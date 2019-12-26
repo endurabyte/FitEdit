@@ -24,7 +24,7 @@ stages:
       displayName: Build an image
       inputs:
         command: build
-        dockerfile: 'Dockerfile'
+        dockerfile: '$(Build.SourcesDirectory)/fitapp/src/Dockerfile'
         tags: |
           $(tag)
     - task: DockerCompose@0
