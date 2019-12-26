@@ -22,7 +22,7 @@ using System.IO;
 
 namespace fitsharplib.Fit
 {
-    internal class DeveloperDataKey
+    public class DeveloperDataKey
         : IComparable
     {
         public byte DeveloperDataIndex { get; private set; }

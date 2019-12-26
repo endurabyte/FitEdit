@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using fitsharplib.Fit;
@@ -18,16 +17,16 @@ namespace fitsharp
 
             encoder.Open(dest);
 
-            foreach (var message in fitFile.Messages)
-            {
-                encoder.Write(message);
-            }
-            
             foreach (var definition in fitFile.MessageDefinitions)
             {
                 encoder.Write(definition);
             }
-            
+
+            foreach (var message in fitFile.Messages)
+            {
+                encoder.Write(message);
+            }
+
             encoder.Close();
         }
 

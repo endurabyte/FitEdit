@@ -30,23 +30,14 @@ namespace fitsharplib.Fit
     /// </summary>
     public class Mesg
     {
-        #region Fields
         protected byte localNum = 0;
         protected uint systemTimeOffset = 0;
-        private List<Field> fields = new List<Field>();
-        private readonly Dictionary<DeveloperDataKey, DeveloperField> developerFields
-            = new Dictionary<DeveloperDataKey, DeveloperField>();
-        #endregion
 
-        #region Properties
         public string Name { get; set; }
         public ushort Num { get; set; }
         public byte LocalNum
         {
-            get
-            {
-                return localNum;
-            }
+            get => localNum;
             set
             {
                 if (value > Fit.LocalMesgNumMask)
@@ -60,21 +51,10 @@ namespace fitsharplib.Fit
             }
         }
 
-        public IEnumerable<Field> Fields
-        {
-            get { return fields; }
-        }
+        public List<Field> Fields { get; } = new List<Field>();
 
-        internal IList<Field> FieldsList
-        {
-            get { return fields; }
-        }
-
-        public IEnumerable<DeveloperField> DeveloperFields
-        {
-            get { return developerFields.Values; }
-        }
-        #endregion
+        public Dictionary<DeveloperDataKey, DeveloperField> DeveloperFields { get; } 
+            = new Dictionary<DeveloperDataKey, DeveloperField>();
 
         #region Constructors
         public Mesg(Mesg mesg)
@@ -89,20 +69,20 @@ namespace fitsharplib.Fit
             this.Num = mesg.Num;
             this.LocalNum = mesg.LocalNum;
             this.systemTimeOffset = mesg.systemTimeOffset;
-            foreach (Field field in mesg.FieldsList)
+            foreach (Field field in mesg.Fields)
             {
                 if (field.GetNumValues() > 0)
                 {
-                    this.FieldsList.Add(new Field(field));
+                    this.Fields.Add(new Field(field));
                 }
             }
 
-            foreach (var fld in mesg.DeveloperFields)
+            foreach (var fld in mesg.DeveloperFields.Values)
             {
                 if (fld.GetNumValues() > 0)
                 {
                     var key = new DeveloperDataKey(fld.DeveloperDataIndex, fld.Num);
-                    developerFields[key] = new DeveloperField(fld);
+                    DeveloperFields[key] = new DeveloperField(fld);
                 }
             }
         }
@@ -386,7 +366,7 @@ namespace fitsharplib.Fit
                     field = Profile.GetField(this.Num, fieldDef.Num);
                     if( null != field )
                     {
-                        FieldsList.Add(field);
+                        Fields.Add(field);
                     }
                     else
                     {
@@ -524,7 +504,7 @@ namespace fitsharplib.Fit
         #region FieldList Manipulation Functions
         public bool HasField(byte fieldNum)
         {
-            foreach (Field field in FieldsList)
+            foreach (Field field in Fields)
             {
                 if (field.Num == fieldNum)
                 {
@@ -537,7 +517,7 @@ namespace fitsharplib.Fit
         public void SetDeveloperField(DeveloperField field)
         {
             var devKey = new DeveloperDataKey(field.DeveloperDataIndex, field.Num);
-            developerFields[devKey] = field;
+            DeveloperFields[devKey] = field;
         }
 
         /// <summary>
@@ -546,15 +526,15 @@ namespace fitsharplib.Fit
         /// <param name="field">Caller allocated field</param>
         public void SetField(Field field)
         {
-            for (int i = 0; i < FieldsList.Count; i++)
+            for (int i = 0; i < Fields.Count; i++)
             {
-                if (FieldsList[i].Num == field.Num)
+                if (Fields[i].Num == field.Num)
                 {
-                    FieldsList[i] = field;
+                    Fields[i] = field;
                     return;
                 }
             }
-            FieldsList.Add(field);
+            Fields.Add(field);
         }
 
         /// <summary>
@@ -565,22 +545,22 @@ namespace fitsharplib.Fit
         public void InsertField(int index, Field field)
         {
             // if message already contains this field, remove it
-            for (int i = 0; i < FieldsList.Count; i++)
+            for (int i = 0; i < Fields.Count; i++)
             {
-                if (FieldsList[i].Num == field.Num)
+                if (Fields[i].Num == field.Num)
                 {
-                    FieldsList.RemoveAt(i);
+                    Fields.RemoveAt(i);
                 }
             }
             // if the index is out of range, add to the end
-            if (index < 0 || index > FieldsList.Count)
+            if (index < 0 || index > Fields.Count)
             {
-                FieldsList.Add(field);
+                Fields.Add(field);
             }
             // insert the new field at desired index
             else
             {
-                FieldsList.Insert(index, field);
+                Fields.Insert(index, field);
             }
         }
 
@@ -590,7 +570,7 @@ namespace fitsharplib.Fit
             {
                 return;
             }
-            foreach (Field field in mesg.FieldsList)
+            foreach (Field field in mesg.Fields)
             {
                 SetField(new Field(field));
             }
@@ -598,13 +578,13 @@ namespace fitsharplib.Fit
 
         public int GetNumFields()
         {
-            return FieldsList.Count;
+            return Fields.Count;
         }
 
         private DeveloperField GetDeveloperField(byte fieldNum, byte developerIndex)
         {
             var devKey = new DeveloperDataKey(developerIndex, fieldNum);
-            return developerFields.ContainsKey(devKey) ? developerFields[devKey] : null;
+            return DeveloperFields.ContainsKey(devKey) ? DeveloperFields[devKey] : null;
         }
 
         public IEnumerable<FieldBase> GetOverrideField(byte fieldNum)
@@ -617,7 +597,7 @@ namespace fitsharplib.Fit
                 localFields.AddLast(nativeField);
             }
 
-            foreach(DeveloperField field in DeveloperFields.Where(x => x.NativeOverride == fieldNum))
+            foreach(DeveloperField field in DeveloperFields.Values.Where(x => x.NativeOverride == fieldNum))
             {
                 localFields.AddLast(field);
             }
@@ -627,7 +607,7 @@ namespace fitsharplib.Fit
 
         public Field GetField(byte fieldNum)
         {
-            foreach (Field field in FieldsList)
+            foreach (Field field in Fields)
             {
                 if (field.Num == fieldNum)
                 {
@@ -645,7 +625,7 @@ namespace fitsharplib.Fit
 
         public Field GetField(string fieldName, bool checkMesgSupportForSubFields)
         {
-            foreach (Field field in FieldsList)
+            foreach (Field field in Fields)
             {
                 if (field.Name == fieldName)
                 {
@@ -697,7 +677,7 @@ namespace fitsharplib.Fit
         /// <param name="field">The Field to be removed from this message.</param>
         public void RemoveField(Field field)
         {
-            FieldsList.Remove(field);
+            Fields.Remove(field);
         }
         #endregion
 
@@ -990,7 +970,7 @@ namespace fitsharplib.Fit
         /// </summary>
         public void RemoveExpandedFields()
         {
-            fields.RemoveAll(x => x.IsExpandedField);
+            Fields.RemoveAll(x => x.IsExpandedField);
         }
 
         private IEnumerable<FieldComponentExpansion> ExpandComponentsInList(List<FieldComponent> componentList, Field currentField, int offset, Accumulator accumulator)
@@ -1096,27 +1076,27 @@ namespace fitsharplib.Fit
         {
             // Traverse the field list
             // Change to for loop so we can add items as we iterate
-            for (int i = 0; i < FieldsList.Count; ++i)
+            for (int i = 0; i < Fields.Count; ++i)
             {
                 List<FieldComponent> componentList = null;
                 // Determine the active subfield
-                ushort activeSubfield = GetActiveSubFieldIndex(FieldsList[i].Num);
+                ushort activeSubfield = GetActiveSubFieldIndex(Fields[i].Num);
 
                 if (activeSubfield == Fit.SubfieldIndexMainField)
                 {
-                    componentList = FieldsList[i].components;
+                    componentList = Fields[i].components;
                 }
                 else
                 {
-                    componentList = FieldsList[i].GetSubfield(activeSubfield).Components;
+                    componentList = Fields[i].GetSubfield(activeSubfield).Components;
                 }
 
                 // Traverse the component list
                 int offset = 0;
-                foreach (FieldComponentExpansion f in ExpandComponentsInList(componentList, FieldsList[i], offset, accumulator))
+                foreach (FieldComponentExpansion f in ExpandComponentsInList(componentList, Fields[i], offset, accumulator))
                 {
                     //Add the new field
-                    FieldsList.Add(f.GetField());
+                    Fields.Add(f.GetField());
                     //update offset
                     offset = f.GetOffset();
                 }

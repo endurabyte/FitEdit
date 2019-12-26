@@ -97,7 +97,7 @@ namespace fitsharplib.Fit
         /// <returns>true if message is compatible. false otherwise</returns>
         public bool ValidateMesg(Mesg mesg)
         {
-            if (mesg.DeveloperFields.Any())
+            if (mesg.DeveloperFields.Values.Any())
             {
                 return false;
             }

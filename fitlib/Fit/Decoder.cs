@@ -376,12 +376,16 @@ namespace fitsharplib.Fit
                     throw new FitException("Decode:DecodeNextMessage - Defn Message unexpected end of file.  Wanted " + numBytes + " bytes at stream position " + fitStream.Position, e);
                 }
 
-                MesgDefinition newMesgDef = new MesgDefinition(mesgDefBuffer, m_lookup);
+                var newMesgDef = new MesgDefinition(mesgDefBuffer, m_lookup);
+                //var duplicate = localMesgDefs.FirstOrDefault(value => value != null && value.GlobalMesgNum == newMesgDef.GlobalMesgNum);
+                //if (duplicate != default)
+                //{
+                //    throw new FitException("Duplicate message definition");
+                //}
+
                 localMesgDefs[newMesgDef.LocalMesgNum] = newMesgDef;
-                if (MesgDefinitionEvent != null)
-                {
-                    MesgDefinitionEvent(this, new MesgDefinitionEventArgs(newMesgDef));
-                }
+
+                MesgDefinitionEvent?.Invoke(this, new MesgDefinitionEventArgs(newMesgDef));
             }
             // Is it a data mesg?
             else if ((nextByte & Fit.MesgDefinitionMask) == Fit.MesgHeaderMask)
@@ -424,7 +428,7 @@ namespace fitsharplib.Fit
                     }
                 }
 
-                foreach (Field field in newMesg.FieldsList)
+                foreach (Field field in newMesg.Fields)
                 {
                     if (field.IsAccumulated)
                     {
@@ -433,7 +437,7 @@ namespace fitsharplib.Fit
                         {
                             long value = Convert.ToInt64(field.GetRawValue(i));
 
-                            foreach (Field fieldIn in newMesg.FieldsList)
+                            foreach (Field fieldIn in newMesg.Fields)
                             {
                                 foreach (FieldComponent fc in fieldIn.components)
                                 {

@@ -1,8 +1,28 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fitlib", "fitlib\fitlib.csproj", "{714EC380-D9FE-4438-ABEC-DE6AE92595F1}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fitlib", "fitlib\fitlib.csproj", "{714EC380-D9FE-4438-ABEC-DE6AE92595F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fitsharp", "fitutil\fitutil.csproj", "{23C31CBB-83C6-42AC-A50B-973F10E0CA37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "fitutil", "fitutil\fitutil.csproj", "{23C31CBB-83C6-42AC-A50B-973F10E0CA37}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "unittests", "unittests\unittests.csproj", "{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "integrationtests", "integrationtests\integrationtests.csproj", "{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorApp.Shared", "fitapp\src\BlazorApp.Shared\BlazorApp.Shared.csproj", "{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorApp.Client", "fitapp\src\BlazorApp.Client\BlazorApp.Client.csproj", "{0812E05C-B4A3-474E-B147-1649E0EA4B1E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorApp.Server", "fitapp\src\BlazorApp.Server\BlazorApp.Server.csproj", "{8B674114-E46A-4D5D-9BD7-096FE631A1D2}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "fitapp\src\docker-compose.dcproj", "{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4593F5C-CF5E-49C2-B3A7-ED68C4AB59C3}"
+	ProjectSection(SolutionItems) = preProject
+		fitapp\src\Dockerfile = fitapp\src\Dockerfile
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +38,35 @@ Global
 		{23C31CBB-83C6-42AC-A50B-973F10E0CA37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23C31CBB-83C6-42AC-A50B-973F10E0CA37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23C31CBB-83C6-42AC-A50B-973F10E0CA37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0812E05C-B4A3-474E-B147-1649E0EA4B1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0812E05C-B4A3-474E-B147-1649E0EA4B1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0812E05C-B4A3-474E-B147-1649E0EA4B1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0812E05C-B4A3-474E-B147-1649E0EA4B1E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B674114-E46A-4D5D-9BD7-096FE631A1D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B674114-E46A-4D5D-9BD7-096FE631A1D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B674114-E46A-4D5D-9BD7-096FE631A1D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B674114-E46A-4D5D-9BD7-096FE631A1D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}
 	EndGlobalSection
 EndGlobal
