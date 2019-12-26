@@ -103,7 +103,7 @@ namespace fitsharp
                 i++;
             }
 
-            foreach (var devField in e.mesg.DeveloperFields)
+            foreach (var devField in e.mesg.DeveloperFields.Values)
             {
                 for (int j = 0; j < devField.GetNumValues(); j++)
                 {
@@ -236,7 +236,7 @@ namespace fitsharp
 
         private static void WriteDeveloperFields(Mesg mesg)
         {
-            foreach (var devField in mesg.DeveloperFields)
+            foreach (var devField in mesg.DeveloperFields.Values)
             {
                 if (devField.GetNumValues() <= 0)
                 {

@@ -677,13 +677,13 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Product", 2, 132, 1, 0, "", false, Type.Uint16));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 263);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 263);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 15);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 15);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("SerialNumber", 3, 140, 1, 0, "", false, Type.Uint32z));
@@ -758,13 +758,13 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Product", 1, 132, 1, 0, "", false, Type.Uint16));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 263);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 263);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 15);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 15);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 13);
             subfieldIndex++;
             fieldIndex++;
 
@@ -824,14 +824,14 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Count", 3, 132, 1, 0, "", false, Type.Uint16));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("NumPerFile", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("NumPerFile", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("MaxPerFile", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("MaxPerFile", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("MaxPerFileType", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 2);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("MaxPerFileType", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 2);
             subfieldIndex++;
             fieldIndex++;
 
@@ -1142,11 +1142,11 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Layout", 1, 13, 1, 0, "", false, Type.Byte));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DigitalLayout", 0, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DigitalLayout", 0, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("AnalogLayout", 0, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("AnalogLayout", 0, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
             subfieldIndex++;
             fieldIndex++;
 
@@ -1326,11 +1326,11 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("HeartRateSource", 20, 2, 1, 0, "", false, Type.Uint8));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("HeartRateAntplusDeviceType", 2, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(19, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("HeartRateAntplusDeviceType", 2, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(19, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("HeartRateLocalDeviceType", 2, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(19, 5);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("HeartRateLocalDeviceType", 2, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(19, 5);
             subfieldIndex++;
             fieldIndex++;
 
@@ -1468,9 +1468,9 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("TotalCycles", 10, 134, 1, 0, "cycles", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TotalStrides", 134, 1, 0, "strides"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 11);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TotalStrides", 134, 1, 0, "strides"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 11);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("TotalCalories", 11, 132, 1, 0, "kcal", false, Type.Uint16));
@@ -1478,10 +1478,10 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("TotalFatCalories", 13, 132, 1, 0, "kcal", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("AvgSpeed", 14, 132, 1000, 0, "m/s", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(124, false, 16, 1000, 0)); // enhanced_avg_speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(124, false, 16, 1000, 0)); // enhanced_avg_speed
             fieldIndex++;
             newMesg.SetField(new Field("MaxSpeed", 15, 132, 1000, 0, "m/s", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(125, false, 16, 1000, 0)); // enhanced_max_speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(125, false, 16, 1000, 0)); // enhanced_max_speed
             fieldIndex++;
             newMesg.SetField(new Field("AvgHeartRate", 16, 2, 1, 0, "bpm", false, Type.Uint8));
             fieldIndex++;
@@ -1489,14 +1489,14 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("AvgCadence", 18, 2, 1, 0, "rpm", false, Type.Uint8));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("AvgRunningCadence", 2, 1, 0, "strides/min"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("AvgRunningCadence", 2, 1, 0, "strides/min"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("MaxCadence", 19, 2, 1, 0, "rpm", false, Type.Uint8));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("MaxRunningCadence", 2, 1, 0, "strides/min"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("MaxRunningCadence", 2, 1, 0, "strides/min"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("AvgPower", 20, 132, 1, 0, "watts", false, Type.Uint16));
@@ -1550,10 +1550,10 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("TotalWork", 48, 134, 1, 0, "J", false, Type.Uint32));
             fieldIndex++;
             newMesg.SetField(new Field("AvgAltitude", 49, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(126, false, 16, 5, 500)); // enhanced_avg_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(126, false, 16, 5, 500)); // enhanced_avg_altitude
             fieldIndex++;
             newMesg.SetField(new Field("MaxAltitude", 50, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(128, false, 16, 5, 500)); // enhanced_max_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(128, false, 16, 5, 500)); // enhanced_max_altitude
             fieldIndex++;
             newMesg.SetField(new Field("GpsAccuracy", 51, 2, 1, 0, "m", false, Type.Uint8));
             fieldIndex++;
@@ -1596,7 +1596,7 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("BestLapIndex", 70, 132, 1, 0, "", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("MinAltitude", 71, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(127, false, 16, 5, 500)); // enhanced_min_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(127, false, 16, 5, 500)); // enhanced_min_altitude
             fieldIndex++;
             newMesg.SetField(new Field("PlayerScore", 82, 132, 1, 0, "", false, Type.Uint16));
             fieldIndex++;
@@ -1743,9 +1743,9 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("TotalCycles", 10, 134, 1, 0, "cycles", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TotalStrides", 134, 1, 0, "strides"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(25, 11);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TotalStrides", 134, 1, 0, "strides"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(25, 11);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("TotalCalories", 11, 132, 1, 0, "kcal", false, Type.Uint16));
@@ -1753,10 +1753,10 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("TotalFatCalories", 12, 132, 1, 0, "kcal", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("AvgSpeed", 13, 132, 1000, 0, "m/s", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(110, false, 16, 1000, 0)); // enhanced_avg_speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(110, false, 16, 1000, 0)); // enhanced_avg_speed
             fieldIndex++;
             newMesg.SetField(new Field("MaxSpeed", 14, 132, 1000, 0, "m/s", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(111, false, 16, 1000, 0)); // enhanced_max_speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(111, false, 16, 1000, 0)); // enhanced_max_speed
             fieldIndex++;
             newMesg.SetField(new Field("AvgHeartRate", 15, 2, 1, 0, "bpm", false, Type.Uint8));
             fieldIndex++;
@@ -1764,14 +1764,14 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("AvgCadence", 17, 2, 1, 0, "rpm", false, Type.Uint8));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("AvgRunningCadence", 2, 1, 0, "strides/min"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("AvgRunningCadence", 2, 1, 0, "strides/min"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("MaxCadence", 18, 2, 1, 0, "rpm", false, Type.Uint8));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("MaxRunningCadence", 2, 1, 0, "strides/min"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("MaxRunningCadence", 2, 1, 0, "strides/min"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("AvgPower", 19, 132, 1, 0, "watts", false, Type.Uint16));
@@ -1809,10 +1809,10 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("TotalWork", 41, 134, 1, 0, "J", false, Type.Uint32));
             fieldIndex++;
             newMesg.SetField(new Field("AvgAltitude", 42, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(112, false, 16, 5, 500)); // enhanced_avg_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(112, false, 16, 5, 500)); // enhanced_avg_altitude
             fieldIndex++;
             newMesg.SetField(new Field("MaxAltitude", 43, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(114, false, 16, 5, 500)); // enhanced_max_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(114, false, 16, 5, 500)); // enhanced_max_altitude
             fieldIndex++;
             newMesg.SetField(new Field("GpsAccuracy", 44, 2, 1, 0, "m", false, Type.Uint8));
             fieldIndex++;
@@ -1851,7 +1851,7 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("RepetitionNum", 61, 132, 1, 0, "", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("MinAltitude", 62, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(113, false, 16, 5, 500)); // enhanced_min_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(113, false, 16, 5, 500)); // enhanced_min_altitude
             fieldIndex++;
             newMesg.SetField(new Field("MinHeartRate", 63, 2, 1, 0, "bpm", false, Type.Uint8));
             fieldIndex++;
@@ -2018,7 +2018,7 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("PositionLong", 1, 133, 1, 0, "semicircles", false, Type.Sint32));
             fieldIndex++;
             newMesg.SetField(new Field("Altitude", 2, 132, 5, 500, "m", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(78, false, 16, 5, 500)); // enhanced_altitude
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(78, false, 16, 5, 500)); // enhanced_altitude
             fieldIndex++;
             newMesg.SetField(new Field("HeartRate", 3, 2, 1, 0, "bpm", false, Type.Uint8));
             fieldIndex++;
@@ -2027,13 +2027,13 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("Distance", 5, 134, 100, 0, "m", true, Type.Uint32));
             fieldIndex++;
             newMesg.SetField(new Field("Speed", 6, 132, 1000, 0, "m/s", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(73, false, 16, 1000, 0)); // enhanced_speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(73, false, 16, 1000, 0)); // enhanced_speed
             fieldIndex++;
             newMesg.SetField(new Field("Power", 7, 132, 1, 0, "watts", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("CompressedSpeedDistance", 8, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(6, false, 12, 100, 0)); // speed
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(5, true, 12, 16, 0)); // distance
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(6, false, 12, 100, 0)); // speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(5, true, 12, 16, 0)); // distance
             fieldIndex++;
             newMesg.SetField(new Field("Grade", 9, 131, 100, 0, "%", false, Type.Sint16));
             fieldIndex++;
@@ -2048,12 +2048,12 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("Speed1s", 17, 2, 16, 0, "m/s", false, Type.Uint8));
             fieldIndex++;
             newMesg.SetField(new Field("Cycles", 18, 2, 1, 0, "cycles", false, Type.Uint8));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(19, true, 8, 1, 0)); // total_cycles
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(19, true, 8, 1, 0)); // total_cycles
             fieldIndex++;
             newMesg.SetField(new Field("TotalCycles", 19, 134, 1, 0, "cycles", true, Type.Uint32));
             fieldIndex++;
             newMesg.SetField(new Field("CompressedAccumulatedPower", 28, 132, 1, 0, "watts", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(29, true, 16, 1, 0)); // accumulated_power
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(29, true, 16, 1, 0)); // accumulated_power
             fieldIndex++;
             newMesg.SetField(new Field("AccumulatedPower", 29, 134, 1, 0, "watts", true, Type.Uint32));
             fieldIndex++;
@@ -2171,76 +2171,76 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("EventType", 1, 0, 1, 0, "", false, Type.EventType));
             fieldIndex++;
             newMesg.SetField(new Field("Data16", 2, 132, 1, 0, "", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(3, false, 16, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(3, false, 16, 1, 0)); // data
             fieldIndex++;
             newMesg.SetField(new Field("Data", 3, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TimerTrigger", 0, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TimerTrigger", 0, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CoursePointIndex", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 10);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CoursePointIndex", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 10);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("BatteryLevel", 132, 1000, 0, "V"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 11);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("BatteryLevel", 132, 1000, 0, "V"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 11);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("VirtualPartnerSpeed", 132, 1000, 0, "m/s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 12);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("VirtualPartnerSpeed", 132, 1000, 0, "m/s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 12);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("HrHighAlert", 2, 1, 0, "bpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("HrHighAlert", 2, 1, 0, "bpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 13);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("HrLowAlert", 2, 1, 0, "bpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 14);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("HrLowAlert", 2, 1, 0, "bpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 14);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("SpeedHighAlert", 134, 1000, 0, "m/s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 15);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("SpeedHighAlert", 134, 1000, 0, "m/s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 15);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("SpeedLowAlert", 134, 1000, 0, "m/s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 16);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("SpeedLowAlert", 134, 1000, 0, "m/s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 16);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CadHighAlert", 132, 1, 0, "rpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 17);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CadHighAlert", 132, 1, 0, "rpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 17);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CadLowAlert", 132, 1, 0, "rpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 18);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CadLowAlert", 132, 1, 0, "rpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 18);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("PowerHighAlert", 132, 1, 0, "watts"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 19);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("PowerHighAlert", 132, 1, 0, "watts"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 19);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("PowerLowAlert", 132, 1, 0, "watts"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 20);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("PowerLowAlert", 132, 1, 0, "watts"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 20);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TimeDurationAlert", 134, 1000, 0, "s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 23);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TimeDurationAlert", 134, 1000, 0, "s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 23);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DistanceDurationAlert", 134, 100, 0, "m"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 24);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DistanceDurationAlert", 134, 100, 0, "m"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 24);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CalorieDurationAlert", 134, 1, 0, "calories"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 25);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CalorieDurationAlert", 134, 1, 0, "calories"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 25);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("FitnessEquipmentState", 0, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 27);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("FitnessEquipmentState", 0, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 27);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("SportPoint", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 33);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(7, false, 16, 1, 0)); // score
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(8, false, 16, 1, 0)); // opponent_score
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("SportPoint", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 33);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(7, false, 16, 1, 0)); // score
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(8, false, 16, 1, 0)); // opponent_score
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GearChangeData", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 42);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 43);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(11, false, 8, 1, 0)); // rear_gear_num
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(12, false, 8, 1, 0)); // rear_gear
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(9, false, 8, 1, 0)); // front_gear_num
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(10, false, 8, 1, 0)); // front_gear
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GearChangeData", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 42);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 43);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(11, false, 8, 1, 0)); // rear_gear_num
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(12, false, 8, 1, 0)); // rear_gear
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(9, false, 8, 1, 0)); // front_gear_num
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddComponent(new FieldComponent(10, false, 8, 1, 0)); // front_gear
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RiderPosition", 0, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 44);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RiderPosition", 0, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 44);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CommTimeout", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 47);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CommTimeout", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 47);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("EventGroup", 4, 2, 1, 0, "", false, Type.Uint8));
@@ -2274,11 +2274,11 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("DeviceType", 1, 2, 1, 0, "", false, Type.Uint8));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("AntplusDeviceType", 2, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("AntplusDeviceType", 2, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(25, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("AntDeviceType", 2, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(25, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("AntDeviceType", 2, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(25, 0);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("Manufacturer", 2, 132, 1, 0, "", false, Type.Manufacturer));
@@ -2287,13 +2287,13 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Product", 4, 132, 1, 0, "", false, Type.Uint16));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 263);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 263);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 15);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(2, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 15);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(2, 13);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("SoftwareVersion", 5, 132, 100, 0, "", false, Type.Uint16));
@@ -2337,13 +2337,13 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Product", 2, 132, 1, 0, "", false, Type.Uint16));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 263);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 263);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 15);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 15);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("SerialNumber", 3, 140, 1, 0, "", false, Type.Uint32z));
@@ -2588,11 +2588,11 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("CalibrationFactor", 1, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("AccelCalFactor", 134, 1, 0, "g"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("AccelCalFactor", 134, 1, 0, "g"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GyroCalFactor", 134, 1, 0, "deg/s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GyroCalFactor", 134, 1, 0, "deg/s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("CalibrationDivisor", 2, 134, 1, 0, "counts", false, Type.Uint32));
@@ -2618,8 +2618,8 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("CalibrationFactor", 1, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("BaroCalFactor", 134, 1, 0, "Pa"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 3);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("BaroCalFactor", 134, 1, 0, "Pa"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 3);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("CalibrationDivisor", 2, 134, 1, 0, "counts", false, Type.Uint32));
@@ -2843,7 +2843,7 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("PositionLong", 6, 133, 1, 0, "semicircles", false, Type.Sint32));
             fieldIndex++;
             newMesg.SetField(new Field("Speed", 7, 132, 1000, 0, "m/s", false, Type.Uint16));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(8, false, 16, 1000, 0)); // enhanced_speed
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(8, false, 16, 1000, 0)); // enhanced_speed
             fieldIndex++;
             newMesg.SetField(new Field("EnhancedSpeed", 8, 134, 1000, 0, "m/s", false, Type.Uint32));
             fieldIndex++;
@@ -2995,8 +2995,8 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("TotalCycles", 10, 134, 1, 0, "cycles", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TotalStrokes", 134, 1, 0, "strokes"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(23, 2);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TotalStrokes", 134, 1, 0, "strokes"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(23, 2);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("TotalCalories", 11, 132, 1, 0, "kcal", false, Type.Uint16));
@@ -3243,106 +3243,106 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("DurationValue", 2, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationTime", 134, 1000, 0, "s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 0);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 28);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationTime", 134, 1000, 0, "s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 0);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 28);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationDistance", 134, 100, 0, "m"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationDistance", 134, 100, 0, "m"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationHr", 134, 1, 0, "% or bpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 2);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 3);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationHr", 134, 1, 0, "% or bpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 2);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 3);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationCalories", 134, 1, 0, "calories"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 4);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationCalories", 134, 1, 0, "calories"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 4);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationStep", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 6);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 7);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 8);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 9);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 10);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 11);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 12);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationStep", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 6);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 7);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 8);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 9);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 10);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 11);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 12);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationPower", 134, 1, 0, "% or watts"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 14);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 15);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationPower", 134, 1, 0, "% or watts"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 14);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 15);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("DurationReps", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 29);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("DurationReps", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 29);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("TargetType", 3, 0, 1, 0, "", false, Type.WktStepTarget));
             fieldIndex++;
             newMesg.SetField(new Field("TargetValue", 4, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TargetSpeedZone", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TargetSpeedZone", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TargetHrZone", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TargetHrZone", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TargetCadenceZone", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 3);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TargetCadenceZone", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 3);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TargetPowerZone", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 4);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TargetPowerZone", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 4);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RepeatSteps", 134, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 6);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RepeatSteps", 134, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 6);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RepeatTime", 134, 1000, 0, "s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 7);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RepeatTime", 134, 1000, 0, "s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 7);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RepeatDistance", 134, 100, 0, "m"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 8);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RepeatDistance", 134, 100, 0, "m"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 8);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RepeatCalories", 134, 1, 0, "calories"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 9);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RepeatCalories", 134, 1, 0, "calories"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 9);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RepeatHr", 134, 1, 0, "% or bpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 10);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 11);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RepeatHr", 134, 1, 0, "% or bpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 10);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 11);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("RepeatPower", 134, 1, 0, "% or watts"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 12);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("RepeatPower", 134, 1, 0, "% or watts"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 12);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(1, 13);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("TargetStrokeType", 0, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 11);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("TargetStrokeType", 0, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 11);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("CustomTargetValueLow", 5, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetSpeedLow", 134, 1000, 0, "m/s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetSpeedLow", 134, 1000, 0, "m/s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetHeartRateLow", 134, 1, 0, "% or bpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetHeartRateLow", 134, 1, 0, "% or bpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetCadenceLow", 134, 1, 0, "rpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 3);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetCadenceLow", 134, 1, 0, "rpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 3);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetPowerLow", 134, 1, 0, "% or watts"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 4);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetPowerLow", 134, 1, 0, "% or watts"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 4);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("CustomTargetValueHigh", 6, 134, 1, 0, "", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetSpeedHigh", 134, 1000, 0, "m/s"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 0);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetSpeedHigh", 134, 1000, 0, "m/s"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 0);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetHeartRateHigh", 134, 1, 0, "% or bpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetHeartRateHigh", 134, 1, 0, "% or bpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetCadenceHigh", 134, 1, 0, "rpm"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 3);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetCadenceHigh", 134, 1, 0, "rpm"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 3);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("CustomTargetPowerHigh", 134, 1, 0, "% or watts"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(3, 4);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("CustomTargetPowerHigh", 134, 1, 0, "% or watts"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(3, 4);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("Intensity", 7, 0, 1, 0, "", false, Type.Intensity));
@@ -3389,13 +3389,13 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Product", 1, 132, 1, 0, "", false, Type.Uint16));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 263);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("FaveroProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 263);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 15);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(0, 13);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("GarminProduct", 132, 1, 0, ""));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 1);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 15);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(0, 13);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("SerialNumber", 2, 140, 1, 0, "", false, Type.Uint32z));
@@ -3543,13 +3543,13 @@ namespace fitsharplib.Fit
             fieldIndex++;
             newMesg.SetField(new Field("Cycles", 3, 134, 2, 0, "cycles", false, Type.Uint32));
             subfieldIndex = 0;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("Steps", 134, 1, 0, "steps"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 6);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("Steps", 134, 1, 0, "steps"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 6);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 1);
             subfieldIndex++;
-            newMesg.FieldsList[fieldIndex].subfields.Add(new Subfield("Strokes", 134, 2, 0, "strokes"));
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 2);
-            newMesg.FieldsList[fieldIndex].subfields[subfieldIndex].AddMap(5, 5);
+            newMesg.Fields[fieldIndex].subfields.Add(new Subfield("Strokes", 134, 2, 0, "strokes"));
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 2);
+            newMesg.Fields[fieldIndex].subfields[subfieldIndex].AddMap(5, 5);
             subfieldIndex++;
             fieldIndex++;
             newMesg.SetField(new Field("ActiveTime", 4, 134, 1000, 0, "s", false, Type.Uint32));
@@ -3579,8 +3579,8 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("ActiveCalories", 19, 132, 1, 0, "kcal", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("CurrentActivityTypeIntensity", 24, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(5, false, 5, 1, 0)); // activity_type
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(28, false, 3, 1, 0)); // intensity
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(5, false, 5, 1, 0)); // activity_type
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(28, false, 3, 1, 0)); // intensity
             fieldIndex++;
             newMesg.SetField(new Field("TimestampMin8", 25, 2, 1, 0, "min", false, Type.Uint8));
             fieldIndex++;
@@ -3616,23 +3616,23 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("FractionalTimestamp", 0, 132, 32768, 0, "s", false, Type.Uint16));
             fieldIndex++;
             newMesg.SetField(new Field("Time256", 1, 2, 256, 0, "s", false, Type.Uint8));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(0, false, 8, 256, 0)); // fractional_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(0, false, 8, 256, 0)); // fractional_timestamp
             fieldIndex++;
             newMesg.SetField(new Field("FilteredBpm", 6, 2, 1, 0, "bpm", false, Type.Uint8));
             fieldIndex++;
             newMesg.SetField(new Field("EventTimestamp", 9, 134, 1024, 0, "s", true, Type.Uint32));
             fieldIndex++;
             newMesg.SetField(new Field("EventTimestamp12", 10, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(9, true, 12, 1024, 0)); // event_timestamp
             fieldIndex++;
 
             return newMesg;
@@ -3699,15 +3699,15 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("MesgId", 1, 13, 1, 0, "", false, Type.Byte));
             fieldIndex++;
             newMesg.SetField(new Field("MesgData", 2, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(3, false, 8, 1, 0)); // channel_number
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(3, false, 8, 1, 0)); // channel_number
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
             fieldIndex++;
             newMesg.SetField(new Field("ChannelNumber", 3, 2, 1, 0, "", false, Type.Uint8));
             fieldIndex++;
@@ -3729,15 +3729,15 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("MesgId", 1, 13, 1, 0, "", false, Type.Byte));
             fieldIndex++;
             newMesg.SetField(new Field("MesgData", 2, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(3, false, 8, 1, 0)); // channel_number
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(3, false, 8, 1, 0)); // channel_number
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(4, false, 8, 1, 0)); // data
             fieldIndex++;
             newMesg.SetField(new Field("ChannelNumber", 3, 2, 1, 0, "", false, Type.Uint8));
             fieldIndex++;
@@ -3772,8 +3772,8 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("ScreenIndex", 0, 2, 1, 0, "", false, Type.Uint8));
             fieldIndex++;
             newMesg.SetField(new Field("ConceptField", 1, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(2, false, 4, 1, 0)); // field_id
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(3, false, 4, 1, 0)); // concept_count
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(2, false, 4, 1, 0)); // field_id
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(3, false, 4, 1, 0)); // concept_count
             fieldIndex++;
             newMesg.SetField(new Field("FieldId", 2, 2, 1, 0, "", false, Type.Uint8));
             fieldIndex++;
@@ -3795,8 +3795,8 @@ namespace fitsharplib.Fit
             newMesg.SetField(new Field("ScreenIndex", 0, 2, 1, 0, "", false, Type.Uint8));
             fieldIndex++;
             newMesg.SetField(new Field("ConceptField", 1, 13, 1, 0, "", false, Type.Byte));
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(2, false, 4, 1, 0)); // field_id
-            newMesg.FieldsList[fieldIndex].components.Add(new FieldComponent(3, false, 4, 1, 0)); // concept_index
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(2, false, 4, 1, 0)); // field_id
+            newMesg.Fields[fieldIndex].components.Add(new FieldComponent(3, false, 4, 1, 0)); // concept_index
             fieldIndex++;
             newMesg.SetField(new Field("FieldId", 2, 2, 1, 0, "", false, Type.Uint8));
             fieldIndex++;

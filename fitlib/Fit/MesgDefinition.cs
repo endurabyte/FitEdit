@@ -118,14 +118,14 @@ namespace fitsharplib.Fit
             LocalMesgNum = mesg.LocalNum;
             GlobalMesgNum = mesg.Num;
             architecture = Fit.LittleEndian;
-            NumFields = (byte)mesg.FieldsList.Count;
+            NumFields = (byte)mesg.Fields.Count;
 
-            foreach (Field field in mesg.FieldsList)
+            foreach (Field field in mesg.Fields)
             {
                 fieldDefs.Add(new FieldDefinition(field));
             }
 
-            foreach (DeveloperField field in mesg.DeveloperFields)
+            foreach (DeveloperField field in mesg.DeveloperFields.Values)
             {
                 m_devFieldDefs.Add(new DeveloperFieldDefinition(
                     field.Num,

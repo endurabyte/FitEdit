@@ -21,7 +21,7 @@ namespace fitsharp
                 return;
             }
 
-            ApplyLaps(args[0], args[1]);
+            Copy(args[0], args[1]);
         }
 
         static void DumpToJson(string source)
