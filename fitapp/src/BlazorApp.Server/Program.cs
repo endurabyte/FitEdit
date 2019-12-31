@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
 
 namespace BlazorApp.Server
 {
     public class Program
     {
-        public static int Main(string[] args)
+        public static void Main(string[] args)
         {
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
@@ -26,24 +28,33 @@ namespace BlazorApp.Server
             {
                 //IdentityServer4 seed should be happening here but because of this bug https://github.com/aspnet/AspNetCore/issues/12349
                 //the seeding is not implemented here.
-                Log.Information("Starting BlazorApp web server host");
-                BuildWebHost(args).Run();
-                return 0;
+
+                BuildWebHost(args, configuration["Domain"]).Run();
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "BlazorApp Host terminated unexpectedly");
-                return 1;
+                Log.Error(ex, "");
             }
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
+        public static IWebHost BuildWebHost(string[] args, string domain) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureLogging(l => l.AddConsole(x => x.IncludeScopes = true))
                 .UseConfiguration(new ConfigurationBuilder()
                     .AddCommandLine(args)
                     .Build())
                 .UseStartup<Startup>()
                 .UseSerilog()
+                .UseKestrel(options =>
+                {
+                    options.ConfigureHttpsDefaults(options => 
+                        options.ServerCertificateSelector = (c, s) => 
+                            LetsEncryptRenewalService.Certificate);
+                })
+                .UseUrls(
+                    $"http://{domain}", 
+                    $"https://{domain}"
+                )
                 .Build();
     }
 }

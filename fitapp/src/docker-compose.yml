@@ -5,23 +5,31 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
-    ports:
-      - 53415:80
     depends_on:
       - sqlserver
     environment:
       - ASPNETCORE_ENVIRONMENT=Development #Consider changing this in Production
+      - ASPNETCORE_URLS=https://+;http://+
+      - ASPNETCORE_HTTPS_PORT=44335
       - Serilog__MinimumLevel__Default=Debug #Consider changing this in Production
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=blazor_app;Trusted_Connection=True;MultipleActiveResultSets=true;User=sa;Password=aZL343Vf!RJj;Integrated Security=false
       - BlazorApp__UseSqlServer=true
       - BlazorApp__ApplicationUrl=blazorapp
       - BlazorApp__IS4ApplicationUrl=blazorapp
+    ports:
+        # Replace the values on the left by the values from launchSettings.json
+      - "53414:80"
+      - "44335:443"
     networks:
       - bb
     restart: on-failure
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets/=/root/.microsoft/usersecrets
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https/
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server
+    user: root
     volumes:
       - dbdata:/var/opt/mssql
     environment:

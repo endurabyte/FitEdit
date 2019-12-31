@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using BlazorApp.Server.Authorization;
 using BlazorApp.Server.Data;
 using BlazorApp.Server.Data.Interfaces;
@@ -8,6 +8,10 @@ using BlazorApp.Server.Middleware;
 using BlazorApp.Server.Models;
 using BlazorApp.Server.Services;
 using BlazorApp.Shared.AuthorizationDefinitions;
+using Certes;
+using FluffySpoon.AspNet.LetsEncrypt;
+using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using IdentityServer4;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -29,6 +33,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using X509Helper;
 
 namespace BlazorApp.Server
 {
@@ -44,6 +49,34 @@ namespace BlazorApp.Server
             _environment = env;
         }
 
+        private async Task<X509Certificate2> AddLetsEncrypt(IServiceCollection services)
+        {
+            services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
+            {
+                Email = "doug@sltr.us",
+                UseStaging = true,
+                Domains = new[] { Configuration["Domain"] },
+                TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30),
+                TimeAfterIssueDateBeforeRenewal = TimeSpan.FromDays(7),
+                CertificateSigningRequest = new CsrInfo()
+                {
+                    CountryName = "USA",
+                    Locality = "US",
+                    Organization = "SLTR.US",
+                    OrganizationUnit = "R&D",
+                    State = "TN"
+                }
+            });
+            services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
+            services.AddFluffySpoonLetsEncryptFileChallengePersistence();
+
+            var serviceProvider = services.BuildServiceProvider();
+            var service = serviceProvider.GetService<ICertificateProvider>();
+            var result = await service.RenewCertificateIfNeeded().ConfigureAwait(false);
+
+            return result.Certificate;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -56,7 +89,7 @@ namespace BlazorApp.Server
                 ? Configuration.GetConnectionString("DefaultConnection")
                 : $"Filename={Configuration.GetConnectionString("SqlLiteConnectionFileName")}";
 
-            var authAuthority = Configuration["BlazorApp:IS4ApplicationUrl"].TrimEnd('/');
+            var authAuthority = $"https://{Configuration["Domain"]}".TrimEnd('/');
 
             void DbContextOptionsBuilder(DbContextOptionsBuilder builder)
             {
@@ -107,64 +140,8 @@ namespace BlazorApp.Server
               })
               .AddAspNetIdentity<ApplicationUser>();
 
-            X509Certificate2 cert = null;
-
-            if (_environment.IsDevelopment())
-            {
-                // The AddDeveloperSigningCredential extension creates temporary key material for signing tokens.
-                // This might be useful to get started, but needs to be replaced by some persistent key material for production scenarios.
-                // See http://docs.identityserver.io/en/release/topics/crypto.html#refcrypto for more information.
-                // https://stackoverflow.com/questions/42351274/identityserver4-hosting-in-iis
-                //.AddDeveloperSigningCredential(true, @"C:\tempkey.rsa")
-                identityServerBuilder.AddDeveloperSigningCredential();
-            }
-            else
-            {
-                // Works for IIS, finds cert by the thumbprint in appsettings.json
-                // Make sure Certificate is in the Web Hosting folder && installed to LocalMachine or update settings below
-                var useLocalCertStore = Convert.ToBoolean(Configuration["BlazorApp:UseLocalCertStore"]);
-                var certificateThumbprint = Configuration["BlazorApp:CertificateThumbprint"];
-
-                if (useLocalCertStore)
-                {
-                    using (X509Store store = new X509Store("WebHosting", StoreLocation.LocalMachine))
-                    {
-                        store.Open(OpenFlags.ReadOnly);
-                        var certs = store.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, false);
-                        if (certs.Count > 0)
-                        {
-                            cert = certs[0];
-                        }
-                        else
-                        {
-                            // import PFX
-                            cert = new X509Certificate2(Path.Combine(_environment.ContentRootPath, "AuthSample.pfx"), "Admin123",
-                                                X509KeyStorageFlags.MachineKeySet |
-                                                X509KeyStorageFlags.PersistKeySet |
-                                                X509KeyStorageFlags.Exportable);
-                            // save certificate and private key
-                            X509Store storeMy = new X509Store(StoreName.CertificateAuthority, StoreLocation.LocalMachine);
-                            storeMy.Open(OpenFlags.ReadWrite);
-                            storeMy.Add(cert);
-                        }
-                        store.Close();
-                    }
-                }
-                else
-                {
-                    // Azure deployment, will be used if deployed to Azure - Not tested
-                    //var vaultConfigSection = Configuration.GetSection("Vault");
-                    //var keyVaultService = new KeyVaultCertificateService(vaultConfigSection["Url"], vaultConfigSection["ClientId"], vaultConfigSection["ClientSecret"]);
-                    ////cert = keyVaultService.GetCertificateFromKeyVault(vaultConfigSection["CertificateName"]);
-
-                    /// I was informed that this will work as a temp solution in Azure
-                    cert = new X509Certificate2("AuthSample.pfx", "Admin123",
-                        X509KeyStorageFlags.MachineKeySet |
-                        X509KeyStorageFlags.PersistKeySet |
-                        X509KeyStorageFlags.Exportable);
-                }
-                identityServerBuilder.AddSigningCredential(cert);
-            }
+            var cert = AddLetsEncrypt(services).Result;
+            identityServerBuilder.AddSigningCredential(cert);
 
             var authBuilder = services.AddAuthentication(options =>
             {
@@ -174,6 +151,7 @@ namespace BlazorApp.Server
             {
                 options.Authority = authAuthority;
                 options.SupportedTokens = SupportedTokens.Jwt;
+                //options.RequireHttpsMetadata = true;
                 options.RequireHttpsMetadata = _environment.IsProduction() ? true : false;
                 options.ApiName = IdentityServerConfig.ApiName;
             });
@@ -237,7 +215,7 @@ namespace BlazorApp.Server
                     {
                         if (context.Request.Path.StartsWithSegments("/api"))
                         {
-                            context.Response.StatusCode = (int) (HttpStatusCode.Unauthorized);
+                            context.Response.StatusCode = (int)(HttpStatusCode.Unauthorized);
                         }
 
                         return Task.CompletedTask;
@@ -253,12 +231,21 @@ namespace BlazorApp.Server
             services.AddControllers().AddNewtonsoftJson();
             services.AddSignalR();
 
+            //if (!_environment.IsDevelopment())
+            {
+                services.AddHttpsRedirection(options =>
+                {
+                    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+                    options.HttpsPort = 443;
+                });
+            }
+
             services.AddSwaggerDocument(config =>
             {
                 config.PostProcess = document =>
                 {
-                    document.Info.Version     = "v0.2.3";
-                    document.Info.Title       = "Blazor Boilerplate";
+                    document.Info.Version = "v0.2.3";
+                    document.Info.Title = "Blazor Boilerplate";
                     document.Info.Description = "Blazor Boilerplate / Starter Template using the  (ASP.NET Core Hosted) (dotnet new blazorhosted) model. Hosted by an ASP.NET Core server";
                 };
             });
@@ -305,6 +292,7 @@ namespace BlazorApp.Server
             }
 
             app.UseResponseCompression(); // This must be before the other Middleware if that manipulates Response
+            app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
 
             // A REST API global exception handler and response wrapper for a consistent API
             // Configure API Loggin in appsettings.json - Logs most API calls. Great for debugging and user activity audits
@@ -317,14 +305,14 @@ namespace BlazorApp.Server
             }
             else
             {
-              // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-              //    app.UseHsts(); //HSTS Middleware (UseHsts) to send HTTP Strict Transport Security Protocol (HSTS) headers to clients.
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts(); //HSTS Middleware (UseHsts) to send HTTP Strict Transport Security Protocol (HSTS) headers to clients.
             }
 
             //app.UseStaticFiles();
             app.UseClientSideBlazorFiles<Client.Startup>();
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection(); // Redundant with AddHttpsRedirection
             app.UseRouting();
             //app.UseAuthentication(); //Removed for IS4
             app.UseIdentityServer();

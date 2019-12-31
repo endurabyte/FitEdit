@@ -4,31 +4,23 @@
     "anonymousAuthentication": true,
     "iisExpress": {
       "applicationUrl": "http://localhost:53414/",
-      "sslPort": 0
+      "sslPort": 44388
     }
   },
   "profiles": {
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
     "BlazorApp.Server": {
       "commandName": "Project",
-      "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:53416/"
+      "applicationUrl": "http://localhost"
     },
     "Docker": {
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
-      "environmentVariables": {},
-      "httpPort": 53415
+      "publishAllPorts": true,
+      "useSSL": true
     }
   }
 }
