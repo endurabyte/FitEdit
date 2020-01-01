@@ -361,6 +361,9 @@ namespace BlazorApp.Server.Middleware
                 requestBody = $"(Truncated to 200 chars) {requestBody.Substring(0, 200)}";
             }
 
+            if (responseBody == null)
+                responseBody = string.Empty;
+
             // If the response body was an ApiResponse we should just save the Result object
             if (responseBody.Contains("\"result\":"))
             {
@@ -391,7 +394,7 @@ namespace BlazorApp.Server.Middleware
                 Path = path,
                 QueryString = queryString,
                 RequestBody = requestBody,
-                ResponseBody = responseBody ?? String.Empty,
+                ResponseBody = responseBody,
                 IPAddress = ipAddress,
                 ApplicationUserId = user == null ? Guid.Empty : user.Id
             });
