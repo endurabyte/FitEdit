@@ -27,13 +27,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using X509Helper;
 
 namespace BlazorApp.Server
 {
@@ -134,7 +131,11 @@ namespace BlazorApp.Server
 
         private void AddIdentity(IServiceCollection services)
         {
-            services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+            services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+            {
+                options.User.AllowedUserNameCharacters = String.Empty;
+                options.User.RequireUniqueEmail = true;
+            })
                 .AddRoles<IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
