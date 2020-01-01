@@ -9,9 +9,6 @@ services:
       - sqlserver
     environment:
       - ASPNETCORE_ENVIRONMENT=Development #Consider changing this in Production
-      - ASPNETCORE_URLS=https://+;http://+
-      - ASPNETCORE_HTTPS_PORT=44335
-      - Serilog__MinimumLevel__Default=Debug #Consider changing this in Production
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=blazor_app;Trusted_Connection=True;MultipleActiveResultSets=true;User=sa;Password=aZL343Vf!RJj;Integrated Security=false
       - BlazorApp__UseSqlServer=true
     ports:
