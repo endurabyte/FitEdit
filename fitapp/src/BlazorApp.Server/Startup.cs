@@ -178,8 +178,7 @@ namespace BlazorApp.Server
             {
                 options.Authority = authAuthority;
                 options.SupportedTokens = SupportedTokens.Jwt;
-                //options.RequireHttpsMetadata = true;
-                options.RequireHttpsMetadata = _environment.IsProduction() ? true : false;
+                options.RequireHttpsMetadata = true;
                 options.ApiName = IdentityServerConfig.ApiName;
             });
 
