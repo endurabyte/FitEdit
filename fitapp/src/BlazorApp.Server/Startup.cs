@@ -49,12 +49,73 @@ namespace BlazorApp.Server
             _environment = env;
         }
 
-        private async Task<X509Certificate2> AddLetsEncrypt(IServiceCollection services)
+        // This method gets called by the runtime. Use this method to add services to the container.
+        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
+
+            services.AddDbContext<ApplicationDbContext>(builder => BuildDbContextOptions(builder));
+
+            AddLetsEncrypt(services);
+            AddIdentity(services);
+            AddCookies(services);
+
+            services.AddControllers().AddNewtonsoftJson();
+            services.AddSignalR();
+
+            services.AddHttpsRedirection(options =>
+            {
+                options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+                options.HttpsPort = 443;
+            });
+           
+            services.AddSwaggerDocument(config =>
+            {
+                config.PostProcess = document =>
+                {
+                    document.Info.Version = "v0.2.3";
+                    document.Info.Title = "Blazor Boilerplate";
+                    document.Info.Description = "Blazor Boilerplate / Starter Template using the  (ASP.NET Core Hosted) (dotnet new blazorhosted) model. Hosted by an ASP.NET Core server";
+                };
+            });
+
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<IUserSession, UserSession>();
+            services.AddSingleton<IEmailConfiguration>(Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>());
+            services.AddTransient<IAccountService, AccountService>();
+            services.AddTransient<IEmailService, EmailService>();
+            services.AddTransient<IUserProfileService, UserProfileService>();
+            services.AddTransient<IApiLogService, ApiLogService>();
+            services.AddTransient<ITodoService, ToDoService>();
+            services.AddTransient<IMessageService, MessageService>();
+
+            // DB Creation and Seeding
+            services.AddTransient<IDatabaseInitializer, DatabaseInitializer>();
+
+            //Automapper to map DTO to Models https://www.c-sharpcorner.com/UploadFile/1492b1/crud-operations-using-automapper-in-mvc-application/
+            var automapperConfig = new MapperConfiguration(configuration =>
+            {
+                configuration.AddProfile(new MappingProfile());
+            });
+
+            var autoMapper = automapperConfig.CreateMapper();
+
+            services.AddSingleton(autoMapper);
+        }
+
+        private void AddLetsEncrypt(IServiceCollection services)
         {
             services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
             {
                 Email = "doug@sltr.us",
-                UseStaging = true,
+                UseStaging = _environment.IsDevelopment(),
                 Domains = new[] { Configuration["Domain"] },
                 TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30),
                 TimeAfterIssueDateBeforeRenewal = TimeSpan.FromDays(7),
@@ -69,46 +130,10 @@ namespace BlazorApp.Server
             });
             services.AddFluffySpoonLetsEncryptFileCertificatePersistence();
             services.AddFluffySpoonLetsEncryptFileChallengePersistence();
-
-            var serviceProvider = services.BuildServiceProvider();
-            var service = serviceProvider.GetService<ICertificateProvider>();
-            var result = await service.RenewCertificateIfNeeded().ConfigureAwait(false);
-
-            return result.Certificate;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
+        private void AddIdentity(IServiceCollection services)
         {
-            services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
-
-            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
-            var useSqlServer = Convert.ToBoolean(Configuration["BlazorApp:UseSqlServer"] ?? "false");
-            var dbConnString = useSqlServer
-                ? Configuration.GetConnectionString("DefaultConnection")
-                : $"Filename={Configuration.GetConnectionString("SqlLiteConnectionFileName")}";
-
-            var authAuthority = $"https://{Configuration["Domain"]}".TrimEnd('/');
-
-            void DbContextOptionsBuilder(DbContextOptionsBuilder builder)
-            {
-                if (useSqlServer)
-                {
-                    builder.UseSqlServer(dbConnString, sql => sql.MigrationsAssembly(migrationsAssembly));
-                }
-                else if (Convert.ToBoolean(Configuration["BlazorApp:UsePostgresServer"] ?? "false"))
-                {
-                    builder.UseNpgsql(Configuration.GetConnectionString("PostgresConnection"), sql => sql.MigrationsAssembly(migrationsAssembly));
-                }
-                else
-                {
-                    builder.UseSqlite(dbConnString, sql => sql.MigrationsAssembly(migrationsAssembly));
-                }
-            }
-
-            services.AddDbContext<ApplicationDbContext>(DbContextOptionsBuilder);
-
             services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
                 .AddRoles<IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -116,6 +141,8 @@ namespace BlazorApp.Server
 
             services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>,
                 AdditionalUserClaimsPrincipalFactory>();
+
+            var authAuthority = $"https://{Configuration["Domain"]}".TrimEnd('/');
 
             // Adds IdentityServer
             var identityServerBuilder = services.AddIdentityServer(options =>
@@ -128,11 +155,11 @@ namespace BlazorApp.Server
             })
               .AddConfigurationStore(options =>
               {
-                  options.ConfigureDbContext = DbContextOptionsBuilder;
+                  options.ConfigureDbContext = builder => BuildDbContextOptions(builder);
               })
               .AddOperationalStore(options =>
               {
-                  options.ConfigureDbContext = DbContextOptionsBuilder;
+                  options.ConfigureDbContext = builder => BuildDbContextOptions(builder);
 
                   // this enables automatic token cleanup. this is optional.
                   options.EnableTokenCleanup = true;
@@ -140,8 +167,8 @@ namespace BlazorApp.Server
               })
               .AddAspNetIdentity<ApplicationUser>();
 
-            var cert = AddLetsEncrypt(services).Result;
-            identityServerBuilder.AddSigningCredential(cert);
+            //identityServerBuilder.AddSigningCredential(LetsEncryptRenewalService.Certificate);
+
 
             var authBuilder = services.AddAuthentication(options =>
             {
@@ -203,7 +230,10 @@ namespace BlazorApp.Server
                     options.SignIn.RequireConfirmedEmail = true;
                 }
             });
+        }
 
+        private static void AddCookies(IServiceCollection services)
+        {
             services.ConfigureApplicationCookie(options =>
             {
                 options.Cookie.HttpOnly = false;
@@ -227,57 +257,28 @@ namespace BlazorApp.Server
                     }
                 };
             });
+        }
 
-            services.AddControllers().AddNewtonsoftJson();
-            services.AddSignalR();
+        private void BuildDbContextOptions(DbContextOptionsBuilder builder)
+        {
+            var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+            var useSqlServer = Convert.ToBoolean(Configuration["BlazorApp:UseSqlServer"] ?? "false");
+            var dbConnString = useSqlServer
+                ? Configuration.GetConnectionString("DefaultConnection")
+                : $"Filename={Configuration.GetConnectionString("SqlLiteConnectionFileName")}";
 
-            //if (!_environment.IsDevelopment())
+            if (useSqlServer)
             {
-                services.AddHttpsRedirection(options =>
-                {
-                    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
-                    options.HttpsPort = 443;
-                });
+                builder.UseSqlServer(dbConnString, sql => sql.MigrationsAssembly(migrationsAssembly));
             }
-
-            services.AddSwaggerDocument(config =>
+            else if (Convert.ToBoolean(Configuration["BlazorApp:UsePostgresServer"] ?? "false"))
             {
-                config.PostProcess = document =>
-                {
-                    document.Info.Version = "v0.2.3";
-                    document.Info.Title = "Blazor Boilerplate";
-                    document.Info.Description = "Blazor Boilerplate / Starter Template using the  (ASP.NET Core Hosted) (dotnet new blazorhosted) model. Hosted by an ASP.NET Core server";
-                };
-            });
-
-            services.AddResponseCompression(opts =>
+                builder.UseNpgsql(Configuration.GetConnectionString("PostgresConnection"), sql => sql.MigrationsAssembly(migrationsAssembly));
+            }
+            else
             {
-                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-                    new[] { "application/octet-stream" });
-            });
-
-            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddScoped<IUserSession, UserSession>();
-            services.AddSingleton<IEmailConfiguration>(Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>());
-            services.AddTransient<IAccountService, AccountService>();
-            services.AddTransient<IEmailService, EmailService>();
-            services.AddTransient<IUserProfileService, UserProfileService>();
-            services.AddTransient<IApiLogService, ApiLogService>();
-            services.AddTransient<ITodoService, ToDoService>();
-            services.AddTransient<IMessageService, MessageService>();
-
-            // DB Creation and Seeding
-            services.AddTransient<IDatabaseInitializer, DatabaseInitializer>();
-
-            //Automapper to map DTO to Models https://www.c-sharpcorner.com/UploadFile/1492b1/crud-operations-using-automapper-in-mvc-application/
-            var automapperConfig = new MapperConfiguration(configuration =>
-            {
-                configuration.AddProfile(new MappingProfile());
-            });
-
-            var autoMapper = automapperConfig.CreateMapper();
-
-            services.AddSingleton(autoMapper);
+                builder.UseSqlite(dbConnString, sql => sql.MigrationsAssembly(migrationsAssembly));
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -291,8 +292,8 @@ namespace BlazorApp.Server
                 databaseInitializer.SeedAsync().Wait();
             }
 
-            app.UseResponseCompression(); // This must be before the other Middleware if that manipulates Response
             app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+            app.UseResponseCompression(); // This must be before the other Middleware if that manipulates Response
 
             // A REST API global exception handler and response wrapper for a consistent API
             // Configure API Loggin in appsettings.json - Logs most API calls. Great for debugging and user activity audits
