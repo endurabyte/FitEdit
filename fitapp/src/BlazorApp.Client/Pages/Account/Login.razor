@@ -31,6 +31,7 @@
             <hr />
             <div>
                 <MatButton class="float-left" OnClick="@Register" Raised="true">Create account</MatButton>
+                <MatButton class="float-left" OnClick="@Signup" Raised="true">Sign up</MatButton>
                 <MatButton class="float-right" OnClick="@GoogleSignIn" Raised="true">Sign in with <img height="18" style="margin-left: 5px" src="https://www.google.pl/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" /></MatButton><br />
             </div>
         </fieldset>
@@ -87,6 +88,11 @@
         navigationManager.NavigateTo("/account/register");
     }
 
+    async Task Signup()
+    {
+        navigationManager.NavigateTo("/account/signup");
+    }
+    
     async Task SubmitLogin()
     {
         try

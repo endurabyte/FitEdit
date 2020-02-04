@@ -1,11 +1,14 @@
 ﻿using System;
+using BlazorApp.Server.Data;
+using BlazorApp.Server.Logging;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
+using Npgsql.Logging;
 
 namespace BlazorApp.Server
 {
@@ -23,13 +26,22 @@ namespace BlazorApp.Server
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
+            
+            NpgsqlLogManager.Provider = new SerilogNpgsqlLoggingProvider();
 
             try
             {
-                //IdentityServer4 seed should be happening here but because of this bug https://github.com/aspnet/AspNetCore/issues/12349
-                //the seeding is not implemented here.
-
-                BuildWebHost(args, configuration["Domain"]).Run();
+                var domain = configuration["Domain"];
+                var builder = CreateHostBuilder(args);
+                builder.UseUrls(
+                    $"http://{domain}",
+                    $"https://{domain}"
+                );
+                
+                var host = builder.Build();
+                    
+                SeedDb(host);
+                host.Run();
             }
             catch (Exception ex)
             {
@@ -37,7 +49,16 @@ namespace BlazorApp.Server
             }
         }
 
-        public static IWebHost BuildWebHost(string[] args, string domain) =>
+        private static void SeedDb(IWebHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var databaseInitializer = scope.ServiceProvider.GetService<IDatabaseInitializer>();
+                databaseInitializer.SeedAsync().Wait();
+            }
+        }
+
+        public static IWebHostBuilder CreateHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .ConfigureLogging(l => l.AddConsole(x => x.IncludeScopes = true))
                 .UseConfiguration(new ConfigurationBuilder()
@@ -47,14 +68,9 @@ namespace BlazorApp.Server
                 .UseSerilog()
                 .UseKestrel(options =>
                 {
-                    options.ConfigureHttpsDefaults(options => 
-                        options.ServerCertificateSelector = (c, s) => 
+                    options.ConfigureHttpsDefaults(options =>
+                        options.ServerCertificateSelector = (c, s) =>
                             LetsEncryptRenewalService.Certificate);
-                })
-                .UseUrls(
-                    $"http://{domain}", 
-                    $"https://{domain}"
-                )
-                .Build();
+                });
     }
 }

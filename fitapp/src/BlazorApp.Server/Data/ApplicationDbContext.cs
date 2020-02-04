@@ -23,7 +23,9 @@ namespace BlazorApp.Server.Data
         private IUserSession _userSession { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        { }
+        {
+            
+        }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IUserSession userSession) : base(options)
         {
@@ -54,9 +56,6 @@ namespace BlazorApp.Server.Data
             modelBuilder.ApplyConfiguration(new MessageConfiguration());
 
             SetGlobalQueryFilters(modelBuilder);
-            // Customize the ASP.NET Identity model and override the defaults if needed.
-            // For example, you can rename the ASP.NET Identity table names and more.
-            // Add your customizations after calling base.OnModelCreating(builder);
         }
 
         private void SetGlobalQueryFilters(ModelBuilder modelBuilder)
