@@ -11,7 +11,6 @@ using BlazorApp.Shared.AuthorizationDefinitions;
 using Certes;
 using FluffySpoon.AspNet.LetsEncrypt;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
-using FluffySpoon.AspNet.LetsEncrypt.Certificates;
 using IdentityServer4;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -52,7 +51,7 @@ namespace BlazorApp.Server
         {
             services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
-            services.AddDbContext<ApplicationDbContext>(builder => BuildDbContextOptions(builder));
+            services.AddDbContext<ApplicationDbContext>(BuildDbContextOptions);
 
             AddLetsEncrypt(services);
             AddIdentity(services);
@@ -111,7 +110,7 @@ namespace BlazorApp.Server
         {
             services.AddFluffySpoonLetsEncryptRenewalService(new LetsEncryptOptions()
             {
-                Email = "doug@sltr.us",
+                Email = "support@sltr.us",
                 UseStaging = _environment.IsDevelopment(),
                 Domains = new[] { Configuration["Domain"] },
                 TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30),
@@ -120,8 +119,8 @@ namespace BlazorApp.Server
                 {
                     CountryName = "USA",
                     Locality = "US",
-                    Organization = "SLTR.US",
-                    OrganizationUnit = "R&D",
+                    Organization = "SLTR",
+                    OrganizationUnit = "Support",
                     State = "TN"
                 }
             });
@@ -271,9 +270,9 @@ namespace BlazorApp.Server
             {
                 builder.UseSqlServer(dbConnString, sql => sql.MigrationsAssembly(migrationsAssembly));
             }
-            else if (Convert.ToBoolean(Configuration["BlazorApp:UsePostgresServer"] ?? "false"))
+            else if (Convert.ToBoolean(Configuration["BlazorApp:UsePostgresServer"] ?? "true"))
             {
-                builder.UseNpgsql(Configuration.GetConnectionString("PostgresConnection"), sql => sql.MigrationsAssembly(migrationsAssembly));
+                builder.UseNpgsql(Configuration.GetConnectionString("PostgresConnection"), options => options.MigrationsAssembly(migrationsAssembly));
             }
             else
             {
@@ -285,13 +284,7 @@ namespace BlazorApp.Server
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             EmailTemplates.Initialize(env);
-
-            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
-            {
-                var databaseInitializer = serviceScope.ServiceProvider.GetService<IDatabaseInitializer>();
-                databaseInitializer.SeedAsync().Wait();
-            }
-
+            
             app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
             app.UseResponseCompression(); // This must be before the other Middleware if that manipulates Response
 

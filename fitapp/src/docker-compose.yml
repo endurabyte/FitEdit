@@ -6,11 +6,12 @@ services:
       context: ./
       dockerfile: ./Dockerfile
     depends_on:
-      - sqlserver
+      - postgres
     environment:
       - ASPNETCORE_ENVIRONMENT=Development #Consider changing this in Production
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=blazor_app;Trusted_Connection=True;MultipleActiveResultSets=true;User=sa;Password=aZL343Vf!RJj;Integrated Security=false
-      - BlazorApp__UseSqlServer=true
+      - ConnectionStrings__PostgresConnection=host=postgres; database=blazor_app;user id=postgres; password=aZL343Vf!RJj
+      - BlazorApp__UseSqlServer=false
+      - BlazorApp__UsePostgresServer=true
     ports:
         # Replace the values on the left by the values from launchSettings.json
       - "80:80"
@@ -19,19 +20,20 @@ services:
       - bb
     restart: on-failure
 
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server
-    user: root
+  postgres: 
+    image: postgres
+    restart: always
     volumes:
-      - dbdata:/var/opt/mssql
+      - dbdata:/var/opt/postgres
     environment:
-      - SA_PASSWORD=aZL343Vf!RJj
-      - ACCEPT_EULA=Y
+      - POSTGRES_PASSWORD=aZL343Vf!RJj
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=blazor_app
     ports:
-      - 1533:1433 #expose port, so can connect to it using host: 'localhost,1533'
+      - "5433:5433"
     networks:
       - bb
-
+      
 volumes:
   dbdata:
 
