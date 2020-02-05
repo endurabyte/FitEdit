@@ -1,14 +1,14 @@
 version: '3.5'
 
 services:
-  blazorapp:
+  fitapp:
     build:
       context: ./
       dockerfile: ./Dockerfile
     depends_on:
       - postgres
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development #Consider changing this in Production
+      - ASPNETCORE_ENVIRONMENT=Production #Consider changing this in Production
       - ConnectionStrings__PostgresConnection=host=postgres; database=blazor_app;user id=postgres; password=aZL343Vf!RJj
       - BlazorApp__UseSqlServer=false
       - BlazorApp__UsePostgresServer=true
