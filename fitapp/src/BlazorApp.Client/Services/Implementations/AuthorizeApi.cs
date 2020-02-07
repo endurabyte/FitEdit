@@ -56,13 +56,23 @@ namespace BlazorApp.Client.Services.Implementations
         public async Task<UserInfoDto> GetUserInfo()
         {
             UserInfoDto userInfo = new UserInfoDto { IsAuthenticated = false, Roles = new List<string>() };
-            ApiResponseDto apiResponse = await _httpClient.GetJsonAsync<ApiResponseDto>("api/Account/UserInfo");
             
-            if (apiResponse.StatusCode == 200)
+            try
             {
-                userInfo = JsonConvert.DeserializeObject<UserInfoDto>(apiResponse.Result.ToString());
-                return userInfo;
+                ApiResponseDto apiResponse = await _httpClient.GetJsonAsync<ApiResponseDto>("api/Account/UserInfo");
+
+                if (apiResponse.StatusCode == 200)
+                {
+                    userInfo = JsonConvert.DeserializeObject<UserInfoDto>(apiResponse.Result.ToString());
+                    return userInfo;
+                }
             }
+            // Thrown if service is not running, causing app to always display "Authorizing..."
+            catch (System.Text.Json.JsonException e) 
+            {
+                Console.WriteLine(e);
+            }
+
             return userInfo;
         }
 

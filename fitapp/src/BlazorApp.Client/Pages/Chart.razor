@@ -1,50 +1,220 @@
 @page "/chart"
 
-@using ChartJs.Blazor.Charts
-@using ChartJs.Blazor.ChartJS.PieChart
-@using ChartJs.Blazor.ChartJS.Common.Properties
-@using ChartJs.Blazor.Util
+@using System.IO
 
-<ChartJsPieChart @ref="_pieChartJs" Config="@_config" Width="600" Height="300"/>
+@using BlazorApp.Shared.Dto.Fitness;
+
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.Common
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.ChartJS.Common.Enums
+@using ChartJs.Blazor.ChartJS.LineChart
+@using ChartJs.Blazor.ChartJS.Common.Axes
+@using ChartJs.Blazor.ChartJS.Common.Handlers
+@using ChartJs.Blazor.ChartJS.Common.Handlers.OnClickHandler
+@using ChartJs.Blazor.ChartJS.Common.Handlers.OnHover
+@using ChartJs.Blazor.Util
+@using Newtonsoft.Json
+
+<ChartJsLineChart @ref="_chart" Config="@_lineConfig" Width="600" Height="300" />
+<br />
+
+<div class="drag-drop-zone">
+    <InputFile multiple OnChange="HandleFilesSelectedAsync" />
+    Drop files here or click to browse...
+</div>
+
+@if (_files != null && _files.Count() == 1)
+{
+<div>
+    @_files.Count() activity has been loaded
+</div>
+}
+
+@if (_files != null && _files.Count() != 1)
+{
+<div>
+    @_files.Count() activities have been loaded
+</div>
+}
 
 @code {
-    private PieConfig _config;
-    private ChartJsPieChart _pieChartJs;
+    private List<IFileListEntry> _files = new List<IFileListEntry>();
 
-    protected override void OnInitialized()
+    private LineConfig _lineConfig;
+    private ChartJsLineChart _chart;
+
+    private readonly Random _rnd = new Random();
+
+    protected override async Task OnInitializedAsync()
     {
-        _config = new PieConfig
+        _lineConfig = GetLineConfig("Activity",
+            "Speed (m/s)",
+            "Cadence (steps/min)",
+            "HR (bpm)");
+    }
+
+    [JSInvokable]
+    public void HandleClick(object sender, object args)
+    {
+    }
+
+    [JSInvokable]
+    public void HandleLegendClicked(object sender, object args)
+    {
+    }
+
+    [JSInvokable]
+    public void HandleLegendHovered(object sender, object args)
+    {
+    }
+
+    private async Task HandleFilesSelectedAsync(IFileListEntry[] files)
+    {
+        foreach (var file in files)
         {
-            Options = new PieOptions
+            await ChartActivityAsync(file);
+        }
+    }
+
+    private async Task ChartActivityAsync(IFileListEntry file)
+    {
+        await Task.Run(async () =>
+        {
+            var activity = await GetActivityAsync(file);
+            var colors = GetColors(100 * _files.Count());
+            _files.Add(file);
+
+            var speedSet = GetDataset("Speed", "Speed (m/s)", colors[2]);
+            var cadenceSet = GetDataset("Cadence", "Cadence (steps/min)", colors[1]);
+            var hrSet = GetDataset("HR", "HR (bpm)", colors[0]);
+
+            DateTime firstTime = default;
+
+            int i = 0;
+            foreach (var lap in activity.Laps)
             {
+                foreach (var tp in lap.Track.Trackpoints)
+                {
+                    if (i++ % 10 != 0)
+                        continue;
+
+                    if (firstTime == default)
+                        firstTime = tp.Time;
+
+                    double seconds = (tp.Time - firstTime).TotalSeconds;
+
+                    speedSet.Add(new Point(seconds, tp.Extensions.Speed));
+                    // Show both feet e.g. 180 instead of 90
+                    cadenceSet.Add(new Point(seconds, tp.Extensions.RunCadence * 2));
+                    hrSet.Add(new Point(seconds, tp.HeartRateBpm));
+                }
+            }
+
+            _lineConfig.Data.Datasets.Add(speedSet);
+            _lineConfig.Data.Datasets.Add(cadenceSet);
+            _lineConfig.Data.Datasets.Add(hrSet);
+
+            await _chart.Update();
+        });
+    }
+
+    public async Task<Activity> GetActivityAsync(IFileListEntry file)
+    {
+        using (var reader = new StreamReader(file.Data))
+        {
+            string content = await reader.ReadToEndAsync();
+            return await Task.Run(() => Tcx.Parse(content).Activities.FirstOrDefault());
+        }
+    }
+
+    private LineConfig GetLineConfig(string title, params string[] yAxisLabels)
+    {
+        return new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Animation = new Animation() { Duration = 0 },
+                Responsive = true,
                 Title = new OptionsTitle
                 {
                     Display = true,
-                    Text = "Sample chart from Blazor"
+                    Text = title
                 },
-                Responsive = true,
-                Animation = new ArcAnimation
+                Legend = new Legend
                 {
-                    AnimateRotate = true,
-                    AnimateScale = true
-                }
+                    Position = Position.Right,
+                    Labels = new LegendLabelConfiguration
+                    {
+                        UsePointStyle = true
+                    },
+                    OnClick = new DotNetInstanceClickHandler(HandleLegendClicked),
+                    OnHover = new DotNetInstanceHoverHandler(HandleLegendHovered)
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = false
+                },
+                Scales = new Scales
+                {
+                    xAxes = new List<CartesianAxis>
+        {
+                        new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Time (s)"
+                            },
+                            GridLines = new GridLines
+                            {
+                                Display = false
+                            }
+                        }
+                    },
+                    yAxes = new List<CartesianAxis>(yAxisLabels.Select(label
+                        => new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel { LabelString = label },
+                            ID = label
+                        }))
+                },
+                Hover = new LineOptionsHover
+                {
+                    Intersect = true,
+                    Mode = InteractionMode.Y,
+                    AnimationDuration = 0
+                },
+                OnClick = new DotNetInstanceClickHandler(HandleClick)
             }
         };
-
-        _config.Data.Labels.AddRange(new[] {"A", "B", "C", "D"});
-
-        var pieSet = new PieDataset
-        {
-            BackgroundColor = new[] { ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString(), ColorUtil.RandomColorString() },
-            BorderWidth = 0,
-            HoverBackgroundColor = ColorUtil.RandomColorString(),
-            HoverBorderColor = ColorUtil.RandomColorString(),
-            HoverBorderWidth = 1,
-            BorderColor = "#ffffff",
-        };
-
-        pieSet.Data.AddRange(new double[] {4, 5, 6, 7});
-        _config.Data.Datasets.Add(pieSet);
     }
 
+    private static List<string> GetColors(int fade)
+    {
+        var b = (byte)(255 - fade);
+        return new List<string>
+{
+            ColorUtil.ColorString(b, 0, 0, 1.0),
+            ColorUtil.ColorString(0, b, 0, 1.0),
+            ColorUtil.ColorString(0, 0, b, 1.0),
+        };
+    }
+
+    private LineDataset<Point> GetDataset(string label, string yAxisId, string color)
+    {
+        return new LineDataset<Point>
+        {
+            BackgroundColor = color,
+            BorderColor = color,
+            Label = label,
+            Fill = false,
+            PointBackgroundColor = color,
+            BorderWidth = 1,
+            PointRadius = 0,
+            PointBorderWidth = 0,
+            SteppedLine = SteppedLine.False,
+            YAxisID = yAxisId
+        };
+    }
 }

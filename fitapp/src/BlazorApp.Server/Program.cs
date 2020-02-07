@@ -65,6 +65,7 @@ namespace BlazorApp.Server
                     .AddCommandLine(args)
                     .Build())
                 .UseStartup<Startup>()
+                .UseStaticWebAssets()
                 .UseSerilog()
                 .UseKestrel(options =>
                 {

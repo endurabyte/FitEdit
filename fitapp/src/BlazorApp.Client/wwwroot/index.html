@@ -3,13 +3,13 @@
 <head>
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <meta charset="utf-8" />
-    <title>Blazor Boilerplate & Starter Kit</title>
+    <title>FitApp - Fitness Data Editor</title>
     <meta name="viewport" content="width=device-width">
     <base href="/" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <meta name="author" content="Enkodellc / Keith Fimreite">
-    <meta name="description" content="Blazor Boilerplate & Starter Kit - A real world Example ">
+    <meta name="author" content="SLTR / Doug Slater">
+    <meta name="description" content="A running fitness data editor for Garmin FIT and TCX files ">
     <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -31,13 +31,10 @@
 </head>
 <body>
     <app>
-        <div class="triangle-container">
-            <div class="triangles">
-            </div>
-        </div>
         <div class="loading-container">
-            <img src="images/blazorboilerplate.svg" alt="Loading" title="Loading Blazor Boilerplate" /><br />
-            Loading Blazor Boilerplate...
+            <div class="loading-animation">
+                Loading...
+            </div>
         </div>
     </app>
     <script src="_framework/blazor.webassembly.js"></script>
@@ -46,7 +43,7 @@
     <script src="javascript/signalr.min.js"></script>
     <script src="javascript/chatClient.js"></script>
 
-    <!-- load charts -->
+    <!-- load ChartJs.Blazor -->
     <!-- Reference the included moment.js javascript file. -->
     <script src="_content/ChartJs.Blazor/moment-with-locales.min.js" type="text/javascript" language="javascript"></script>
 
@@ -58,5 +55,8 @@
 
     <!-- Some styling -->
     <link rel="stylesheet" href="_content/ChartJs.Blazor/ChartJSBlazor.css" />
+
+    <!--Load BlazorInputFile-->
+    <script src="_content/BlazorInputFile/inputfile.js"></script>
 </body>
 </html>

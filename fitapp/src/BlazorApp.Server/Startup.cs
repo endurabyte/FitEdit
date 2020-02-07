@@ -303,7 +303,7 @@ namespace BlazorApp.Server
                 app.UseHsts(); //HSTS Middleware (UseHsts) to send HTTP Strict Transport Security Protocol (HSTS) headers to clients.
             }
 
-            //app.UseStaticFiles();
+            app.UseStaticFiles();
             app.UseClientSideBlazorFiles<Client.Startup>();
 
             //app.UseHttpsRedirection(); // Redundant with AddHttpsRedirection

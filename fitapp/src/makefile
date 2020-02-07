@@ -6,7 +6,7 @@ build:
 	docker-compose build --pull ${args} ${IMAGE_NAME}
 
 run:
-	docker-compose up --no-build --detach ${IMAGE_NAME}
+	docker-compose up --no-build --remove-orphans --detach ${IMAGE_NAME}
 
 logs:
 	docker-compose logs -f ${IMAGE_NAME}
