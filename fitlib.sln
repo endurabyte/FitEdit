@@ -22,6 +22,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4593F5C-CF5E-49C2-B3A7-ED68C4AB59C3}"
 	ProjectSection(SolutionItems) = preProject
 		fitapp\src\Dockerfile = fitapp\src\Dockerfile
+		fitapp\src\makefile = fitapp\src\makefile
 	EndProjectSection
 EndProject
 Global

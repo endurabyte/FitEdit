@@ -42,35 +42,22 @@ app {
 }
 
 /* Loading page */
-.triangle-container {
+.loading-container {
     left: calc(-50vw + 50%);
     position: fixed;
     right: calc(-50vw + 50%);
     top: 0;
     bottom: 0;
     z-index: -1;
-    background-color: #5D2E8F;
 }
 
-.triangles {
-    background-image: url("../images/triangles.svg");
+.loading-animation {
+    background-image: url("../images/ring.svg");
     background-size: cover;
     height: 100%;
-    bottom: 0;
-    left: 0;
-    mix-blend-mode: hard-light;
-    position: fixed;
-    right: 0;
-    top: 0;
+    margin: auto;
     background-position: center center;
-}
-
-.loading-container {
-    position: relative;
     text-align: center;
-    background-color: #fff;
-    margin: 10% auto 0 auto;
-    padding: 20px;
 }
 
 /* Login page */
@@ -711,4 +698,32 @@ ul.breadcrumb {
 
 .mat-toast-close-button .material-icons {
     color: white;
+}
+
+/* BlazorInputFile */
+.drag-drop-zone {
+    border: 3px dashed #e68710;
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eee;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+    color: #aeaeae;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin: 1.5rem 0 2rem 0;
+    position: relative;
+}
+
+.drag-drop-zone:hover {
+    background-color: #f5f5f5;
+}
+
+.drag-drop-zone input[type=file] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
 }
