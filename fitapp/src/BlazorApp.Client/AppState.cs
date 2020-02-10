@@ -1,7 +1,5 @@
 ﻿using BlazorApp.Client.Services.Contracts;
-using BlazorApp.Client.States;
 using BlazorApp.Shared.Dto;
-using Microsoft.AspNetCore.Components.Authorization;
 using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
@@ -19,23 +17,6 @@ namespace BlazorApp.Client
         {
             _userProfileApi = userProfileApi;
         }
-
-        public bool IsNavOpen
-        {
-            get
-            {
-                if (UserProfile == null)
-                {
-                    return true;
-                }
-                return UserProfile.IsNavOpen;
-            }
-            set
-            {
-                UserProfile.IsNavOpen = value;
-            }
-        }
-        public bool IsNavMinified { get; set; }
 
         public async Task UpdateUserProfile()
         {
