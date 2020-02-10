@@ -1,4 +1,5 @@
 @page "/chart"
+@inject HttpClient client
 
 @using System.IO
 
@@ -14,7 +15,6 @@
 @using ChartJs.Blazor.ChartJS.Common.Handlers.OnClickHandler
 @using ChartJs.Blazor.ChartJS.Common.Handlers.OnHover
 @using ChartJs.Blazor.Util
-@using Newtonsoft.Json
 
 <ChartJsLineChart @ref="_chart" Config="@_lineConfig" Width="600" Height="300" />
 <br />
@@ -73,17 +73,38 @@
     {
         foreach (var file in files)
         {
-            await ChartActivityAsync(file);
+
+            using (var reader = new StreamReader(file.Data))
+            {
+                string content = await reader.ReadToEndAsync();
+                await AddChartAsync(content);
+                await UploadFile(content, file.Name);
+            }
+
+            _files.Add(file);
         }
     }
 
-    private async Task ChartActivityAsync(IFileListEntry file)
+    private async Task UploadFile(string stringContent, string fileName)
+    {
+            var content = new MultipartFormDataContent
+            {
+                { 
+                    new StringContent(stringContent, System.Text.Encoding.UTF8), 
+                    "\"upload\"", 
+                    fileName 
+                }
+            };
+
+            await client.PostAsync("api/upload", content);
+    }
+
+    private async Task AddChartAsync(string content)
     {
         await Task.Run(async () =>
         {
-            var activity = await GetActivityAsync(file);
-            var colors = GetColors(100 * _files.Count());
-            _files.Add(file);
+            var activity = await GetActivityAsync(content);
+            var colors = GetColors(0);
 
             var speedSet = GetDataset("Speed", "Speed (m/s)", colors[2]);
             var cadenceSet = GetDataset("Cadence", "Cadence (steps/min)", colors[1]);
@@ -119,13 +140,9 @@
         });
     }
 
-    public async Task<Activity> GetActivityAsync(IFileListEntry file)
+    public async Task<Activity> GetActivityAsync(string content)
     {
-        using (var reader = new StreamReader(file.Data))
-        {
-            string content = await reader.ReadToEndAsync();
-            return await Task.Run(() => Tcx.Parse(content).Activities.FirstOrDefault());
-        }
+        return await Task.Run(() => Tcx.Parse(content).Activities.FirstOrDefault());
     }
 
     private LineConfig GetLineConfig(string title, params string[] yAxisLabels)
@@ -136,6 +153,7 @@
             {
                 Animation = new Animation() { Duration = 0 },
                 Responsive = true,
+                ResponsiveAnimationDuration = 0,
                 Title = new OptionsTitle
                 {
                     Display = true,
@@ -159,7 +177,7 @@
                 Scales = new Scales
                 {
                     xAxes = new List<CartesianAxis>
-        {
+                    {
                         new LinearCartesianAxis
                         {
                             ScaleLabel = new ScaleLabel
