@@ -2,13 +2,14 @@ version: '3.5'
 
 services:
   fitapp:
+    image: 127.0.0.1:5000/fitapp
     build:
       context: ./
       dockerfile: ./Dockerfile
     depends_on:
       - postgres
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development #Consider changing this in Production
+      - ASPNETCORE_ENVIRONMENT=Production #Consider changing this in Production
       - ConnectionStrings__PostgresConnection=host=postgres; database=blazor_app;user id=postgres; password=aZL343Vf!RJj
       - BlazorApp__UseSqlServer=false
       - BlazorApp__UsePostgresServer=true
@@ -17,7 +18,7 @@ services:
       - "80:80"
       - "443:443"
     networks:
-      - bbl
+      - bb
     restart: on-failure
 
   postgres: 
@@ -30,6 +31,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=blazor_app
     ports:
+      - "5432:5432"
       - "5433:5433"
     networks:
       - bb
