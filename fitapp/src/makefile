@@ -5,8 +5,20 @@ IMAGE_NAME ?= fitapp
 build:
 	docker-compose build --pull ${args} ${IMAGE_NAME}
 
-run:
+up:
 	docker-compose up --no-build --remove-orphans --detach ${IMAGE_NAME}
+
+down:
+	docker-compose down
+
+push:
+	docker-compose push
+
+deploy:
+	docker stack deploy --compose-file ${COMPOSE_FILE} fitapp
+
+servicelogs:
+	docker service logs fitapp_fitapp --no-trunc -f
 
 logs:
 	docker-compose logs -f ${IMAGE_NAME}
@@ -25,3 +37,7 @@ down:
 
 status:
 	docker-compose ps
+
+clean:
+	docker stack rm fitapp
+	docker stack rm registry
