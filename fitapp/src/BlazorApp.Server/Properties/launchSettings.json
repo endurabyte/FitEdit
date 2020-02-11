@@ -11,6 +11,8 @@
     "BlazorApp.Server": {
       "commandName": "Project",
       "environmentVariables": {
+        "AWS_SECRET_ACCESS_KEY": "c7ReuxGLurOZ6Em28UoN6vs3URTeg5UvJYvRFQDg",
+        "AWS_ACCESS_KEY_ID": "AKIAIXGOTDKOKLWWLZ2A",
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "http://localhost"

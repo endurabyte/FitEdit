@@ -13,6 +13,8 @@ services:
       - ConnectionStrings__PostgresConnection=host=postgres; database=blazor_app;user id=postgres; password=aZL343Vf!RJj
       - BlazorApp__UseSqlServer=false
       - BlazorApp__UsePostgresServer=true
+      - AWS_ACCESS_KEY_ID=AKIAIXGOTDKOKLWWLZ2A
+      - AWS_SECRET_ACCESS_KEY=c7ReuxGLurOZ6Em28UoN6vs3URTeg5UvJYvRFQDg
     ports:
         # Replace the values on the left by the values from launchSettings.json
       - "80:80"

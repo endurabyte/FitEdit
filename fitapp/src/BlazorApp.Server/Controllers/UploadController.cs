@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using BlazorApp.Shared.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -14,24 +15,37 @@ namespace BlazorApp.Server.Controllers
     public class UploadController : ControllerBase
     {
         private readonly IWebHostEnvironment environment;
-        public UploadController(IWebHostEnvironment environment)
+        private readonly IMultiSinkFileRepository _repo;
+
+        public UploadController(IWebHostEnvironment environment, IMultiSinkFileRepository repo)
         {
-            Directory.CreateDirectory(Path.Combine(environment.ContentRootPath, "uploads"));
+            if (environment == null) throw new ArgumentNullException(nameof(environment));
             this.environment = environment;
+
+            if (repo == null) throw new ArgumentNullException(nameof(repo));
+            _repo = repo;
         }
 
         [HttpPost]
-        public async Task Post()
+        public IActionResult Post()
         {
             if (!HttpContext.Request.Form.Files.Any())
-                return;
+                return BadRequest("No files provided");
 
-            foreach (var file in HttpContext.Request.Form.Files)
+            Task.Run(() => SaveFiles(HttpContext.Request.Form.Files));
+
+            return Ok();
+        }
+
+        private async void SaveFiles(IFormFileCollection files)
+        {
+            var location = $"activities/{HttpContext.User.Identity.Name}"; 
+
+            foreach (var file in files)
             {
-                var path = Path.Combine(environment.ContentRootPath, "uploads", file.FileName);
-
-                using var stream = new FileStream(path, FileMode.Create);
-                await file.CopyToAsync(stream).ConfigureAwait(false);
+                await _repo
+                    .SaveAsync(file.OpenReadStream(), location, file.FileName)
+                    .ConfigureAwait(false);
             }
         }
     }

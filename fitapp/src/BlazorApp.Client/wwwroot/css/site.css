@@ -52,8 +52,9 @@ app {
 }
 
 .loading-animation {
-    background-image: url("../images/ring.svg");
-    background-size: cover;
+    background-image: url("../images/loading-bars.svg");
+    background-size: 30%;
+    background-repeat: no-repeat;
     height: 100%;
     margin: auto;
     background-position: center center;

@@ -93,7 +93,7 @@ namespace BlazorApp.Server.Data
                     ApplicationUser = user,
                     Count = 2,
                     IsNavOpen = true,
-                    LastPageVisited = "/dashboard",
+                    LastPageVisited = "/chart",
                     IsNavMinified = false,
                     LastUpdatedDate = DateTime.Now
                 };

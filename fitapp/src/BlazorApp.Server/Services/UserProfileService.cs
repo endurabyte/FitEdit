@@ -28,7 +28,7 @@ namespace BlazorApp.Server.Services
 
         public string GetLastPageVisited(string userName)
         {
-            string lastPageVisited = "/dashboard";
+            string lastPageVisited = "/chart";
             var userProfile = from userProf in _db.UserProfiles
                               join user in _db.Users on userProf.UserId equals user.Id
                               where user.UserName == userName
