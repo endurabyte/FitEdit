@@ -8,11 +8,13 @@ using BlazorApp.Server.Middleware;
 using BlazorApp.Server.Models;
 using BlazorApp.Server.Services;
 using BlazorApp.Shared.AuthorizationDefinitions;
+using BlazorApp.Shared.Repositories;
 using Certes;
 using FluffySpoon.AspNet.LetsEncrypt;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using IdentityServer4;
 using IdentityServer4.AccessTokenValidation;
+using Lamar;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -26,6 +28,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -38,6 +41,7 @@ namespace BlazorApp.Server
         public IConfiguration Configuration { get; }
 
         private readonly IWebHostEnvironment _environment;
+        private IContainer _container;
 
         public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
@@ -48,6 +52,10 @@ namespace BlazorApp.Server
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
+        {
+        }
+
+        public void ConfigureContainer(ServiceRegistry services)
         {
             services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
 
@@ -104,6 +112,16 @@ namespace BlazorApp.Server
             var autoMapper = automapperConfig.CreateMapper();
 
             services.AddSingleton(autoMapper);
+
+            services.Scan(s =>
+            {
+                s.TheCallingAssembly();
+                s.WithDefaultConventions();
+            });
+
+            services.For<IMultiSinkFileRepository>().Use<MultiSinkFileRepository>()
+                .Ctor<IFileRepository>("localRepo").Is<LocalFileRepository>()
+                .Ctor<IFileRepository>("s3Repo").Is<S3FileRepository>();
         }
 
         private void AddLetsEncrypt(IServiceCollection services)

@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using Npgsql.Logging;
+using Lamar.Microsoft.DependencyInjection;
 
 namespace BlazorApp.Server
 {
@@ -64,6 +65,7 @@ namespace BlazorApp.Server
                 .UseConfiguration(new ConfigurationBuilder()
                     .AddCommandLine(args)
                     .Build())
+                .UseLamar()
                 .UseStartup<Startup>()
                 .UseStaticWebAssets()
                 .UseSerilog()
