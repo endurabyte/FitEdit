@@ -53,7 +53,7 @@ namespace BlazorApp.Server
 
             services.AddDbContext<ApplicationDbContext>(BuildDbContextOptions);
 
-            AddLetsEncrypt(services);
+            //AddLetsEncrypt(services);
             AddIdentity(services);
             AddCookies(services);
 
@@ -285,7 +285,7 @@ namespace BlazorApp.Server
         {
             EmailTemplates.Initialize(env);
             
-            app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+            //app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
             app.UseResponseCompression(); // This must be before the other Middleware if that manipulates Response
 
             // A REST API global exception handler and response wrapper for a consistent API
