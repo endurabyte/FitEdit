@@ -19,11 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.IO;
 using System.Linq;
-using Dauer.Data.Utility;
 
 namespace Dauer.Data.Fit
 {

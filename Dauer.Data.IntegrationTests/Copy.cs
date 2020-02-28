@@ -2,7 +2,7 @@ using Dauer.Data.Fit;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace Dauer.IntegrationTests
+namespace Dauer.Data.IntegrationTests
 {
     public class Copy
     {
@@ -17,9 +17,9 @@ namespace Dauer.IntegrationTests
         {
             var dest = "output.fit";
 
-            var fitFile = new FitDecoder().Decode(_source);
-            new FitEncoder().Encode(fitFile, dest);
-            var fitFile2 = new FitDecoder().Decode(dest);
+            var fitFile = new Reader().Read(_source);
+            new Writer().Write(fitFile, dest);
+            var fitFile2 = new Reader().Read(dest);
 
             var json = JsonConvert.SerializeObject(fitFile, Formatting.Indented);
             var json2 = JsonConvert.SerializeObject(fitFile2, Formatting.Indented);

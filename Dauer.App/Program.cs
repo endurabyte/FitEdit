@@ -26,25 +26,25 @@ namespace Dauer.App
 
         static void DumpToJson(string source)
         {
-            var fitFile = new FitDecoder().Decode(source);
+            var fitFile = new Reader().Read(source);
                 
             Console.WriteLine(JsonConvert.SerializeObject(fitFile, Formatting.Indented));
         }
         
         static void Copy(string sourceFile, string destFile)
         {
-            var fitFile = new FitDecoder().Decode(sourceFile);
-            new FitEncoder().Encode(fitFile, destFile);
+            var fitFile = new Reader().Read(sourceFile);
+            new Writer().Write(fitFile, destFile);
         }
         
         static void ApplyLaps(string sourceFile, string destFile)
         {
-            var fitFile = new FitDecoder().Decode(sourceFile);
+            var fitFile = new Reader().Read(sourceFile);
             
             var laps = fitFile.Messages.Where(message => message.Num == MesgNum.Lap);
             var records = fitFile.Messages.Where(message => message.Num == MesgNum.Record);
 
-            new FitEncoder().Encode(fitFile, destFile);
+            new Writer().Write(fitFile, destFile);
         }
     }
 }

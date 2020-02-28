@@ -1,19 +1,18 @@
 ﻿using Dauer.Data.Fit;
 using NUnit.Framework;
 
-namespace Dauer.UnitTests
+namespace Dauer.Data.UnitTests.Fit.Writer
 {
     [TestFixture]
-    public class EncodeMethod
+    public class WriteMethod
     {
-
         [Test]
         public void WritesFile()
         {
             var dest = "output.fit";
 
             var fitFile = new FitFile();
-            new FitEncoder().Encode(fitFile, dest);
+            new Data.Fit.Writer().Write(fitFile, dest);
             FileAssert.Exists(dest);
         }
     }

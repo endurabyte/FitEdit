@@ -21,13 +21,13 @@ using System;
 using System.Text;
 using System.IO;
 
-namespace Dauer.Data.Utility
+namespace Dauer.Data.Fit
 {
     /// <summary>
-    /// Extend framework BinaryWriter to support BigEndian destinations.
-    /// When writing multibyte values, the bytes are reordered appropriately.
+    /// Extend framework BinaryReader to support BigEndian datasources.
+    /// When reading multibyte values, the bytes are reordered appropriately.
     /// </summary>
-    public class EndianBinaryWriter : BinaryWriter
+    public class EndianBinaryReader : BinaryReader
     {
         #region Fields
         private bool isBigEndian = false;
@@ -42,113 +42,121 @@ namespace Dauer.Data.Utility
         #endregion
 
         #region Constructors
-        public EndianBinaryWriter(Stream output, Encoding encoding, bool isBigEndian)
-            : base(output, encoding)
+        public EndianBinaryReader(Stream input, Encoding encoding, bool isBigEndian)
+            : base(input, encoding)
         {
             this.isBigEndian = isBigEndian;
         }
 
-        public EndianBinaryWriter(Stream output, bool isBigEndian)
-            : this(output, Encoding.UTF8, isBigEndian)
+        public EndianBinaryReader(Stream input, bool isBigEndian)
+            : this(input, Encoding.UTF8, isBigEndian)
         {
         }
         #endregion
 
         #region Methods
-        public override void Write(short value)
+        public override short ReadInt16()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadInt16();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[2];
+            Read(buffer, 0, 2);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 2);
+
+            return BitConverter.ToInt16(buffer, 0);
         }
 
-        public override void Write(ushort value)
+        public override ushort ReadUInt16()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadUInt16();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[2];
+            Read(buffer, 0, 2);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 2);
+
+            return BitConverter.ToUInt16(buffer, 0);
         }
 
-        public override void Write(int value)
+        public override int ReadInt32()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadInt32();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[4];
+            Read(buffer, 0, 4);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 4);
+
+            return BitConverter.ToInt32(buffer, 0);
         }
 
-        public override void Write(uint value)
+        public override uint ReadUInt32()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadUInt32();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[4];
+            Read(buffer, 0, 4);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 4);
+
+            return BitConverter.ToUInt32(buffer, 0);
         }
 
-        public override void Write(long value)
+        public override long ReadInt64()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadInt64();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[8];
+            Read(buffer, 0, 8);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 8);
+
+            return BitConverter.ToInt64(buffer, 0);
         }
 
-        public override void Write(ulong value)
+        public override ulong ReadUInt64()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadUInt64();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[8];
+            Read(buffer, 0, 8);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 8);
+
+            return BitConverter.ToUInt64(buffer, 0);
         }
 
-        public override void Write(float value)
+        public override float ReadSingle()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadSingle();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[4];
+            Read(buffer, 0, 4);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 4);
+
+            return BitConverter.ToSingle(buffer, 0);
         }
 
-        public override void Write(double value)
+        public override double ReadDouble()
         {
             if (!IsBigEndian)
             {
-                base.Write(value);
-                return;
+                return base.ReadDouble();
             }
-            byte[] buffer = BitConverter.GetBytes(value);
+            byte[] buffer = new byte[8];
+            Read(buffer, 0, 8);
             Array.Reverse(buffer);
-            base.Write(buffer, 0, 8);
+
+            return BitConverter.ToDouble(buffer, 0);
         }
         #endregion
     }
