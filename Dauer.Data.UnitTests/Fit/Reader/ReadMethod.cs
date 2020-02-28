@@ -1,11 +1,10 @@
-using Dauer.Data.Fit;
 using Newtonsoft.Json;
 using NUnit.Framework;
 
-namespace Dauer.UnitTests
+namespace Dauer.Data.UnitTests.Fit.Reader
 {
     [TestFixture]
-    public class DecodeMethod
+    public class ReadMethod
     {
         const string _source = @"..\..\..\..\data\devices\forerunner-945\sports\running\treadmill\2019-12-17\"
            + @"steep-1mi-easy-2x[2mi 2min rest]\garmin-connect\activity.fit";
@@ -13,14 +12,14 @@ namespace Dauer.UnitTests
         [Test]
         public void ReadsFile()
         {
-            var fitFile = new FitDecoder().Decode(_source);
+            var fitFile = new Data.Fit.Reader().Read(_source);
             Assert.NotNull(fitFile);
         }
 
         [Test]
         public void DumpsToJson()
         {
-            var fitFile = new FitDecoder().Decode(_source);
+            var fitFile = new Data.Fit.Reader().Read(_source);
 
             Assert.DoesNotThrow(() =>
             {

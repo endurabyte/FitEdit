@@ -4,9 +4,9 @@ using System.IO;
 
 namespace Dauer.Data.Fit
 {
-    public class FitDecoder
+    public class Reader
     {
-        public FitFile Decode(string source)
+        public FitFile Read(string source)
         {
             try
             {

@@ -142,7 +142,7 @@
 
     public async Task<Activity> GetActivityAsync(string content)
     {
-        return await Task.Run(() => Parser.Parse(content).Activities.FirstOrDefault());
+        return await Task.Run(() => Reader.Read(content).Activities.FirstOrDefault());
     }
 
     private LineConfig GetLineConfig(string title, params string[] yAxisLabels)
@@ -161,7 +161,7 @@
                 },
                 Legend = new Legend
                 {
-                    Position = Position.Right,
+                    Position = ChartJs.Blazor.ChartJS.Common.Enums.Position.Right,
                     Labels = new LegendLabelConfiguration
                     {
                         UsePointStyle = true

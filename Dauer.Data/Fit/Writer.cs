@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using DateTime = Dauer.Data.Fit.DateTime;
-using Encoder = Dauer.Data.Fit.Encoder;
 
 namespace Dauer.Data.Fit
 {
-    public class FitEncoder
+    public class Writer
     {
-        public void Encode(FitFile fitFile, string destination)
+        public void Write(FitFile fitFile, string destination)
         {
             var encoder = new Encoder(ProtocolVersion.V20);
             using var dest = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);

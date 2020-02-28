@@ -4,6 +4,6 @@
     {
         public double AvgSpeed { get; set; }
         public double AvgRunCadence { get; set; }
-        public double MaxRuNCadence { get; set; }
+        public double MaxRunCadence { get; set; }
     }
 }
