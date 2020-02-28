@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ooui" Version="0.11.303" />
+    <PackageReference Include="Ooui.Forms" Version="0.11.303" />
+    <PackageReference Include="Ooui.Wasm" Version="0.11.303" />
+    <PackageReference Include="Xamarin.Forms" Version="3.6.0.709228" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Page1.xaml.cs">
+      <DependentUpon>Page1.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Update="Page1.xaml">
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

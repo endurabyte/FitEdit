@@ -1,0 +1,52 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
+@inject AppState appState
+     <MatDrawerContainer Style="width: 100vw; height: 100vh;">
+            <MatDrawerContent>
+                <MatAppBarContainer>
+                    <MatAppBar Fixed="true">
+                        <MatAppBarRow>
+                            <MatAppBarSection Align="@MatAppBarSectionAlign.Start">
+                                <Breadcrumbs RootLinkTitle="Home"></Breadcrumbs>
+                            </MatAppBarSection>
+                            <MatAppBarSection Align="@MatAppBarSectionAlign.End">
+                                <Login></Login>
+                            </MatAppBarSection>
+                        </MatAppBarRow>
+                    </MatAppBar>
+                    <MatAppBarContent>
+                        <section class="container-fluid">
+                            @Body
+                        </section>
+                        <footer class="page-footer">
+                            <div class="flex-1">
+                                © 2020 <a href="//dauer.app">Dauer</a> Developed by <a href="https://sltr.us" target="_blank">Doug Slater</a>
+                            </div>
+                        </footer>
+                    </MatAppBarContent>
+                </MatAppBarContainer>
+            </MatDrawerContent>
+        </MatDrawerContainer>
+
+@code {
+
+    [CascadingParameter]
+    Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Uncomment to secure entire app
+        //navigationManager.NavigateTo("/account/login");
+
+        // Set Default landing page if you want
+        navigationManager.NavigateTo("/chart");
+
+        var user = (await authenticationStateTask).User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var profile = await appState.GetUserProfile();
+            // navigationManager.NavigateTo(AppState.UserProfile.LastPageVisited); //Not Implemented
+        }
+    }
+}

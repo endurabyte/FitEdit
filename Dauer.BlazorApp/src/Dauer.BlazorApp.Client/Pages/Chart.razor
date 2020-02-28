@@ -1,0 +1,238 @@
+@page "/chart"
+@inject HttpClient client
+
+@using System.IO
+
+@using Dauer.Data.Tcx;
+
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.Common
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.ChartJS.Common.Enums
+@using ChartJs.Blazor.ChartJS.LineChart
+@using ChartJs.Blazor.ChartJS.Common.Axes
+@using ChartJs.Blazor.ChartJS.Common.Handlers
+@using ChartJs.Blazor.ChartJS.Common.Handlers.OnClickHandler
+@using ChartJs.Blazor.ChartJS.Common.Handlers.OnHover
+@using ChartJs.Blazor.Util
+
+<ChartJsLineChart @ref="_chart" Config="@_lineConfig" Width="600" Height="300" />
+<br />
+
+<div class="drag-drop-zone">
+    <InputFile multiple OnChange="HandleFilesSelectedAsync" />
+    Drop files here or click to browse...
+</div>
+
+@if (_files != null && _files.Count() == 1)
+{
+<div>
+    @_files.Count() activity has been loaded
+</div>
+}
+
+@if (_files != null && _files.Count() != 1)
+{
+<div>
+    @_files.Count() activities have been loaded
+</div>
+}
+
+@code {
+    private List<IFileListEntry> _files = new List<IFileListEntry>();
+
+    private LineConfig _lineConfig;
+    private ChartJsLineChart _chart;
+
+    private readonly Random _rnd = new Random();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _lineConfig = GetLineConfig("Activity",
+            "Speed (m/s)",
+            "Cadence (steps/min)",
+            "HR (bpm)");
+    }
+
+    [JSInvokable]
+    public void HandleClick(object sender, object args)
+    {
+    }
+
+    [JSInvokable]
+    public void HandleLegendClicked(object sender, object args)
+    {
+    }
+
+    [JSInvokable]
+    public void HandleLegendHovered(object sender, object args)
+    {
+    }
+
+    private async Task HandleFilesSelectedAsync(IFileListEntry[] files)
+    {
+        foreach (var file in files)
+        {
+
+            using (var reader = new StreamReader(file.Data))
+            {
+                string content = await reader.ReadToEndAsync();
+                await AddChartAsync(content);
+                await UploadFile(content, file.Name);
+            }
+
+            _files.Add(file);
+        }
+    }
+
+    private async Task UploadFile(string stringContent, string fileName)
+    {
+            var content = new MultipartFormDataContent
+            {
+                { 
+                    new StringContent(stringContent, System.Text.Encoding.UTF8), 
+                    "\"upload\"", 
+                    fileName 
+                }
+            };
+
+            await client.PostAsync("api/upload", content);
+    }
+
+    private async Task AddChartAsync(string content)
+    {
+        await Task.Run(async () =>
+        {
+            var activity = await GetActivityAsync(content);
+            var colors = GetColors(0);
+
+            var speedSet = GetDataset("Speed", "Speed (m/s)", colors[2]);
+            var cadenceSet = GetDataset("Cadence", "Cadence (steps/min)", colors[1]);
+            var hrSet = GetDataset("HR", "HR (bpm)", colors[0]);
+
+            DateTime firstTime = default;
+
+            int i = 0;
+            foreach (var lap in activity.Laps)
+            {
+                foreach (var tp in lap.Track.Trackpoints)
+                {
+                    if (i++ % 10 != 0)
+                        continue;
+
+                    if (firstTime == default)
+                        firstTime = tp.Time;
+
+                    double seconds = (tp.Time - firstTime).TotalSeconds;
+
+                    speedSet.Add(new Point(seconds, tp.Extensions.Speed));
+                    // Show both feet e.g. 180 instead of 90
+                    cadenceSet.Add(new Point(seconds, tp.Extensions.RunCadence * 2));
+                    hrSet.Add(new Point(seconds, tp.HeartRateBpm));
+                }
+            }
+
+            _lineConfig.Data.Datasets.Add(speedSet);
+            _lineConfig.Data.Datasets.Add(cadenceSet);
+            _lineConfig.Data.Datasets.Add(hrSet);
+
+            await _chart.Update();
+        });
+    }
+
+    public async Task<Activity> GetActivityAsync(string content)
+    {
+        return await Task.Run(() => Parser.Parse(content).Activities.FirstOrDefault());
+    }
+
+    private LineConfig GetLineConfig(string title, params string[] yAxisLabels)
+    {
+        return new LineConfig
+        {
+            Options = new LineOptions
+            {
+                Animation = new Animation() { Duration = 0 },
+                Responsive = true,
+                ResponsiveAnimationDuration = 0,
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = title
+                },
+                Legend = new Legend
+                {
+                    Position = Position.Right,
+                    Labels = new LegendLabelConfiguration
+                    {
+                        UsePointStyle = true
+                    },
+                    OnClick = new DotNetInstanceClickHandler(HandleLegendClicked),
+                    OnHover = new DotNetInstanceHoverHandler(HandleLegendHovered)
+                },
+                Tooltips = new Tooltips
+                {
+                    Mode = InteractionMode.Nearest,
+                    Intersect = false
+                },
+                Scales = new Scales
+                {
+                    xAxes = new List<CartesianAxis>
+                    {
+                        new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Time (s)"
+                            },
+                            GridLines = new GridLines
+                            {
+                                Display = false
+                            }
+                        }
+                    },
+                    yAxes = new List<CartesianAxis>(yAxisLabels.Select(label
+                        => new LinearCartesianAxis
+                        {
+                            ScaleLabel = new ScaleLabel { LabelString = label },
+                            ID = label
+                        }))
+                },
+                Hover = new LineOptionsHover
+                {
+                    Intersect = true,
+                    Mode = InteractionMode.Y,
+                    AnimationDuration = 0
+                },
+                OnClick = new DotNetInstanceClickHandler(HandleClick)
+            }
+        };
+    }
+
+    private static List<string> GetColors(int fade)
+    {
+        var b = (byte)(255 - fade);
+        return new List<string>
+{
+            ColorUtil.ColorString(b, 0, 0, 1.0),
+            ColorUtil.ColorString(0, b, 0, 1.0),
+            ColorUtil.ColorString(0, 0, b, 1.0),
+        };
+    }
+
+    private LineDataset<Point> GetDataset(string label, string yAxisId, string color)
+    {
+        return new LineDataset<Point>
+        {
+            BackgroundColor = color,
+            BorderColor = color,
+            Label = label,
+            Fill = false,
+            PointBackgroundColor = color,
+            BorderWidth = 1,
+            PointRadius = 0,
+            PointBorderWidth = 0,
+            SteppedLine = SteppedLine.False,
+            YAxisID = yAxisId
+        };
+    }
+}
