@@ -1,4 +1,4 @@
-﻿namespace Dauer.Data.Tcx
+﻿namespace Dauer.Data.Tcx.Entities
 {
     public class Creator
     {

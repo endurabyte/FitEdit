@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dauer.Data.Tcx
+namespace Dauer.Data.Tcx.Entities
 {
     public class Trackpoint
     {

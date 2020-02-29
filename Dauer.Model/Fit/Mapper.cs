@@ -1,10 +1,9 @@
 ﻿using Dauer.Data.Extensions;
 using Dauer.Data.Fit;
-using Dauer.Data.Tcx;
 using System;
 using System.Linq;
 
-namespace Dauer.Model
+namespace Dauer.Model.Fit
 {
     public class Mapper
     {
@@ -22,7 +21,7 @@ namespace Dauer.Model
                     var sessionDuration = (double)session.GetTotalElapsedTime();
                     var sessionEnd = sessionStart + TimeSpan.FromSeconds(sessionDuration);
 
-                    return new Sequence
+                    return (ISequence)new NodeSequence
                     {
                         When = sessionStart,
                         Sequences = laps
@@ -40,7 +39,7 @@ namespace Dauer.Model
                                 var lapDuration = (double)lap.GetTotalElapsedTime();
                                 var lapEnd = lapStart + TimeSpan.FromSeconds(lapDuration);
 
-                                return new Sequence
+                                return (ISequence)new LeafSequence
                                 {
                                     When = lapStart,
                                     Samples = records
@@ -51,7 +50,7 @@ namespace Dauer.Model
                                         })
                                         .Select(record =>
                                         {
-                                            return (Sample)new GpsRunSample()
+                                            return (ISample)new GpsRunSample
                                             {
                                                 When = record.GetTimestamp().GetDateTime(),
                                                 Distance = record.GetDistance() != default ? (double)record.GetDistance() : default,
@@ -74,71 +73,6 @@ namespace Dauer.Model
         public FitFile MapToFit(Workout workout)
         {
             throw new NotImplementedException();
-        }
-
-        public Workout Map(TrainingCenterDatabase db)
-        {
-            return new Workout
-            {
-                Sequences = db.Activities.Select(activity => new Sequence
-                {
-                    When = System.DateTime.Parse(activity.Id),
-                    Sequences = activity.Laps.Select(lap => new Sequence
-                    {
-                        When = lap.StartTime,
-                        Samples = lap.Track.Trackpoints.Select(trackpoint => (Sample)new GpsRunSample
-                        {
-                            When = trackpoint.Time,
-                            Distance = trackpoint.DistanceMeters,
-                            Speed = trackpoint.Extensions.Speed,
-                            Cadence = trackpoint.Extensions.RunCadence,
-                            HeartRate = trackpoint.HeartRateBpm,
-                            Altitude = trackpoint.AltitudeMeters,
-                            Latitude = trackpoint.Position?.LatitudeDegrees,
-                            Longitude = trackpoint.Position?.LongitudeDegrees,
-
-                        }).ToList()
-                    }).ToList()
-                }).ToList()
-            };
-        }
-
-        public TrainingCenterDatabase MapToTcx(Workout workout)
-        {
-            return new TrainingCenterDatabase
-            {
-                Activities = workout.Sequences.Select(activitySequence => new Data.Tcx.Activity
-                {
-                    Laps = activitySequence.Sequences.Select(lapSequence => new Lap 
-                    { 
-                        Track = new Track 
-                        { 
-                            Trackpoints = lapSequence.Samples.Select(sample =>
-                            {
-                                var runSample = sample as GpsRunSample;
-
-                                return new Trackpoint
-                                {
-                                    Time = runSample.When,
-                                    DistanceMeters = runSample.Distance,
-                                    Extensions = new TrackpointExtensions
-                                    {
-                                        Speed = runSample.Speed,
-                                        RunCadence = runSample.Cadence,
-                                    },
-                                    HeartRateBpm = runSample.HeartRate,
-                                    AltitudeMeters = runSample.Altitude,
-                                    Position = runSample.HasPosition ? default : new Position
-                                    {
-                                        LatitudeDegrees = runSample.Latitude ?? default,
-                                        LongitudeDegrees = runSample.Longitude ?? default
-                                    }
-                                };
-                            }).ToList()
-                        }
-                    }).ToList()
-                }).ToList()
-            };
         }
     }
 }
