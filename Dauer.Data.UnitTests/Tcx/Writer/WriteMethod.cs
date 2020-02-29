@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Dauer.UnitTests.Shared;
+using NUnit.Framework;
 
 namespace Dauer.Data.UnitTests.Tcx.Writer
 {
@@ -8,7 +9,7 @@ namespace Dauer.Data.UnitTests.Tcx.Writer
         [Test]
         public void WritesString()
         {
-            var db = Fixtures.GetTrainingCenterDatabase();
+            var db = TcxFixtures.GetTrainingCenterDatabase();
             string xml = Data.Tcx.Writer.Write(db);
         }
     }

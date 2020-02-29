@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Dauer.Data.UnitTests.Tcx
+namespace Dauer.UnitTests.Shared
 {
-    public static class Fixtures
+    public static class TcxFixtures
     {
         public static string GetGpsWorkout()
         {
