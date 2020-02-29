@@ -4,12 +4,13 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
-WORKDIR /src
+WORKDIR /
 COPY ["/Dauer.BlazorApp.Server/Dauer.BlazorApp.Server.csproj", "Dauer.BlazorApp.Server/"]
 COPY ["/Dauer.BlazorApp.Shared/Dauer.BlazorApp.Shared.csproj", "Dauer.BlazorApp.Shared/"]
 COPY ["/Dauer.BlazorApp.Client/Dauer.BlazorApp.Client.csproj", "Dauer.BlazorApp.Client/"]
+COPY ["/Dauer.Data/Dauer.Data.csproj", "Dauer.Data/"]
 COPY . .
-WORKDIR "/src/Dauer.BlazorApp.Server"
+WORKDIR "/Dauer.BlazorApp.Server"
 RUN dotnet build "Dauer.BlazorApp.Server.csproj" -c Release -o /app/build
 
 FROM build AS publish

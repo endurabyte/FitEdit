@@ -11,18 +11,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.UnitTests", "Dau
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.IntegrationTests", "Dauer.Data.IntegrationTests\Dauer.Data.IntegrationTests.csproj", "{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.BlazorApp.Shared", "Dauer.BlazorApp\src\Dauer.BlazorApp.Shared\Dauer.BlazorApp.Shared.csproj", "{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.BlazorApp.Shared", "Dauer.BlazorApp.Shared\Dauer.BlazorApp.Shared.csproj", "{CEBAC8D6-C747-45DF-8F67-1FB4AD633054}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.BlazorApp.Client", "Dauer.BlazorApp\src\Dauer.BlazorApp.Client\Dauer.BlazorApp.Client.csproj", "{0812E05C-B4A3-474E-B147-1649E0EA4B1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.BlazorApp.Client", "Dauer.BlazorApp.Client\Dauer.BlazorApp.Client.csproj", "{0812E05C-B4A3-474E-B147-1649E0EA4B1E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.BlazorApp.Server", "Dauer.BlazorApp\src\Dauer.BlazorApp.Server\Dauer.BlazorApp.Server.csproj", "{8B674114-E46A-4D5D-9BD7-096FE631A1D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.BlazorApp.Server", "Dauer.BlazorApp.Server\Dauer.BlazorApp.Server.csproj", "{8B674114-E46A-4D5D-9BD7-096FE631A1D2}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "Dauer.BlazorApp\src\docker-compose.dcproj", "{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}"
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{43D0A8C8-FC43-4DE5-BCDE-48EE46ED2511}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4593F5C-CF5E-49C2-B3A7-ED68C4AB59C3}"
 	ProjectSection(SolutionItems) = preProject
-		Dauer.BlazorApp\src\Dockerfile = Dauer.BlazorApp\src\Dockerfile
-		Dauer.BlazorApp\src\makefile = Dauer.BlazorApp\src\makefile
+		Dockerfile = Dockerfile
+		makefile = makefile
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Ooui", "Dauer.Ooui\Dauer.Ooui.csproj", "{76E5C0CB-2334-40E7-8D02-FE7E3A5E4AFE}"
