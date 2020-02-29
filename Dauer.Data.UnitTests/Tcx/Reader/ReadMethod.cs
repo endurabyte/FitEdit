@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Dauer.UnitTests.Shared;
+using NUnit.Framework;
 
 namespace Dauer.Data.UnitTests.Tcx.Reader
 {
@@ -8,8 +9,8 @@ namespace Dauer.Data.UnitTests.Tcx.Reader
         [Test]
         public void ReadsString()
         {
-            var treadmill = Data.Tcx.Reader.Read(Fixtures.GetTreadmillWorkout());
-            var gps = Data.Tcx.Reader.Read(Fixtures.GetGpsWorkout());
+            var treadmill = Data.Tcx.Reader.Read(TcxFixtures.GetTreadmillWorkout());
+            var gps = Data.Tcx.Reader.Read(TcxFixtures.GetGpsWorkout());
         }
     }
 }

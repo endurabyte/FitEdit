@@ -1,4 +1,5 @@
 ﻿using Dauer.Data.Tcx;
+using Dauer.Data.Tcx.Entities;
 using System;
 using System.Collections.Generic;
 using System.IO;

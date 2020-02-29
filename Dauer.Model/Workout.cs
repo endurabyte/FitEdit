@@ -7,6 +7,6 @@ namespace Dauer.Model
         /// <summary>
         /// Maps to FIT Sessions, TCX Activities, GPX Track
         /// </summary>
-        public List<Sequence> Sequences { get; set; }
+        public List<ISequence> Sequences { get; set; }
     }
 }

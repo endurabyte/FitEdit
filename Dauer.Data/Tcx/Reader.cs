@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Xml.Linq;
 using Dauer.Data.Extensions;
+using Dauer.Data.Tcx.Entities;
 
 namespace Dauer.Data.Tcx
 {
