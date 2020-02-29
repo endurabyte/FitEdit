@@ -1,138 +1,133 @@
 ﻿using Dauer.Data.Extensions;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Dauer.Data.Tcx
 {
     public static class Writer
     {
-        public static string Write(this TrainingCenterDatabase db)
+        private static readonly XNamespace Ns = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2";
+        private static readonly XNamespace Ns2 = "http://www.garmin.com/xmlschemas/UserProfile/v2";
+        private static readonly XNamespace Ns3 = "http://www.garmin.com/xmlschemas/ActivityExtension/v2";
+        private static readonly XNamespace Ns4 = "http://www.garmin.com/xmlschemas/ProfileExtension/v1";
+        private static readonly XNamespace Ns5 = "http://www.garmin.com/xmlschemas/ActivityGoals/v1";
+        private static readonly XNamespace Xsi = "http://www.w3.org/2001/XMLSchema-instance";
+        private static readonly XNamespace SchemaLocation = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd";
+
+        private static XName InNs(this string name, XNamespace ns = null)
         {
-            XNamespace ns = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2";
-            XNamespace ns2 = "http://www.garmin.com/xmlschemas/UserProfile/v2";
-            XNamespace ns3 = "http://www.garmin.com/xmlschemas/ActivityExtension/v2";
-            XNamespace ns4 = "http://www.garmin.com/xmlschemas/ProfileExtension/v1";
-            XNamespace ns5 = "http://www.garmin.com/xmlschemas/ActivityGoals/v1";
-            XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
-            XNamespace schemaLocation = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd";
+            return (ns ?? Ns) + name;
+        }
 
-            var root = new XElement(ns + "TrainingCenterDatabase",
-                new XAttribute(XNamespace.Xmlns + "ns2", ns2),
-                new XAttribute(XNamespace.Xmlns + "ns3", ns3),
-                new XAttribute(XNamespace.Xmlns + "ns4", ns4),
-                new XAttribute(XNamespace.Xmlns + "ns5", ns5),
-                new XAttribute(XNamespace.Xmlns + "xsi", xsi),
-                new XAttribute(xsi + "schemaLocation", schemaLocation));
+        public static string Write(this TrainingCenterDatabase db) => db.ToTcx().ToString();
 
-            var activities = new XElement(ns + "Activities");
+        private static XElement ToTcx(this TrainingCenterDatabase db) => 
+            new XElement("TrainingCenterDatabase".InNs(),
+                 new XAttribute("ns2".InNs(XNamespace.Xmlns), Ns2),
+                 new XAttribute("ns3".InNs(XNamespace.Xmlns), Ns3),
+                 new XAttribute("ns4".InNs(XNamespace.Xmlns), Ns4),
+                 new XAttribute("ns5".InNs(XNamespace.Xmlns), Ns5),
+                 new XAttribute("xsi".InNs(XNamespace.Xmlns), Xsi),
+                 new XAttribute("schemaLocation".InNs(Xsi), SchemaLocation),
+                 db.Activities.ToTcx(),
+                 db.Author.ToTcx());
 
-            foreach (var activity in db.Activities)
+        private static XElement ToTcx(this List<Activity> activities) =>
+            new XElement("Activities".InNs(), activities.Select(ToTcx));
+
+        private static XElement ToTcx(this Activity activity) => new XElement("Activity".InNs(),
+                new XAttribute("Sport", activity.Sport),
+                new XElement("Id".InNs(), activity.Id),
+                activity.Laps.Select(ToTcx),
+                activity.Creator.ToTcx()
+            );
+
+        private static XElement ToTcx(this Lap lap) => new XElement("Lap".InNs(),
+                new XAttribute("StartTime", lap.StartTime.ToTcx()),
+                new XElement("TotalTimeSeconds".InNs(), lap.TotalTimeSeconds),
+                new XElement("DistanceMeters".InNs(), lap.DistanceMeters),
+                new XElement("MaximumSpeed".InNs(), lap.MaximumSpeed),
+                new XElement("Calories".InNs(), lap.Calories),
+                new XElement("AverageHeartRateBpm".InNs(),
+                    new XElement("Value".InNs(), lap.AverageHeartRateBpm)
+                ),
+                new XElement("MaximumHeartRateBpm".InNs(),
+                    new XElement("Value".InNs(), lap.MaximumHeartRateBpm)
+                ),
+                new XElement("Intensity".InNs(), lap.Intensity),
+                new XElement("TriggerMethod".InNs(), lap.TriggerMethod),
+                lap.Track.ToTcx(),
+                lap.Extensions.ToTcx()
+            );
+
+        private static XElement ToTcx(this LapExtensions lapExtensions) => new XElement("Extensions".InNs(),
+                new XElement("LX".InNs(Ns3),
+                    new XElement("AvgSpeed".InNs(Ns3), lapExtensions.AvgSpeed),
+                    new XElement("AvgRunCadence".InNs(Ns3), lapExtensions.AvgRunCadence),
+                    new XElement("MaxRunCadence".InNs(Ns3), lapExtensions.MaxRunCadence)
+                )
+            );
+
+        private static XElement ToTcx(this Track track) => 
+            new XElement("Track".InNs(), track.Trackpoints.Select(trackpoint =>
             {
-                var activityElem = new XElement(ns + "Activity",
-                    new XAttribute("Sport", activity.Sport)
+                var tpElem = new XElement("Trackpoint".InNs(),
+                    new XElement("Time".InNs(), trackpoint.Time.ToTcx()),
+                    new XElement("DistanceMeters".InNs(), trackpoint.DistanceMeters),
+                    new XElement("HeartRateBpm".InNs(), new XElement("Value".InNs(), trackpoint.HeartRateBpm)),
+                    new XElement("Extensions".InNs(),
+                        new XElement("TPX".InNs(Ns3),
+                            new XElement("Speed".InNs(Ns3), trackpoint.Extensions.Speed),
+                            new XElement("RunCadence".InNs(Ns3), trackpoint.Extensions.RunCadence)
+                        )
+                    )
                 );
 
-                activityElem.Add(new XElement(ns + "Id", activity.Id));
-
-                foreach (var lap in activity.Laps)
+                // For GPS workouts
+                if (trackpoint.Position != default)
                 {
-                    var lapElem = new XElement(ns + "Lap",
-                        new XAttribute("StartTime", lap.StartTime.ToTcx())
-                    );
-
-                    lapElem.Add(new XElement(ns + "TotalTimeSeconds", lap.TotalTimeSeconds));
-                    lapElem.Add(new XElement(ns + "DistanceMeters", lap.DistanceMeters));
-                    lapElem.Add(new XElement(ns + "MaximumSpeed", lap.MaximumSpeed));
-                    lapElem.Add(new XElement(ns + "Calories", lap.Calories));
-                    lapElem.Add(new XElement(ns + "AverageHeartRateBpm", 
-                        new XElement(ns + "Value", lap.AverageHeartRateBpm))
-                    );
-                    lapElem.Add(new XElement(ns + "MaximumHeartRateBpm", 
-                        new XElement(ns + "Value", lap.MaximumHeartRateBpm))
-                    );
-                    lapElem.Add(new XElement(ns + "Intensity", lap.Intensity));
-                    lapElem.Add(new XElement(ns + "TriggerMethod", lap.TriggerMethod));
-
-                    var trackElem = new XElement(ns + "Track");
-
-                    foreach (var trackpoint in lap.Track.Trackpoints)
-                    {
-                        var tpElem = new XElement(ns + "Trackpoint",
-                            new XElement(ns + "Time", trackpoint.Time.ToTcx()),
-                            new XElement(ns + "DistanceMeters", trackpoint.DistanceMeters),
-                            new XElement(ns + "HeartRateBpm", new XElement(ns + "Value", trackpoint.HeartRateBpm)),
-                            new XElement(ns + "Extensions",
-                                new XElement(ns3 + "TPX",
-                                    new XElement(ns3 + "Speed", trackpoint.Extensions.Speed),
-                                    new XElement(ns3 + "RunCadence", trackpoint.Extensions.RunCadence)
-                                )
-                            )
-                        );
-
-                        // For GPS workouts
-                        if (trackpoint.Position != default)
-                        {
-                            trackElem.Add(new XElement(ns + "Position",
-                                new XElement(ns + "LatitudeDegrees", trackpoint.Position.LatitudeDegrees),
-                                new XElement(ns + "LongitudeDegrees", trackpoint.Position.LongitudeDegrees)
-                            ));
-                        }
-
-                        // For GPS workouts
-                        if (trackpoint.AltitudeMeters != default)
-                        {
-                            trackElem.Add(new XElement(ns + "AltitudeMeters", trackpoint.AltitudeMeters));
-                        }
-
-                        trackElem.Add(tpElem);
-                    }
-
-                    lapElem.Add(trackElem);
-
-                    lapElem.Add(new XElement(ns + "Extensions",
-                        new XElement(ns3 + "LX",
-                            new XElement(ns3 + "AvgSpeed", lap.Extensions.AvgSpeed),
-                            new XElement(ns3 + "AvgRunCadence", lap.Extensions.AvgRunCadence),
-                            new XElement(ns3 + "MaxRunCadence", lap.Extensions.MaxRunCadence)
-                        )
-                    ));
-
-                    activityElem.Add(lapElem);
-
-                    activityElem.Add(new XElement(ns + "Creator",
-                        new XAttribute(xsi + "type", activity.Creator.Type),
-                        new XElement(ns + "Name", activity.Creator.Name),
-                        new XElement(ns + "UnitId", activity.Creator.UnitId),
-                        new XElement(ns + "ProductID", activity.Creator.ProductID),
-                        new XElement(ns + "Version",
-                            new XElement(ns + "VersionMajor", activity.Creator.VersionMajor),
-                            new XElement(ns + "VersionMinor", activity.Creator.VersionMinor),
-                            new XElement(ns + "BuildMajor", activity.Creator.BuildMajor),
-                            new XElement(ns + "BuildMinor", activity.Creator.BuildMinor)
-                        )
+                    tpElem.Add(new XElement("Position".InNs(),
+                        new XElement("LatitudeDegrees".InNs(), trackpoint.Position.LatitudeDegrees),
+                        new XElement("LongitudeDegrees".InNs(), trackpoint.Position.LongitudeDegrees)
                     ));
                 }
 
-                activities.Add(activityElem);
-            }
+                // For GPS workouts
+                if (trackpoint.AltitudeMeters != default)
+                {
+                    tpElem.Add(new XElement("AltitudeMeters".InNs(), trackpoint.AltitudeMeters));
+                }
 
-            root.Add(activities);
+                return tpElem;
+            }));
 
-            root.Add(new XElement(ns + "Author",
-                new XAttribute(xsi + "type", db.Author.Type),
-                new XElement(ns + "Name", db.Author.Name),
-                new XElement(ns + "Build",
-                    new XElement(ns + "Version",
-                        new XElement(ns + "VersionMajor", db.Author.BuildVersionMajor),
-                        new XElement(ns + "VersionMinor", db.Author.BuildVersionMinor),
-                        new XElement(ns + "BuildMajor", db.Author.BuildBuildMajor),
-                        new XElement(ns + "BuildMinor", db.Author.BuildBuildMinor)
+        private static XElement ToTcx(this Creator creator) => new XElement("Creator".InNs(),
+                new XAttribute("type".InNs(Xsi), creator.Type),
+                new XElement("Name".InNs(), creator.Name),
+                new XElement("UnitId".InNs(), creator.UnitId),
+                new XElement("ProductID".InNs(), creator.ProductID),
+                new XElement("Version".InNs(),
+                    new XElement("VersionMajor".InNs(), creator.VersionMajor),
+                    new XElement("VersionMinor".InNs(), creator.VersionMinor),
+                    new XElement("BuildMajor".InNs(), creator.BuildMajor),
+                    new XElement("BuildMinor".InNs(), creator.BuildMinor)
+                )
+            );
+
+        private static XElement ToTcx(this Author author) => new XElement("Author".InNs(),
+                new XAttribute("type".InNs(Xsi), author.Type),
+                new XElement("Name".InNs(), author.Name),
+                new XElement("Build".InNs(),
+                    new XElement("Version".InNs(),
+                        new XElement("VersionMajor".InNs(), author.BuildVersionMajor),
+                        new XElement("VersionMinor".InNs(), author.BuildVersionMinor),
+                        new XElement("BuildMajor".InNs(), author.BuildBuildMajor),
+                        new XElement("BuildMinor".InNs(), author.BuildBuildMinor)
                     )
                 ),
-                new XElement(ns + "LangID", db.Author.LangID),
-                new XElement(ns + "PartNumber", db.Author.PartNumber)
-            ));
-
-            return root.ToString();
-        }
+                new XElement("LangID".InNs(), author.LangID),
+                new XElement("PartNumber".InNs(), author.PartNumber)
+            );
     }
 }
