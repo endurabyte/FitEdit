@@ -10,11 +10,19 @@ services:
       - postgres
     environment:
       - ASPNETCORE_ENVIRONMENT=Development #Consider changing this in Production
-      - ConnectionStrings__PostgresConnection=host=postgres; database=blazor_app;user id=postgres; password=aZL343Vf!RJj
-      - BlazorApp__UseSqlServer=false
-      - BlazorApp__UsePostgresServer=true
-      - AWS_ACCESS_KEY_ID=AKIAIXGOTDKOKLWWLZ2A
-      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - ExternalAuthProviders__Google__ClientId=${GOOGLE_AUTH_CLIENTID}
+      - ExternalAuthProviders__Google__ClientSecret=${GOOGLE_AUTH_CLIENTSECRET}
+      - Domain=${DOMAIN}
+      - EmailConfiguration__SmtpUsername=${EMAIL_SMTP_USERNAME}
+      - EmailConfiguration__SmtpPassword=${EMAIL_SMTP_PASSWORD}
+      - EmailConfiguration__PoppUsername=${EMAIL_POP_USERNAME}
+      - EmailConfiguration__PopPassword=${EMAIL_POP_PASSWORD}
+      - EmailConfiguration__ImapUsername=${EMAIL_IMAP_USERNAME}
+      - EmailConfiguration__ImapPassword=${EMAIL_IMAP_PASSWORD}
+      - ConnectionStrings__PostgresConnection=${POSTGRES_CONNECTION_STRING}
+
     ports:
         # Replace the values on the left by the values from launchSettings.json
       - "80:80"
@@ -29,9 +37,9 @@ services:
     volumes:
       - dbdata:/var/opt/postgres
     environment:
-      - POSTGRES_PASSWORD=aZL343Vf!RJj
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=blazor_app
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - "5432:5432"
       - "5433:5433"
