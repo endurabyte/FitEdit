@@ -35,7 +35,7 @@ namespace Dauer.BlazorApp.Shared.Repositories
         private static Stream TarGzipFile(Stream input, string name)
         {
             var ms = new MemoryStream();
-            var opts = new WriterOptions(SharpCompress.Common.CompressionType.GZip) { LeaveStreamOpen = true };
+            var opts = new WriterOptions(CompressionType.GZip) { LeaveStreamOpen = true };
             using var writer = WriterFactory.Open(ms, ArchiveType.Tar, opts);
             writer.Write(name, input);
 

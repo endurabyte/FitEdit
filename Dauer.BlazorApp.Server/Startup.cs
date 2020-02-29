@@ -28,7 +28,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -61,7 +60,7 @@ namespace Dauer.BlazorApp.Server
 
             services.AddDbContext<ApplicationDbContext>(BuildDbContextOptions);
 
-            //AddLetsEncrypt(services);
+            AddLetsEncrypt(services);
             AddIdentity(services);
             AddCookies(services);
 
@@ -185,7 +184,7 @@ namespace Dauer.BlazorApp.Server
               })
               .AddAspNetIdentity<ApplicationUser>();
 
-            //identityServerBuilder.AddSigningCredential(LetsEncryptRenewalService.Certificate);
+            identityServerBuilder.AddSigningCredential(LetsEncryptRenewalService.Certificate);
 
 
             var authBuilder = services.AddAuthentication(options =>
@@ -303,7 +302,7 @@ namespace Dauer.BlazorApp.Server
         {
             EmailTemplates.Initialize(env);
             
-            //app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
+            app.UseFluffySpoonLetsEncryptChallengeApprovalMiddleware();
             app.UseResponseCompression(); // This must be before the other Middleware if that manipulates Response
 
             // A REST API global exception handler and response wrapper for a consistent API

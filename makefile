@@ -11,6 +11,21 @@ up:
 down:
 	docker-compose down
 
+stop:
+	docker-compose stop
+
+downvolumes:
+	docker-compose down -v
+
+downimages:
+	docker-compose down --rmi all
+	
+logs:
+	docker-compose logs -f ${IMAGE_NAME}
+
+status:
+	docker-compose ps
+
 push:
 	docker-compose push
 
@@ -20,23 +35,11 @@ deploy:
 servicelogs:
 	docker service logs dauer_dauer --no-trunc -f
 
-logs:
-	docker-compose logs -f ${IMAGE_NAME}
-
 bash:
-	docker exec -it src_dauer_1 /bin/bash
+	docker exec -it dauer_dauer_1 /bin/bash
 
 psql:
-	docker exec -it src_postgres_1 su -c psql postgres
-
-stop:
-	docker-compose stop
-
-down:
-	docker-compose down -v
-
-status:
-	docker-compose ps
+	docker exec -it dauer_postgres_1 su -c psql postgres
 
 clean:
 	docker stack rm dauer
