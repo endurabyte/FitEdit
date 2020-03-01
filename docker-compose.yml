@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - ExternalAuthProviders__Google__ClientId=${GOOGLE_AUTH_CLIENTID}
