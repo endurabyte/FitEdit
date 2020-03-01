@@ -9,7 +9,7 @@ namespace Dauer.BlazorApp.Shared.Repositories
 {
     public class S3FileRepository : IFileRepository
     {
-        private const string bucketName = "www.sltr.us";
+        private const string bucketName = "dauer.app";
         private static IAmazonS3 _client;
 
         public S3FileRepository()

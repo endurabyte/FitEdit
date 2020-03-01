@@ -4,7 +4,7 @@ IMAGE_NAME ?= dauer
 
 build:
 	docker-compose build --pull ${args} ${IMAGE_NAME}
-
+	
 up:
 	docker-compose up --no-build --remove-orphans --detach ${IMAGE_NAME}
 

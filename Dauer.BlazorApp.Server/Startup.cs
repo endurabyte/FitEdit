@@ -184,8 +184,8 @@ namespace Dauer.BlazorApp.Server
               })
               .AddAspNetIdentity<ApplicationUser>();
 
-            identityServerBuilder.AddSigningCredential(LetsEncryptRenewalService.Certificate);
-
+            // TODO Certificate is null at startup. Assign it when the it is available. 
+            //identityServerBuilder.AddSigningCredential(LetsEncryptRenewalService.Certificate);
 
             var authBuilder = services.AddAuthentication(options =>
             {
