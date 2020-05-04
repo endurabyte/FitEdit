@@ -35,7 +35,7 @@ FIT, GPX, and TCX (which borrows from GPX) use different words, but they map to 
 
 ## File Formats
 
-The FIT file format is binary: compact and suited for low-power wearables, but not human-readable as it is not plaintext; viewing the data requires a specialized parser. TCX and GPX are XML, which is arguably readable but heavyweight, complete with XML schemas and namespaces. Dauer seeks both portability and readability by using JSON as its data interchange format.
+The FIT file format is binary: compact, fault-tolerant, and suited for low-power wearables, but not human-readable as it is not plaintext; viewing the data requires a specialized parser. TCX and GPX are XML, which is arguably readable but heavyweight, complete with XML schemas and namespaces. Dauer seeks both portability and readability by using JSON as its data interchange format.
 
 |Dauer  |FIT    |TCX  |GPX
 |---    |---    |---  |---  
