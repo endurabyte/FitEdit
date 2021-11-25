@@ -21,7 +21,7 @@ namespace Dauer.Model.UnitTests
         {
             var xml = TcxFixtures.GetGpsWorkout();
             var db = Data.Tcx.Reader.Read(xml);
-            var workout = new Mapper().Map(db);
+            var workout = new Tcx.Mapper().Map(db);
         }
 
         [Test]
@@ -36,7 +36,7 @@ namespace Dauer.Model.UnitTests
                 + @"generic\2019-12-18\35min-easy-4x20s-strides\garmin-connect\activity.fit";
 
             var fit = new Data.Fit.Reader().Read(source);
-            var workout = new Mapper().Map(fit);
+            var workout = new Fit.Mapper().Map(fit);
         }
     }
 }

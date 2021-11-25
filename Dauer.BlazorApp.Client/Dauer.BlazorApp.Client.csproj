@@ -25,8 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Dauer.Data\Dauer.Data.csproj" />
     <ProjectReference Include="..\Dauer.BlazorApp.Shared\Dauer.BlazorApp.Shared.csproj" />
+    <ProjectReference Include="..\Dauer.Data\Dauer.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>
