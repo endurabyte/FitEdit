@@ -2,7 +2,7 @@
 
 namespace Dauer.Model
 {
-    public class Workout
+  public class Workout
     {
         /// <summary>
         /// Maps to FIT Sessions, TCX Activities, GPX Track

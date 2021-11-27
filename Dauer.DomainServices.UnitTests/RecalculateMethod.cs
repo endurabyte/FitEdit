@@ -22,7 +22,7 @@ namespace Dauer.DomainServices.UnitTests
             (
                 GetWorkout(),
                 new List<double> { 2.0 }, 
-                CompoundUnit.MetersPerSecond
+                SpeedUnit.MetersPerSecond
             );
         }
 

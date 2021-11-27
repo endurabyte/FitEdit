@@ -8,12 +8,12 @@ namespace Dauer.DomainServices
 {
     public interface IWorkoutService
     {
-        void Recalculate(Workout workout, List<double> lapSpeeds, CompoundUnit unit);
+        void Recalculate(Workout workout, List<double> lapSpeeds, SpeedUnit unit);
     }
 
     public class WorkoutService : IWorkoutService
     {
-        public void Recalculate(Workout workout, List<double> lapSpeeds, CompoundUnit unit)
+        public void Recalculate(Workout workout, List<double> lapSpeeds, SpeedUnit unit)
         {
             var leaves = SelectLeaves(workout);
 

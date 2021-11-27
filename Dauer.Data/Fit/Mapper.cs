@@ -1,5 +1,6 @@
 ﻿using Dauer.Data.Extensions;
 using Dauer.Model;
+using Dynastream.Fit;
 using System;
 using System.Linq;
 
