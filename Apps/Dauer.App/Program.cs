@@ -149,10 +149,9 @@ namespace Dauer.App
         throw new ArgumentException($"Found {laps.Count} laps but {speeds.Count} speeds");
       }
 
-      int lapIndex = 0;
       foreach (int i in Enumerable.Range(0, laps.Count))
       {
-        laps[i].SetEnhancedAvgSpeed((float)speeds[lapIndex].Unit.MetersPerSecond(speeds[lapIndex].Value));
+        laps[i].SetEnhancedAvgSpeed((float)speeds[i].Unit.MetersPerSecond(speeds[i].Value));
       }
 
       // Sort earliest to latest
