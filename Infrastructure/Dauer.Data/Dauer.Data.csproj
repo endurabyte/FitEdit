@@ -5,12 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Dynastream.Fit.Portable">
-      <HintPath>../lib/Dynastream.Fit.Portable.dll</HintPath>
+      <HintPath>../../lib/Dynastream.Fit.Portable.dll</HintPath>
     </Reference>
   </ItemGroup>
 

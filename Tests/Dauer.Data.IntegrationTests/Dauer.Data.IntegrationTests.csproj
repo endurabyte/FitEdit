@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -13,8 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.Data\Dauer.Data.csproj" />
-    <ProjectReference Include="..\Dauer.UnitTests.Shared\Dauer.UnitTests.Shared.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Dynastream.Fit.Portable">
+      <HintPath>..\..\lib\Dynastream.Fit.Portable.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

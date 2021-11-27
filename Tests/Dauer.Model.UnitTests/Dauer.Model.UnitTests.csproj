@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.DomainServices\Dauer.DomainServices.csproj" />
-    <ProjectReference Include="..\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
     <ProjectReference Include="..\Dauer.UnitTests.Shared\Dauer.UnitTests.Shared.csproj" />
   </ItemGroup>
 

@@ -3,21 +3,24 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data", "Dauer.Data\Dauer.Data.csproj", "{714EC380-D9FE-4438-ABEC-DE6AE92595F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data", "Infrastructure\Dauer.Data\Dauer.Data.csproj", "{714EC380-D9FE-4438-ABEC-DE6AE92595F1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.App", "Dauer.App\Dauer.App.csproj", "{23C31CBB-83C6-42AC-A50B-973F10E0CA37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.App", "Apps\Dauer.App\Dauer.App.csproj", "{23C31CBB-83C6-42AC-A50B-973F10E0CA37}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.UnitTests", "Dauer.Data.UnitTests\Dauer.Data.UnitTests.csproj", "{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.UnitTests", "Tests\Dauer.Data.UnitTests\Dauer.Data.UnitTests.csproj", "{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.IntegrationTests", "Dauer.Data.IntegrationTests\Dauer.Data.IntegrationTests.csproj", "{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.IntegrationTests", "Tests\Dauer.Data.IntegrationTests\Dauer.Data.IntegrationTests.csproj", "{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4593F5C-CF5E-49C2-B3A7-ED68C4AB59C3}"
+
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Model", "Core\Dauer.Model\Dauer.Model.csproj", "{F0EF7218-60EB-4F66-B49E-0C30983EF92C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Model", "Dauer.Model\Dauer.Model.csproj", "{F0EF7218-60EB-4F66-B49E-0C30983EF92C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Model.UnitTests", "Tests\Dauer.Model.UnitTests\Dauer.Model.UnitTests.csproj", "{3DE164EB-628A-46D3-956C-1A8A04C975EA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Model.UnitTests", "Dauer.Model.UnitTests\Dauer.Model.UnitTests.csproj", "{3DE164EB-628A-46D3-956C-1A8A04C975EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.UnitTests.Shared", "Tests\Dauer.UnitTests.Shared\Dauer.UnitTests.Shared.csproj", "{41B1CCFB-643D-4A7B-AFBF-81B54D767405}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.UnitTests.Shared", "Dauer.UnitTests.Shared\Dauer.UnitTests.Shared.csproj", "{41B1CCFB-643D-4A7B-AFBF-81B54D767405}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.DomainServices", "Core\Dauer.DomainServices\Dauer.DomainServices.csproj", "{07FD12B2-88F1-4CE1-B258-8EB1075D9422}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.DomainServices.UnitTests", "Tests\Dauer.DomainServices.UnitTests\Dauer.DomainServices.UnitTests.csproj", "{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C4B0BF37-8C87-4A7E-9413-A8F417C554D1}"
 EndProject
@@ -25,9 +28,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{ACB83B7E-8
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{F4873C72-D0B4-462F-A822-837B1E4E6B81}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.DomainServices", "Dauer.DomainServices\Dauer.DomainServices.csproj", "{07FD12B2-88F1-4CE1-B258-8EB1075D9422}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.DomainServices.UnitTests", "Dauer.DomainServices.UnitTests\Dauer.DomainServices.UnitTests.csproj", "{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4593F5C-CF5E-49C2-B3A7-ED68C4AB59C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,7 +79,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{714EC380-D9FE-4438-ABEC-DE6AE92595F1} = {ACB83B7E-8AB4-425C-A305-ABE92AC9961B}
+		{714EC380-D9FE-4438-ABEC-DE6AE92595F1} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 		{23C31CBB-83C6-42AC-A50B-973F10E0CA37} = {F4873C72-D0B4-462F-A822-837B1E4E6B81}
 		{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 		{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
@@ -84,6 +87,7 @@ Global
 		{3DE164EB-628A-46D3-956C-1A8A04C975EA} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 		{41B1CCFB-643D-4A7B-AFBF-81B54D767405} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 		{07FD12B2-88F1-4CE1-B258-8EB1075D9422} = {ACB83B7E-8AB4-425C-A305-ABE92AC9961B}
+		{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}
