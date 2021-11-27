@@ -3,6 +3,10 @@
   <Import Project="$(SolutionDir)Common.props" />
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
   </ItemGroup>
 

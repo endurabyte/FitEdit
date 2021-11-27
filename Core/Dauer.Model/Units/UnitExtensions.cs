@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Dauer.Model.Units
+﻿namespace Dauer.Model.Units
 {
   public static class UnitExtensions
   {
@@ -32,7 +30,7 @@ namespace Dauer.Model.Units
     /// <summary>
     /// Return unit conversions to meter
     /// </summary>
-    public static Dictionary<DistanceUnit, double> LengthMeterConversions = new()
+    public static Dictionary<DistanceUnit, double> DistanceMeterConversions = new()
     {
       [DistanceUnit.Kilometer] = 1e-3,
       [DistanceUnit.Meter] = 1,
@@ -50,8 +48,18 @@ namespace Dauer.Model.Units
     public static double MetersPerSecond(this SpeedUnit unit, double d) => d * MetersPerSecondConversions[unit];
 
     /// <summary>
-    /// Convert the given lenght unit to meters
+    /// Convert the given speed unit to minutes per mile
     /// </summary>
-    public static double Meters(this DistanceUnit unit, double d) => d * LengthMeterConversions[unit];
+    public static double MinutesPerMile(this SpeedUnit unit, double d) => d * MetersPerSecondConversions[unit] / MetersPerSecondConversions[SpeedUnit.MetersPerSecond];
+
+    /// <summary>
+    /// Convert the given distance unit to meters
+    /// </summary>
+    public static double Meters(this DistanceUnit unit, double d) => d * DistanceMeterConversions[unit];
+
+    /// <summary>
+    /// Convert the given distance unit to miles
+    /// </summary>
+    public static double Miles(this DistanceUnit unit, double d) => d * DistanceMeterConversions[unit] / DistanceMeterConversions[DistanceUnit.Mile];
   }
 }

@@ -1,5 +1,4 @@
 using Dynastream.Fit;
-using System.IO;
 
 namespace Dauer.Data.Fit
 {
