@@ -12,18 +12,13 @@ namespace Dauer.Data.Fit
       try
       {
         // Attempt to open .FIT file
-        using var fitSource = new FileStream(source, FileMode.Open);
+        using var fitSource = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         var decoder = new Decode();
-        var mesgBroadcaster = new MesgBroadcaster();
-
-        // Connect the Broadcaster to our event (message) source (in this case the Decoder)
-        decoder.MesgEvent += mesgBroadcaster.OnMesg;
-        decoder.MesgDefinitionEvent += mesgBroadcaster.OnMesgDefinition;
 
         var fitFile = new FitFile();
-        mesgBroadcaster.MesgEvent += (o, s) => fitFile.Messages.Add(s.mesg);
-        mesgBroadcaster.MesgDefinitionEvent += (o, s) => fitFile.MessageDefinitions.Add(s.mesgDef);
+        decoder.MesgEvent += (o, s) => fitFile.Messages.Add(MessageFactory.Create(s.mesg));
+        decoder.MesgDefinitionEvent += (o, s) => fitFile.MessageDefinitions.Add(s.mesgDef);
 
         bool ok = decoder.IsFIT(fitSource);
         ok &= decoder.CheckIntegrity(fitSource);

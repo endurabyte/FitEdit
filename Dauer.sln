@@ -11,16 +11,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.UnitTests", "Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.IntegrationTests", "Tests\Dauer.Data.IntegrationTests\Dauer.Data.IntegrationTests.csproj", "{A2A74C51-9871-4DA8-8CC3-02C8C26CEA7C}"
 EndProject
-
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Model", "Core\Dauer.Model\Dauer.Model.csproj", "{F0EF7218-60EB-4F66-B49E-0C30983EF92C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Model.UnitTests", "Tests\Dauer.Model.UnitTests\Dauer.Model.UnitTests.csproj", "{3DE164EB-628A-46D3-956C-1A8A04C975EA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.UnitTests.Shared", "Tests\Dauer.UnitTests.Shared\Dauer.UnitTests.Shared.csproj", "{41B1CCFB-643D-4A7B-AFBF-81B54D767405}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.DomainServices", "Core\Dauer.DomainServices\Dauer.DomainServices.csproj", "{07FD12B2-88F1-4CE1-B258-8EB1075D9422}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Services", "Core\Dauer.Services\Dauer.Services.csproj", "{07FD12B2-88F1-4CE1-B258-8EB1075D9422}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.DomainServices.UnitTests", "Tests\Dauer.DomainServices.UnitTests\Dauer.DomainServices.UnitTests.csproj", "{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Services.UnitTests", "Tests\Dauer.Services.UnitTests\Dauer.Services.UnitTests.csproj", "{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Infrastructure", "Infrastructure\Dauer.Infrastructure\Dauer.Infrastructure.csproj", "{1991029F-59ED-4CB7-9676-27CB9405CF96}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.Fit", "Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj", "{F59847CE-DEEE-42CD-98CE-8901E8E6E501}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C4B0BF37-8C87-4A7E-9413-A8F417C554D1}"
 EndProject
@@ -31,6 +34,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F4593F5C-CF5E-49C2-B3A7-ED68C4AB59C3}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		Common.props = Common.props
+		dauer-logo.png = dauer-logo.png
+		Directory.Build.Props = Directory.Build.Props
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -74,6 +85,14 @@ Global
 		{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1991029F-59ED-4CB7-9676-27CB9405CF96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1991029F-59ED-4CB7-9676-27CB9405CF96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1991029F-59ED-4CB7-9676-27CB9405CF96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1991029F-59ED-4CB7-9676-27CB9405CF96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F59847CE-DEEE-42CD-98CE-8901E8E6E501}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F59847CE-DEEE-42CD-98CE-8901E8E6E501}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F59847CE-DEEE-42CD-98CE-8901E8E6E501}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F59847CE-DEEE-42CD-98CE-8901E8E6E501}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -88,6 +107,8 @@ Global
 		{41B1CCFB-643D-4A7B-AFBF-81B54D767405} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 		{07FD12B2-88F1-4CE1-B258-8EB1075D9422} = {ACB83B7E-8AB4-425C-A305-ABE92AC9961B}
 		{DCEF4C35-B2EE-4FB2-9565-AF4CCDE6FAA8} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
+		{1991029F-59ED-4CB7-9676-27CB9405CF96} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
+		{F59847CE-DEEE-42CD-98CE-8901E8E6E501} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}

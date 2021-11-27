@@ -6,10 +6,4 @@
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Dynastream.Fit.Portable">
-      <HintPath>../../lib/Dynastream.Fit.Portable.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

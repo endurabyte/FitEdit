@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\$(Platform)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+
+    <OutputPath>$(BaseOutputPath)</OutputPath>
+
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(Configuration)\$(Platform)\</IntermediateOutputPath>
+    <IntDir Condition="'$(BuildingForLiveUnitTesting)' != 'true'">$(IntermediateOutputPath)</IntDir>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <Deterministic>true</Deterministic>
+    <!-- Disable automatic generation of assembly info for .NET Standard assemblys-->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+</Project>

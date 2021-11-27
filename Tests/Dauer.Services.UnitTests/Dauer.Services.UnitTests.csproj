@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+  <Import Project="$(SolutionDir)Common.props" />
 
+  <PropertyGroup>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Core\Dauer.DomainServices\Dauer.DomainServices.csproj" />
+    <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
     <ProjectReference Include="..\Dauer.UnitTests.Shared\Dauer.UnitTests.Shared.csproj" />
   </ItemGroup>

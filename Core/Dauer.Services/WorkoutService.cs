@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Dauer.Model;
+﻿using Dauer.Model;
 using Dauer.Model.Units;
 
 namespace Dauer.DomainServices
@@ -22,10 +19,8 @@ namespace Dauer.DomainServices
                 throw new ArgumentException($"Found {lapSpeeds.Count} laps but {leaves.Count} speeds");
             }
 
-            double distance = 0.0; // cumulative distance;
-            DateTime time; // lap completion
-
-
+            //double distance = 0.0; // cumulative distance;
+            //DateTime time; // lap completion
         }
 
         private List<LeafSequence> SelectLeaves(Workout workout)

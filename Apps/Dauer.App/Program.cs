@@ -141,87 +141,57 @@ namespace Dauer.App
 
     public static void ApplyLaps(string sourceFile, string destFile, List<Speed> speeds)
     {
-      var fitFile = new Reader().Read(sourceFile);
+      FitFile fitFile = new Reader().Read(sourceFile);
 
-      Dictionary<int, LapMesg> laps = fitFile.Messages
-        .Where(message => message.Num == MesgNum.Lap)
-        .Select((message, index) => new { index = fitFile.Messages.IndexOf(message), message = new LapMesg(message) })
-        .ToDictionary(obj => obj.index, obj => obj.message);
-    
-      Dictionary<int, RecordMesg> records = fitFile.Messages
-        .Where(message => message.Num == MesgNum.Record)
-        .Select((message, index) => new { index = fitFile.Messages.IndexOf(message), message = new RecordMesg(message) })
-        .ToDictionary(obj => obj.index, obj => obj.message);
-      
-      Dictionary<int, SessionMesg> sessions = fitFile.Messages
-        .Where(message => message.Num == MesgNum.Session)
-        .Select((message, index) => new { index = fitFile.Messages.IndexOf(message), message = new SessionMesg(message) })
-        .ToDictionary(obj => obj.index, obj => obj.message);
+      var laps = fitFile.Get<LapMesg>();
+      var records = fitFile.Get<RecordMesg>();
+      var sessions = fitFile.Get<SessionMesg>();
 
       if (laps.Count != speeds.Count)
       {
         throw new ArgumentException($"Found {laps.Count} laps but {speeds.Count} speeds");
       }
 
-      Dictionary<int, int> lapMap = new();
-
       int lapIndex = 0;
-      foreach (var lap in laps)
+      foreach (int i in Enumerable.Range(0, laps.Count))
       {
-        lapMap[lap.Key] = lapIndex;
-        lap.Value.SetEnhancedAvgSpeed((float)speeds[lapIndex].Unit.MetersPerSecond(speeds[lapIndex].Value));
-        lapIndex++;
+        laps[i].SetEnhancedAvgSpeed((float)speeds[lapIndex].Unit.MetersPerSecond(speeds[lapIndex].Value));
       }
 
       // Sort earliest to latest
-      List<KeyValuePair<int, RecordMesg>> recordsList = records.ToList();
-      recordsList.Sort((a, b) => a.Value.GetTimestamp().CompareTo(b.Value.GetTimestamp()));
+      records.Sort((a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp()));
 
       double distance = 0;
-      int lastTimestamp = (int)recordsList[0].Value.GetTimestamp().GetTimeStamp();
+      int lastTimestamp = (int)records[0].GetTimestamp().GetTimeStamp();
 
-      foreach (int i in Enumerable.Range(0, recordsList.Count))
+      foreach (int i in Enumerable.Range(0, records.Count))
       {
         // Find relevant lap
         var lap = laps.First(lap =>
         {
-          uint lapStartTime = lap.Value.GetStartTime().GetTimeStamp();
-          uint lapEndTime = lap.Value.GetTimestamp().GetTimeStamp();
-          uint recordStartTime = recordsList[i].Value.GetTimestamp().GetTimeStamp();
+          uint lapStartTime = lap.GetStartTime().GetTimeStamp();
+          uint lapEndTime = lap.GetTimestamp().GetTimeStamp();
+          uint recordStartTime = records[i].GetTimestamp().GetTimeStamp();
 
           return lapStartTime <= recordStartTime && recordStartTime <= lapEndTime;
         });
 
-        int j = lapMap[lap.Key];
+        int j = laps.IndexOf(lap);
 
         double speed = speeds[j].Unit.MetersPerSecond(speeds[j].Value);
 
-        int timestamp = (int)recordsList[i].Value.GetTimestamp().GetTimeStamp();
+        int timestamp = (int)records[i].GetTimestamp().GetTimeStamp();
         int elapsedSeconds = timestamp - lastTimestamp;
         lastTimestamp = timestamp;
 
         distance += speed * elapsedSeconds;
 
-        lap.Value.SetTotalDistance((float)distance);
-        recordsList[i].Value.SetDistance((float)distance);
-        recordsList[i].Value.SetEnhancedSpeed((float)speed);
+        lap.SetTotalDistance((float)distance);
+        records[i].SetDistance((float)distance);
+        records[i].SetEnhancedSpeed((float)speed);
       }
 
-      sessions.First().Value.SetTotalDistance((float)distance);
-
-      // Write changed records back into FitFile
-      foreach (var kvp in laps)
-      {
-        fitFile.Messages[kvp.Key] = kvp.Value;
-      }
-      foreach (var kvp in records)
-      {
-        fitFile.Messages[kvp.Key] = kvp.Value;
-      }
-      foreach (var kvp in sessions)
-      {
-        fitFile.Messages[kvp.Key] = kvp.Value;
-      }
+      sessions.First().SetTotalDistance((float)distance);
 
       // Write to File
       new Writer().Write(fitFile, destFile);
