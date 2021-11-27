@@ -44,7 +44,20 @@ namespace Dauer.Data.Fit
 
         foreach (var rec in lapRecords)
         {
-          Log.Info($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+          //Log.Info($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+
+          var speed = new Speed { Unit = SpeedUnit.MetersPerSecond, Value = (double)rec.GetEnhancedSpeed() };
+          var distance = new Distance { Unit = DistanceUnit.Meter, Value = (double)rec.GetDistance() };
+
+          // Print the fractional part of the given number as
+          // seconds of a minute e.g. 8.9557 => 8:57
+          string pretty(double minPerMile)
+          {
+            int floor = (int)Math.Floor(minPerMile);
+            return $"{floor}:{(int)((minPerMile - floor)*60):00}";
+          }
+
+          Log.Info($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {pretty(speed.MinutesPerMile())} min/mi, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
         }
       }
     }
