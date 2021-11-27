@@ -1,7 +1,8 @@
 {
   "profiles": {
     "fitutil": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY.fit\" \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
     }
   }
 }
