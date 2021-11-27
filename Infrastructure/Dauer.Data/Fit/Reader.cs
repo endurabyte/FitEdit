@@ -1,7 +1,5 @@
 using Dauer.Model;
 using Dynastream.Fit;
-using System;
-using System.IO;
 
 namespace Dauer.Data.Fit
 {
@@ -11,7 +9,8 @@ namespace Dauer.Data.Fit
     {
       try
       {
-        // Attempt to open .FIT file
+        Log.Info($"Opening {source}");
+
         using var fitSource = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         var decoder = new Decode();
@@ -23,38 +22,41 @@ namespace Dauer.Data.Fit
         bool ok = decoder.IsFIT(fitSource);
         ok &= decoder.CheckIntegrity(fitSource);
 
-        // Process the file
-        if (ok)
+        if (!decoder.IsFIT(fitSource))
         {
-          decoder.Read(fitSource);
+          Log.Error($"Is not a FIT file: {source}");
+          return null;
         }
-        else
+
+        if (!decoder.CheckIntegrity(fitSource))
         {
-          Log.Error($"Integrity Check Failed {source}");
+          Log.Warn($"Integrity Check failed...");
           if (decoder.InvalidDataSize)
           {
-            Log.Error("Invalid Size Detected, Attempting to decode...");
-            decoder.Read(fitSource);
+            Log.Warn("Invalid Size detected...");
           }
-          else
+
+          Log.Warn("Attempting to read by skipping the header...");
+          if (!decoder.Read(fitSource, DecodeMode.InvalidHeader))
           {
-            Log.Error("Attempting to decode by skipping the header...");
-            decoder.Read(fitSource, DecodeMode.InvalidHeader);
+            Log.Error($"Could not read {source} by skipping the header");
+            return null;
           }
+        }
+
+        if (!decoder.Read(fitSource))
+        {
+          Log.Error($"Could not read {source}");
+          return null;
         }
 
         return fitFile;
       }
-      catch (FitException ex)
-      {
-        Log.Error(ex.Message);
-      }
       catch (Exception ex)
       {
         Log.Error(ex.Message);
+        return null;
       }
-
-      return null;
     }
   }
 }

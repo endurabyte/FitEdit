@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Dauer.Data.Fit;
+﻿using Dauer.Data.Fit;
 using Dauer.Model.Units;
 using Dynastream.Fit;
 using Newtonsoft.Json;
