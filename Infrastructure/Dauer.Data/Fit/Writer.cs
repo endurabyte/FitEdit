@@ -1,3 +1,4 @@
+using Dauer.Model;
 using Dynastream.Fit;
 
 namespace Dauer.Data.Fit
@@ -21,6 +22,7 @@ namespace Dauer.Data.Fit
         encoder.Write(message);
       }
 
+      Log.Info($"Wrote {fitFile.Messages.Count} messages and {fitFile.MessageDefinitions.Count} definitions to {destination}");
       encoder.Close();
     }
   }

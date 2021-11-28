@@ -8,7 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Infrastructure\Dauer.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,12 +1,24 @@
 {
   "profiles": {
-    "one arg": {
+    "recalc speeds": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
+      "commandLineArgs": "speeds  -l 6.7 -l 9.2 -l 6 --units=mi/h \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY.fit\" \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
     },
-    "two args": {
+    "No args": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY.fit\" \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
+      "commandLineArgs": ""
+    },
+    "show": {
+      "commandName": "Project",
+      "commandLineArgs": "show \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
+    },
+    "show verbose": {
+      "commandName": "Project",
+      "commandLineArgs": "show --verbose \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
+    },
+    "dump": {
+      "commandName": "Project",
+      "commandLineArgs": "dump \"C:\\Users\\DougSlater\\Downloads\\1xMile\\7864712224_ACTIVITY_edited.fit\""
     }
   }
 }

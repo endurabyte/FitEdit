@@ -2,8 +2,6 @@ using Dauer.Data.Fit;
 using Dynastream.Fit;
 using Newtonsoft.Json;
 using NUnit.Framework;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Dauer.Data.IntegrationTests
 {

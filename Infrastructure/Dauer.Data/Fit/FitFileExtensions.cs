@@ -19,7 +19,7 @@ namespace Dauer.Data.Fit
       var records = f.Records;
 
       Log.Info($"Fit File: ");
-      Log.Info($"  {records.Count} {(laps.Count == 1 ? "record" : "records")}:");
+      Log.Info($"  {records.Count} {(laps.Count == 1 ? "record" : "records")}");
       Log.Info($"  {sessions.Count} {(sessions.Count == 1 ? "session" : "sessions")}:");
 
       foreach (var sess in sessions)
@@ -53,6 +53,11 @@ namespace Dauer.Data.Fit
           // seconds of a minute e.g. 8.9557 => 8:57
           string pretty(double minPerMile)
           {
+            if (minPerMile == double.PositiveInfinity || minPerMile == double.NegativeInfinity)
+            {
+              return "0:00";
+            }
+
             int floor = (int)Math.Floor(minPerMile);
             return $"{floor}:{(int)((minPerMile - floor)*60):00}";
           }

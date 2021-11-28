@@ -4,6 +4,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
   </ItemGroup>
 
 </Project>

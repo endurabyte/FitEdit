@@ -4,7 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace Dauer.DomainServices.UnitTests
+namespace Dauer.Services.UnitTests
 {
     public class Tests
     {

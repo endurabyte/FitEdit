@@ -50,7 +50,7 @@
     /// <summary>
     /// Convert the given speed unit to minutes per mile
     /// </summary>
-    public static double MinutesPerMile(this SpeedUnit unit, double d) => MetersPerSecondConversions[SpeedUnit.MinPerMi] / (d * MetersPerSecondConversions[unit]);
+    public static double MinutesPerMile(this SpeedUnit unit, double d) => d < 1e-12 ? 0 : MetersPerSecondConversions[SpeedUnit.MinPerMi] / (d * MetersPerSecondConversions[unit]);
 
     /// <summary>
     /// Convert the given distance unit to meters

@@ -9,7 +9,7 @@ namespace Dauer.Data.Fit
     {
       try
       {
-        Log.Info($"Opening {source}");
+        Log.Info($"Opening {source}...");
 
         using var fitSource = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
 
@@ -50,6 +50,7 @@ namespace Dauer.Data.Fit
           return null;
         }
 
+        Log.Info($"Found {fitFile.Messages.Count} messages");
         return fitFile;
 
       }

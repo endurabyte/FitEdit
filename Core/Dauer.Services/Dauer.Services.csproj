@@ -3,6 +3,7 @@
   <Import Project="$(SolutionDir)Common.props" />
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
     <ProjectReference Include="..\Dauer.Model\Dauer.Model.csproj" />
   </ItemGroup>
 
