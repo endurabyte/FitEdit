@@ -16,8 +16,28 @@ namespace Dauer.Data.Fit
         var decoder = new Decode();
 
         var fitFile = new FitFile();
-        decoder.MesgEvent += (o, s) => fitFile.Messages.Add(MessageFactory.Create(s.mesg));
-        decoder.MesgDefinitionEvent += (o, s) => fitFile.MessageDefinitions.Add(s.mesgDef);
+
+        decoder.MesgEvent += (o, s) =>
+        {
+          Log.Debug($"Found {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}). Fields = {string.Join(", ", s.mesg.Fields.Select(field => $"({field.Num} \'{field.Name}\')"))}");
+          var mesg = MessageFactory.Create(s.mesg); // Convert general Mesg to specific e.g. LapMesg
+
+          fitFile.Messages.Add(mesg);
+          fitFile.Events.Add(new MesgEventArgs(mesg));
+        };
+
+        decoder.MesgDefinitionEvent += (o, s) =>
+        {
+          Log.Debug($"Found {nameof(MesgDefinition)}. (GlobalMesgNum, LocalMesgNum) = ({s.mesgDef.GlobalMesgNum}, {s.mesgDef.LocalMesgNum}). Fields = {string.Join(", ", s.mesgDef.GetFields().Select(field => field.Num))}");
+          fitFile.MessageDefinitions.Add(s.mesgDef);
+          fitFile.Events.Add(s);
+        };
+
+        decoder.DeveloperFieldDescriptionEvent += (o, s) =>
+        {
+          Log.Debug($"Found {nameof(DeveloperFieldDescription)}. (ApplicationId, ApplicationVersion, FieldDefinitionNumber) = ({s.Description.ApplicationId}, {s.Description.ApplicationVersion}, {s.Description.FieldDefinitionNumber}");
+          fitFile.Events.Add(s);
+        };
 
         bool ok = decoder.IsFIT(fitSource);
         ok &= decoder.CheckIntegrity(fitSource);

@@ -12,14 +12,17 @@ namespace Dauer.Data.Fit
 
       encoder.Open(dest);
 
-      foreach (var definition in fitFile.MessageDefinitions)
+      // Preserve the original message order
+      foreach (var message in fitFile.Events)
       {
-        encoder.Write(definition);
-      }
+        Action write = message switch
+        {
+          _ when message is MesgEventArgs args => () => encoder.Write(args.mesg),
+          _ when message is MesgDefinitionEventArgs args => () => encoder.Write(args.mesgDef),
+          _ => () => { },
+        };
 
-      foreach (var message in fitFile.Messages)
-      {
-        encoder.Write(message);
+        write();
       }
 
       Log.Info($"Wrote {fitFile.Messages.Count} messages and {fitFile.MessageDefinitions.Count} definitions to {destination}");

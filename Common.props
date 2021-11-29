@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <ErrorReport>prompt</ErrorReport>
     <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 </Project>

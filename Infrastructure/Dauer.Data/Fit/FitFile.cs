@@ -7,12 +7,11 @@ namespace Dauer.Data.Fit
   {
     public List<MesgDefinition> MessageDefinitions { get; set; } = new List<MesgDefinition>();
     public List<Mesg> Messages { get; set; } = new List<Mesg>();
+    public List<EventArgs> Events { get; set; } = new List<EventArgs>();
 
     public List<LapMesg> Laps => Get<LapMesg>();
-    public List<RecordMesg> Records => Get<RecordMesg>().Sorted(sort_);
+    public List<RecordMesg> Records => Get<RecordMesg>().Sorted(MessageExtensions.Sort);
     public List<SessionMesg> Sessions => Get<SessionMesg>();
-
-    private Comparison<RecordMesg> sort_ = (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
 
     public List<T> Get<T>() where T : Mesg => Messages
       .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])

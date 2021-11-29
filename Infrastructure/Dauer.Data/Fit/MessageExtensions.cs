@@ -39,5 +39,8 @@ namespace Dauer.Data.Fit
     public static System.DateTime End(this LapMesg lap) => lap.GetTimestamp().GetDateTime();
     public static System.DateTime Start(this SessionMesg sess) => sess.GetStartTime().GetDateTime();
     public static System.DateTime End(this SessionMesg sess) => sess.GetTimestamp().GetDateTime();
+
+    public static Comparison<RecordMesg> Sort => (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
+
   }
 }
