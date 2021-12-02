@@ -9,9 +9,9 @@ namespace Dauer.Data.Fit
     public List<Mesg> Messages { get; set; } = new List<Mesg>();
     public List<EventArgs> Events { get; set; } = new List<EventArgs>();
 
+    public List<SessionMesg> Sessions => Get<SessionMesg>();
     public List<LapMesg> Laps => Get<LapMesg>();
     public List<RecordMesg> Records => Get<RecordMesg>().Sorted(MessageExtensions.Sort);
-    public List<SessionMesg> Sessions => Get<SessionMesg>();
 
     public List<T> Get<T>() where T : Mesg => Messages
       .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])

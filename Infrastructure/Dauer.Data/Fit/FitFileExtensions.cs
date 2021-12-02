@@ -9,10 +9,49 @@ namespace Dauer.Data.Fit
   public static class FitFileExtensions
   {
     /// <summary>
+    /// Fill modified Session, Records, Laps, etc, into Events
+    /// </summary>
+    public static FitFile BackfillEvents(this FitFile f)
+    {
+      int li = 0;
+      int ri = 0;
+      int si = 0;
+
+      foreach (EventArgs ea in f.Events)
+      {
+        if (ea is not MesgEventArgs mea)
+        {
+          continue;
+        }
+
+        if (!MessageFactory.Types.TryGetValue(mea.mesg.Num, out Type t))
+        {
+          continue;
+        }
+
+        Action a = t switch
+        {
+          _ when t == typeof(SessionMesg) => () => { mea.mesg = f.Sessions[si++]; },
+          _ when t == typeof(LapMesg) => () => { mea.mesg = f.Laps[li++]; },
+          _ when t == typeof(RecordMesg) => () => { mea.mesg = f.Records[ri++]; },
+          _ => () => { }
+        };
+
+        a();
+      }
+
+      return f;
+    }
+
+    /// <summary>
     /// Pretty-print useful information from a fit file: Session, Laps, and Records
     /// </summary>
-    public static void Print(this FitFile f, bool showRecords)
+    public static FitFile Print(this FitFile f, bool showRecords)
     {
+      if (f == null)
+      {
+        return f;
+      }
 
       var sessions = f.Sessions;
       var laps = f.Laps;
@@ -35,7 +74,7 @@ namespace Dauer.Data.Fit
         var lapRecords = records.Where(rec => rec.Start() > lap.Start() && rec.Start() < lap.End())
                                 .ToList();
 
-        Log.Info($"      {lapRecords.Count} {(laps.Count == 1 ? "record" : "records")}");
+        Log.Info($"      {lapRecords.Count} {(lapRecords.Count == 1 ? "record" : "records")}");
 
         if (!showRecords)
         {
@@ -44,8 +83,6 @@ namespace Dauer.Data.Fit
 
         foreach (var rec in lapRecords)
         {
-          //Log.Info($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
-
           var speed = new Speed { Unit = SpeedUnit.MetersPerSecond, Value = (double)rec.GetEnhancedSpeed() };
           var distance = new Distance { Unit = DistanceUnit.Meter, Value = (double)rec.GetDistance() };
 
@@ -63,8 +100,11 @@ namespace Dauer.Data.Fit
           }
 
           Log.Info($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {pretty(speed.MinutesPerMile())} min/mi, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+          //Log.Info($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
         }
       }
+
+      return f;
     }
 
     /// <summary>

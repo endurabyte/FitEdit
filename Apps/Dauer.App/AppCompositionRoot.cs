@@ -69,7 +69,7 @@ namespace Dauer.App
           config.Description = "Recalculate lap speeds";
           CommandArgument src = config.Argument("source", "Source .fit file").IsRequired();
           CommandArgument dest = config.Argument("dest", "Destination .fit file").IsRequired();
-          CommandOption<string> speedsOpt = config.Option<string>("-l|--lap <LAPS>", "Lap speeds", CommandOptionType.MultipleValue);
+          CommandOption<string> speedsOpt = config.Option<string>("-l|--lap <LAP>", "Lap speeds", CommandOptionType.MultipleValue);
           CommandOption<string> unitOpt = config.Option<string>("-u|--units <UNIT>", "Lap speed units", CommandOptionType.SingleOrNoValue);
 
           config.OnExecute(() =>

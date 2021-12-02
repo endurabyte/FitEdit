@@ -7,6 +7,11 @@ namespace Dauer.Data.Fit
   {
     public void Write(FitFile fitFile, string destination)
     {
+      if (fitFile == null)
+      {
+        return;
+      }
+
       var encoder = new Encode(ProtocolVersion.V20);
       using var dest = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
 

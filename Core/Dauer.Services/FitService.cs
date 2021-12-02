@@ -54,9 +54,9 @@ namespace Dauer.Services
     {
       FitFile fitFile = new Reader()
         .Read(sourceFile)
-       ?.ApplySpeeds(speeds);
-
-      fitFile.Print(false);
+       ?.ApplySpeeds(speeds)
+       ?.BackfillEvents()
+       ?.Print(false);
 
       new Writer().Write(fitFile, destFile);
     }

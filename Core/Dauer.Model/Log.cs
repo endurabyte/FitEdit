@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Dauer.Model
+﻿namespace Dauer.Model
 {
   public static class Log
   {
