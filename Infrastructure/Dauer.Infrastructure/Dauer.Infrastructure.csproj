@@ -3,6 +3,10 @@
   <Import Project="$(SolutionDir)Common.props" />
 
   <ItemGroup>
+    <PackageReference Include="Lamar" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
     <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
   </ItemGroup>

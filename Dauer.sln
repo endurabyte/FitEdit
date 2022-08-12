@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data", "Infrastructure\Dauer.Data\Dauer.Data.csproj", "{714EC380-D9FE-4438-ABEC-DE6AE92595F1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.App", "Apps\Dauer.App\Dauer.App.csproj", "{23C31CBB-83C6-42AC-A50B-973F10E0CA37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Cli", "Apps\Dauer.Cli\Dauer.Cli.csproj", "{23C31CBB-83C6-42AC-A50B-973F10E0CA37}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Data.UnitTests", "Tests\Dauer.Data.UnitTests\Dauer.Data.UnitTests.csproj", "{3FC44178-9DEF-450A-B81E-BD0F88F2CF7A}"
 EndProject
