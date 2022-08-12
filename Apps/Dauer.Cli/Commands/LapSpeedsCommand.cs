@@ -3,6 +3,7 @@ using Dauer.Services;
 using Typin;
 using Typin.Attributes;
 using Typin.Console;
+
 namespace Dauer.Cli.Commands;
 
 [Command("laps", Manual = "Recalculate lap speeds")]
@@ -25,7 +26,7 @@ public class LapSpeedsCommand : ICommand
   /// <summary>
   /// Return <c>{filename}-edited.{extension}</c> e.g. myactivity.fit => myactivity-edited.fit
   /// </summary>
-  private string autoDestination_ => Destination ?? $"{Path.GetFileNameWithoutExtension(Source)}-edited{Path.GetExtension(Source)}";
+  private string AutoDestination_ => Destination ?? $"{Path.GetFileNameWithoutExtension(Source)}-edited{Path.GetExtension(Source)}";
 
   public LapSpeedsCommand(IFitService service)
   {
@@ -38,7 +39,7 @@ public class LapSpeedsCommand : ICommand
     .Select(speed => new Speed(double.Parse(speed), Units))
     .ToList();
 
-    service_.SetLapSpeeds(Source, autoDestination_, speeds);
+    service_.SetLapSpeeds(Source, AutoDestination_, speeds);
 
     return ValueTask.CompletedTask;
   }

@@ -7,6 +7,11 @@ namespace Dauer.Services
   public interface IFitService
   {
     /// <summary>
+    /// Return a one-line description of a fit file
+    /// </summary>
+    string OneLine(string source);
+
+    /// <summary>
     /// Pretty-print useful information from a fit file: Session, Laps, and Records.
     /// Optionally show details about each record.
     /// </summary>
@@ -30,6 +35,8 @@ namespace Dauer.Services
 
   public class FitService : IFitService
   {
+    public string OneLine(string source) => new Reader().Read(source).OneLine();
+
     public void Print(string source, bool showRecords)
     {
       FitFile fitFile = new Reader().Read(source);

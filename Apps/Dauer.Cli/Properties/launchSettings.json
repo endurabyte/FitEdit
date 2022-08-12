@@ -1,5 +1,9 @@
 {
   "profiles": {
+    "interactive": {
+      "commandName": "Project",
+      "commandLineArgs": "interactive bulklaps"
+    },
     "recalc speeds": {
       "commandName": "Project",
       "commandLineArgs": "laps 6.7 7.1 --units mi/h --source 9388802734_ACTIVITY.fit"

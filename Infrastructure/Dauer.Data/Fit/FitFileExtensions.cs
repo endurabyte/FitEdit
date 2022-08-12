@@ -43,6 +43,19 @@ namespace Dauer.Data.Fit
       return f;
     }
 
+    public static float? TotalDistance(this IEnumerable<SessionMesg> sessions) => sessions.Sum(sess => sess.GetTotalDistance());
+    public static float? TotalElapsedTime(this IEnumerable<SessionMesg> sessions) => sessions.Sum(sess => sess.GetTotalElapsedTime());
+
+    /// <summary>
+    /// Return a one-line description of a fit file
+    /// </summary>
+    public static string OneLine(this FitFile f) => f.Sessions.Count switch
+    {
+      1 => $"From {f.Sessions[0].Start()} to {f.Sessions[0].End()}: {f.Sessions[0].GetTotalDistance()} m in {f.Sessions[0].GetTotalElapsedTime()}s ({f.Sessions[0].GetEnhancedAvgSpeed():0.##} m/s)",
+      _ when f.Sessions.Count > 1 => $"From {f.Sessions.First().Start()} to {f.Sessions.Last().End()}: {f.Sessions.TotalDistance()} m in {f.Sessions.TotalElapsedTime()}s",
+      _ => "No sessions",
+    };
+
     /// <summary>
     /// Pretty-print useful information from a fit file: Session, Laps, and Records
     /// </summary>

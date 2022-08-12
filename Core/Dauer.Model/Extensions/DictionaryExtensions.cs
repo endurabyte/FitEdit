@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace Dauer.Model.Extensions
+﻿namespace Dauer.Model.Extensions
 {
   public static class DictionaryExtensions
   {
