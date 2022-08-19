@@ -1,4 +1,5 @@
 ﻿using Dauer.Services;
+using OpenQA.Selenium;
 using Typin;
 using Typin.Attributes;
 using Typin.Console;

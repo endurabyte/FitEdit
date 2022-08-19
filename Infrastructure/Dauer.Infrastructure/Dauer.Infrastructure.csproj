@@ -4,11 +4,13 @@
 
   <ItemGroup>
     <PackageReference Include="Lamar" Version="8.0.1" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.4.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
     <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
+    <ProjectReference Include="..\Dauer.Adapters.Selenium\Dauer.Adapters.Selenium.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,8 @@
-﻿using Dauer.Services;
+﻿using Dauer.Adapters.Selenium;
+using Dauer.Model.Services;
+using Dauer.Services;
 using Lamar;
+using OpenQA.Selenium;
 
 namespace Dauer.Infrastructure;
 
@@ -12,13 +15,17 @@ public interface ICompositionRoot
 public class CompositionRoot : ICompositionRoot
 {
   public ServiceRegistry Registry { get; }
-  private IContainer _container { get; }
+  private IContainer container_ { get; }
 
   public CompositionRoot()
   {
     Registry = new ServiceRegistry();
+
+    Registry.For<IWebDriver>().Use(new ChromeDriverFactory().Create());
     Registry.For<IFitService>().Use<FitService>();
+    Registry.For<IBrowserAdapter>().Use<SeleniumAdapter>();
+    Registry.For<IBrowserService>().Use<BrowserService>();
   }
 
-  public T Get<T>() => _container.GetInstance<T>();
+  public T Get<T>() => container_.GetInstance<T>();
 }

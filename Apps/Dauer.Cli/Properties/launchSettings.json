@@ -1,12 +1,20 @@
 {
   "profiles": {
+    "Garmin login": {
+      "commandName": "Project",
+      "commandLineArgs": "login-garmin --username test@test.com --password supersecret"
+    },
+    "Garmin upload": {
+      "commandName": "Project",
+      "commandLineArgs": "upload-garmin --file 9428168054_ACTIVITY.fit"
+    },
     "interactive": {
       "commandName": "Project",
-      "commandLineArgs": "interactive bulklaps"
+      "commandLineArgs": "bulk"
     },
     "recalc speeds": {
       "commandName": "Project",
-      "commandLineArgs": "laps 6.7 7.1 --units mi/h --source 9388802734_ACTIVITY.fit"
+      "commandLineArgs": "laps 6.7 7.1 --units mi/h --source 9428168054_ACTIVITY.fit"
     },
     "No args": {
       "commandName": "Project",
