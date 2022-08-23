@@ -5,23 +5,25 @@ using OpenQA.Selenium;
 
 namespace Dauer.Adapters.Selenium;
 
-public class GarminLoginStep : Step, IStep
+public class GarminSigninStep : Step, IStep
 {
   public string Username { get; set; }
   public string Password { get; set; }
+  public bool Force { get; set; }
 
-  public GarminLoginStep(IWebDriver driver) : base(driver) => Name = "Garmin Login";
+  public GarminSigninStep(IWebDriver driver) : base(driver) => Name = "Garmin Login";
 
   public async Task<bool> Run()
   {
-    if (await SignedIn().AnyContext())
+    if (!Force && await driver_.SignedInToGarmin().AnyContext())
     {
+      Log.Info($"  Already signed in. Use --force to login again.");
       return true;
     }
 
     await SignInWithUserPass().AnyContext();
 
-    bool ok = await SignedIn().AnyContext();
+    bool ok = await driver_.SignedInToGarmin().AnyContext();
 
     if (!ok)
     {
@@ -29,7 +31,7 @@ public class GarminLoginStep : Step, IStep
     }
     else
     {
-      Log.Info("Logged in");
+      Log.Info("Signed in");
     }
 
     return ok;
@@ -39,11 +41,10 @@ public class GarminLoginStep : Step, IStep
   {
     Log.Info($"Signing in to Garmin Connect with user/pass...");
 
-    string url = "https://connect.garmin.com/signin/";
-    driver_.Url = url;
+    driver_.Url = "https://connect.garmin.com/signin/";
 
     // Signin elements are in an iframe to sso.garmin.com
-    if (!WaitForElement(By.Id("gauth-widget-frame-gauth-widget"), out IWebElement authFrame))
+    if (!driver_.WaitForElement(By.Id("gauth-widget-frame-gauth-widget"), out IWebElement authFrame))
     {
       Log.Error($"Could not find sign in button");
       return Task.CompletedTask;
@@ -52,7 +53,7 @@ public class GarminLoginStep : Step, IStep
     driver_.SwitchTo().Frame(authFrame);
 
     // Wait for "Sign In" button to appear
-    if (!WaitForElement(By.Id("login-btn-signin"), out IWebElement signInButton))
+    if (!driver_.WaitForElement(By.Id("login-btn-signin"), out IWebElement signInButton))
     {
       Log.Error($"Could not find sign in button");
       return Task.CompletedTask;
@@ -64,7 +65,7 @@ public class GarminLoginStep : Step, IStep
     signInButton.Click();
 
     // Wait for "signed in" class to appear on root html element
-    if (!WaitForElement(By.ClassName("signed-in"), out _))
+    if (!driver_.WaitForElement(By.ClassName("signed-in"), out _))
     {
       Log.Error($"Could not sign in");
     }

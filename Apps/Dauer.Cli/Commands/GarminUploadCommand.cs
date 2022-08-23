@@ -1,4 +1,5 @@
 ﻿using Dauer.Adapters.Selenium;
+using Dauer.Model;
 using FundLog.Model.Extensions;
 using OpenQA.Selenium;
 using Typin;
@@ -26,7 +27,10 @@ public class GarminUploadCommand : ICommand
 
     try
     {
-      await upload_.Run().AnyContext();
+      if (!await upload_.Run().AnyContext())
+      {
+        Log.Error("Failed");
+      }
     }
     finally
     {

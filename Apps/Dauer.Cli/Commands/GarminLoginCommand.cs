@@ -1,4 +1,5 @@
 ﻿using Dauer.Adapters.Selenium;
+using Dauer.Model;
 using FundLog.Model.Extensions;
 using OpenQA.Selenium;
 using Typin;
@@ -10,7 +11,7 @@ namespace Dauer.Cli.Commands;
 [Command("login-garmin", Manual = "Login to Garmin")]
 public class GarminLoginCommand : ICommand
 {
-  private readonly GarminLoginStep login_;
+  private readonly GarminSigninStep login_;
 
   [CommandOption("username", 'u', Description = "Garmin Connect username", IsRequired = true)]
   public string Username { get; set; }
@@ -18,7 +19,10 @@ public class GarminLoginCommand : ICommand
   [CommandOption("password", 'p', Description = "Garmin Connect password", IsRequired = true)]
   public string Password { get; set; }
 
-  public GarminLoginCommand(GarminLoginStep login)
+  [CommandOption("force", 'f', Description = "Log in even if already logged in", IsRequired = false)]
+  public bool Force { get; set; }
+
+  public GarminLoginCommand(GarminSigninStep login)
   {
     login_ = login;
   }
@@ -27,10 +31,14 @@ public class GarminLoginCommand : ICommand
   {
     login_.Username = Username;
     login_.Password = Password;
+    login_.Force = Force;
 
     try
     {
-      await login_.Run().AnyContext();
+      if (!await login_.Run().AnyContext())
+      {
+        Log.Error("Failed");
+      }
     }
     finally
     {

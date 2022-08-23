@@ -6,7 +6,15 @@
     },
     "Garmin upload": {
       "commandName": "Project",
-      "commandLineArgs": "upload-garmin --file 9428168054_ACTIVITY.fit"
+      "commandLineArgs": "upload-garmin 9436866924_ACTIVITY.fit"
+    },
+    "Garmin edit": {
+      "commandName": "Project",
+      "commandLineArgs": "edit-garmin 9443610623 --title \"Test Title\" --note \"Test Note\""
+    },
+    "Garmin delete": {
+      "commandName": "Project",
+      "commandLineArgs": "delete-garmin 9436866924"
     },
     "interactive": {
       "commandName": "Project",

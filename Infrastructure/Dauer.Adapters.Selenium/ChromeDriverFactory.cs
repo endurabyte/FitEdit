@@ -5,12 +5,9 @@ namespace Dauer.Adapters.Selenium;
 
 public class ChromeDriverFactory
 {
-  public ChromeDriver Create(bool randomize = false)
+  public ChromeDriver Create()
   {
-    if (randomize)
-    {
-      ChromeDriverProcess.Randomize().Await();
-    }
+    ChromeDriverProcess.Setup(randomize: false).Await();
 
     ChromeDriverService cds = ChromeDriverService.CreateDefaultService();
     cds.HideCommandPromptWindow = true;
@@ -36,7 +33,7 @@ public class ChromeDriverFactory
 
       // Note: Some bot detectors (e.g. Discover Card) notice --headless and block us
       // https://stackoverflow.com/questions/55364643
-      "--headless",
+      //"--headless",
 
       // Needed for headless on Linux without root
       //"--no-sandbox",
@@ -65,6 +62,10 @@ public class ChromeDriverFactory
           ["source"] = @"const newProto = navigator.__proto__; delete newProto.webdriver; navigator.__proto__ = newProto;",
         });
     }
+
+    // Prevents StaleElementReferenceException and ElementNotInteractableException.
+    // We don't use implicit waits because we wait explicitly where needed.
+    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
 
     return driver;
   }

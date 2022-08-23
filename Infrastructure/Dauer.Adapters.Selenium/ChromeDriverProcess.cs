@@ -21,14 +21,21 @@ public class ChromeDriverProcess
   /// <summary>
   /// Kill the current chromedriver process, randomize its fingerprinting signature, and make it executable.
   /// </summary>
-  public static async Task Setup()
+  public static async Task Setup(bool randomize)
   {
-    Log.Info("Setting up ChromeDriver...");
-
     // chromedriver.exe tends to keep running. Kill it
     await Kill().AnyContext();
-    await Randomize().AnyContext();
-    await MakeExecutable().AnyContext();
+
+    if (!File.Exists(FullOutput))
+    {
+      File.Copy(FullInput, FullOutput);
+    }
+
+    if (randomize)
+    {
+      await Randomize().AnyContext();
+      await MakeExecutable().AnyContext();
+    }
   }
 
   /// <summary>
