@@ -25,6 +25,8 @@ public class CompositionRoot : ICompositionRoot
     Registry.For<IFitService>().Use<FitService>();
     Registry.For<IBrowserAdapter>().Use<SeleniumAdapter>();
     Registry.For<IBrowserService>().Use<BrowserService>();
+    Registry.For<FinalSurgeCalendar>().Use<FinalSurgeCalendar>();
+    Registry.For<FinalSurgeCalendarSearch>().Use<FinalSurgeCalendarSearch>();
   }
 
   public T Get<T>() => container_.GetInstance<T>();

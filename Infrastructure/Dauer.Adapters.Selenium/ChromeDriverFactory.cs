@@ -31,6 +31,7 @@ public class ChromeDriverFactory
       "--window-size=1200,800",
       //"--start-maximized",
 
+      // Note: Some FinalSurge controls e.g. Save don't appear with --headless
       // Note: Some bot detectors (e.g. Discover Card) notice --headless and block us
       // https://stackoverflow.com/questions/55364643
       //"--headless",
@@ -63,9 +64,9 @@ public class ChromeDriverFactory
         });
     }
 
-    // Prevents StaleElementReferenceException and ElementNotInteractableException.
-    // We don't use implicit waits because we wait explicitly where needed.
-    driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+    // We don't use implicit waits because they make IWebDriver.FindElements very slow.
+    // Instead, we wait explicitly where needed.
+    //driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
 
     return driver;
   }

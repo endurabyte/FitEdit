@@ -8,12 +8,12 @@ public static class WebDriverExtensions
 {
   public static T RunJs<T>(this IWebDriver driver, string script) => (T)((IJavaScriptExecutor)driver).ExecuteScript(script);
 
-  public static bool TryFindElement(this IWebDriver driver, By by, out IWebElement element)
+  public static bool TryFindElement(this ISearchContext ctx, By by, out IWebElement element)
   {
     try
     {
-      element = driver.FindElement(by);
-      return element != null /*&& element.Displayed*/;
+      element = ctx.FindElement(by);
+      return element != null;
     }
     catch (NoSuchElementException)
     {

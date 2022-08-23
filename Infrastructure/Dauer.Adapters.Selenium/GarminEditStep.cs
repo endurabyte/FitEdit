@@ -3,8 +3,6 @@ using Dauer.Model.Web;
 using FundLog.Model.Extensions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Support.UI;
-using SeleniumExtras.WaitHelpers;
 
 namespace Dauer.Adapters.Selenium;
 
@@ -14,7 +12,7 @@ public class GarminEditStep : Step, IStep
   public string Title { get; set; }
   public string Note { get; set; }
 
-  public GarminEditStep(IWebDriver driver) : base(driver) => Name = "Garmin Actiivty Edit";
+  public GarminEditStep(IWebDriver driver) : base(driver) => Name = "Garmin Activity Edit";
 
   public async Task<bool> Run()
   {
