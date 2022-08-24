@@ -27,7 +27,8 @@ public class FinalSurgeCalendar
       return false;
     }
 
-    if (TryParseSafe(monthYear, out DateTime currentDt) && currentDt.AlmostEqual(dt))
+    var dtMonth = new DateTime(dt.Year, dt.Month, 1);
+    if (TryParseSafe(monthYear, out DateTime currentDt, "MMMM yyyy") && currentDt.AlmostEqual(dtMonth))
     {
       // Already at the requested month/year
       return true;
@@ -145,11 +146,11 @@ public class FinalSurgeCalendar
     return $"{timeSpan.Text} {daySpan.Text} {monthYear}";
   }
 
-  private bool TryParseSafe(string date, out DateTime dt)
+  private bool TryParseSafe(string date, out DateTime dt, string format = null)
   {
     try
     {
-      return DateTime.TryParseExact(date, format_, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt);
+      return DateTime.TryParseExact(date, format ?? format_, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt);
     }
     catch (Exception)
     {
