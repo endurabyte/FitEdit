@@ -98,17 +98,25 @@ public class FinalSurgeEditStep : Step, IStep
       return null;
     }
 
-    if (!modal
+    if (!await driver
       .TryClick(By.CssSelector(".fs-responsive-modal > [id='fs-modal-content'] > div > div.content > div.fs-workout-preview > div.header > div.button-group > div.button"))
-      .Await())
+      .AnyContext())
     {
       Log.Error("Could not click edit button");
       return null;
     }
 
-    if (!driver.TryFindElement(By.CssSelector("[id='fs-modal-content']"), out IWebElement quickEditModal))
+    if (!driver.TryFindElement(By.CssSelector(".fs-responsive-modal-full"), out IWebElement quickEditModal))
     {
-      Log.Error("Could not find modal");
+      Log.Error("Could not find quick edit modal");
+      return null;
+    }
+
+    string title = await quickEditModal.TryGetText(By.CssSelector("[id='fs-modal-content'] > div.header > span.fs-modal-title")).AnyContext();
+
+    if (title != "Quick edit")
+    {
+      Log.Error("Found wrong modal");
       return null;
     }
 

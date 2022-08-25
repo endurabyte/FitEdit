@@ -39,7 +39,7 @@ public class GarminEditStep : Step, IStep
     {
       // Elements don't become interactable until the page sees any mouse movement
       new Actions(driver_).MoveToElement(editButton).Perform();
-      await editButton.TryClick().AnyContext();
+      return await editButton.TryClick().AnyContext();
     }).AnyContext())
     {
       return false;

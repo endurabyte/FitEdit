@@ -9,7 +9,18 @@ namespace Dauer.Adapters.Selenium;
 
 public static class WebDriverExtensions
 {
-  public static T RunJs<T>(this IWebDriver driver, string script) => (T)((IJavaScriptExecutor)driver).ExecuteScript(script);
+  public static T RunJs<T>(this IWebDriver driver, string script, params object[] args) => (T)((IJavaScriptExecutor)driver).ExecuteScript(script, args);
+
+  public static IDictionary<string, object> GetAttributes(this IWebDriver driver, IWebElement elem) => driver.RunJs<IDictionary<string, object>>
+  (
+    @"var items = {};
+        var elem = arguments[0];
+        for (i = 0; i < elem.attributes.length; i++) {
+          items[elem.attributes[i].name] = elem.attributes[i].value;
+        }
+        return items;",
+    elem
+  );
 
   public static async Task<bool> TryWaitForUrl
   (
@@ -29,7 +40,7 @@ public static class WebDriverExtensions
   ) => await ctx.RetryAsync(by, elem =>
   {
     elem.Click();
-    return Task.CompletedTask;
+    return Task.FromResult(true);
   }, config.WithDescription($"{nameof(TryClick)}({by})")).AnyContext();
 
   public static async Task<bool> TryClick
@@ -53,7 +64,7 @@ public static class WebDriverExtensions
     elem.Clear();
     elem.SendKeys(text);
     elem.SendKeys(Keys.Enter);
-    return Task.CompletedTask;
+    return Task.FromResult(true);
   }, config.WithDescription($"{nameof(TrySetText)}(\"{text}\")")).AnyContext();
 
   public static async Task<string> TryGetText
@@ -68,7 +79,7 @@ public static class WebDriverExtensions
     bool ok = await ctx.RetryAsync(by, elem =>
     {
       tmp = elem.Text;
-      return Task.CompletedTask;
+      return Task.FromResult(!string.IsNullOrWhiteSpace(tmp));
     }, config).AnyContext();
     
     return ok ? tmp : null;
@@ -78,14 +89,13 @@ public static class WebDriverExtensions
   (
     this ISearchContext ctx,
     By by,
-    Func<IWebElement, Task> action,
+    Func<IWebElement, Task<bool>> action,
     RetryConfig config = default
   ) => await Resilently.RetryAsync(async () =>
   {
     if (ctx.TryFindElement(by, out IWebElement elem))
     {
-      await action(elem).AnyContext();
-      return true;
+      return await action(elem).AnyContext();
     }
 
     return false;
