@@ -9,6 +9,9 @@ public struct RetryConfig
   public TimeSpan Duration { get; set; }
   public CancellationToken CancellationToken { get; set; }
   public int RetryLimit { get; set; }
+  /// <summary>
+  /// Excluded from equality check, hash code, and copy constructor
+  /// </summary>
   public string Description { get; set; }
   public Action Callback { get; set; }
 

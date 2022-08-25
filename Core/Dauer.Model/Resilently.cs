@@ -12,9 +12,11 @@ public static class Resilently
   {
     if (config == default)
     {
-      var desc = config.Description;
-      config = new RetryConfig();
-      config.Description = desc;
+      string desc = config.Description; 
+      config = new RetryConfig
+      {
+        Description = desc
+      };
     }
 
     DateTime start = DateTime.UtcNow;
@@ -28,8 +30,7 @@ public static class Resilently
       {
         if (tries > 1)
         {
-          string description = $"{(string.IsNullOrWhiteSpace(config.Description) ? "" : $"of \"{config.Description}\" ") }";
-          Log.Debug($"Retry {description}succeeded in {(DateTime.UtcNow - start).TotalSeconds:##.#}s after {tries} of {config.RetryLimit} tries");
+          Log(config, start, tries);
         }
 
         return true;
@@ -37,6 +38,14 @@ public static class Resilently
     }
 
     return false;
+  }
+
+  private static void Log(RetryConfig config, DateTime start, int tries)
+  {
+    string description = $"{(string.IsNullOrWhiteSpace(config.Description) ? "" : $"of \"{config.Description}\" ")}";
+    string maxTries = $"{(config.RetryLimit == int.MaxValue ? "inf" : $"{config.RetryLimit}")}";
+
+    Model.Log.Debug($"Retry {description}succeeded in {(DateTime.UtcNow - start).TotalSeconds:##.#}s after {tries} of {maxTries} tries");
   }
 
   private static async Task<bool> DoRetry
