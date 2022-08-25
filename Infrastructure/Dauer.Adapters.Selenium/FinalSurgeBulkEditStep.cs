@@ -18,11 +18,11 @@ public class FinalSurgeBulkEditStep : Step, IStep
     search_ = search;
   }
 
-  public Task<bool> Run()
+  public async Task<bool> Run()
   {
-    if (!driver_.SignedInToFinalSurge(advise: true))
+    if (!await driver_.SignedInToFinalSurge(advise: true).AnyContext())
     {
-      return Task.FromResult(false);
+      return false;
     }
 
     bool ok = true;
@@ -37,22 +37,23 @@ public class FinalSurgeBulkEditStep : Step, IStep
 
       Log.Info($"Editing {Dates[i]} \"{WorkoutNames[i]}\"");
 
-      if (!search_.TryFind(Dates[i], out IWebElement workout))
+      IWebElement workout = await search_.TryFind(Dates[i]).AnyContext();
+      if (workout == null)
       {
         Log.Error($"Could not find workout '{WorkoutNames[i]}' on {Dates[i]}");
         continue;
       }
 
-      bool ok2 = Resilently.RetryAsync
+      bool ok2 = await Resilently.RetryAsync
       (
-        () => Task.FromResult(editor.Edit(workout, WorkoutNames[i], Descriptions[i])), 
+        async () => await editor.Edit(workout, WorkoutNames[i], Descriptions[i]).AnyContext(),
         new RetryConfig
         {
           RetryLimit = 3,
           Duration = TimeSpan.FromMinutes(1),
           Description = $"Edit workout {Dates[i]} \"{WorkoutNames[i]}\""
         }
-      ).Await();
+      ).AnyContext();
 
       if (ok2)
       {
@@ -65,6 +66,6 @@ public class FinalSurgeBulkEditStep : Step, IStep
       ok &= ok2;
     }
 
-    return Task.FromResult(ok);
+    return ok;
   }
 }

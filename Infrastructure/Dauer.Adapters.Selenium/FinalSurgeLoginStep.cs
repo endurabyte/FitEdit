@@ -1,4 +1,5 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Web;
 using OpenQA.Selenium;
 
@@ -12,15 +13,15 @@ public class FinalSurgeLoginStep : Step, IStep
 
   public FinalSurgeLoginStep(IWebDriver driver) : base(driver) => Name = "Final Surge Login";
 
-  public Task<bool> Run()
+  public async Task<bool> Run()
   {
-    if (!Force && driver_.SignedInToFinalSurge())
+    if (!Force && await driver_.SignedInToFinalSurge().AnyContext())
     {
       Log.Info($"  Already logged in. Use --force to login again.");
-      return Task.FromResult(true);
+      return true;
     }
 
-    bool ok = LogInWithUserPass() || driver_.SignedInToFinalSurge();
+    bool ok = LogInWithUserPass() || await driver_.SignedInToFinalSurge().AnyContext();
 
     if (!ok)
     {
@@ -31,7 +32,7 @@ public class FinalSurgeLoginStep : Step, IStep
       Log.Info("Signed in");
     }
 
-    return Task.FromResult(ok);
+    return ok;
   }
 
   private bool LogInWithUserPass()

@@ -1,4 +1,5 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using OpenQA.Selenium;
 
 namespace Dauer.Adapters.Selenium;
@@ -19,7 +20,7 @@ public class FinalSurgeCalendar
   /// <summary>
   /// Navigate the date picker to the given month
   /// </summary>
-  public bool GoToMonth(DateTime dt)
+  public async Task<bool> GoToMonth(DateTime dt)
   {
     if (!TryGetMonthYear(out string monthYear, out IWebElement picker))
     {
@@ -34,7 +35,7 @@ public class FinalSurgeCalendar
     }
 
     // Expand the date picker
-    picker.TryClick();
+    await picker.TryClick().AnyContext();
 
     if (!driver_.TryFindElement(By.CssSelector("[id='fs-date-picker-container']"), out IWebElement expandedPicker))
     {
@@ -49,11 +50,11 @@ public class FinalSurgeCalendar
     // Select year
     while (int.TryParse(year.Text, out int yearInt) && yearInt > dt.Year)
     {
-      left.TryClick();
+      await left.TryClick().AnyContext();
     }
     while (int.TryParse(year.Text, out int yearInt) && yearInt < dt.Year)
     {
-      right.TryClick();
+      await right.TryClick().AnyContext();
     }
 
     // Select month
@@ -67,7 +68,7 @@ public class FinalSurgeCalendar
     bool didSetMonth = cell switch
     {
       null => false,
-      _ => cell.TryClick()
+      _ => await cell.TryClick().AnyContext()
     };
 
     if (!didSetMonth)

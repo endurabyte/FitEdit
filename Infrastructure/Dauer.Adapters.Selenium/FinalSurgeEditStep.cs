@@ -1,4 +1,5 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Web;
 using OpenQA.Selenium;
 using System.Text.RegularExpressions;
@@ -19,79 +20,109 @@ public class FinalSurgeEditStep : Step, IStep
     search_ = search;
   }
 
-  public Task<bool> Run()
+  public async Task<bool> Run()
   {
     string calendarUrl = $"https://beta.finalsurge.com/workoutcalendar";
 
     if (driver_.Url != calendarUrl)
     {
-      if (!driver_.SignedInToFinalSurge(advise: true))
+      if (!await driver_.SignedInToFinalSurge(advise: true).AnyContext())
       {
-        return Task.FromResult(false);
+        return false;
       }
     }
 
     if (driver_.Url != calendarUrl)
     {
-      return Task.FromResult(false);
+      return false;
     }
 
-    if (!search_.TryFind(Date, out IWebElement workout))
+    IWebElement workout = await search_.TryFind(Date).AnyContext();
+    if (workout == null)
     {
-      return Task.FromResult(false);
+      return false;
     }
 
-    bool ok = Edit(workout, WorkoutName, Description);
+    bool ok = await Edit(workout, WorkoutName, Description).AnyContext();
 
-    return Task.FromResult(ok);
+    return ok;
   }
 
   /// <summary>
   /// Set the name or description of the given workout.
   /// </summary>
-  public bool Edit(IWebElement day, string name, string description) => 
-    TryOpenWorkoutModal(driver_, day, out IWebElement modal)
-      && TryEditName(modal, name)
-      && TryEditDescription(modal, description)
-      && TrySave(driver_)
-      && TryShowWorkout(driver_);
-
-  /// <summary>
-  /// Open the modal dialog by clicking the workout and then in the workout bubble clicking the edit pencil.
-  /// </summary>
-  private static bool TryOpenWorkoutModal(IWebDriver driver, IWebElement day, out IWebElement modal)
+  public async Task<bool> Edit(IWebElement day, string name, string description)
   {
-    modal = null;
+   IWebElement modal = await TryOpenQuickEditModal(driver_, day, Date).AnyContext();
 
-    if (!day.TryClick(By.CssSelector(".workout-item__overlay")))
-    {
-      Log.Error("Could not click on workout");
-      return false;
-    }
-
-    if (!driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div > div.content > div > div.header > div > div:nth-child(1) > div.button__border")))
-    {
-      Log.Error("Could not click edit button");
-      return false;
-    }
-
-    if (!driver.TryFindElement(By.CssSelector("[id='fs-modal-content']"), out modal))
-    {
-      Log.Error("Could not find modal");
-      return false;
-    }
-
-    return true;
+    return modal != null
+      && await TryEditName(modal, name).AnyContext()
+      && await TryEditDescription(modal, description).AnyContext()
+      && await TrySave(driver_).AnyContext()
+      && await TryShowWorkout(driver_).AnyContext();
   }
 
-  private static bool TryEditName(IWebElement modal, string name)
+  /// <summary>
+  /// Open the workout quick edit modal by clicking the workout and then in the workout bubble clicking the edit pencil.
+  /// </summary>
+  private static async Task<IWebElement> TryOpenQuickEditModal(IWebDriver driver, IWebElement day, DateTime date)
+  {
+    List<IWebElement> workouts = day.FindElements(By.CssSelector(".fs-workout-item")).ToList();
+
+    IWebElement workout = workouts.FirstOrDefault(wc =>
+    {
+      if (!wc.TryFindElement(By.CssSelector(".workout-item__time > span"), out IWebElement time))
+      {
+        Log.Error("Could not find workout time");
+        return false;
+      }
+
+      if (!DateTimeFactory.TryParseSafe(time.Text, out DateTime dt, "HH:mm"))
+      {
+        Log.Error("Could not parse workout time");
+      }
+
+      return dt.Hour == date.Hour && dt.Minute == date.Minute;
+    });
+
+    // Opens the workout modal
+    if (!await workout.TryClick().AnyContext())
+    {
+      Log.Error("Could not click on workout");
+      return null;
+    }
+
+    if (!day.TryFindElement(By.CssSelector(".workout-modal-container"), out IWebElement modal))
+    {
+      Log.Error("Could not click on workout");
+      return null;
+    }
+
+    if (!modal
+      .TryClick(By.CssSelector(".fs-responsive-modal > [id='fs-modal-content'] > div > div.content > div.fs-workout-preview > div.header > div.button-group > div.button"))
+      .Await())
+    {
+      Log.Error("Could not click edit button");
+      return null;
+    }
+
+    if (!driver.TryFindElement(By.CssSelector("[id='fs-modal-content']"), out IWebElement quickEditModal))
+    {
+      Log.Error("Could not find modal");
+      return null;
+    }
+
+    return quickEditModal;
+  }
+
+  private static async Task<bool> TryEditName(IWebElement modal, string name)
   {
     if (string.IsNullOrWhiteSpace(name))
     {
       return true;
     }
 
-    if (!modal.TrySetText(By.CssSelector("[placeholder=\"Workout Name\"]"), name))
+    if (!await modal.TrySetText(By.CssSelector("[placeholder=\"Workout Name\"]"), name).AnyContext())
     {
       Log.Error("Could not set workout name");
       return false;
@@ -100,14 +131,14 @@ public class FinalSurgeEditStep : Step, IStep
     return true;
   }
 
-  private static bool TryEditDescription(IWebElement modal, string description)
+  private static async Task<bool> TryEditDescription(IWebElement modal, string description)
   {
     if (string.IsNullOrWhiteSpace(description))
     {
       return true;
     }
 
-    if (!modal.TrySetText(By.CssSelector("[placeholder=\"Description\"]"), description))
+    if (!await modal.TrySetText(By.CssSelector("[placeholder=\"Description\"]"), description).AnyContext())
     {
       Log.Error("Could not set workout description");
       return false;
@@ -116,9 +147,11 @@ public class FinalSurgeEditStep : Step, IStep
     return true;
   }
 
-  private static bool TrySave(IWebDriver driver)
+  private static async Task<bool> TrySave(IWebDriver driver)
   {
-    if (!driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div.content > div > div.quick-add-footer > div > div > div > button:nth-child(1)")))
+    if (!await driver
+      .TryClick(By.CssSelector("[id='fs-modal-content'] > div.content > div > div.quick-add-footer > div > div > div > button:nth-child(1)"))
+      .AnyContext())
     {
       Log.Error("Could not find save button");
       return false;
@@ -127,24 +160,24 @@ public class FinalSurgeEditStep : Step, IStep
     return true;
   }
 
-  private static bool TryShowWorkout(IWebDriver driver)
+  private static async Task<bool> TryShowWorkout(IWebDriver driver)
   {
     // Wait for workout modal to close
-    if (!driver.TryClick(By.CssSelector(".workout-item__overlay")))
+    if (!await driver.TryClick(By.CssSelector(".workout-item__overlay")).AnyContext())
     {
       Log.Error("Saved but could not close modal to get workout ID.");
       return false;
     }
 
     // Request analyzer load
-    if (!driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div > div.window-container")))
+    if (!await driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div > div.window-container")).AnyContext())
     {
       Log.Error("Could not find analyze button");
       return false;
     }
 
     // Wait for analyzer to load
-    if (!driver.TryWaitForUrl(new Regex(".*workoutcalendar/workout-details/USER/")))
+    if (!await driver.TryWaitForUrl(new Regex(".*workoutcalendar/workout-details/USER/")).AnyContext())
     {
       Log.Error("Could not open analyzer");
       return false;
@@ -159,7 +192,9 @@ public class FinalSurgeEditStep : Step, IStep
     Log.Debug($"URL: {driver.Url}");
 
     // Close analyzer
-    if (!driver.TryClick(By.CssSelector("[id='fs-component_container'] > div.modal.modal--global > div.header > div.header__action > div > div.el-tooltip.button.workout-details-page__action.button--l.button--empty.button--icon-left > div.button__border")))
+    if (!await driver
+      .TryClick(By.CssSelector("[id='fs-component_container'] > div.modal.modal--global > div.header > div.header__action > div > div.el-tooltip.button.workout-details-page__action.button--l.button--empty.button--icon-left > div.button__border"))
+      .AnyContext())
     {
       Log.Error("Could not close analyzer");
       return false;

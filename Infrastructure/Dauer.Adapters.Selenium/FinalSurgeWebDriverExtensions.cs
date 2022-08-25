@@ -1,4 +1,5 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using OpenQA.Selenium;
 using System.Text.RegularExpressions;
 
@@ -6,7 +7,7 @@ namespace Dauer.Adapters.Selenium;
 
 public static class FinalSurgeWebDriverExtensions
 {
-  public static bool SignedInToFinalSurge(this IWebDriver driver, bool advise = false)
+  public static async Task<bool> SignedInToFinalSurge(this IWebDriver driver, bool advise = false)
   {
     // If signed in, we get redirected to /workoutcalendar.
     // If not signed in, we get redirected to /login
@@ -14,7 +15,7 @@ public static class FinalSurgeWebDriverExtensions
     driver.Url = "https://www.finalsurge.com/login/";
     Thread.Sleep(4000);
 
-    bool signedIn = driver.TryWaitForUrl(new Regex("https://beta.finalsurge.com/workoutcalendar"));
+    bool signedIn = await driver.TryWaitForUrl(new Regex("https://beta.finalsurge.com/workoutcalendar")).AnyContext();
 
     if (!signedIn && advise)
     {

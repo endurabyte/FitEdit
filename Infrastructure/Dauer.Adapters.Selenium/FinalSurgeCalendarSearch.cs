@@ -17,12 +17,15 @@ public class FinalSurgeCalendarSearch
   /// <summary>
   /// Find the <see cref="IWebElement"/> for the workout which starts at the given <see cref="DateTime"/>.
   /// </summary>
-  public bool TryFind(DateTime dt, out IWebElement workout) => FindAll(new[] { dt }).TryGetValue(dt, out workout);
+  public async Task<IWebElement> TryFind(DateTime dt) => (await FindAll(new[] { dt }).AnyContext())
+    .TryGetValue(dt, out IWebElement workout) 
+      ? workout 
+      : null;
 
   /// <summary>
   /// Find the <see cref="IWebElement"/> for each workout which starts at each given <see cref="DateTime"/>.
   /// </summary>
-  public Dictionary<DateTime, IWebElement> FindAll(IEnumerable<DateTime> dts)
+  public async Task<Dictionary<DateTime, IWebElement>> FindAll(IEnumerable<DateTime> dts)
   {
     var dtsSorted = dts.ToList();
     dtsSorted.Sort(); // Oldest to newest
@@ -33,11 +36,12 @@ public class FinalSurgeCalendarSearch
     DateTime lastDt = default;
     foreach (DateTime dt in dtsSorted)
     {
+      // Go to the workout month in the FinalSurge date picker
       if (lastDt == default || dt.Month != lastDt.Month)
       {
-        bool didSetMonth = Resilently.RetryAsync
+        bool didSetMonth = await Resilently.RetryAsync
         (
-          () => Task.FromResult(calendar_.GoToMonth(dt)),
+          async () => await calendar_.GoToMonth(dt).AnyContext(),
           
           new RetryConfig 
           { 
@@ -45,7 +49,7 @@ public class FinalSurgeCalendarSearch
             Duration = TimeSpan.FromMinutes(1),
             Description = "Set month/year"
           }
-        ).Await();
+        ).AnyContext();
 
         if (!didSetMonth)
         {

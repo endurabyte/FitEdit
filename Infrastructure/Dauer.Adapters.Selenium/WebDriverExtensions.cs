@@ -11,68 +11,67 @@ public static class WebDriverExtensions
 {
   public static T RunJs<T>(this IWebDriver driver, string script) => (T)((IJavaScriptExecutor)driver).ExecuteScript(script);
 
-  public static bool TryWaitForUrl
+  public static async Task<bool> TryWaitForUrl
   (
     this IWebDriver driver,
     Regex regex,
     RetryConfig config = default
-  ) => Resilently.RetryAsync(() =>
+  ) => await Resilently.RetryAsync(() =>
   {
     return Task.FromResult(regex.IsMatch(driver.Url));
-  }, config.WithDescription($"{nameof(TryWaitForUrl)}(\"{regex}\")")).Await();
+  }, config.WithDescription($"{nameof(TryWaitForUrl)}(\"{regex}\")")).AnyContext();
 
-  public static bool TryClick
+  public static async Task<bool> TryClick
   (
     this ISearchContext ctx,
     By by,
     RetryConfig config = default
-  ) => ctx.RetryAsync(by, elem =>
+  ) => await ctx.RetryAsync(by, elem =>
   {
     elem.Click();
     return Task.CompletedTask;
-  }, config.WithDescription($"{nameof(TryClick)}({by})")).Await();
+  }, config.WithDescription($"{nameof(TryClick)}({by})")).AnyContext();
 
-  public static bool TryClick
+  public static async Task<bool> TryClick
   (
     this IWebElement elem,
     RetryConfig config = default
-  ) => elem.RetryAsync(elem =>
+  ) => await elem.RetryAsync(elem =>
   {
     elem.Click();
     return Task.FromResult(true);
-  }, config.WithDescription($"{nameof(TryClick)}({elem.TagName})")).Await();
+  }, config.WithDescription($"{nameof(TryClick)}({elem.TagName})")).AnyContext();
 
-  public static bool TrySetText
+  public static async Task<bool> TrySetText
   (
     this ISearchContext ctx,
     By by,
     string text,
     RetryConfig config = default
-  ) => ctx.RetryAsync(by, elem =>
+  ) => await ctx.RetryAsync(by, elem =>
   {
     elem.Clear();
     elem.SendKeys(text);
+    elem.SendKeys(Keys.Enter);
     return Task.CompletedTask;
-  }, config.WithDescription($"{nameof(TrySetText)}(\"{text}\")")).Await();
+  }, config.WithDescription($"{nameof(TrySetText)}(\"{text}\")")).AnyContext();
 
-  public static bool TryGetText
+  public static async Task<string> TryGetText
   (
     this ISearchContext ctx,
     By by,
-    out string text,
     RetryConfig config = default
   )
   {
     string tmp = null;
 
-    bool ok = ctx.RetryAsync(by, elem =>
+    bool ok = await ctx.RetryAsync(by, elem =>
     {
       tmp = elem.Text;
       return Task.CompletedTask;
-    }, config).Await();
+    }, config).AnyContext();
     
-    text = ok ? tmp : null;
-    return ok;
+    return ok ? tmp : null;
   }
 
   public static async Task<bool> RetryAsync

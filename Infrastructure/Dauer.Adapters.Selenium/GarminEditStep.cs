@@ -35,26 +35,22 @@ public class GarminEditStep : Step, IStep
   private async Task<bool> EditTitle(string title)
   {
     // Click the pencil icon
-    if (!driver_.WaitForClickable(By.CssSelector(".modal-trigger > .icon-pencil"), out IWebElement editButton))
+    if (!await driver_.RetryAsync(By.CssSelector(".modal-trigger > .icon-pencil"), async editButton =>
+    {
+      // Elements don't become interactable until the page sees any mouse movement
+      new Actions(driver_).MoveToElement(editButton).Perform();
+      await editButton.TryClick().AnyContext();
+    }).AnyContext())
     {
       return false;
     }
-
-    // Elements don't become interactable until the page sees any mouse movement
-    new Actions(driver_).MoveToElement(editButton).Perform();
-    editButton.Click();
 
     // Clear and type new title
-    if (!driver_.WaitForElement(By.CssSelector(".inline-edit-editable > .page-title-overflow"), out IWebElement titleEditor))
+    if (!await driver_.TrySetText(By.CssSelector(".inline-edit-editable > .page-title-overflow"), title).AnyContext())
     {
       return false;
     }
 
-    titleEditor.Clear();
-    titleEditor.SendKeys(title);
-    titleEditor.SendKeys(Keys.Enter);
-
-    await Task.CompletedTask;
     return true;
   }
 
