@@ -1,6 +1,6 @@
 ﻿using Dauer.Adapters.Selenium;
 using Dauer.Model;
-using FundLog.Model.Extensions;
+using Dauer.Model.Extensions;
 using OpenQA.Selenium;
 using Typin;
 using Typin.Attributes;
@@ -37,7 +37,7 @@ public class FinalSurgeBulkEditCommand : ICommand
     {
       if (!await edit_.Run().AnyContext())
       {
-        Log.Error("Failed");
+        Log.Error($"{nameof(FinalSurgeBulkEditCommand)} Failed");
       }
     }
     finally

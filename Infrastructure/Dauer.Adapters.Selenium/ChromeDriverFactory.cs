@@ -1,4 +1,4 @@
-﻿using FundLog.Model.Extensions;
+﻿using Dauer.Model.Extensions;
 using OpenQA.Selenium.Chrome;
 
 namespace Dauer.Adapters.Selenium;

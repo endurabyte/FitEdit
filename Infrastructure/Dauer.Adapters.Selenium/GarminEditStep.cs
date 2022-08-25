@@ -1,6 +1,6 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Web;
-using FundLog.Model.Extensions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 

@@ -1,7 +1,7 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Web;
 using Dauer.Services;
-using FundLog.Model.Extensions;
 using OpenQA.Selenium;
 
 namespace Dauer.Adapters.Selenium;

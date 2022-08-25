@@ -1,6 +1,5 @@
 ﻿using Dauer.Model;
 using OpenQA.Selenium;
-using System.Globalization;
 
 namespace Dauer.Adapters.Selenium;
 
@@ -28,53 +27,55 @@ public class FinalSurgeCalendar
     }
 
     var dtMonth = new DateTime(dt.Year, dt.Month, 1);
-    if (TryParseSafe(monthYear, out DateTime currentDt, "MMMM yyyy") && currentDt.AlmostEqual(dtMonth))
+    if (DateTimeFactory.TryParseSafe(monthYear, out DateTime currentDt, "MMMM yyyy") && currentDt.AlmostEqual(dtMonth))
     {
       // Already at the requested month/year
       return true;
     }
 
     // Expand the date picker
-    picker.Click();
+    picker.TryClick();
 
     if (!driver_.TryFindElement(By.CssSelector("[id='fs-date-picker-container']"), out IWebElement expandedPicker))
     {
-      Log.Error("Could expand date picker");
+      Log.Error("Could not expand date picker");
       return false;
     }
 
     IWebElement left = expandedPicker.FindElement(By.CssSelector(".icon-arrow-left"));
     IWebElement right = expandedPicker.FindElement(By.CssSelector(".icon-arrow-right"));
-    IWebElement yearElem = expandedPicker.FindElement(By.CssSelector(".calendar-picker-header__button"));
+    IWebElement year = expandedPicker.FindElement(By.CssSelector(".calendar-picker-header__button"));
 
     // Select year
-    while (int.TryParse(yearElem.Text, out int year) && year > dt.Year)
+    while (int.TryParse(year.Text, out int yearInt) && yearInt > dt.Year)
     {
-      left.Click(); 
+      left.TryClick();
     }
-    while (int.TryParse(yearElem.Text, out int year) && year < dt.Year)
+    while (int.TryParse(year.Text, out int yearInt) && yearInt < dt.Year)
     {
-      right.Click();
+      right.TryClick();
     }
 
-    // Wait for slide animation to stop
+    // Select month
+    // Wait for slide animation to finish, otherwise cells are for the year currently sliding through
     Thread.Sleep(500);
 
     // After changing the year, any previous cell reference is now stale
     IReadOnlyCollection<IWebElement> cells = expandedPicker.FindElements(By.CssSelector(".date-picker-view__cell"));
-
-    // Select month
     IWebElement cell = cells.FirstOrDefault(cell => cell.Text.Contains($"{dt:MMM}")); // e.g. "Aug", "Jul"
 
-    if (cell == null)
+    bool didSetMonth = cell switch
     {
-      Log.Error("Could not set month");
-      return false;
+      null => false,
+      _ => cell.TryClick()
+    };
+
+    if (!didSetMonth)
+    {
+      Log.Error("Could not set year and/or month");
     }
 
-    cell?.Click(); // Closes the picker. 
-
-    return true;
+    return didSetMonth;
   }
 
   /// <summary>
@@ -87,7 +88,7 @@ public class FinalSurgeCalendar
       return null;
     }
 
-    // Days without just have the day of the month e.g. "1" or "28"
+    // Days without workouts just have the day of the month e.g. "1" or "28"
     int minLen = 2;
 
     List<IWebElement> days = driver_
@@ -99,14 +100,17 @@ public class FinalSurgeCalendar
 
     foreach (IWebElement day in days)
     {
-      string date = KeyFor(day, monthYear);
+      List<string> dates = KeysFor(day, monthYear);
 
-      if (!TryParseSafe(date, out DateTime key))
+      foreach (string date in dates)
       {
-        continue;
-      }
+        if (!DateTimeFactory.TryParseSafe(date, out DateTime key, format_))
+        {
+          continue;
+        }
 
-      dict[key] = day;
+        dict[key] = day;
+      }
     }
 
     return dict;
@@ -128,34 +132,18 @@ public class FinalSurgeCalendar
     return true;
   }
 
-  private static string KeyFor(IWebElement day, string monthYear)
+  private static List<string> KeysFor(IWebElement day, string monthYear)
   {
     if (!day.TryFindElement(By.CssSelector(".fs-cwdv-date"), out IWebElement daySpan))
     {
       // Not a calendar day
-      return "";
+      return new List<string>();
     }
 
-    if (!day.TryFindElement(By.CssSelector(".workout-item__time > span"), out IWebElement timeSpan))
-    {
-      // No workout that day
-      return "";
-    }
+    // empty => No workout that day
+    List<IWebElement> times = day.FindElements(By.CssSelector(".workout-item__time > span")).ToList();
 
     // Format is e.g. "08:09 8 August 2022"
-    return $"{timeSpan.Text} {daySpan.Text} {monthYear}";
-  }
-
-  private bool TryParseSafe(string date, out DateTime dt, string format = null)
-  {
-    try
-    {
-      return DateTime.TryParseExact(date, format ?? format_, CultureInfo.InvariantCulture, DateTimeStyles.None, out dt);
-    }
-    catch (Exception)
-    {
-      dt = default;
-      return false;
-    }
+    return times.Select(time => $"{time.Text} {daySpan.Text} {monthYear}").ToList();
   }
 }

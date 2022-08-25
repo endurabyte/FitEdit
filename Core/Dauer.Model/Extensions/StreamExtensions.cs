@@ -1,4 +1,6 @@
-﻿public static class StreamExtensions
+﻿namespace Dauer.Model.Extensions;
+
+public static class StreamExtensions
 {
   public static byte[] ReadAllBytes(this Stream s)
   {

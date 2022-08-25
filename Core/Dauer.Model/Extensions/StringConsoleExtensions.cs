@@ -1,4 +1,6 @@
-﻿public static class StringConsoleExtensions
+﻿namespace Dauer.Model.Extensions;
+
+public static class StringConsoleExtensions
 {
   private static readonly object lock_ = new();
 

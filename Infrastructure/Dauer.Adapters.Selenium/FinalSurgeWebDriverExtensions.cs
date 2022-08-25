@@ -1,5 +1,6 @@
 ﻿using Dauer.Model;
 using OpenQA.Selenium;
+using System.Text.RegularExpressions;
 
 namespace Dauer.Adapters.Selenium;
 
@@ -12,7 +13,8 @@ public static class FinalSurgeWebDriverExtensions
 
     driver.Url = "https://www.finalsurge.com/login/";
     Thread.Sleep(4000);
-    bool signedIn = driver.Url == "https://beta.finalsurge.com/workoutcalendar";
+
+    bool signedIn = driver.TryWaitForUrl(new Regex("https://beta.finalsurge.com/workoutcalendar"));
 
     if (!signedIn && advise)
     {

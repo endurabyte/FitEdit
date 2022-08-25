@@ -1,4 +1,5 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Workouts;
 using Dauer.Services;
 using System.IO.Compression;

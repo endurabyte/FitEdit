@@ -1,6 +1,7 @@
 ﻿using Dauer.Model;
 using Dauer.Model.Web;
 using OpenQA.Selenium;
+using System.Text.RegularExpressions;
 
 namespace Dauer.Adapters.Selenium;
 
@@ -41,7 +42,7 @@ public class FinalSurgeEditStep : Step, IStep
     }
 
     bool ok = Edit(workout, WorkoutName, Description);
-    
+
     return Task.FromResult(ok);
   }
 
@@ -62,17 +63,15 @@ public class FinalSurgeEditStep : Step, IStep
   {
     modal = null;
 
-    if (!day.TryFindElement(By.CssSelector(".workout-item__overlay"), out IWebElement workout))
+    if (!day.TryClick(By.CssSelector(".workout-item__overlay")))
     {
-      Log.Error("Could not find workout");
+      Log.Error("Could not click on workout");
       return false;
     }
 
-    workout.Click();
-
-    if (!driver.TryFindElement(By.CssSelector("[id='fs-modal-content'] > div > div.content > div > div.header > div > div:nth-child(1) > div.button__border"), out IWebElement editButton))
+    if (!driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div > div.content > div > div.header > div > div:nth-child(1) > div.button__border")))
     {
-      Log.Error("Could not find edit button");
+      Log.Error("Could not click edit button");
       return false;
     }
 
@@ -82,7 +81,6 @@ public class FinalSurgeEditStep : Step, IStep
       return false;
     }
 
-    editButton.Click();
     return true;
   }
 
@@ -93,14 +91,12 @@ public class FinalSurgeEditStep : Step, IStep
       return true;
     }
 
-    if (!modal.TryFindElement(By.CssSelector("[placeholder=\"Workout Name\"]"), out IWebElement nameInput))
+    if (!modal.TrySetText(By.CssSelector("[placeholder=\"Workout Name\"]"), name))
     {
-      Log.Error("Could not find workout name input");
+      Log.Error("Could not set workout name");
       return false;
     }
 
-    nameInput.Clear();
-    nameInput.SendKeys(name);
     return true;
   }
 
@@ -111,66 +107,63 @@ public class FinalSurgeEditStep : Step, IStep
       return true;
     }
 
-    if (!modal.TryFindElement(By.CssSelector("[placeholder=\"Description\"]"), out IWebElement descriptionInput))
+    if (!modal.TrySetText(By.CssSelector("[placeholder=\"Description\"]"), description))
     {
-      Log.Error("Could not find workout description input");
+      Log.Error("Could not set workout description");
       return false;
     }
 
-    descriptionInput.Clear();
-    descriptionInput.SendKeys(description);
     return true;
   }
 
-  private bool TrySave(IWebDriver driver)
+  private static bool TrySave(IWebDriver driver)
   {
-    if (!driver.TryFindElement(By.CssSelector("[id='fs-modal-content'] > div.content > div > div.quick-add-footer > div > div > div > button:nth-child(1)"), out IWebElement saveButton))
+    if (!driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div.content > div > div.quick-add-footer > div > div > div > button:nth-child(1)")))
     {
       Log.Error("Could not find save button");
       return false;
     }
 
-    saveButton.Click();
     return true;
   }
 
   private static bool TryShowWorkout(IWebDriver driver)
   {
-    Thread.Sleep(2000);
-
-    // Wait for modal to close
-    if (!driver.WaitForClickable(By.CssSelector(".workout-item__overlay"), out IWebElement workout))
+    // Wait for workout modal to close
+    if (!driver.TryClick(By.CssSelector(".workout-item__overlay")))
     {
       Log.Error("Saved but could not close modal to get workout ID.");
       return false;
     }
 
-    workout.Click();
-
-    if (!driver.TryFindElement(By.CssSelector("[id='fs-modal-content'] > div > div.window-container"), out IWebElement analyzeButton))
+    // Request analyzer load
+    if (!driver.TryClick(By.CssSelector("[id='fs-modal-content'] > div > div.window-container")))
     {
       Log.Error("Could not find analyze button");
       return false;
     }
 
-    analyzeButton.Click();
-    Thread.Sleep(1000);
+    // Wait for analyzer to load
+    if (!driver.TryWaitForUrl(new Regex(".*workoutcalendar/workout-details/USER/")))
+    {
+      Log.Error("Could not open analyzer");
+      return false;
+    }
 
     string url = driver.Url;
     string[] split = url.Split('/');
     string userId = split[split.Length - 2];
     string workoutId = split[split.Length - 1];
 
-    Log.Info($"Edited workout {workoutId}");
-    Log.Info($"Full URL: {driver.Url}");
+    Log.Debug($"Workout ID: {workoutId}");
+    Log.Debug($"URL: {driver.Url}");
 
-    if (!driver.TryFindElement(By.CssSelector("[id='fs-component_container'] > div.modal.modal--global > div.header > div.header__action > div > div.el-tooltip.button.workout-details-page__action.button--l.button--empty.button--icon-left > div.button__border"), out IWebElement closeButton))
+    // Close analyzer
+    if (!driver.TryClick(By.CssSelector("[id='fs-component_container'] > div.modal.modal--global > div.header > div.header__action > div > div.el-tooltip.button.workout-details-page__action.button--l.button--empty.button--icon-left > div.button__border")))
     {
       Log.Error("Could not close analyzer");
       return false;
     }
-
-    closeButton.Click();
 
     return true;
   }

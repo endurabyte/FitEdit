@@ -1,7 +1,7 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Services;
 using Dauer.Model.Web;
-using FundLog.Model.Extensions;
 
 namespace Dauer.Services;
 

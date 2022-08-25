@@ -1,4 +1,4 @@
-﻿namespace FundLog.Model.Extensions;
+﻿namespace Dauer.Model.Extensions;
 
 public static class TaskExtensions
 {

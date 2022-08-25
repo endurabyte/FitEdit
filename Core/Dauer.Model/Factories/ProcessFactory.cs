@@ -1,4 +1,4 @@
-﻿using FundLog.Model.Extensions;
+﻿using Dauer.Model.Extensions;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 

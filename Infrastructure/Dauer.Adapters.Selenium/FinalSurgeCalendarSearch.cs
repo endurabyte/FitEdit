@@ -1,4 +1,6 @@
-﻿using OpenQA.Selenium;
+﻿using Dauer.Model;
+using Dauer.Model.Extensions;
+using OpenQA.Selenium;
 
 namespace Dauer.Adapters.Selenium;
 
@@ -23,7 +25,7 @@ public class FinalSurgeCalendarSearch
   public Dictionary<DateTime, IWebElement> FindAll(IEnumerable<DateTime> dts)
   {
     var dtsSorted = dts.ToList();
-    dtsSorted.Sort();
+    dtsSorted.Sort(); // Oldest to newest
 
     Dictionary<DateTime, IWebElement> source = null;
     Dictionary<DateTime, IWebElement> dest = new();
@@ -33,7 +35,23 @@ public class FinalSurgeCalendarSearch
     {
       if (lastDt == default || dt.Month != lastDt.Month)
       {
-        calendar_.GoToMonth(dt);
+        bool didSetMonth = Resilently.RetryAsync
+        (
+          () => Task.FromResult(calendar_.GoToMonth(dt)),
+          
+          new RetryConfig 
+          { 
+            RetryLimit = 3, 
+            Duration = TimeSpan.FromMinutes(1),
+            Description = "Set month/year"
+          }
+        ).Await();
+
+        if (!didSetMonth)
+        {
+          continue;
+        }
+
         source = calendar_.ReadMonth();
       }
 
@@ -50,8 +68,7 @@ public class FinalSurgeCalendarSearch
   }
 
   /// <summary>
-  /// Find the first <see cref="DateTime"/> that is equal to 
-  /// the given <see cref="DateTime"/> within <see cref="Precision"/>.
+  /// Find the first <see cref="DateTime"/> that is equal to the given <see cref="DateTime"/>.
   /// Return false iff there is no such match.
   /// </summary>
   private bool TryMatch(DateTime dt, IEnumerable<DateTime> all, out DateTime match)
