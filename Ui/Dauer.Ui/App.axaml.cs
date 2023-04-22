@@ -1,7 +1,5 @@
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Dauer.Ui.Services;
 using Dauer.Ui.ViewModels;
 using Dauer.Ui.Views;
 
@@ -16,20 +14,22 @@ public partial class App : Application
 
   public override void OnFrameworkInitializationCompleted()
   {
-    var db = new Database();
+    var root = new CompositionRoot(ApplicationLifetime);
+    object? dataContext = root.Get<IMainViewModel>();
 
-    if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+    if (ApplicationLifetime.IsDesktop(out var desktop))
     {
-      desktop.MainWindow = new MainWindow
+      desktop!.MainWindow = new MainWindow
       {
-        DataContext = new MainViewModel(db)
+        DataContext = dataContext
       };
     }
-    else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
+
+    else if (ApplicationLifetime.IsMobile(out var mobile))
     {
-      singleViewPlatform.MainView = new MainView
+      mobile!.MainView = new MainView
       {
-        DataContext = new MainViewModel(db)
+        DataContext = dataContext
       };
     }
 

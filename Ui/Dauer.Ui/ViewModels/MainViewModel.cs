@@ -2,16 +2,25 @@
 using System.Collections.ObjectModel;
 using Dauer.Ui.Models;
 using Dauer.Ui.Services;
+using Dauer.Ui.Adapters.Storage;
 
 namespace Dauer.Ui.ViewModels;
 
-public class MainViewModel : ViewModelBase
+public interface IMainViewModel
+{
+
+}
+
+public class MainViewModel : ViewModelBase, IMainViewModel
 {
   public ObservableCollection<InventoryItem> Items { get; }
   private Models.File? lastFile_ = null;
+  private readonly IStorageAdapter storage_;
 
-  public MainViewModel(Database db)
+  public MainViewModel(IStorageAdapter storage, Database db)
   {
+    storage_ = storage;
+
     Items = new ObservableCollection<InventoryItem>(db.GetItems());
     this.Log().Debug($"test log from {nameof(MainViewModel)}");
     Log.Write("MainViewModel ready");
@@ -31,7 +40,7 @@ public class MainViewModel : ViewModelBase
     {
       try
       {
-        Models.File? file = await Storage.OpenFileAsync();
+        Models.File? file = await storage_.OpenFileAsync();
         if (file == null)
         {
           Log.Write("Could not load file");
@@ -63,7 +72,7 @@ public class MainViewModel : ViewModelBase
 
         string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
         string extension = Path.GetExtension(lastFile_.Name);
-        await Storage.SaveAsync(new Models.File($"{name}_edit.{extension}", lastFile_.Bytes));
+        await storage_.SaveAsync(new Models.File($"{name}_edit.{extension}", lastFile_.Bytes));
       }
       catch (Exception e)
       {

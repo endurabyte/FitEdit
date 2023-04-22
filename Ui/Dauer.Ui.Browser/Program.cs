@@ -4,9 +4,9 @@ using Avalonia.Logging;
 using Avalonia.ReactiveUI;
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
 using Dauer.Ui;
-using Dauer.Ui.Services;
+using Dauer.Ui.Adapters;
+using Dauer.Ui.Adapters.Storage;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -15,22 +15,22 @@ internal partial class Program
   private static void Main(string[] args)
   {
     _ = JSHost
-      .ImportAsync(WebStorage.ModuleName, "./main.js")
+      .ImportAsync(WebStorageAdapterImpl.ModuleName, "./store.js")
       .ContinueWith(_ =>
       {
-        WebConsole.Log($"{WebStorage.ModuleName} ready");
+        WebConsoleAdapter.Log($"{WebStorageAdapterImpl.ModuleName} ready");
         string key = "testKey";
-        WebStorage.SetLocalStorage(key, "{ \"jsonKey\" : \"jsonValue\" }");
-        string data = WebStorage.GetLocalStorage(key);
-        WebConsole.Log($"Got from storage: {key} => {data}");
-        WebStorage.SetMessage();
+        WebStorageAdapterImpl.SetLocalStorage(key, "{ \"jsonKey\" : \"jsonValue\" }");
+        string data = WebStorageAdapterImpl.GetLocalStorage(key);
+        WebConsoleAdapter.Log($"Got from storage: {key} => {data}");
       });
 
     _ = JSHost
-      .ImportAsync(WebConsole.ModuleName, "./main.js")
+      .ImportAsync(WebConsoleAdapter.ModuleName, "./console.js")
       .ContinueWith(_ =>
       {
-        WebConsole.Log($"{WebConsole.ModuleName} ready");
+        WebConsoleAdapter.Log($"{WebConsoleAdapter.ModuleName} ready");
+        WebConsoleAdapter.SetMessage();
       });
 
     BuildAvaloniaApp()

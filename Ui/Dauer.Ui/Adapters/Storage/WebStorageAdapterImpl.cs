@@ -1,13 +1,12 @@
 ﻿using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
 
-namespace Dauer.Ui.Services;
+namespace Dauer.Ui.Adapters.Storage;
 
 [SupportedOSPlatform("browser")]
-public partial class WebStorage
+public partial class WebStorageAdapterImpl
 {
-  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Services)}.{nameof(WebStorage)}";
+  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Adapters)}.{nameof(Storage)}.{nameof(WebStorageAdapterImpl)}";
 
   [JSImport("setLocalStorage", ModuleName)]
   public static partial void SetLocalStorage(string key, string value);
@@ -15,15 +14,9 @@ public partial class WebStorage
   [JSImport("getLocalStorage", ModuleName)]
   public static partial string GetLocalStorage(string key);
 
-  [JSImport("setMessage", ModuleName)]
-  public static partial string SetMessage();
-
   [JSImport("openFile", ModuleName)]
   public static partial Task<JSObject> OpenFileAsync();
 
   [JSImport("downloadByteArray", ModuleName)]
   public static partial void DownloadByteArray(string fileName, byte[] bytes);
-
-  [JSExport]
-  internal static string GetMessage() => $"Hello from {ModuleName}";
 }
