@@ -2,15 +2,15 @@
   "profiles": {
     "Garmin login": {
       "commandName": "Project",
-      "commandLineArgs": "login-garmin --username test@test.com --password supersecret"
+      "commandLineArgs": "login-garmin --username user@example.com --password supersecret"
     },
     "Garmin upload": {
       "commandName": "Project",
-      "commandLineArgs": "upload-garmin 9436866924_ACTIVITY.fit"
+      "commandLineArgs": "upload-garmin \"C:\\Users\\doug\\Downloads\\9436866924_ACTIVITY.fit\""
     },
     "Garmin edit": {
       "commandName": "Project",
-      "commandLineArgs": "edit-garmin 9443610623 --title \"Test Title\" --note \"Test Note\""
+      "commandLineArgs": "edit-garmin 9474464024 --title \"6mi hills hard\""
     },
     "Garmin delete": {
       "commandName": "Project",
@@ -18,7 +18,7 @@
     },
     "Final Surge login": {
       "commandName": "Project",
-      "commandLineArgs": "login-finalsurge --username test@test.com --password supersecret"
+      "commandLineArgs": "login-finalsurge --username user@example.com --password supersecret"
     },
     "Final Surge edit": {
       "commandName": "Project",
