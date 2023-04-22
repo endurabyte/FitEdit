@@ -21,9 +21,8 @@ public class CopyCommand : ICommand
     service_ = service;
   }
 
-  public ValueTask ExecuteAsync(IConsole console)
+  public async ValueTask ExecuteAsync(IConsole console)
   {
-    service_.Copy(Source, Destination);
-    return ValueTask.CompletedTask;
+    await service_.CopyAsync(Source, Destination);
   }
 }

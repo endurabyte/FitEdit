@@ -22,16 +22,15 @@ public class InteractiveLapSpeedsCommand : ICommand
     service_ = service;
   }
 
-  public ValueTask ExecuteAsync(IConsole console)
+  public async ValueTask ExecuteAsync(IConsole console)
   {
-    LapSpeeds();
-    return ValueTask.CompletedTask;
+    await LapSpeeds();
   }
 
   /// <summary>
   /// Interactively edit a single FIT file
   /// </summary>
-  public void LapSpeeds()
+  public async Task LapSpeeds()
   {
     Console.WriteLine("Interactively editing a single FIT file.");
 
@@ -58,6 +57,6 @@ public class InteractiveLapSpeedsCommand : ICommand
     .Select(speed => new Speed(double.Parse(speed), units))
     .ToList();
 
-    service_.SetLapSpeeds(source, dest, speeds);
+    await service_.SetLapSpeedsAsync(source, dest, speeds);
   }
 }

@@ -33,14 +33,12 @@ public class LapSpeedsCommand : ICommand
     service_ = service;
   }
 
-  public ValueTask ExecuteAsync(IConsole console)
+  public async ValueTask ExecuteAsync(IConsole console)
   {
     List<Speed> speeds = LapSpeeds
     .Select(speed => new Speed(double.Parse(speed), Units))
     .ToList();
 
-    service_.SetLapSpeeds(Source, AutoDestination_, speeds);
-
-    return ValueTask.CompletedTask;
+    await service_.SetLapSpeedsAsync(Source, AutoDestination_, speeds);
   }
 }

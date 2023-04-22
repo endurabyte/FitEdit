@@ -91,21 +91,21 @@ public class MainViewModel : ViewModelBase, IMainViewModel
         };
 
         // Blocks the UI thread
-        FitFile fit = new Reader().Read(file.Name, ps);
+        FitFile fit = await new Reader().ReadAsync(file.Name, ps);
 
         // Blocks the UI thread
-        //FitFile fit = await Task.Run(() => new Reader().Read(file.Name, ps));
+        //FitFile fit = await Task.Run(async () => await new Reader().ReadAsync(file.Name, ps));
 
         // Blocks the UI thread but sometimes RunJobs runs other posted UI work.
-        //FitFile fit = await Dispatcher.UIThread.InvokeAsync(() => new Reader().Read(file.Name, ps));
+        //FitFile fit = await Dispatcher.UIThread.InvokeAsync(async () => await new Reader().ReadAsync(file.Name, ps));
 
         // Maybe this could be the ticket
         //Dispatcher.UIThread.Post(async () =>
         //{
-        //  Show($"Reading FIT file {file.Name}");
+        //  await Show($"Reading FIT file {file.Name}");
         //  using var ms = new MemoryStream(lastFile_.Bytes);
-        //  using var ps = new ProgressStream(ms, 5*1024); // report progress every 5 kB
-        //  Show($"Read progress: ");
+        //  using var ps = new ProgressStream(ms, 5 * 1024); // report progress every 5 kB
+        //  await Show($"Read progress: ");
         //  Dispatcher.UIThread.RunJobs();
         //  await Task.Yield();
 
@@ -118,7 +118,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
         //    await Task.Yield();
         //  };
 
-        //  FitFile fit = new Reader().Read(file.Name, ps);
+        //  FitFile fit = await new Reader().ReadAsync(file.Name, ps);
         //});
 
         RemoveTail();

@@ -28,19 +28,18 @@ public class BulkLapCommand : ICommand
     service_ = service;
   }
 
-  public ValueTask ExecuteAsync(IConsole console)
+  public async ValueTask ExecuteAsync(IConsole console)
   {
     // Suppress annoyingly verbose output for an interactive session
     Log.Level = LogLevel.None;
 
-    BulkLapSpeeds();
-    return ValueTask.CompletedTask;
+    await BulkLapSpeeds();
   }
 
   /// <summary>
   /// Interactively edit multiple FIT files in a directory.
   /// </summary>
-  public void BulkLapSpeeds()
+  public async Task BulkLapSpeeds()
   {
     Console.WriteLine("Interactively editing multiple FIT files in a directory.");
 
@@ -59,14 +58,14 @@ public class BulkLapCommand : ICommand
 
     List<string> originals = Directory.EnumerateFiles(originalsDir, "*.fit").ToList();
 
-    ShowUser(originals);
+    await ShowUser(originals);
 
     // Edit each found lap file
     foreach (var fitFile in originals)
     {
       string dest = @$"{editsDir}\{Path.GetFileName(fitFile)}";
 
-      while (!TrySetLapSpeeds(fitFile, units, dest))
+      while (!await TrySetLapSpeeds(fitFile, units, dest))
       {
       }
     }
@@ -107,14 +106,14 @@ public class BulkLapCommand : ICommand
   /// <summary>
   /// Tell the user what we found.
   /// </summary>
-  private void ShowUser(List<string> files)
+  private async Task ShowUser(List<string> files)
   {
     Console.WriteLine($"Found {files.Count} files");
 
     foreach (var file in files)
     {
       $"  {Path.GetFileName(file)}".Write(detailColor_);
-      $" ({service_.OneLine(file)})".WriteLine(defaultColor_);
+      $" ({await service_.OneLineAsync(file)})".WriteLine(defaultColor_);
     }
   }
 
@@ -148,7 +147,7 @@ public class BulkLapCommand : ICommand
     }
   }
 
-  private bool TrySetLapSpeeds(string fitFile, string units, string dest)
+  private async Task<bool> TrySetLapSpeeds(string fitFile, string units, string dest)
   {
     try
     {
@@ -172,7 +171,7 @@ public class BulkLapCommand : ICommand
         .Select(speed => new Speed(double.Parse(speed), units))
         .ToList();
 
-      service_.SetLapSpeeds(fitFile, dest, speeds);
+      await service_.SetLapSpeedsAsync(fitFile, dest, speeds);
 
       $"Wrote {dest}.".WriteLine(goodColor_);
       return true;

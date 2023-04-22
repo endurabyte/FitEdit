@@ -20,9 +20,8 @@ public class ShowCommand : ICommand
     service_ = service;
   }
 
-  public ValueTask ExecuteAsync(IConsole console)
+  public async ValueTask ExecuteAsync(IConsole console)
   {
-    service_.Print(Source, Verbose);
-    return ValueTask.CompletedTask;
+    await service_.PrintAsync(Source, Verbose);
   }
 }

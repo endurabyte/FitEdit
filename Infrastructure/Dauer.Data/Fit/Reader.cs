@@ -5,14 +5,14 @@ namespace Dauer.Data.Fit
 {
   public class Reader
   {
-    public FitFile Read(string source)
+    public async Task<FitFile> ReadAsync(string source)
     {
       Log.Info($"Opening {source}...");
       using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
-      return Read(source, stream);
+      return await ReadAsync(source, stream);
     }
 
-    public FitFile Read(string source, Stream stream)
+    public async Task<FitFile> ReadAsync(string source, Stream stream)
     {
       try
       {
@@ -60,14 +60,14 @@ namespace Dauer.Data.Fit
           }
 
           Log.Warn("Attempting to read by skipping the header...");
-          if (!decoder.Read(stream, DecodeMode.InvalidHeader))
+          if (!await decoder.ReadAsync(stream, DecodeMode.InvalidHeader))
           {
             Log.Error($"Could not read {source} by skipping the header");
             return null;
           }
         }
 
-        if (!decoder.Read(stream))
+        if (!await decoder.ReadAsync(stream))
         {
           Log.Error($"Could not read {source}");
           return null;

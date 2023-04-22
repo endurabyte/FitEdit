@@ -17,9 +17,8 @@ public class DumpCommand : ICommand
     service_ = service;
   }
 
-  public ValueTask ExecuteAsync(IConsole console)
+  public async ValueTask ExecuteAsync(IConsole console)
   {
-    service_.PrintAll(Source);
-    return ValueTask.CompletedTask;
+    await service_.PrintAllAsync(Source);
   }
 }

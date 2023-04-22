@@ -7,20 +7,20 @@ namespace Dauer.Data.IntegrationTests
 {
   public class Copy
   {
-    const string _source = @"..\..\..\..\data\devices\forerunner-945\sports\running\treadmill\2019-12-17\"
+    private const string source_ = @"..\..\..\..\data\devices\forerunner-945\sports\running\treadmill\2019-12-17\"
         + @"steep-1mi-easy-2x[2mi 2min rest]\garmin-connect\activity.fit";
 
     /// <summary>
     /// Verify round trip integrity, i.e. encode(decode(file)) == file
     /// </summary>
     [Test]
-    public void Copies()
+    public async Task Copies()
     {
       var dest = "output.fit";
 
-      var fitFile = new Reader().Read(_source);
+      var fitFile = await new Reader().ReadAsync(source_);
       new Writer().Write(fitFile, dest);
-      var fitFile2 = new Reader().Read(dest);
+      var fitFile2 = await new Reader().ReadAsync(dest);
 
       Assert.AreEqual(fitFile.MessageDefinitions.Count, fitFile2.MessageDefinitions.Count);
 
@@ -40,26 +40,26 @@ namespace Dauer.Data.IntegrationTests
     // This test doesn't pass due to minor differences e.g. protocol version
     [Explicit]
     [Test]
-    public void Copy_FilesBinarySame()
+    public async Task Copy_FilesBinarySame()
     {
       var dest = "output.fit";
 
-      var fitFile = new Reader().Read(_source);
+      var fitFile = await new Reader().ReadAsync(source_);
       new Writer().Write(fitFile, dest);
 
-      FileAssert.AreEqual(_source, dest);
+      FileAssert.AreEqual(source_, dest);
     }
 
     // This test doesn't pass due to minor differences e.g. protocol version
     [Explicit]
     [Test]
-    public void Copies_JsonEqual()
+    public async Task Copies_JsonEqual()
     {
       var dest = "output.fit";
 
-      var fitFile = new Reader().Read(_source);
+      var fitFile = await new Reader().ReadAsync(source_);
       new Writer().Write(fitFile, dest);
-      var fitFile2 = new Reader().Read(dest);
+      var fitFile2 = new Reader().ReadAsync(dest);
 
       var json = JsonConvert.SerializeObject(fitFile, Formatting.Indented);
       var json2 = JsonConvert.SerializeObject(fitFile2, Formatting.Indented);
@@ -70,7 +70,7 @@ namespace Dauer.Data.IntegrationTests
       Assert.AreEqual(json, json2);
     }
 
-    void AssertAreEqual(MesgDefinition a, MesgDefinition b)
+    private void AssertAreEqual(MesgDefinition a, MesgDefinition b)
     {
       Assert.AreEqual(a.GlobalMesgNum, b.GlobalMesgNum);
       Assert.AreEqual(a.LocalMesgNum, b.LocalMesgNum);
@@ -79,7 +79,7 @@ namespace Dauer.Data.IntegrationTests
       Assert.AreEqual(a.IsBigEndian, b.IsBigEndian);
     }
 
-    void AssertAreEqual(Mesg a, Mesg b)
+    private void AssertAreEqual(Mesg a, Mesg b)
     {
       Assert.AreEqual(a.Name, b.Name);
       Assert.AreEqual(a.Num, b.Num);
@@ -94,7 +94,7 @@ namespace Dauer.Data.IntegrationTests
       }
     }
 
-    void AssertAreEqual(Field a, Field b)
+    private void AssertAreEqual(Field a, Field b)
     {
       Assert.AreEqual(a.Name, b.Name);
       Assert.AreEqual(a.Num, b.Num);

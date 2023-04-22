@@ -159,37 +159,19 @@ namespace Dynastream.Fit
         /// <returns>
         /// Returns true if reading finishes successfully.
         /// </returns>
-        public bool Read(Stream fitStream)
+        public async Task<bool> ReadAsync(Stream fitStream)
         {
             bool status = true;
             long position = fitStream.Position;
 
             while ((fitStream.Position < fitStream.Length) && status)
             {
-                status = Read(fitStream, DecodeMode.Normal);
+                status = await ReadAsync(fitStream, DecodeMode.Normal);
             }
 
             fitStream.Position = position;
 
             return status;
-        }
-
-        /// <summary>
-        /// Reads a FIT binary file.
-        /// </summary>
-        /// <param name="fitStream">Seekable (file)stream to parse.</param>
-        /// <param name="skipHeader">When true, skip file header.  Also CRC will not be calculated.</param>
-        /// <returns>
-        /// Returns true if reading finishes successfully.
-        /// </returns>
-        [Obsolete(
-            "Arguments to this function are ambiguous, " +
-            "use Read(stream, DecodeMode) instead. " +
-            "Function will be removed after 20.30.00",
-            false)]
-        public bool Read(Stream fitStream, bool skipHeader)
-        {
-            return Read(fitStream, skipHeader ? DecodeMode.InvalidHeader : DecodeMode.Normal);
         }
 
 
@@ -201,7 +183,7 @@ namespace Dynastream.Fit
         /// <returns>
         /// Returns true if reading finishes successfully.
         /// </returns>
-        public bool Read(Stream fitStream, DecodeMode mode)
+        public async Task<bool> ReadAsync(Stream fitStream, DecodeMode mode)
         {
             bool readOK = true;
             long fileSize = 0;
@@ -266,7 +248,7 @@ namespace Dynastream.Fit
                 {
                     byte[] data = new byte[fileSize];
                     fitStream.Position = filePosition;
-                    fitStream.Read(data, 0, data.Length);
+                    await fitStream.ReadAsync(data, 0, data.Length);
                     readOK &= (CRC.Calc16(data, data.Length) == 0x0000);
                     fitStream.Position = filePosition + fileSize;
                 }

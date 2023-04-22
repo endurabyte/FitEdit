@@ -12,14 +12,14 @@ namespace Dauer.Data.UnitTests.Fit.Reader
         [Test]
         public void ReadsFile()
         {
-            var fitFile = new Data.Fit.Reader().Read(_source);
+            var fitFile = new Data.Fit.Reader().ReadAsync(_source);
             Assert.NotNull(fitFile);
         }
 
         [Test]
         public void DumpsToJson()
         {
-            var fitFile = new Data.Fit.Reader().Read(_source);
+            var fitFile = new Data.Fit.Reader().ReadAsync(_source);
 
             Assert.DoesNotThrow(() =>
             {
