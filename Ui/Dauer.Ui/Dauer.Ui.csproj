@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
     <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
   </ItemGroup>
 </Project>

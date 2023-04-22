@@ -79,9 +79,9 @@ public class MainViewModel : ViewModelBase, IMainViewModel
           return;
         }
 
-        await Show($"Reading FIT file {file.Name}");
         using var ms = new MemoryStream(lastFile_.Bytes);
         using var ps = new ProgressStream(ms, 5 * 1024); // report progress every 5 kB
+        await Show($"Reading FIT file {file.Name}");
         await Show($"Read progress: ");
 
         ps.ReadProgressChanged += async (long position, long length) =>
