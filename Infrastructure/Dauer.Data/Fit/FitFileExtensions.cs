@@ -11,33 +11,46 @@ namespace Dauer.Data.Fit
     /// <summary>
     /// Fill modified Session, Records, Laps, etc, into Events
     /// </summary>
-    public static FitFile BackfillEvents(this FitFile f)
+    public static FitFile BackfillEvents(this FitFile f, int resolution = 100, Action<int, int> handleProgress = null)
     {
+      handleProgress ??= (_, _) => { };
+
       int li = 0;
       int ri = 0;
       int si = 0;
 
-      foreach (EventArgs ea in f.Events)
+      int i = 0;
+
+      var sessions = f.Sessions;
+      var laps = f.Laps;
+      var records = f.Records;
+      var events = f.Events.OfType<MesgEventArgs>().ToList();
+
+      foreach (MesgEventArgs e in events)
       {
-        if (ea is not MesgEventArgs mea)
+        if (i % resolution == 0)
+        {
+          handleProgress(i, f.Events.Count);
+        }
+        i++;
+
+        if (!MessageFactory.Types.TryGetValue(e.mesg.Num, out Type t))
         {
           continue;
         }
 
-        if (!MessageFactory.Types.TryGetValue(mea.mesg.Num, out Type t))
+        if (t == typeof(SessionMesg))
         {
-          continue;
+          e.mesg = sessions[si++];
         }
-
-        Action a = t switch
+        else if (t == typeof(LapMesg))
         {
-          _ when t == typeof(SessionMesg) => () => { mea.mesg = f.Sessions[si++]; },
-          _ when t == typeof(LapMesg) => () => { mea.mesg = f.Laps[li++]; },
-          _ when t == typeof(RecordMesg) => () => { mea.mesg = f.Records[ri++]; },
-          _ => () => { }
-        };
-
-        a();
+          e.mesg = laps[li++];
+        }
+        else if (t == typeof(RecordMesg))
+        {
+          e.mesg = records[ri++];
+        }
       }
 
       return f;
@@ -59,7 +72,7 @@ namespace Dauer.Data.Fit
     /// <summary>
     /// Pretty-print useful information from a fit file: Session, Laps, and Records
     /// </summary>
-    public static FitFile Print(this FitFile f, bool showRecords)
+    public static FitFile Print(this FitFile f, Action<string> print, bool showRecords)
     {
       if (f == null)
       {
@@ -70,24 +83,24 @@ namespace Dauer.Data.Fit
       var laps = f.Laps;
       var records = f.Records;
 
-      Log.Info($"Fit File: ");
-      Log.Info($"  {records.Count} {(laps.Count == 1 ? "record" : "records")}");
-      Log.Info($"  {sessions.Count} {(sessions.Count == 1 ? "session" : "sessions")}:");
+      print($"Fit File: ");
+      print($"  {records.Count} {(laps.Count == 1 ? "record" : "records")}");
+      print($"  {sessions.Count} {(sessions.Count == 1 ? "session" : "sessions")}:");
 
       foreach (var sess in sessions)
       {
-        Log.Info($"    From {sess.Start()} to {sess.End()}: {sess.GetTotalDistance()} m in {sess.GetTotalElapsedTime()}s ({sess.GetEnhancedAvgSpeed():0.##} m/s)");
+        print($"    From {sess.Start()} to {sess.End()}: {sess.GetTotalDistance()} m in {sess.GetTotalElapsedTime()}s ({sess.GetEnhancedAvgSpeed():0.##} m/s)");
       }
 
-      Log.Info($"  {laps.Count} {(laps.Count == 1 ? "lap" : "laps")}:");
+      print($"  {laps.Count} {(laps.Count == 1 ? "lap" : "laps")}:");
       foreach (var lap in laps)
       {
-        Log.Info($"    From {lap.Start()} to {lap.End()}: {lap.GetTotalDistance()} m in {lap.GetTotalElapsedTime()}s ({lap.GetEnhancedAvgSpeed():0.##} m/s)");
+        print($"    From {lap.Start()} to {lap.End()}: {lap.GetTotalDistance()} m in {lap.GetTotalElapsedTime()}s ({lap.GetEnhancedAvgSpeed():0.##} m/s)");
 
         var lapRecords = records.Where(rec => rec.Start() > lap.Start() && rec.Start() < lap.End())
                                 .ToList();
 
-        Log.Info($"      {lapRecords.Count} {(lapRecords.Count == 1 ? "record" : "records")}");
+        print($"      {lapRecords.Count} {(lapRecords.Count == 1 ? "record" : "records")}");
 
         if (!showRecords)
         {
@@ -112,8 +125,8 @@ namespace Dauer.Data.Fit
             return $"{floor}:{(int)((minPerMile - floor)*60):00}";
           }
 
-          Log.Info($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {pretty(speed.MinutesPerMile())} min/mi, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
-          //Log.Info($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+          print($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {pretty(speed.MinutesPerMile())} min/mi, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+          //print($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
         }
       }
 

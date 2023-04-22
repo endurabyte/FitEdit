@@ -2,12 +2,12 @@
 
 public class Log
 {
-  public static void Write(string message)
+  public static void Info(string message)
   {
     //if (OperatingSystem.IsBrowser())
     //{
     //  WebConsole.Log(message);
     //}
-    Console.WriteLine(message);
+    Model.Log.Info(message);
   }
 }

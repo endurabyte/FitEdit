@@ -7,12 +7,15 @@ namespace Dauer.Data.Fit
   {
     public FitFile Read(string source)
     {
+      Log.Info($"Opening {source}...");
+      using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
+      return Read(source, stream);
+    }
+
+    public FitFile Read(string source, Stream stream)
+    {
       try
       {
-        Log.Info($"Opening {source}...");
-
-        using var fitSource = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
-
         var decoder = new Decode();
 
         var fitFile = new FitFile();
@@ -39,16 +42,16 @@ namespace Dauer.Data.Fit
           fitFile.Events.Add(s);
         };
 
-        bool ok = decoder.IsFIT(fitSource);
-        ok &= decoder.CheckIntegrity(fitSource);
+        bool ok = decoder.IsFIT(stream);
+        ok &= decoder.CheckIntegrity(stream);
 
-        if (!decoder.IsFIT(fitSource))
+        if (!decoder.IsFIT(stream))
         {
           Log.Error($"Is not a FIT file: {source}");
           return null;
         }
 
-        if (!decoder.CheckIntegrity(fitSource))
+        if (!decoder.CheckIntegrity(stream))
         {
           Log.Warn($"Integrity Check failed...");
           if (decoder.InvalidDataSize)
@@ -57,14 +60,14 @@ namespace Dauer.Data.Fit
           }
 
           Log.Warn("Attempting to read by skipping the header...");
-          if (!decoder.Read(fitSource, DecodeMode.InvalidHeader))
+          if (!decoder.Read(stream, DecodeMode.InvalidHeader))
           {
             Log.Error($"Could not read {source} by skipping the header");
             return null;
           }
         }
 
-        if (!decoder.Read(fitSource))
+        if (!decoder.Read(stream))
         {
           Log.Error($"Could not read {source}");
           return null;

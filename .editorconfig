@@ -146,7 +146,7 @@ dotnet_naming_rule.interface_names_must_begin_with_i.severity = warning
 
 dotnet_naming_rule.private_and_protected_fields_must_end_with_underscore.symbols   = private_fields
 dotnet_naming_rule.private_and_protected_fields_must_end_with_underscore.style = camel_end_with_underscore_style
-dotnet_naming_rule.private_and_protected_fields_must_end_with_underscore.severity = warning
+dotnet_naming_rule.private_and_protected_fields_must_end_with_underscore.severity = silent
 
 dotnet_naming_rule.private_and_protected_members_must_end_with_underscore.symbols   = private_members
 dotnet_naming_rule.private_and_protected_members_must_end_with_underscore.style = pascal_end_with_underscore_style
@@ -168,7 +168,7 @@ dotnet_naming_symbols.interfaces.applicable_accessibilities = *
 dotnet_naming_symbols.private_fields.applicable_kinds           = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private,protected,protected_internal
 
-dotnet_naming_symbols.private_members.applicable_kinds           = class,struct,interface,enum,property,method,event,delegate
+dotnet_naming_symbols.private_members.applicable_kinds           = class,struct,interface,enum,property,event,delegate
 dotnet_naming_symbols.private_members.applicable_accessibilities = private,protected,protected_internal
 
 dotnet_naming_symbols.public_and_internal_members.applicable_kinds           = class,struct,enum,property,method,event,delegate,field

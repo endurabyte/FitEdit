@@ -13,24 +13,17 @@
   </Design.DataContext>
 
   <DockPanel>
-    <Button DockPanel.Dock="Bottom"
-            HorizontalAlignment="Center"
-            Command="{Binding HandleDownloadFileClicked}">
-      Download file
-    </Button>
-    <Button DockPanel.Dock="Bottom"
-            HorizontalAlignment="Center"
+    <TextBlock DockPanel.Dock="Top" Text="{Binding Text}"/>
+    <Button DockPanel.Dock="Top"
+            HorizontalAlignment="Left"
             Command="{Binding HandleSelectFileClicked}">
       Select file
     </Button>
-    <ItemsControl Items="{Binding Items}">
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-          <CheckBox Margin="4"
-                    IsChecked="{Binding IsChecked}"
-                    Content="{Binding Description}"/>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+    <Button DockPanel.Dock="Top"
+            HorizontalAlignment="Left"
+            Command="{Binding HandleDownloadFileClicked}">
+      Download file
+    </Button>
+    <ListBox Items="{Binding Log}"/>
   </DockPanel>
 </UserControl>

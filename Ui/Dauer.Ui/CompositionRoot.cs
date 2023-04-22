@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
-using Dauer.Ui.Adapters;
+using Dauer.Model;
+using Dauer.Services;
 using Dauer.Ui.Adapters.Storage;
-using Dauer.Ui.Services;
 using Dauer.Ui.ViewModels;
 
 namespace Dauer.Ui;
@@ -24,10 +24,10 @@ public class CompositionRoot
   {
     lifetime_ = lifetime;
 
-    var db = new Database();
-    var vm = new MainViewModel(Storage_, db);
+    var vm = new MainViewModel(Storage_, new FitService());
 
     registrations_[typeof(IMainViewModel)] = vm;
+    Log.Level = LogLevel.Info;
   }
 
   public T Get<T>() => (T)registrations_[typeof(T)];

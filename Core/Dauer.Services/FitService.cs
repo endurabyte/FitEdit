@@ -22,6 +22,8 @@ namespace Dauer.Services
     /// </summary>
     void PrintAll(string source);
 
+    void PrintAll(string source, Stream s);
+
     /// <summary>
     /// Duplicate the given FIT file by reading and writing each message.
     /// </summary>
@@ -33,6 +35,16 @@ namespace Dauer.Services
     void SetLapSpeeds(string sourceFile, string destFile, List<Speed> speeds);
   }
 
+  public class NullFitService : IFitService
+  {
+    public void Copy(string sourceFile, string destFile) { }
+    public string OneLine(string source) => "";
+    public void Print(string source, bool showRecords) { }
+    public void PrintAll(string source) { }
+    public void PrintAll(string source, Stream s) { }
+    public void SetLapSpeeds(string sourceFile, string destFile, List<Speed> speeds) { }
+  }
+
   public class FitService : IFitService
   {
     public string OneLine(string source) => new Reader().Read(source).OneLine();
@@ -40,12 +52,18 @@ namespace Dauer.Services
     public void Print(string source, bool showRecords)
     {
       FitFile fitFile = new Reader().Read(source);
-      fitFile?.Print(showRecords);
+      fitFile?.Print(Log.Info, showRecords);
     }
 
     public void PrintAll(string source)
     {
       FitFile fitFile = new Reader().Read(source);
+      Log.Info(fitFile.PrintAll());
+    }
+
+    public void PrintAll(string source, Stream s)
+    {
+      FitFile fitFile = new Reader().Read(source, s);
       Log.Info(fitFile.PrintAll());
     }
 
@@ -63,7 +81,7 @@ namespace Dauer.Services
         .Read(sourceFile)
        ?.ApplySpeeds(speeds)
        ?.BackfillEvents()
-       ?.Print(false);
+       ?.Print(Log.Info, false);
 
       new Writer().Write(fitFile, destFile);
     }
