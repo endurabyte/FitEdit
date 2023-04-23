@@ -24,6 +24,6 @@
             Command="{Binding HandleDownloadFileClicked}">
       Download file
     </Button>
-    <ListBox Items="{Binding Log}"/>
+    <ListBox Items="{Binding LogEntries}"/>
   </DockPanel>
 </UserControl>

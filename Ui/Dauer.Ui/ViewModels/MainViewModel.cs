@@ -21,11 +21,11 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
 
-  public ObservableCollection<string> Log { get; } = new();
+  public ObservableCollection<string> LogEntries { get; } = new();
 
   private string text_ = "Welcome to Dauer. Please load a FIT file.";
-  public string Text 
-  { 
+  public string Text
+  {
     get => text_;
     set => this.RaiseAndSetIfChanged(ref text_, value);
   }
@@ -40,25 +40,30 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Services.Log.Info($"{nameof(MainViewModel)} ready");
   }
 
-  private async Task Show(string s)
+  private async Task Log(string s)
   {
     Services.Log.Info(s);
-    Log.Add(s);
-    while (Log.Count > 25) RemoveHead();
+    LogEntries.Add(s);
+    while (LogEntries.Count > 25) RemoveHead();
 
-    Dispatcher.UIThread.RunJobs();
-    await Task.Yield();
+    // Give other jobs a chance to run on single-threaded platforms like WASM
+    await Task.Delay(1); 
   }
 
-  private void RemoveHead() => Log.RemoveAt(0);
-  private void RemoveTail() => Log.RemoveAt(Log.Count - 1);
+  private void RemoveHead() => LogEntries.RemoveAt(0);
+  private void RemoveTail() 
+  {
+    if (LogEntries.Count > 0)
+    {
+      LogEntries.RemoveAt(LogEntries.Count - 1);
+    }
+  }
 
   public void HandleSelectFileClicked()
   {
     Services.Log.Info("Select file clicked");
 
-    //_ = Task.Run(async () =>
-    Dispatcher.UIThread.Post(async () =>
+    _ = Task.Run(async () =>
     {
       try
       {
@@ -80,53 +85,39 @@ public class MainViewModel : ViewModelBase, IMainViewModel
         }
 
         using var ms = new MemoryStream(lastFile_.Bytes);
-        using var ps = new ProgressStream(ms, 5 * 1024); // report progress every 5 kB
-        await Show($"Reading FIT file {file.Name}");
-        await Show($"Read progress: ");
+        await Log($"Reading FIT file {file.Name}");
+        await Log($"Read progress: ");
 
-        ps.ReadProgressChanged += async (long position, long length) =>
+        var reader = new Reader();
+        if (!reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
         {
+          return;
+        }
+
+        long lastPosition = 0;
+        long resolution = 5 * 1024; // report progress every 5 kB
+
+        // Instead of reading all FIT messages at once,
+        // Read just a few FIT messages at a time so that other tasks can run on the main thread e.g. in WASM
+        while (await reader.ReadOneAsync(ms, decoder, 100))
+        {
+          if (ms.Position - resolution > lastPosition)
+          {
+            continue;
+          }
+
           RemoveTail();
-          await Show($"Read progress: {(double)position / length * 100:##.##}% ({position}/{length})");
-        };
-
-        // Blocks the UI thread
-        FitFile fit = await new Reader().ReadAsync(file.Name, ps);
-
-        // Blocks the UI thread
-        //FitFile fit = await Task.Run(async () => await new Reader().ReadAsync(file.Name, ps));
-
-        // Blocks the UI thread but sometimes RunJobs runs other posted UI work.
-        //FitFile fit = await Dispatcher.UIThread.InvokeAsync(async () => await new Reader().ReadAsync(file.Name, ps));
-
-        // Maybe this could be the ticket
-        //Dispatcher.UIThread.Post(async () =>
-        //{
-        //  await Show($"Reading FIT file {file.Name}");
-        //  using var ms = new MemoryStream(lastFile_.Bytes);
-        //  using var ps = new ProgressStream(ms, 5 * 1024); // report progress every 5 kB
-        //  await Show($"Read progress: ");
-        //  Dispatcher.UIThread.RunJobs();
-        //  await Task.Yield();
-
-        //  ps.ReadProgressChanged += async (long position, long length) =>
-        //  {
-        //    string progress = $"{(double)position / length * 100:##.##}%";
-        //    Console.WriteLine(progress);
-        //    Log.Add(progress);
-        //    Dispatcher.UIThread.RunJobs();
-        //    await Task.Yield();
-        //  };
-
-        //  FitFile fit = await new Reader().ReadAsync(file.Name, ps);
-        //});
+          string percent = $"{(double)ms.Position / ms.Length * 100:##.##}";
+          await Log($"Reading...{percent}% ({ms.Position}/{ms.Length})");
+          lastPosition = ms.Position;
+        }
 
         RemoveTail();
-        await Show($"Read progress: 100%");
+        await Log($"Read progress: 100%");
 
         var sb = new StringBuilder();
         fit.Print(s => sb.AppendLine(s), showRecords: false);
-        await Show(sb.ToString());
+        await Log(sb.ToString());
 
         var speeds = new List<Speed>
         {
@@ -138,24 +129,23 @@ public class MainViewModel : ViewModelBase, IMainViewModel
           new() { Value = 6.7, Unit = Model.Units.SpeedUnit.MiPerHour },
         };
 
-        await Show("Applying new lap speeds");
+        await Log("Applying new lap speeds");
+
         fit.ApplySpeeds(speeds);
-        await Show("Backfilling events");
-        await Show("Backfill: ");
-        await Task.Run(() =>
+
+        await Log("Backfilling: ");
+
+        fit.BackfillEvents(100, async (i, total) =>
         {
-          fit.BackfillEvents(100, async (i, total) =>
-          {
-            RemoveTail();
-            await Show($"Backfill: {(double)i / total * 100:##.##}% ({i}/{total})");
-          });
+          RemoveTail();
+          await Log($"Backfilling: {(double)i / total * 100:##.##}% ({i}/{total})");
         });
         RemoveTail();
-        await Show("Backfill: 100%");
+        await Log("Backfilling: 100%");
 
         sb = new StringBuilder();
         fit.Print(s => sb.AppendLine(s), showRecords: false);
-        await Show(sb.ToString());
+        await Log(sb.ToString());
       }
       catch (Exception e)
       {
@@ -174,7 +164,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       {
         if (lastFile_ == null)
         {
-          await Show("Cannot download file; none has been uploaded");
+          await Log("Cannot download file; none has been uploaded");
           return;
         }
 

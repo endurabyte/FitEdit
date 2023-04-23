@@ -32,6 +32,12 @@ namespace Dynastream.Fit
         /// <summary>
         /// Indicates that the Stream does not contain a Header or CRC
         /// </summary>
-        DataOnly
+        DataOnly,
+
+        /// <summary>
+        /// Indicates that we should only read part of the stream.
+        /// The stream position might be nonzero if messages have already been decoded.
+        /// </summary>
+        Partial,
     }
 }
