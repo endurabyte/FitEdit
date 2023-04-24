@@ -15,9 +15,20 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+  </ItemGroup>-->
+  
+  <!--<ItemGroup>
+    <ProjectReference Include="..\Dauer.Fuse\Dauer.Fuse.csproj" />
+  </ItemGroup>-->
+  <ItemGroup>
+    <Reference Include="Dauer.Fuse">
+      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

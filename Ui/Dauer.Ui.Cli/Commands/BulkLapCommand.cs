@@ -15,11 +15,11 @@ public class BulkLapCommand : ICommand
   private string defaultDirectory_ = @"C:\Users\doug\Downloads";
   private string defaultUnit_ = "mi/h";
 
-  private ConsoleColor goodColor_ => ConsoleColor.Green;
-  private ConsoleColor warnColor_ => ConsoleColor.Yellow;
-  private ConsoleColor errorColor_ => ConsoleColor.Red;
-  private ConsoleColor detailColor_ => ConsoleColor.Magenta;
-  private ConsoleColor defaultColor_ => Console.ForegroundColor;
+  private ConsoleColor GoodColor_ => ConsoleColor.Green;
+  private ConsoleColor WarnColor_ => ConsoleColor.Yellow;
+  private ConsoleColor ErrorColor_ => ConsoleColor.Red;
+  private ConsoleColor DetailColor_ => ConsoleColor.Magenta;
+  private ConsoleColor DefaultColor_ => Console.ForegroundColor;
 
   private readonly IFitService service_;
 
@@ -78,7 +78,7 @@ public class BulkLapCommand : ICommand
   private string GetDirectory()
   {
     Console.Write("Directory? (Default: ");
-    defaultDirectory_.Write(detailColor_);
+    defaultDirectory_.Write(DetailColor_);
     Console.WriteLine(")");
 
     string directory = Console.ReadLine().Trim().Trim('"'); // escape quotes
@@ -91,7 +91,7 @@ public class BulkLapCommand : ICommand
   private string GetUnits()
   {
     Console.Write("Units? (Default: ");
-    defaultUnit_.Write(detailColor_);
+    defaultUnit_.Write(DetailColor_);
     Console.WriteLine(")");
 
     string units = Console.ReadLine().Trim();
@@ -112,8 +112,8 @@ public class BulkLapCommand : ICommand
 
     foreach (var file in files)
     {
-      $"  {Path.GetFileName(file)}".Write(detailColor_);
-      $" ({await service_.OneLineAsync(file)})".WriteLine(defaultColor_);
+      $"  {Path.GetFileName(file)}".Write(DetailColor_);
+      $" ({await service_.OneLineAsync(file)})".WriteLine(DefaultColor_);
     }
   }
 
@@ -152,14 +152,14 @@ public class BulkLapCommand : ICommand
     try
     {
       Console.Write($"\nLap Speeds? (");
-      Path.GetFileName(fitFile).Write(detailColor_);
+      Path.GetFileName(fitFile).Write(DetailColor_);
       Console.WriteLine($")");
 
       string command = Console.ReadLine().Trim();
 
       if (command == "!")
       {
-        $"Skipping {dest}.".WriteLine(warnColor_);
+        $"Skipping {dest}.".WriteLine(WarnColor_);
         return true;
       }
 
@@ -173,13 +173,13 @@ public class BulkLapCommand : ICommand
 
       await service_.SetLapSpeedsAsync(fitFile, dest, speeds);
 
-      $"Wrote {dest}.".WriteLine(goodColor_);
+      $"Wrote {dest}.".WriteLine(GoodColor_);
       return true;
     }
     catch (Exception e)
     {
-      $"Error: {e.Message}.".WriteLine(errorColor_);
-      $"Please try again. Type ! to skip.".WriteLine(defaultColor_);
+      $"Error: {e.Message}.".WriteLine(ErrorColor_);
+      $"Please try again. Type ! to skip.".WriteLine(DefaultColor_);
       return false;
     }
   }

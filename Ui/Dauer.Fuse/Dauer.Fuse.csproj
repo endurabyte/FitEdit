@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="ILRepack.Lib.MSBuild" Version="2.1.18" />
+  </ItemGroup>
+
+  <ItemDefinitionGroup>
+    <ProjectReference>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+  </ItemGroup>
+  
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)\Dauer.*.dll" />
+    </ItemGroup>
+     <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(TargetName)$(TargetExt)" Importance="High" />
+    <ILRepack
+      Parallel="true"
+      DebugInfo="true"
+      Internalize="false"
+      InputAssemblies="@(InputAssemblies)"
+      TargetKind="SameAsPrimaryAssembly"
+      OutputFile="$(OutputPath)$(TargetName)$(TargetExt)"
+    />
+  </Target>
+
+  <!--<Target Name="Protect" AfterTargets="Build">
+    <Exec Command="powershell.exe -ExecutionPolicy Bypass -File protect.ps1" />
+  </Target>-->
+  
+</Project>

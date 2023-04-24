@@ -1,8 +1,8 @@
-﻿using Dauer.Model;
+﻿using System.Text.Json;
+using Dauer.Model;
 using Dauer.Model.Units;
 using Dauer.Model.Workouts;
 using Dynastream.Fit;
-using Newtonsoft.Json;
 
 namespace Dauer.Data.Fit
 {
@@ -136,7 +136,7 @@ namespace Dauer.Data.Fit
     /// <summary>
     /// Pretty-print everything in the given FIT file.
     /// </summary>
-    public static string PrintAll(this FitFile f) => JsonConvert.SerializeObject(f, Formatting.Indented);
+    public static string PrintAll(this FitFile f) => JsonSerializer.Serialize(f, new JsonSerializerOptions { WriteIndented = true });
 
     /// <summary>
     /// Recalculate the workout as if each lap was run at the corresponding constant speed.

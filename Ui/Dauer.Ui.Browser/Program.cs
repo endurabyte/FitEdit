@@ -7,11 +7,16 @@ using System.Runtime.Versioning;
 using Dauer.Ui;
 using Dauer.Ui.Adapters;
 using Dauer.Ui.Adapters.Storage;
+using System.Reflection;
+using System.Diagnostics.CodeAnalysis;
+using Splat;
+using Dauer.Fuse;
 
 [assembly: SupportedOSPlatform("browser")]
 
 internal partial class Program
 {
+  [RequiresUnreferencedCode("Calls Dauer.Fuse.Fuse.Init(String)")]
   private static void Main(string[] args)
   {
     _ = JSHost
@@ -33,9 +38,42 @@ internal partial class Program
         WebConsoleAdapter.SetMessage();
       });
 
+    try
+    {
+      AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+      {
+        return args.Name.StartsWith("Dauer")
+          ? Fuse.Redirect(args.Name, "/Dauer.Fuse.dll")
+          : null;
+      };
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine(e);
+    }
+
     BuildAvaloniaApp()
       .UseReactiveUI()
       .SetupBrowserApp("out");
+  }
+
+  [RequiresUnreferencedCode("Calls System.Reflection.Assembly.LoadFile(String)")]
+  private static Assembly? Redirect(object? sender, ResolveEventArgs args)
+  {
+    if (!args.Name.StartsWith("Dauer")) return null;
+    string dll = "/Dauer.Fuse.dll";
+    Console.WriteLine($"Redirecting {args.Name} => {dll}");
+    try
+    {
+      var assem = Assembly.LoadFile(dll);
+      Console.WriteLine($"Got assembly: {assem.FullName}");
+      return assem;
+    }
+    catch (Exception e)
+    {
+      Console.WriteLine($"{e}");
+      return null;
+    }
   }
 
   public static AppBuilder BuildAvaloniaApp()
