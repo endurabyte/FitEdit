@@ -9,8 +9,7 @@ using Dauer.Ui.Adapters;
 using Dauer.Ui.Adapters.Storage;
 using System.Reflection;
 using System.Diagnostics.CodeAnalysis;
-using Splat;
-using Dauer.Fuse;
+using Dauer.Fuse.Secure;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -43,7 +42,7 @@ internal partial class Program
       AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
       {
         return args.Name.StartsWith("Dauer")
-          ? Fuse.Redirect(args.Name, "/Dauer.Fuse.dll")
+          ? Defuse.Redirect(args.Name, "/Dauer.Fuse.dll")
           : null;
       };
     }

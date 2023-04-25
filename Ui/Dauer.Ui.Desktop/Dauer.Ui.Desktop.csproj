@@ -20,21 +20,14 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
-  <!--<ItemGroup>
-    <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\Dauer.Ui\Dauer.Ui.csproj" />
-  </ItemGroup>-->
+  <ItemGroup>
+    <ProjectReference Include="..\Dauer.Fuse.Secure\Dauer.Fuse.Secure.csproj" />
+  </ItemGroup>
 
-  <!--<ItemGroup>
-    <ProjectReference Include="..\Dauer.Fuse\Dauer.Fuse.csproj" />
-  </ItemGroup>-->
   <ItemGroup>
     <Reference Include="Dauer.Fuse">
-      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse.dll</HintPath>
+      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse_Secure\Dauer.Fuse.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <!--<ItemGroup>
-    <Reference Condition="'$(Configuration)' == 'Release'" Include="Dauer.Fuse">
-      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse.Secure\Dauer.Fuse.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
+
 </Project>

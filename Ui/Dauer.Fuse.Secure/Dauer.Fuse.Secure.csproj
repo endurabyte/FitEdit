@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Target Name="Protect" AfterTargets="Build">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File protect.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="Dauer.Fuse.nrproj" />
+  </ItemGroup>
+
+</Project>

@@ -19,16 +19,13 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
-  <!--<ItemGroup>
-    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
-  </ItemGroup>-->
-  
-  <!--<ItemGroup>
-    <ProjectReference Include="..\Dauer.Fuse\Dauer.Fuse.csproj" />
-  </ItemGroup>-->
+  <ItemGroup>
+    <ProjectReference Include="..\Dauer.Fuse.Secure\Dauer.Fuse.Secure.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="Dauer.Fuse">
-      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse.dll</HintPath>
+      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse_Secure\Dauer.Fuse.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

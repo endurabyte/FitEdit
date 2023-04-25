@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 
-namespace Dauer.Fuse;
+namespace Dauer.Fuse.Secure;
 
-public class Fuse
+public static class Defuse
 {
   /// <summary>
   /// Redirect attempts to load Dauer.Ui, Dauer.Models, etc to Dauer.Fuse.dll
