@@ -181,5 +181,5 @@ await registerAvaloniaModule(dotnetRuntime);
 
 const config = dotnetRuntime.getConfig();
 
-console.log(`main.js: Running dotnet with config: ${config}`)
+console.log(`main.js: Running dotnet with config: ${JSON.stringify(config)}`)
 await dotnetRuntime.runMainAndExit(config.mainAssemblyName, [window.location.search]);
