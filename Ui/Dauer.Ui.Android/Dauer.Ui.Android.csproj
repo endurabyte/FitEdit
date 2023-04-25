@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="$(SolutionDir)Common.props" />
   
@@ -25,6 +25,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+    <ProjectReference Include="..\Dauer.Fuse.Secure\Dauer.Fuse.Secure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Dauer.Fuse">
+      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\net7.0\Dauer.Fuse.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- We don't need to obfuscate on Android since it's AOT compiled which is not easily reversed -->
+  <!--<ItemGroup>
+    <Reference Include="Dauer.Fuse">
+      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\net7.0\Dauer.Fuse_Secure\Dauer.Fuse.dll</HintPath>
+    </Reference>
+  </ItemGroup>-->
+
 </Project>
