@@ -2,6 +2,8 @@ import * as ProgressBar from './progressbar.min.js'
 
 class LoadState {
 
+  verbose;
+
   constructor() {
     this.progressBar = new window.ProgressBar.Line('#progress-bar', {
       duration: 0,
@@ -20,6 +22,7 @@ class LoadState {
     this.mono_config = {};
     this.originalTitle = document.title;
 
+    this.verbose = false;
   }
 
   // Example response excerpt:
@@ -65,7 +68,10 @@ class LoadState {
   async getMonoConfig(response) {
 
     var text = await response.blob().then(blob => blob.text());
-    console.log(`main.js: Got ${response.url}:\n ${text}`);
+
+    if (this.verbose) {
+      console.log(`loadstate.js: Got ${response.url}:\n ${text}`);
+    }
 
     const jsonObject = JSON.parse(text);
     const dict = {};
@@ -91,7 +97,9 @@ class LoadState {
     const pathname = url.pathname;
     const filename = pathname.split('/').pop();
 
-    // console.log(`Got file ${filename}`)
+    if (this.verbose) {
+      console.log(`loadstate.js: Got file ${filename}`)
+    }
     return filename;
   }
 
@@ -107,7 +115,9 @@ class LoadState {
 
     this.progressBar.animate(percent / 100);
 
-    //console.log(`Assembly load progress: ${percent.toFixed(1)}% (${numLoaded}/${total})`);
+    if (this.verbose) {
+      console.log(`loadstate.js: Assembly load progress: ${percent.toFixed(1)}% (${numLoaded}/${total})`);
+    }
   }
 
   // Log a message showing assembly load progress
@@ -136,10 +146,14 @@ class LoadState {
     this.origFetch = origFetch;
 
     window.fetch = async (...args) => {
-      // console.log("main.js: fetch called with args:", args);
+      if (this.verbose) {
+        console.log("loadstate.js: fetch called with args:", args);
+      }
       const response = await origFetch(...args);
 
-      // console.log(`main.js: Got response`, response);
+      if (this.verbose) {
+        console.log(`loadstate.js: Got response`, response);
+      }
       const fileName = this.extractFileName(response);
 
       if (fileName === null) {
@@ -148,7 +162,10 @@ class LoadState {
 
       if (fileName === "mono-config.json") {
         this.mono_config = await this.getMonoConfig(response.clone());
-        console.log(`Got mono_config: ${JSON.stringify(this.mono_config)}`);
+
+        if (this.verbose) {
+          console.log(`loadstate.js: Got mono_config: ${JSON.stringify(this.mono_config)}`);
+        }
       }
 
       this.handleFileLoadProgress(fileName);
@@ -165,7 +182,7 @@ class LoadState {
     var missing_assemblies = this.collectFalseKeys(this.mono_config);
 
     if (missing_assemblies.length > 0) {
-      console.log(`main.js: Warning: Didn't load the following assemblies:`, missing_assemblies);
+      console.log(`loadstate.js: Warning: Didn't load the following assemblies:`, missing_assemblies);
     }
   }
 
