@@ -96,45 +96,44 @@ class LoadState {
   }
 
   notifyAssemblyLoadProgress(percent, numLoaded, total) {
-    let title = originalTitle;
+    let title = this.originalTitle;
     if (percent < 100){
-      title = `${originalTitle} (${percent.toFixed(0)}% loaded)`
+      title = `${this.originalTitle} (${percent.toFixed(0)}% loaded)`
     }
 
     if (title !== document.title) {
       document.title = title;
     }
 
-    progressBar.animate(percent / 100);
+    this.progressBar.animate(percent / 100);
 
     //console.log(`Assembly load progress: ${percent.toFixed(1)}% (${numLoaded}/${total})`);
   }
 
+  // Log a message showing assembly load progress
+  handleFileLoadProgress(fileName) {
+    if (this.mono_config === null || !(fileName in this.mono_config)) {
+      return;
+    }
+
+    this.mono_config[fileName] = true;
+
+    const numLoaded = Object.values(this.mono_config).reduce((count, value) => {
+      return count + (value === true ? 1 : 0);
+    }, 0);
+    const total = Object.values(this.mono_config).length;
+    const percent = numLoaded / total * 100;
+
+    this.notifyAssemblyLoadProgress(percent, numLoaded, total);
+    return { percent, numLoaded, total};
+  }
+
+
   start() {
-
-    // Log a message showing assembly load progress
-    const handleFileLoadProgress = (fileName) => {
-      if (mono_config === null || !(fileName in mono_config)) {
-        return;
-      }
-
-      mono_config[fileName] = true;
-
-      const numLoaded = Object.values(mono_config).reduce((count, value) => {
-        return count + (value === true ? 1 : 0);
-      }, 0);
-      const total = Object.values(mono_config).length;
-      const percent = numLoaded / total * 100;
-
-      notifyAssemblyLoadProgress(percent, numLoaded, total);
-      return { percent, numLoaded, total};
-    };
 
     // Intercept fetch so we can show loading progress
     const { fetch: origFetch } = window;
-
-    // Stop intercepting fetch now that dotnet is loaded
-    window.fetch = origFetch;
+    this.origFetch = origFetch;
 
     window.fetch = async (...args) => {
       // console.log("main.js: fetch called with args:", args);
@@ -148,18 +147,22 @@ class LoadState {
       }
 
       if (fileName === "mono-config.json") {
-        mono_config = await getMonoConfig(response.clone());
-        console.log(`Got mono_config: ${JSON.stringify(mono_config)}`);
+        this.mono_config = await this.getMonoConfig(response.clone());
+        console.log(`Got mono_config: ${JSON.stringify(this.mono_config)}`);
       }
 
-      handleFileLoadProgress(fileName);
+      this.handleFileLoadProgress(fileName);
 
       return response;
     };
   }
 
   complete() {
-    var missing_assemblies = collectFalseKeys(mono_config);
+
+    // Stop intercepting fetch now that dotnet is loaded
+    window.fetch = this.origFetch;
+
+    var missing_assemblies = this.collectFalseKeys(this.mono_config);
 
     if (missing_assemblies.length > 0) {
       console.log(`main.js: Warning: Didn't load the following assemblies:`, missing_assemblies);
