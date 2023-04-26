@@ -15,7 +15,7 @@ using Dauer.Fuse.Secure;
 internal partial class Program
 {
   [RequiresUnreferencedCode("Calls Dauer.Fuse.Fuse.Init(String)")]
-  private static void Main(string[] args)
+  private static async Task Main(string[] args)
   {
     _ = JSHost
       .ImportAsync(WebStorageAdapterImpl.ModuleName, "./store.js")
@@ -50,9 +50,9 @@ internal partial class Program
       Console.WriteLine(e);
     }
 
-    BuildAvaloniaApp()
+    await BuildAvaloniaApp()
       .UseReactiveUI()
-      .SetupBrowserApp("out");
+      .StartBrowserAppAsync("out");
   }
 
   public static AppBuilder BuildAvaloniaApp()

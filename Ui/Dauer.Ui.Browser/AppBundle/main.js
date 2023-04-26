@@ -1,5 +1,4 @@
 ﻿import { dotnet } from './dotnet.js'
-import { registerAvaloniaModule } from './avalonia.js';
 import { loadState } from './loadstate.js';
 
 const is_browser = typeof window != "undefined";
@@ -29,9 +28,6 @@ const dotnetRuntime = await dotnet
     .create();
 
 loadState.complete();
-
-log("main.js: Registering Avalonia module");
-await registerAvaloniaModule(dotnetRuntime);
 
 const config = dotnetRuntime.getConfig();
 
