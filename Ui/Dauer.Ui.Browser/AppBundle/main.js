@@ -24,7 +24,7 @@ loadState.start();
 
 log("main.js: Starting dotnet runtime");
 const dotnetRuntime = await dotnet
-    .withDiagnosticTracing(false)
+    .withDiagnosticTracing(verbose)
     .withApplicationArgumentsFromQuery()
     .create();
 

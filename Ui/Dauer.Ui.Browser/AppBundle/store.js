@@ -19,7 +19,7 @@ export async function openFile() {
 
             reader.onload = _ => {
                 var arrayBuffer = reader.result;
-                console.log(`js: Got file ${file.name} (${arrayBuffer.byteLength} bytes)`);
+                console.log(`store.js: Got file ${file.name} (${arrayBuffer.byteLength} bytes)`);
                 var bytes = new Uint8Array(arrayBuffer);
                 resolve({ name: file.name, bytes: bytes });
             }
@@ -29,14 +29,14 @@ export async function openFile() {
             }
             reader.readAsArrayBuffer(file);
         };
-        console.log("js: Opening file...");
+        console.log("store.js: Opening file...");
         input.click();
         input.remove();
     })
 }
 
 export function downloadByteArray(fileName, bytes) {
-    console.log(`js: Saving ${fileName} (${bytes.length} bytes)`)
+    console.log(`store.js: Saving ${fileName} (${bytes.length} bytes)`)
 
     var blob = new Blob([bytes], {type: "application/octet-stream"});
     var link = document.createElement('a');
