@@ -18,7 +18,7 @@
       <InputAssemblies Include="$(ProjectDir)..\..\Infrastructure\Dauer.Data\bin\$(Configuration)\$(TargetFramework)\Dauer.Data.dll" />
       <InputAssemblies Include="$(ProjectDir)..\Dauer.Ui\bin\$(Configuration)\$(TargetFramework)\Dauer.Ui.dll" />
     </ItemGroup>
-     <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(TargetName)$(TargetExt)" Importance="High" />
+    <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(TargetName)$(TargetExt)" Importance="High" />
     <ILRepack Parallel="true" DebugInfo="true" Internalize="false" InputAssemblies="@(InputAssemblies)" TargetKind="SameAsPrimaryAssembly" OutputFile="$(OutputPath)$(TargetName)$(TargetExt)" />
   </Target>
 

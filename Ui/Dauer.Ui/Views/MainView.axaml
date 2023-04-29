@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             xmlns:oxy="clr-namespace:OxyPlot.Avalonia;assembly=OxyPlot.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Dauer.Ui.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -12,18 +13,36 @@
     <vm:MainViewModel />
   </Design.DataContext>
 
-  <DockPanel>
-    <TextBlock DockPanel.Dock="Top" Text="{Binding Text}"/>
-    <Button DockPanel.Dock="Top"
-            HorizontalAlignment="Left"
-            Command="{Binding HandleSelectFileClicked}">
-      Select file
-    </Button>
-    <Button DockPanel.Dock="Top"
-            HorizontalAlignment="Left"
-            Command="{Binding HandleDownloadFileClicked}">
-      Download file
-    </Button>
-    <ListBox ItemsSource="{Binding LogEntries}"/>
-  </DockPanel>
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition/>
+      <RowDefinition MaxHeight="1000"/>
+      <RowDefinition/>
+    </Grid.RowDefinitions>
+
+    <StackPanel Grid.Row="0">
+      <TextBlock Text="{Binding Text}"/>
+      <Button HorizontalAlignment="Left"
+              Command="{Binding HandleSelectFileClicked}">
+        Select file
+      </Button>
+      
+      <Button HorizontalAlignment="Left"
+              Command="{Binding HandleProcessFileClicked}">
+        Process 
+      </Button>
+      
+      <Button HorizontalAlignment="Left"
+              Command="{Binding HandleDownloadFileClicked}">
+        Download file
+      </Button>
+    </StackPanel>
+
+    <oxy:PlotView Model="{Binding Model}" Grid.Row="1" />
+    <ListBox ItemsSource="{Binding LogEntries}" Grid.Row="2"/>
+  </Grid>
 </UserControl>

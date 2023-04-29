@@ -15,15 +15,24 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-av11-preview6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Dauer.Fuse.Secure\Dauer.Fuse.Secure.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
+  
+  <!--<ItemGroup Condition="'$(Configuration)' != 'Debug'">
     <Reference Include="Dauer.Fuse">
       <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse_Secure\Dauer.Fuse.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+  </ItemGroup>-->
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
   </ItemGroup>
 </Project>

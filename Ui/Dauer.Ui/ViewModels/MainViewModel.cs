@@ -4,9 +4,9 @@ using Dauer.Services;
 using ReactiveUI;
 using Dauer.Data.Fit;
 using System.Text;
-using Avalonia.Threading;
 using System.Collections.ObjectModel;
 using Dauer.Model.Workouts;
+using OxyPlot;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -18,16 +18,25 @@ public interface IMainViewModel
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
   private Models.File? lastFile_ = null;
+  private FitFile? lastFit_ = null;
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
+  private string text_ = "Welcome to Dauer. Please load a FIT file.";
+  private PlotModel? model_;
 
   public ObservableCollection<string> LogEntries { get; } = new();
 
-  private string text_ = "Welcome to Dauer. Please load a FIT file.";
+
   public string Text
   {
     get => text_;
     set => this.RaiseAndSetIfChanged(ref text_, value);
+  }
+
+  public PlotModel? Model
+  {
+    get => model_;
+    private set => this.RaiseAndSetIfChanged(ref model_, value);
   }
 
   public MainViewModel() : this(new NullStorageAdapter(), new NullFitService()) { }
@@ -38,6 +47,55 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     fit_ = fit;
     this.Log().Debug($"{nameof(MainViewModel)}.ctor");
     Services.Log.Info($"{nameof(MainViewModel)} ready");
+
+    Model = new PlotModel();
+  }
+
+  private void Plot(FitFile fit)
+  {
+    // Create the plot model
+    var tmp = new PlotModel
+    {
+      Title = "Title",
+      Subtitle = "Subtitle",
+      TextColor = OxyColors.White,
+      TitleColor = OxyColors.White,
+      SubtitleColor = OxyColors.White,
+      PlotAreaBorderColor = OxyColors.White,
+      DefaultColors = new List<OxyColor>()
+      {
+        OxyColors.Red,
+        OxyColors.Green,
+        OxyColor.Parse("#64b5cd00"),
+      },
+    };
+
+    // Create two line series (markers are hidden by default)
+    var hrSeries = new OxyPlot.Series.LineSeries { Title = "HR", YAxisKey = "HR", MarkerType = MarkerType.Square };
+    var speedSeries = new OxyPlot.Series.LineSeries { Title = "Speed", YAxisKey = "Speed", MarkerType = MarkerType.Square };
+
+    DateTime start = fit.Sessions.First().GetStartTime().GetDateTime();
+    foreach (var record in fit.Records)
+    {
+      var speed = (double?)record.GetEnhancedSpeed() ?? 0;
+      var hr = (double?)record.GetHeartRate() ?? 0;
+      var time = record.GetTimestamp().GetDateTime();
+      double elapsedSeconds = (time - start).TotalSeconds;
+
+      hrSeries.Points.Add(new(elapsedSeconds, hr));
+      speedSeries.Points.Add(new(elapsedSeconds, speed));
+    }
+
+    tmp.Series.Add(hrSeries);
+    tmp.Series.Add(speedSeries);
+
+    // Axes are created automatically if they are not defined
+    tmp.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Key="HR" });
+    tmp.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Right, Key="Speed" });
+
+    // Set the Model property. INotifyPropertyChanged will update the PlotView
+    Model = tmp;
+    //Model.ResetAllAxes();
   }
 
   private async Task Log(string s)
@@ -47,11 +105,11 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     while (LogEntries.Count > 25) RemoveHead();
 
     // Give other jobs a chance to run on single-threaded platforms like WASM
-    await Task.Delay(1); 
+    await Task.Delay(1);
   }
 
   private void RemoveHead() => LogEntries.RemoveAt(0);
-  private void RemoveTail() 
+  private void RemoveTail()
   {
     if (LogEntries.Count > 0)
     {
@@ -118,39 +176,56 @@ public class MainViewModel : ViewModelBase, IMainViewModel
         var sb = new StringBuilder();
         fit.Print(s => sb.AppendLine(s), showRecords: false);
         await Log(sb.ToString());
-
-        var speeds = new List<Speed>
-        {
-          new() { Value = 6.7, Unit = Model.Units.SpeedUnit.MiPerHour },
-          new() { Value = 9, Unit = Model.Units.SpeedUnit.MiPerHour },
-          new() { Value = 5, Unit = Model.Units.SpeedUnit.MiPerHour },
-          new() { Value = 9, Unit = Model.Units.SpeedUnit.MiPerHour },
-          new() { Value = 5, Unit = Model.Units.SpeedUnit.MiPerHour },
-          new() { Value = 6.7, Unit = Model.Units.SpeedUnit.MiPerHour },
-        };
-
-        await Log("Applying new lap speeds");
-
-        fit.ApplySpeeds(speeds);
-
-        await Log("Backfilling: ");
-
-        fit.BackfillEvents(100, async (i, total) =>
-        {
-          RemoveTail();
-          await Log($"Backfilling: {(double)i / total * 100:##.##}% ({i}/{total})");
-        });
-        RemoveTail();
-        await Log("Backfilling: 100%");
-
-        sb = new StringBuilder();
-        fit.Print(s => sb.AppendLine(s), showRecords: false);
-        await Log(sb.ToString());
+        Plot(fit);
+        lastFit_ = fit;
       }
       catch (Exception e)
       {
         Services.Log.Info($"{e}");
       }
+    });
+  }
+
+  public void HandleProcessFileClicked()
+  {
+    _ = Task.Run(async () =>
+    {
+      if (lastFit_ == null)
+      {
+        await Log("No file loaded");
+        return;
+      }
+
+      FitFile fit = lastFit_;
+
+      var speeds = new List<Speed>
+      {
+        new() { Value = 6.7, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
+        new() { Value = 9, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
+        new() { Value = 5, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
+        new() { Value = 9, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
+        new() { Value = 5, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
+        new() { Value = 6.7, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
+      };
+
+      await Log("Applying new lap speeds");
+
+      fit.ApplySpeeds(speeds);
+
+      await Log("Backfilling: ");
+
+      fit.BackfillEvents(100, async (i, total) =>
+      {
+        RemoveTail();
+        await Log($"Backfilling: {(double)i / total * 100:##.##}% ({i}/{total})");
+      });
+      RemoveTail();
+      await Log("Backfilling: 100%");
+
+      var sb = new StringBuilder();
+      fit.Print(s => sb.AppendLine(s), showRecords: false);
+      await Log(sb.ToString());
+      Plot(fit);
     });
   }
 

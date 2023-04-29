@@ -7,7 +7,7 @@
     <TargetFramework>net7.0-android</TargetFramework>
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
-    <ApplicationId>com.Slater.Dauer.Ui</ApplicationId>
+    <ApplicationId>com.slater.dauer</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
@@ -22,23 +22,11 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-av11-preview6" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.Fuse.Secure\Dauer.Fuse.Secure.csproj" />
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Dauer.Fuse">
-      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\net7.0\Dauer.Fuse.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <!-- We don't need to obfuscate on Android since it's AOT compiled which is not easily reversed -->
-  <!--<ItemGroup>
-    <Reference Include="Dauer.Fuse">
-      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\net7.0\Dauer.Fuse_Secure\Dauer.Fuse.dll</HintPath>
-    </Reference>
-  </ItemGroup>-->
 
 </Project>

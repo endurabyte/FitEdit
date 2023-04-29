@@ -14,18 +14,13 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-av11-preview6" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.Fuse.Secure\Dauer.Fuse.Secure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Dauer.Fuse">
-      <HintPath>..\Dauer.Fuse\bin\$(Configuration)\$(TargetFramework)\Dauer.Fuse_Secure\Dauer.Fuse.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
   </ItemGroup>
 
 </Project>
