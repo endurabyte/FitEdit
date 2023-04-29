@@ -3,6 +3,7 @@ import * as ProgressBar from './progressbar.min.js'
 class LoadState {
 
   verbose;
+  lores;
 
   constructor() {
     this.progressBar = new window.ProgressBar.Line('#progress-bar', {
@@ -24,12 +25,17 @@ class LoadState {
     // For setting the progress in the window titlebar
     this.originalTitle = document.title;
     this.verbose = false;
+    this.lores = true;
   }
 
   log(...args) {
     if (this.verbose) {
       console.log(`loadstate.js: `, ...args);
     }
+  }
+
+  error(...args) {
+    console.error(`loadstate.js: `, ...args);
   }
 
   // Example response excerpt:
@@ -132,6 +138,8 @@ class LoadState {
   // perc: percent 0-100 of fetch of filename
   // returns overall percent 0-100 of all fetches
   handleFileLoadProgress(filename, perc) {
+    this.log(`${filename} read progress: ${perc.toFixed(1)}%`);
+
     if (this.mono_config === null || !(filename in this.mono_config)) {
       return;
     }
@@ -148,6 +156,43 @@ class LoadState {
     return { percent, numLoaded, total};
   }
 
+  async fetchWithAxios(url, options) {
+    // Set up the Axios configuration
+    const axiosConfig = {
+      url,
+      method: options?.method || 'GET',
+      data: options?.body,
+      headers: options?.headers,
+      responseType: 'blob', // To handle binary data (e.g. images)
+      onDownloadProgress: (progressEvent) => {
+        const percentCompleted = Math.floor((progressEvent.loaded * 100) / progressEvent.total);
+        let filename = url.split('/').pop();
+        this.handleFileLoadProgress(filename, percentCompleted)
+      },
+    };
+
+    try {
+      // Make the request using Axios
+      const response = await axios(axiosConfig);
+
+      // Create a new Response object to mimic the Fetch API response
+      const customResponse = new Response(response.data, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+      //
+      // Hack to set readonly Response.url
+      Object.defineProperty(customResponse, "url", { value: url });
+
+      return customResponse;
+    } catch (error) {
+      // If there's an error, call the original fetch function
+      this.error('fetchWithAxios: ', error);
+      return originalFetch(url, options);
+    }
+  };
+
   start() {
 
     // Intercept fetch so we can show loading progress
@@ -155,93 +200,51 @@ class LoadState {
     this.origFetch = origFetch;
 
     window.fetch = async (...args) => {
-      if (this.verbose) {
-        this.log("fetch called with args:", args);
-      }
+      this.log("fetch called with args:", args);
 
-      const origResponse = await origFetch(...args);
-      // const response = origResponse;
-      
-      // Intercept stream read for fetch progress
       let filename = "";
       if (args instanceof Array && args.length > 0 && typeof args[0] === 'string') {
         filename = args[0].split('/').pop();
       }
-      const response = await this.readWithProgress(filename, origResponse);
 
-      if (this.verbose) {
-        this.log(`Got response`, response);
-      }
-      const respFilename = this.extractFileName(response);
+      const origResponse = await origFetch(...args);
+      let response = null;
 
-      if (respFilename === null) {
-        this.log(`No response. Expected ${filename}, got null`)
-        return;
-      }
-
-      if (respFilename !== filename) {
-        this.log(`Mismatched response. Expected ${filename}, got ${respFilename}`)
+      if (this.lores === true) {
+        response = origResponse;
+      } else {
+        this.log("Fetching with Axios...");
+        response = await this.fetchWithAxios(...args);
       }
 
-      if (filename === "mono-config.json") {
-        this.mono_config = await this.getMonoConfig(response.clone());
-
-        if (this.verbose) {
-          this.log(`Got mono_config: ${JSON.stringify(this.mono_config)}`);
-        }
-      }
-
-      this.handleFileLoadProgress(filename, 100);
-
+      await this.handleGotResponse(filename, response);
       return response;
     };
   }
 
-  async readWithProgress(filename, response) {
+  async handleGotResponse(filename, response) {
 
-    const length = response.headers.get('Content-Length');
-    if (!length) {
+    this.log(`Got response`, response);
+
+    const respFilename = this.extractFileName(response);
+
+    if (respFilename === null) {
+      this.log(`No response. Expected ${filename}, got null`)
       return;
     }
 
-    const data = new Uint8Array(length);
-    let at = 0;
-
-    const reader = response.body.getReader();
-
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-
-      data.set(value, at);
-      at += value.length;
-
-      const perc = (at / length * 100);
-      
-      this.log(`${filename} read progress: ${perc.toFixed(1)}% (${at}/${length} bytes)`);
-      this.handleFileLoadProgress(filename, perc);
+    if (respFilename !== filename) {
+      this.log(`Mismatched response. Expected ${filename}, got ${respFilename}`)
+      return;
     }
 
-    // Create a new stream which has the read data we just read
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(data);
-        controller.close();
-      }
-    })
+    if (filename === "mono-config.json") {
+      this.mono_config = await this.getMonoConfig(response.clone());
 
-    const resp = new Response(stream, {
-      body: stream,
-      headers: response.headers,
-      status: response.status,
-      statusText: response.statusText,
-    });
-    
-    // Hack to set readonly Response.url
-    Object.defineProperty(resp, "url", { value: response.url });
-    return resp;
+      this.log(`Got mono_config: ${JSON.stringify(this.mono_config)}`);
+    }
+
+    this.handleFileLoadProgress(filename, 100);
   }
 
   complete() {
@@ -249,10 +252,10 @@ class LoadState {
     // Stop intercepting fetch now that dotnet is loaded
     window.fetch = this.origFetch;
 
-    let missing_assemblies = this.collectFalseKeys(this.mono_config);
+    let missing_files = this.collectFalseKeys(this.mono_config);
 
-    if (missing_assemblies.length > 0) {
-      this.log(`Warning: Didn't load the following assemblies:`, missing_assemblies);
+    if (missing_files.length > 0) {
+      this.log(`Warning: Didn't load the following files:`, missing_files);
     }
   }
 
