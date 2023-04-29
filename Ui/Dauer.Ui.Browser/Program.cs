@@ -7,14 +7,11 @@ using System.Runtime.Versioning;
 using Dauer.Ui;
 using Dauer.Ui.Adapters;
 using Dauer.Ui.Adapters.Storage;
-using System.Diagnostics.CodeAnalysis;
-using Dauer.Fuse.Secure;
 
 [assembly: SupportedOSPlatform("browser")]
 
 internal partial class Program
 {
-  [RequiresUnreferencedCode("Calls Dauer.Fuse.Fuse.Init(String)")]
   private static async Task Main(string[] args)
   {
     _ = JSHost
@@ -35,20 +32,6 @@ internal partial class Program
         WebConsoleAdapter.Log($"{WebConsoleAdapter.ModuleName} ready");
         WebConsoleAdapter.SetMessage();
       });
-
-    try
-    {
-      AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-      {
-        return args.Name.StartsWith("Dauer")
-          ? Defuse.Redirect(args.Name, "/Dauer.Fuse.dll")
-          : null;
-      };
-    }
-    catch (Exception e)
-    {
-      Console.WriteLine(e);
-    }
 
     await BuildAvaloniaApp()
       .UseReactiveUI()

@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+  
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
@@ -13,11 +16,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Dauer.Ui.Desktop.nrproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-av11-preview6" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
   </ItemGroup>
+
+  <Target Name="Protect" AfterTargets="Build" Condition="'$(Configuration)' == 'Deploy'">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File deploy.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />

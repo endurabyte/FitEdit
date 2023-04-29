@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
+    <Configurations>Debug;Release;Deploy</Configurations>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ImplicitUsings>enable</ImplicitUsings>
