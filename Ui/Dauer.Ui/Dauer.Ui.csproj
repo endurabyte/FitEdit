@@ -29,4 +29,13 @@
     <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\PlotView.axaml.cs">
+      <DependentUpon>PlotView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\LapView.axaml.cs">
+      <DependentUpon>LapView.axaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

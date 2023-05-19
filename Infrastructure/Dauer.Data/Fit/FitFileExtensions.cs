@@ -142,16 +142,11 @@ namespace Dauer.Data.Fit
     /// Recalculate the workout as if each lap was run at the corresponding constant speed.
     /// Return the same modified FitFile.
     /// </summary>
-    public static FitFile ApplySpeeds(this FitFile fitFile, List<Speed> speeds)
+    public static FitFile ApplySpeeds(this FitFile fitFile, Dictionary<int, Speed> speeds)
     {
       var laps = fitFile.Get<LapMesg>();
       var records = fitFile.Get<RecordMesg>();
       var sessions = fitFile.Get<SessionMesg>();
-
-      if (laps.Count != speeds.Count)
-      {
-        throw new ArgumentException($"Found {laps.Count} laps but {speeds.Count} speeds");
-      }
 
       if (!records.Any())
       {
@@ -163,7 +158,7 @@ namespace Dauer.Data.Fit
         throw new ArgumentException($"Could not find any sessions");
       }
 
-      foreach (int i in Enumerable.Range(0, laps.Count))
+      foreach (int i in speeds.Keys)
       {
         laps[i].Apply(speeds[i]);
       }
@@ -178,21 +173,25 @@ namespace Dauer.Data.Fit
 
         int j = laps.IndexOf(lap);
 
-        double speed = speeds[j].MetersPerSecond();
+        if (speeds.TryGetValue(j, out Speed value))
+        {
+          double speed = value.MetersPerSecond();
 
-        System.DateTime timestamp = record.Start();
-        double elapsedSeconds = (timestamp - lastTimestamp).TotalSeconds;
-        lastTimestamp = timestamp;
+          System.DateTime timestamp = record.Start();
+          double elapsedSeconds = (timestamp - lastTimestamp).TotalSeconds;
+          lastTimestamp = timestamp;
 
-        distance.Value += speed * elapsedSeconds;
+          distance.Value += speed * elapsedSeconds;
+
+          record.SetEnhancedSpeed((float)speed);
+        }
 
         lap.SetTotalDistance((float)distance.Meters());
         record.SetDistance((float)distance.Meters());
-        record.SetEnhancedSpeed((float)speed);
       }
 
       SessionMesg session = sessions.FirstOrDefault();
-      session?.Apply(distance, speeds.MaxBy(s => s.Value));
+      session?.Apply(distance, speeds.Values.MaxBy(s => s.Value));
 
       return fitFile;
     }

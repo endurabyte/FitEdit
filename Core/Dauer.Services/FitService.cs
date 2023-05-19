@@ -77,8 +77,19 @@ namespace Dauer.Services
 
     public async Task SetLapSpeedsAsync(string sourceFile, string destFile, List<Speed> speeds)
     {
-      FitFile fitFile = (await new Reader().ReadAsync(sourceFile))
-       ?.ApplySpeeds(speeds)
+      Dictionary<int, Speed> dict = speeds
+        .Select((speed, i) => new { speed, i })
+        .ToDictionary(pair => pair.i, pair => pair.speed);
+
+      FitFile original = await new Reader().ReadAsync(sourceFile);
+
+      if (original.Laps.Count != speeds.Count)
+      {
+        throw new ArgumentException($"Found {original.Laps.Count} laps but {speeds.Count} speeds");
+      }
+
+      FitFile fitFile = original
+       ?.ApplySpeeds(dict)
        ?.BackfillEvents()
        ?.Print(Log.Info, false);
 

@@ -6,7 +6,7 @@ using Dauer.Data.Fit;
 using System.Text;
 using System.Collections.ObjectModel;
 using Dauer.Model.Workouts;
-using OxyPlot;
+using DynamicData.Binding;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -14,18 +14,18 @@ public interface IMainViewModel
 {
 
 }
-
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
   private Models.File? lastFile_ = null;
   private FitFile? lastFit_ = null;
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
-  private string text_ = "Welcome to Dauer. Please load a FIT file.";
-  private PlotModel? model_;
+  public IPlotViewModel Plot { get; }
+  public ILapViewModel LapEditor { get; }
+
+  private string text_ = "Welcome to FitEdit. Please load a FIT file.";
 
   public ObservableCollection<string> LogEntries { get; } = new();
-
 
   public string Text
   {
@@ -33,69 +33,49 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     set => this.RaiseAndSetIfChanged(ref text_, value);
   }
 
-  public PlotModel? Model
-  {
-    get => model_;
-    private set => this.RaiseAndSetIfChanged(ref model_, value);
-  }
+  public MainViewModel() : this(
+    new NullStorageAdapter(),
+    new NullFitService(),
+    new PlotViewModel(),
+    new LapViewModel()) { }
 
-  public MainViewModel() : this(new NullStorageAdapter(), new NullFitService()) { }
-
-  public MainViewModel(IStorageAdapter storage, IFitService fit)
+  public MainViewModel(
+    IStorageAdapter storage,
+    IFitService fit,
+    IPlotViewModel plot,
+    ILapViewModel lapEditor)
   {
     storage_ = storage;
     fit_ = fit;
+    Plot = plot;
+    LapEditor = lapEditor;
+
     this.Log().Debug($"{nameof(MainViewModel)}.ctor");
     Services.Log.Info($"{nameof(MainViewModel)} ready");
-
-    Model = new PlotModel();
   }
 
-  private void Plot(FitFile fit)
+  public void HandleAuthorizeClicked()
   {
-    // Create the plot model
-    var tmp = new PlotModel
+    Services.Log.Info($"{nameof(HandleAuthorizeClicked)}");
+
+    _ = Task.Run(async () =>
     {
-      Title = "Title",
-      Subtitle = "Subtitle",
-      TextColor = OxyColors.White,
-      TitleColor = OxyColors.White,
-      SubtitleColor = OxyColors.White,
-      PlotAreaBorderColor = OxyColors.White,
-      DefaultColors = new List<OxyColor>()
+      string username = "dougslater@gmail.com";
+      var client = new HttpClient();
+      var request = new HttpRequestMessage(HttpMethod.Get, $"https://localhost:7117/Auth?username={username}");
+
+      try
       {
-        OxyColors.Red,
-        OxyColors.Green,
-        OxyColor.Parse("#64b5cd00"),
-      },
-    };
-
-    // Create two line series (markers are hidden by default)
-    var hrSeries = new OxyPlot.Series.LineSeries { Title = "HR", YAxisKey = "HR", MarkerType = MarkerType.Square };
-    var speedSeries = new OxyPlot.Series.LineSeries { Title = "Speed", YAxisKey = "Speed", MarkerType = MarkerType.Square };
-
-    DateTime start = fit.Sessions.First().GetStartTime().GetDateTime();
-    foreach (var record in fit.Records)
-    {
-      var speed = (double?)record.GetEnhancedSpeed() ?? 0;
-      var hr = (double?)record.GetHeartRate() ?? 0;
-      var time = record.GetTimestamp().GetDateTime();
-      double elapsedSeconds = (time - start).TotalSeconds;
-
-      hrSeries.Points.Add(new(elapsedSeconds, hr));
-      speedSeries.Points.Add(new(elapsedSeconds, speed));
-    }
-
-    tmp.Series.Add(hrSeries);
-    tmp.Series.Add(speedSeries);
-
-    // Axes are created automatically if they are not defined
-    tmp.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Key="HR" });
-    tmp.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Right, Key="Speed" });
-
-    // Set the Model property. INotifyPropertyChanged will update the PlotView
-    Model = tmp;
-    //Model.ResetAllAxes();
+        var response = await client.SendAsync(request);
+        await Log($"Got response {response.StatusCode}");
+        string responseContent = await response.Content.ReadAsStringAsync();
+        await Log(responseContent);
+      }
+      catch (Exception e)
+      {
+        await Log($"{e}");
+      }
+    });
   }
 
   private async Task Log(string s)
@@ -117,12 +97,13 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     }
   }
 
-  public void HandleSelectFileClicked()
+  public async void HandleSelectFileClicked()
   {
     Services.Log.Info("Select file clicked");
 
-    _ = Task.Run(async () =>
-    {
+    // On iOS, the file picker must run on the main thread
+    //_ = Task.Run(async () =>
+    //{
       try
       {
         Models.File? file = await storage_.OpenFileAsync();
@@ -139,6 +120,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
         if (extension.ToLower() != ".fit")
         {
+          Services.Log.Info($"Unsupported extension {extension}");
           return;
         }
 
@@ -176,65 +158,54 @@ public class MainViewModel : ViewModelBase, IMainViewModel
         var sb = new StringBuilder();
         fit.Print(s => sb.AppendLine(s), showRecords: false);
         await Log(sb.ToString());
-        Plot(fit);
+
+
         lastFit_ = fit;
+        Show(fit);
       }
       catch (Exception e)
       {
         Services.Log.Info($"{e}");
       }
-    });
+    //});
   }
 
-  public void HandleProcessFileClicked()
+  public async Task EditLapSpeeds(Speed? speed, int i)
   {
-    _ = Task.Run(async () =>
+    if (lastFit_ == null)
     {
-      if (lastFit_ == null)
-      {
-        await Log("No file loaded");
-        return;
-      }
+      await Log("No file loaded");
+      return;
+    }
 
-      FitFile fit = lastFit_;
+    FitFile fit = lastFit_;
 
-      var speeds = new List<Speed>
-      {
-        new() { Value = 6.7, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
-        new() { Value = 9, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
-        new() { Value = 5, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
-        new() { Value = 9, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
-        new() { Value = 5, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
-        new() { Value = 6.7, Unit = Dauer.Model.Units.SpeedUnit.MiPerHour },
-      };
+    await Log("Applying new lap speeds");
 
-      await Log("Applying new lap speeds");
+    fit.ApplySpeeds(new Dictionary<int, Speed?> { [i] = speed });
 
-      fit.ApplySpeeds(speeds);
+    await Log("Backfilling: ");
 
-      await Log("Backfilling: ");
-
-      fit.BackfillEvents(100, async (i, total) =>
-      {
-        RemoveTail();
-        await Log($"Backfilling: {(double)i / total * 100:##.##}% ({i}/{total})");
-      });
+    fit.BackfillEvents(100, async (i, total) =>
+    {
       RemoveTail();
-      await Log("Backfilling: 100%");
-
-      var sb = new StringBuilder();
-      fit.Print(s => sb.AppendLine(s), showRecords: false);
-      await Log(sb.ToString());
-      Plot(fit);
+      await Log($"Backfilling: {(double)i / total * 100:##.##}% ({i}/{total})");
     });
+    RemoveTail();
+    await Log("Backfilling: 100%");
+
+    var sb = new StringBuilder();
+    fit.Print(s => sb.AppendLine(s), showRecords: false);
+    await Log(sb.ToString());
   }
 
-  public void HandleDownloadFileClicked()
+  public async void HandleDownloadFileClicked()
   {
     Services.Log.Info("Download file clicked...");
 
-    _ = Task.Run(async () =>
-    {
+    // On macOS, the file save dialog must run on the main thread
+    //_ = Task.Run(async () =>
+    //{
       try
       {
         if (lastFile_ == null)
@@ -251,6 +222,29 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       {
         Services.Log.Info($"{e}");
       }
-    });
+    //});
+  }
+
+  private void Show(FitFile fit)
+  {
+    Plot.Show(fit);
+    LapEditor.Show(fit);
+
+    var pairs = LapEditor.Laps.Select((lap, i) => new { lap.Speed, i }).ToList();
+
+    foreach (var pair in pairs)
+    {
+      var speed = pair.Speed!;
+      speed.WhenPropertyChanged(x => x.Value).Subscribe(async speed =>
+      {
+        var spd = fit.Laps[pair.i].GetEnhancedAvgSpeed() ?? 0;
+        if (Math.Abs(speed.Value - spd) < 1e-5)
+        {
+          return;
+        }
+        await EditLapSpeeds(pair.Speed, pair.i);
+        Plot.Show(fit);
+      });
+    }
   }
 }
