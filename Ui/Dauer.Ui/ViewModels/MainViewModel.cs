@@ -14,6 +14,19 @@ public interface IMainViewModel
 {
 
 }
+
+public class DesignMainViewModel : MainViewModel
+{
+  public DesignMainViewModel() : base(
+    new NullStorageAdapter(),
+    new NullFitService(),
+    new DesignPlotViewModel(),
+    new DesignLapViewModel(),
+    new DesignRecordViewModel()
+  ) 
+  { 
+  }
+}
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
   private Models.File? lastFile_ = null;
@@ -21,7 +34,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
   public IPlotViewModel Plot { get; }
-  public ILapViewModel LapEditor { get; }
+  public ILapViewModel Laps { get; }
+  public IRecordViewModel Records { get; }
 
   private string text_ = "Welcome to FitEdit. Please load a FIT file.";
 
@@ -33,22 +47,25 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     set => this.RaiseAndSetIfChanged(ref text_, value);
   }
 
-  public MainViewModel() : this(
-    new NullStorageAdapter(),
-    new NullFitService(),
-    new PlotViewModel(),
-    new LapViewModel()) { }
-
   public MainViewModel(
     IStorageAdapter storage,
     IFitService fit,
     IPlotViewModel plot,
-    ILapViewModel lapEditor)
+    ILapViewModel laps,
+    IRecordViewModel records
+  )
   {
     storage_ = storage;
     fit_ = fit;
     Plot = plot;
-    LapEditor = lapEditor;
+    Laps = laps;
+    Records = records;
+
+    // When the records list selection changes, show it in the plot
+    records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => plot.SelectedIndex = property.Value);
+
+    // When plot selected data point changes, show it in the records list
+    plot.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => records.SelectedIndex = property.Value);
 
     this.Log().Debug($"{nameof(MainViewModel)}.ctor");
     Services.Log.Info($"{nameof(MainViewModel)} ready");
@@ -228,9 +245,10 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   private void Show(FitFile fit)
   {
     Plot.Show(fit);
-    LapEditor.Show(fit);
+    Laps.Show(fit);
+    Records.Show(fit);
 
-    var pairs = LapEditor.Laps.Select((lap, i) => new { lap.Speed, i }).ToList();
+    var pairs = Laps.Laps.Select((lap, i) => new { lap.Speed, i }).ToList();
 
     foreach (var pair in pairs)
     {

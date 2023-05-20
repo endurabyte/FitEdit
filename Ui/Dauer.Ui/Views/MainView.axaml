@@ -8,7 +8,7 @@
              x:Class="Dauer.Ui.Views.MainView"
              x:DataType="vm:MainViewModel">
   <Design.DataContext>
-    <vm:MainViewModel />
+    <vm:DesignMainViewModel />
   </Design.DataContext>
 
   <UserControl.Styles>
@@ -18,6 +18,8 @@
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="5"/>
       <RowDefinition Height="*"/>
       <RowDefinition Height="3*"/>
       <RowDefinition Height="*"/>
@@ -40,8 +42,10 @@
       </Button>
     </StackPanel>
 
-    <views:LapView Grid.Row="1" DataContext="{Binding LapEditor}"/>
-    <views:PlotView Grid.Row="2" DataContext="{Binding Plot}"/>
-    <ListBox ItemsSource="{Binding LogEntries}" Grid.Row="3" FontSize="6"/>
+    <views:LapView Grid.Row="1" DataContext="{Binding Laps}"/>
+    <Separator Grid.Row="2" VerticalAlignment="Stretch" Background="Gray"/>
+    <views:RecordView Grid.Row="3" DataContext="{Binding Records}"/>
+    <views:PlotView Grid.Row="4" DataContext="{Binding Plot}"/>
+    <ListBox ItemsSource="{Binding LogEntries}" Grid.Row="5" FontSize="6"/>
   </Grid>
 </UserControl>

@@ -10,7 +10,7 @@
              x:DataType="vm:PlotViewModel">
 
   <Design.DataContext>
-    <vm:PlotViewModel />
+    <vm:DesignPlotViewModel />
   </Design.DataContext>
 
   <UserControl.Styles>
@@ -19,10 +19,10 @@
 
   <Grid>
 
-    <oxy:PlotView Model="{Binding Plot}" Grid.Row="1">
+    <oxy:PlotView Model="{Binding Plot}">
       <oxy:PlotView.DefaultTrackerTemplate>
         <ControlTemplate>
-          <oxy:TrackerControl Position="{Binding TrackerPosition}" Background="Transparent" BorderBrush="Gray">
+          <oxy:TrackerControl Position="{Binding TrackerPosition, Mode=TwoWay}" Background="Transparent" BorderBrush="Gray">
             <oxy:TrackerControl.Content>
               <TextBlock Text="{Binding}" Margin="7" Foreground="White" />
             </oxy:TrackerControl.Content>

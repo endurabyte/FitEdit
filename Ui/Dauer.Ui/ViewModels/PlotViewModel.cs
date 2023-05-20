@@ -2,22 +2,91 @@
 using Dauer.Data.Fit;
 using OxyPlot;
 using OxyPlot.Annotations;
+using OxyPlot.Series;
+using OxyPlot.Axes;
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IPlotViewModel
 {
+  int SelectedIndex { get; set; }
+
   void Show(FitFile fit);
+}
+
+public class DesignPlotViewModel : PlotViewModel
+{
+  public DesignPlotViewModel()
+  {
+    var fit = new FitFile();
+    var session = new Dynastream.Fit.SessionMesg();
+    session.LocalNum = 12;
+    var start = new Dynastream.Fit.DateTime(DateTime.Now - TimeSpan.FromMinutes(6));
+    session.SetTimestamp(start);
+    session.SetStartTime(start);
+
+    fit.Messages.Add(session);
+
+    var lap1 = new Dynastream.Fit.LapMesg();
+    var lap2 = new Dynastream.Fit.LapMesg();
+    var lap3 = new Dynastream.Fit.LapMesg();
+
+    lap1.SetStartTime(start);
+    lap2.SetStartTime(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(2)));
+    lap3.SetStartTime(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(5)));
+
+    fit.Messages.Add(lap1);
+    fit.Messages.Add(lap2);
+    fit.Messages.Add(lap3);
+
+    foreach (int i in Enumerable.Range(0, 2*60))
+    {
+      var record = new Dynastream.Fit.RecordMesg();
+      record.SetEnhancedSpeed(3.7f);
+      record.SetTimestamp(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromSeconds(i)));
+      fit.Messages.Add(record);
+    }
+
+    foreach (int i in Enumerable.Range(0, 3*60))
+    {
+      var record = new Dynastream.Fit.RecordMesg();
+      record.SetEnhancedSpeed(6.7f);
+      record.SetTimestamp(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(2) + TimeSpan.FromSeconds(i)));
+      fit.Messages.Add(record);
+    }
+
+    foreach (int i in Enumerable.Range(0, 1*60))
+    {
+      var record = new Dynastream.Fit.RecordMesg();
+      record.SetEnhancedSpeed(2.5f);
+      record.SetTimestamp(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(i)));
+      fit.Messages.Add(record);
+    }
+
+    Show(fit);
+  }
 }
 
 public class PlotViewModel : ViewModelBase, IPlotViewModel
 {
-  private PlotModel? model_;
+  private PlotModel? plot_;
+
+  private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
 
   public PlotModel? Plot
   {
-    get => model_;
-    private set => this.RaiseAndSetIfChanged(ref model_, value);
+    get => plot_;
+    private set => this.RaiseAndSetIfChanged(ref plot_, value);
+  }
+
+  private int selectedIndex_;
+  public int SelectedIndex
+  {
+    get => selectedIndex_; set
+    {
+      if (value < 0 || value > (HrSeries_?.Points.Count ?? 0)) { return; }
+      this.RaiseAndSetIfChanged(ref selectedIndex_, value);
+    }
   }
 
   private ScreenPoint? trackerPosition_;
@@ -25,6 +94,30 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     get => trackerPosition_;
     set => this.RaiseAndSetIfChanged(ref trackerPosition_, value);
+  }
+
+  public PlotViewModel()
+  {
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelecteIndexChanged(e.Value));
+  }
+
+  private void HandleSelecteIndexChanged(int index)
+  {
+    LineSeries? series = HrSeries_;
+    if (series == null) { return; }
+
+    DataPoint selection = series.Points[index];
+    ScreenPoint position = series.Transform(selection);
+
+    TrackerPosition = position;
+
+    var hit = new TrackerHitResult
+    {
+      Position = position,
+      Text = $"Record {index}"
+    };
+
+    Plot?.PlotView.ShowTracker(hit);
   }
 
   public void Show(FitFile fit)
@@ -43,15 +136,18 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       SubtitleFontSize = 0,
     };
 
+    var controller = new PlotController();
+
+
 #pragma warning disable CS0618 // Type or member is obsolete
     plot.TrackerChanged += HandleTrackerChanged;
 #pragma warning restore CS0618 // Type or member is obsolete
 
     // Plot heart rate and speed data points
     string str = "{0}\n{1:0.0}: {2:0.0}\n{3:0.0}: {4:0.0}";
-    var hrSeries = new OxyPlot.Series.LineSeries { Title = "HR", YAxisKey = "HR", TrackerFormatString = str };
-    var cadenceSeries = new OxyPlot.Series.LineSeries { Title = "Cadence", YAxisKey = "Cadence", TrackerFormatString = str };
-    var speedSeries = new OxyPlot.Series.LineSeries { Title = "Speed", YAxisKey = "Speed", TrackerFormatString = str };
+    var hrSeries = new LineSeries { Title = "HR", YAxisKey = "HR", TrackerFormatString = str };
+    var cadenceSeries = new LineSeries { Title = "Cadence", YAxisKey = "Cadence", TrackerFormatString = str };
+    var speedSeries = new LineSeries { Title = "Speed", YAxisKey = "Speed", TrackerFormatString = str };
 
     DateTime start = fit.Sessions.First().Start();
 
@@ -73,10 +169,10 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     plot.Series.Add(speedSeries);
 
     // Axes are created automatically if they are not defined
-    plot.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Bottom, IsAxisVisible = false });
-    plot.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Key = "HR", IsAxisVisible = false });
-    plot.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Left, Key = "Cadence", IsAxisVisible = false });
-    plot.Axes.Add(new OxyPlot.Axes.LinearAxis { Position = OxyPlot.Axes.AxisPosition.Right, Key = "Speed", IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "HR", IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "Cadence", IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Right, Key = "Speed", IsAxisVisible = false });
 
     // Render a vertical line at the end of each lap
     foreach (int i in Enumerable.Range(0, fit.Laps.Count))
@@ -99,13 +195,15 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       plot.Annotations.Add(ann);
     }
 
-    // Set the Model property. INotifyPropertyChanged will update the PlotView
     Plot = plot;
   }
 
   private void HandleTrackerChanged(object? sender, TrackerEventArgs e)
   {
-    TrackerPosition = e.HitResult?.Position;
+    if (e.HitResult == null) { return; }
+
+    TrackerPosition = e.HitResult.Position;
+    SelectedIndex = (int)e.HitResult.Index;
   }
 
   public void HandleResetPlotClicked()
