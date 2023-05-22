@@ -24,7 +24,13 @@ public class CompositionRoot
   {
     lifetime_ = lifetime;
 
-    var vm = new MainViewModel(Storage_, new FitService(), new PlotViewModel(), new LapViewModel(), new RecordViewModel());
+    var vm = new MainViewModel(
+      Storage_,
+      new FitService(),
+      new PlotViewModel(),
+      new LapViewModel(),
+      new RecordViewModel(),
+      new MapViewModel());
 
     registrations_[typeof(IMainViewModel)] = vm;
     Log.Level = LogLevel.Info;

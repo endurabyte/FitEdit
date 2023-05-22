@@ -22,7 +22,8 @@ public class DesignMainViewModel : MainViewModel
     new NullFitService(),
     new DesignPlotViewModel(),
     new DesignLapViewModel(),
-    new DesignRecordViewModel()
+    new DesignRecordViewModel(),
+    new DesignMapViewModel()
   ) 
   { 
   }
@@ -36,6 +37,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IPlotViewModel Plot { get; }
   public ILapViewModel Laps { get; }
   public IRecordViewModel Records { get; }
+  public IMapViewModel Map { get; }
 
   private string text_ = "Welcome to FitEdit. Please load a FIT file.";
 
@@ -52,7 +54,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IFitService fit,
     IPlotViewModel plot,
     ILapViewModel laps,
-    IRecordViewModel records
+    IRecordViewModel records,
+    IMapViewModel map
   )
   {
     storage_ = storage;
@@ -60,12 +63,21 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Plot = plot;
     Laps = laps;
     Records = records;
+    Map = map;
 
     // When the records list selection changes, show it in the plot
-    records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => plot.SelectedIndex = property.Value);
+    records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      plot.SelectedIndex = property.Value;
+      Map.ShowCoordinate(property.Value);
+    });
 
     // When plot selected data point changes, show it in the records list
-    plot.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => records.SelectedIndex = property.Value);
+    plot.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      records.SelectedIndex = property.Value;
+      Map.ShowCoordinate(property.Value);
+    });
 
     this.Log().Debug($"{nameof(MainViewModel)}.ctor");
     Services.Log.Info($"{nameof(MainViewModel)} ready");
@@ -247,6 +259,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Plot.Show(fit);
     Laps.Show(fit);
     Records.Show(fit);
+    Map.ShowGpsTrace(fit);
 
     var pairs = Laps.Laps.Select((lap, i) => new { lap.Speed, i }).ToList();
 

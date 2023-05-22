@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="Dauer.Ui.Views.MainView"
              x:DataType="vm:MainViewModel">
   <Design.DataContext>
@@ -21,6 +21,7 @@
       <RowDefinition Height="*"/>
       <RowDefinition Height="5"/>
       <RowDefinition Height="*"/>
+      <RowDefinition Height="3*"/>
       <RowDefinition Height="3*"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
@@ -46,6 +47,7 @@
     <Separator Grid.Row="2" VerticalAlignment="Stretch" Background="Gray"/>
     <views:RecordView Grid.Row="3" DataContext="{Binding Records}"/>
     <views:PlotView Grid.Row="4" DataContext="{Binding Plot}"/>
-    <ListBox ItemsSource="{Binding LogEntries}" Grid.Row="5" FontSize="6"/>
+    <views:MapView Grid.Row="5" DataContext="{Binding Map}"/>
+    <ListBox ItemsSource="{Binding LogEntries}" Grid.Row="6" FontSize="6"/>
   </Grid>
 </UserControl>

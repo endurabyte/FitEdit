@@ -31,11 +31,11 @@
       </oxy:PlotView.DefaultTrackerTemplate>
     </oxy:PlotView>
 
-    <Button HorizontalAlignment="Left"
+    <!--<Button HorizontalAlignment="Left"
             VerticalAlignment="Bottom"
             Command="{Binding HandleResetPlotClicked}">
       Reset Plot
-    </Button>
+    </Button>-->
 
   </Grid>
 </UserControl>
