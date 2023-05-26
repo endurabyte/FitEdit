@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(SolutionDir)Common.props" />
+  <!--<Import Project="$(SolutionDir)Common.props" />-->
+  <Import Project="$(ProjectDir)..\..\Common.props" />
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -20,6 +21,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--This DLL is hand-built since the branch for Avalonia11 requires preview8 but we use preview6 -->
+    <Reference Include="Mapsui.UI.Avalonia" HintPath="..\Dauer.Ui\lib\Mapsui\Mapsui.UI.Avalonia.dll" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
   </ItemGroup>
+  
 </Project>
