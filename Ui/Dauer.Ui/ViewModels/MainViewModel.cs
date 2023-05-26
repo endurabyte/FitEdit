@@ -28,6 +28,7 @@ public class DesignMainViewModel : MainViewModel
   { 
   }
 }
+
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
   private Models.File? lastFile_ = null;
@@ -69,14 +70,14 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       plot.SelectedIndex = property.Value;
-      Map.ShowCoordinate(property.Value);
+      Map.SelectedIndex = property.Value;
     });
 
     // When plot selected data point changes, show it in the records list
     plot.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       records.SelectedIndex = property.Value;
-      Map.ShowCoordinate(property.Value);
+      Map.SelectedIndex = property.Value;
     });
 
     this.Log().Debug($"{nameof(MainViewModel)}.ctor");

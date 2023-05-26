@@ -1,20 +1,21 @@
 ﻿using Dauer.Data.Fit;
-using Mapsui.UI;
-using Mapsui.UI.Avalonia;
-using Mapsui.Tiling;
-using NetTopologySuite.Geometries;
+using Dauer.Ui.Extensions;
 using Mapsui.Layers;
 using Mapsui.Nts;
 using Mapsui.Styles;
+using Mapsui.Tiling;
+using Mapsui.UI;
+using Mapsui.UI.Avalonia;
+using NetTopologySuite.Geometries;
 using NetTopologySuite.Utilities;
-using Dauer.Ui.Extensions;
+using ReactiveUI;
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IMapViewModel
 {
-  public void ShowCoordinate(int index);
-  public void ShowGpsTrace(FitFile fit);
+  int SelectedIndex { get; set; }
+  void ShowGpsTrace(FitFile fit);
 }
 
 public class DesignMapViewModel : MapViewModel
@@ -27,11 +28,25 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private ILayer? breadcrumbLayer_;
   private FitFile? lastFit_;
 
+  private int selectedIndex_;
+  public int SelectedIndex
+  {
+    get => selectedIndex_; set
+    {
+      if (value < 0 || value > (lastFit_?.Records.Count ?? 0)) { return; }
+      this.RaiseAndSetIfChanged(ref selectedIndex_, value);
+    }
+  }
+
   public MapViewModel()
   {
     Map = new MapControl();
     Map.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
+
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
   }
+
+  private void HandleSelectedIndexChanged(int index) => ShowCoordinate(index);
 
   public void ShowCoordinate(int index)
   {

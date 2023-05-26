@@ -13,6 +13,7 @@ public interface IPlotViewModel
 
   void Show(FitFile fit);
 }
+
 public class DesignPlotViewModel : PlotViewModel
 {
   public DesignPlotViewModel()
