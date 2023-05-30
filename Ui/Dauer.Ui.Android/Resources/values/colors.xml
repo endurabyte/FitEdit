@@ -1,4 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="splash_background">#FFFFFF</color>
+  <color name="splash_background">@color/FitLeadBlack2</color>
+  
+  <color name="FitOceanBlue">#005C8D</color>
+  <color name="FitSkyBlue">#8CD1F4</color>
+  <color name="FitLicoriceBlack">#000000</color>
+  <color name="FitLeadBlack2">#363636</color>
+  <color name="FitLeadBlack">#262626</color>
+  <color name="FitMercuryGrey">#eeeeee</color>
+  <color name="FitSnowWhite">#ffffff</color>
+
+  <color name="FitTealCrayon">#5FDFC8</color>
+  <color name="FitBlueCrayon">#0096FF</color>
+  <color name="FitPurpleCrayon">#7981FE</color>
+  <color name="FitOrangeCrayon">#FF9400</color>
+  <color name="FitPinkCrayon">#FF85FE</color>
+  <color name="FitRedCrayon">#FF2F91</color>
+  <color name="FitGreenCrayon">#00FA91</color>
+  <color name="FitLimeCrayon">#D4FB7A</color>
+  <color name="FitTanCrayon">#FFD478</color>
+  <color name="FitPeachCrayon">#FF7E79</color>
 </resources>

@@ -13,7 +13,18 @@
 
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PackageIcon>PackageIcon.png</PackageIcon>
+    <AssemblyName>FitEdit</AssemblyName>
+    <ApplicationIcon>hourglass.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="hourglass.ico" />
+    <None Update="PackageIcon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="Dauer.Ui.Desktop.nrproj" />

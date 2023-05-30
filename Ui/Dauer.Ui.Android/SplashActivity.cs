@@ -13,7 +13,8 @@ public class SplashActivity : AvaloniaSplashActivity<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
-    AvaloniaLocator.CurrentMutable.Bind<IWebAuthenticator>().ToSingleton<AndroidWebAuthenticator>();
+    CompositionRoot.ServiceLocator.Register<IWebAuthenticator, AndroidWebAuthenticator>(new AndroidWebAuthenticator());
+
     return base.CustomizeAppBuilder(builder)
           .UseReactiveUI();
   }

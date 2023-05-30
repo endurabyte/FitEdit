@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Markup.Xaml;
+using Dauer.Model;
 using Dauer.Ui.ViewModels;
 using Dauer.Ui.Views;
 
@@ -14,8 +15,11 @@ public partial class App : Application
 
   public override void OnFrameworkInitializationCompleted()
   {
-    var root = new CompositionRoot(ApplicationLifetime);
-    object? dataContext = root.Get<IMainViewModel>();
+    IWebAuthenticator authenticator = AvaloniaLocator.Current.GetService<IWebAuthenticator>() ?? new NullWebAuthenticator();
+    Log.Level = LogLevel.Info;
+
+    var root = new CompositionRoot(ApplicationLifetime).Build();
+    object? dataContext = root.Container.Get<IMainViewModel>();
 
     if (ApplicationLifetime.IsDesktop(out var desktop))
     {

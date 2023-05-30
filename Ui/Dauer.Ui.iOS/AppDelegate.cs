@@ -17,7 +17,8 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
-    AvaloniaLocator.CurrentMutable.Bind<IWebAuthenticator>().ToSingleton<AppleWebAuthenticator>();
+    CompositionRoot.ServiceLocator.Register<IWebAuthenticator, AppleWebAuthenticator>(new AppleWebAuthenticator());
+
     return base.CustomizeAppBuilder(builder)
       .AfterSetup(_ => Platform.Init(() => Window.RootViewController!))
       .UseReactiveUI();
