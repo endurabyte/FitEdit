@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--This DLL is hand-built since the branch for Avalonia11 requires preview8 but we use preview6 -->
+    <!--This DLL is hand-built since the MapsUi branch for Avalonia11 requires preview8 but we use preview6 -->
     <Reference Include="Mapsui.UI.Avalonia" HintPath="lib\Mapsui\Mapsui.UI.Avalonia.dll" />
   </ItemGroup>
 

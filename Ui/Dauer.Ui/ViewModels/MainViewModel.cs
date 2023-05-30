@@ -23,7 +23,8 @@ public class DesignMainViewModel : MainViewModel
     new DesignPlotViewModel(),
     new DesignLapViewModel(),
     new DesignRecordViewModel(),
-    new DesignMapViewModel()
+    new DesignMapViewModel(),
+    new NullWebAuthenticator()
   ) 
   { 
   }
@@ -35,6 +36,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   private FitFile? lastFit_ = null;
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
+  private readonly IWebAuthenticator webAuthn_;
+
   public IPlotViewModel Plot { get; }
   public ILapViewModel Laps { get; }
   public IRecordViewModel Records { get; }
@@ -56,7 +59,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IPlotViewModel plot,
     ILapViewModel laps,
     IRecordViewModel records,
-    IMapViewModel map
+    IMapViewModel map,
+    IWebAuthenticator webAuthn
   )
   {
     storage_ = storage;
@@ -65,6 +69,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Laps = laps;
     Records = records;
     Map = map;
+    webAuthn_ = webAuthn;
 
     // When the records list selection changes, show it in the plot
     records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
@@ -88,24 +93,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   {
     Services.Log.Info($"{nameof(HandleAuthorizeClicked)}");
 
-    _ = Task.Run(async () =>
-    {
-      string username = "dougslater@gmail.com";
-      var client = new HttpClient();
-      var request = new HttpRequestMessage(HttpMethod.Get, $"https://localhost:7117/Auth?username={username}");
-
-      try
-      {
-        var response = await client.SendAsync(request);
-        await Log($"Got response {response.StatusCode}");
-        string responseContent = await response.Content.ReadAsStringAsync();
-        await Log(responseContent);
-      }
-      catch (Exception e)
-      {
-        await Log($"{e}");
-      }
-    });
+    webAuthn_.AuthenticateAsync();
   }
 
   private async Task Log(string s)
@@ -260,23 +248,28 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Plot.Show(fit);
     Laps.Show(fit);
     Records.Show(fit);
-    Map.ShowGpsTrace(fit);
+    Map.Show(fit);
 
     var pairs = Laps.Laps.Select((lap, i) => new { lap.Speed, i }).ToList();
 
     foreach (var pair in pairs)
     {
       var speed = pair.Speed!;
-      speed.WhenPropertyChanged(x => x.Value).Subscribe(async speed =>
+      speed.WhenPropertyChanged(x => x.Value).Subscribe(async property =>
       {
-        var spd = fit.Laps[pair.i].GetEnhancedAvgSpeed() ?? 0;
-        if (Math.Abs(speed.Value - spd) < 1e-5)
-        {
-          return;
-        }
-        await EditLapSpeeds(pair.Speed, pair.i);
+        await SetLapSpeed(fit, pair.i, property.Sender);
         Plot.Show(fit);
       });
     }
+  }
+
+  private async Task SetLapSpeed(FitFile fit, int i, Speed? speed)
+  {
+    var spd = fit.Laps[i].GetEnhancedAvgSpeed() ?? 0;
+    if (Math.Abs(speed?.Value ?? 0 - spd) < 1e-5)
+    {
+      return;
+    }
+    await EditLapSpeeds(speed, i);
   }
 }

@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls.ApplicationLifetimes;
+﻿using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Model;
 using Dauer.Services;
 using Dauer.Ui.Adapters.Storage;
@@ -23,6 +24,7 @@ public class CompositionRoot
   public CompositionRoot(IApplicationLifetime? lifetime)
   {
     lifetime_ = lifetime;
+    IWebAuthenticator webAuthn = AvaloniaLocator.Current.GetRequiredService<IWebAuthenticator>();
 
     var vm = new MainViewModel(
       Storage_,
@@ -30,7 +32,8 @@ public class CompositionRoot
       new PlotViewModel(),
       new LapViewModel(),
       new RecordViewModel(),
-      new MapViewModel());
+      new MapViewModel(),
+      webAuthn);
 
     registrations_[typeof(IMainViewModel)] = vm;
     Log.Level = LogLevel.Info;

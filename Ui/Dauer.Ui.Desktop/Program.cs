@@ -1,5 +1,4 @@
-﻿using System;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.ReactiveUI;
 
 namespace Dauer.Ui.Desktop;
@@ -12,6 +11,8 @@ internal class Program
   [STAThread]
   public static void Main(string[] args)
   {
+    AvaloniaLocator.CurrentMutable.Bind<IWebAuthenticator>().ToSingleton<DesktopWebAuthenticator>();
+
     BuildAvaloniaApp()
       .StartWithClassicDesktopLifetime(args);
   }

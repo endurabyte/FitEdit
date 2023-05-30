@@ -15,7 +15,7 @@ namespace Dauer.Ui.ViewModels;
 public interface IMapViewModel
 {
   int SelectedIndex { get; set; }
-  void ShowGpsTrace(FitFile fit);
+  void Show(FitFile fit);
 }
 
 public class DesignMapViewModel : MapViewModel
@@ -75,7 +75,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbLayer_ = layer;
   }
 
-  public void ShowGpsTrace(FitFile fit)
+  public void Show(FitFile fit)
   {
     lastFit_ = fit;
 

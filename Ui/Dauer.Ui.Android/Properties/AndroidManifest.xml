@@ -1,5 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
 	<uses-permission android:name="android.permission.INTERNET" />
-	<application android:label="Dauer.Ui" android:icon="@drawable/Icon" />
+	<application android:label="FitEdit" android:icon="@drawable/Icon" />
+
+  <queries>
+    <intent>
+      <!-- Declare we use "Custom Tabs" which we need for WebAuthenticator. If not available Intent is started for the URL
+           https://learn.microsoft.com/en-us/xamarin/essentials/web-authenticator?tabs=android -->
+      <action android:name="android.support.customtabs.action.CustomTabsService" />
+    </intent>
+  </queries>
 </manifest>

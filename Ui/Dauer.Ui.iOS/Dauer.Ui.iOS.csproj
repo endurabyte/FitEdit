@@ -21,8 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!--This DLL is hand-built since the branch for Avalonia11 requires preview8 but we use preview6 -->
+    <!--This DLL is hand-built since the MapsUi branch for Avalonia11 requires preview8 but we use preview6 -->
     <Reference Include="Mapsui.UI.Avalonia" HintPath="..\Dauer.Ui\lib\Mapsui\Mapsui.UI.Avalonia.dll" />
+    <!--This DLL is hand-built since Avalonia.Essentials requires preview8 but we use preview6 -->
+    <Reference Include="Avalonia.Essentials" HintPath="..\Dauer.Ui\lib\Avalonia.Essentials\net7.0-ios\Avalonia.Essentials.dll"/>
   </ItemGroup>
   
   <ItemGroup>

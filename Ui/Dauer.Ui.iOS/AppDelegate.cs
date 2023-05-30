@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.iOS;
 using Avalonia.Media;
 using Avalonia.ReactiveUI;
+using Microsoft.Maui.ApplicationModel;
 
 namespace Dauer.Ui.iOS;
 
@@ -14,8 +15,11 @@ namespace Dauer.Ui.iOS;
 [Register("AppDelegate")]
 public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
-    {
-        return builder.UseReactiveUI();
-    }
+  protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+  {
+    AvaloniaLocator.CurrentMutable.Bind<IWebAuthenticator>().ToSingleton<AppleWebAuthenticator>();
+    return base.CustomizeAppBuilder(builder)
+      .AfterSetup(_ => Platform.Init(() => Window.RootViewController!))
+      .UseReactiveUI();
+  }
 }

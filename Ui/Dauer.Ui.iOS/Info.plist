@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDisplayName</key>
-	<string>Dauer.Ui</string>
+	<string>FitEdit</string>
 	<key>CFBundleIdentifier</key>
-	<string>companyName.Dauer.Ui</string>
+	<string>com.fitedit.editor</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
@@ -43,5 +43,19 @@
 	<true/>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<!-- Register fitedit:// protocol -->
+	<key>CFBundleURLTypes</key>
+	<array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>fitedit</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>fitedit</string>
+      </array>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+    </dict>
+	</array>
 </dict>
 </plist>

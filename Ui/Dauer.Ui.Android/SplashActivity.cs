@@ -11,8 +11,12 @@ namespace Dauer.Ui.Android;
 [Activity(Theme = "@style/MyTheme.Splash", MainLauncher = true, NoHistory = true)]
 public class SplashActivity : AvaloniaSplashActivity<App>
 {
-  protected override AppBuilder CustomizeAppBuilder(AppBuilder builder) => base.CustomizeAppBuilder(builder)
+  protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+  {
+    AvaloniaLocator.CurrentMutable.Bind<IWebAuthenticator>().ToSingleton<AndroidWebAuthenticator>();
+    return base.CustomizeAppBuilder(builder)
           .UseReactiveUI();
+  }
 
   protected override void OnCreate(Bundle? savedInstanceState)
   {
@@ -22,7 +26,16 @@ public class SplashActivity : AvaloniaSplashActivity<App>
   protected override void OnResume()
   {
     base.OnResume();
-
     StartActivity(new Intent(Application.Context, typeof(MainActivity)));
+  }
+
+  protected override void OnNewIntent(Intent? intent)
+  {
+    base.OnNewIntent(intent);
+  }
+
+  protected override void OnDestroy()
+  {
+    base.OnDestroy();
   }
 }
