@@ -15,6 +15,7 @@ namespace Dauer.Ui.ViewModels;
 public interface IMapViewModel
 {
   int SelectedIndex { get; set; }
+
   void Show(FitFile fit);
 }
 
@@ -96,7 +97,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     };
 
     Map.Map!.Layers.Add(trace);
-    Map.Map!.Home = n => n.CenterOnAndZoomTo(trace.Extent!.Centroid, 2);
+    Map.Map!.Home = n => n.CenterOnAndZoomTo(trace.Extent!.Centroid, 10, 2000);
     Map.Map!.Home.Invoke(Map.Map!.Navigator);
   }
 }

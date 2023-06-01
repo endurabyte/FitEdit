@@ -7,6 +7,7 @@ using System.Runtime.Versioning;
 using Dauer.Ui;
 using Dauer.Ui.Adapters;
 using Dauer.Ui.Adapters.Storage;
+using Dauer.Ui.Adapters.Windowing;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -31,6 +32,14 @@ internal partial class Program
       {
         WebConsoleAdapter.Log($"{WebConsoleAdapter.ModuleName} ready");
         WebConsoleAdapter.SetMessage();
+      });
+
+    _ = JSHost
+      .ImportAsync(WebWindowAdapterImpl.ModuleName, "./windowing.js")
+      .ContinueWith(_ =>
+      {
+        WebConsoleAdapter.Log($"{WebWindowAdapterImpl.ModuleName} ready");
+        WebWindowAdapterImpl.ListenForResize();
       });
 
     await BuildAvaloniaApp()

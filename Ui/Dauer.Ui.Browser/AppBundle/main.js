@@ -9,6 +9,7 @@ function getIsVerbose() {
   const query = new URLSearchParams(location.search);
   return query.has("verbose") && query.get("verbose") === "true";
 }
+
 // Activate low resolution progressbar if the query includes e.g. "?lores=true" or "&lores=true"
 function getProgressIsLowResolution() {
   const query = new URLSearchParams(location.search);

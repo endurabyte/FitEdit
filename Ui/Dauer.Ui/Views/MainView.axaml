@@ -17,37 +17,39 @@
 
   <Grid>
     <Grid.RowDefinitions>
-      <RowDefinition Height="Auto"/>
-      <RowDefinition Height="*"/>
-      <RowDefinition Height="5"/>
-      <RowDefinition Height="*"/>
-      <RowDefinition Height="3*"/>
-      <RowDefinition Height="3*"/>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <StackPanel Grid.Row="0" Orientation="Horizontal">
-      <TextBlock Text="{Binding Text}"/>
-      <Button HorizontalAlignment="Left"
-              Command="{Binding HandleSelectFileClicked}">
-        Select file
-      </Button>
+    <TabControl>
+      <TabItem Header="File">
+        <StackPanel Orientation="Vertical">
+          <TextBlock Grid.Row="0" Text="{Binding Text}"/>
+          <Button Grid.Row="1" Command="{Binding HandleSelectFileClicked}" Content="Select file"/>
+          <Button Grid.Row="2" Command="{Binding HandleAuthorizeClicked}" Content="Authorize"/>
+          <Button Grid.Row="3" Command="{Binding HandleDownloadFileClicked}" Content="Download file"/>
+        </StackPanel>
 
-      <Button Command="{Binding HandleAuthorizeClicked}">
-        Authorize
-      </Button>
-      
-      <Button HorizontalAlignment="Left"
-              Command="{Binding HandleDownloadFileClicked}">
-        Download file
-      </Button>
-    </StackPanel>
+      </TabItem>
+      <TabItem Header="Laps">
+        <views:LapView DataContext="{Binding Laps}"/>
+      </TabItem>
+      <TabItem Header="Records">
+        <views:RecordView DataContext="{Binding Records}"/>
+      </TabItem>
+      <TabItem Header="Chart">
 
-    <views:LapView Grid.Row="1" DataContext="{Binding Laps}"/>
-    <Separator Grid.Row="2" VerticalAlignment="Stretch" Background="Gray"/>
-    <views:RecordView Grid.Row="3" DataContext="{Binding Records}"/>
-    <views:PlotView Grid.Row="4" DataContext="{Binding Plot}"/>
-    <views:MapView Grid.Row="5" DataContext="{Binding Map}"/>
-    <ListBox ItemsSource="{Binding LogEntries}" Grid.Row="6" FontSize="6"/>
+        <Grid RowDefinitions="*, 4, *">
+          <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
+          <GridSplitter Grid.Row="1" Background="{DynamicResource FitLeadBlack2Brush}" ResizeDirection="Rows"/>
+          <views:MapView Grid.Row="2" DataContext="{Binding Map}"/>
+        </Grid>
+
+      </TabItem>
+
+      <TabItem Header="Log">
+        <ListBox ItemsSource="{Binding LogEntries}" FontSize="6"/>
+      </TabItem>
+    </TabControl>
+
   </Grid>
 </UserControl>

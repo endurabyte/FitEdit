@@ -7,6 +7,12 @@ using System.Text;
 using System.Collections.ObjectModel;
 using Dauer.Model.Workouts;
 using DynamicData.Binding;
+using Avalonia.Controls;
+using Dauer.Ui.Adapters.Windowing;
+using Dauer.Model;
+using ReactiveUI.Fody.Helpers;
+using Avalonia;
+using Dauer.Ui.Adapters;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -19,6 +25,7 @@ public class DesignMainViewModel : MainViewModel
 {
   public DesignMainViewModel() : base(
     new NullStorageAdapter(),
+    new NullWindowAdapter(),
     new NullFitService(),
     new DesignPlotViewModel(),
     new DesignLapViewModel(),
@@ -36,40 +43,43 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   private FitFile? lastFit_ = null;
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
-  private readonly IWebAuthenticator webAuthn_;
+  private readonly IWebAuthenticator auth_;
+  private readonly IWindowAdapter window_;
 
   public IPlotViewModel Plot { get; }
   public ILapViewModel Laps { get; }
   public IRecordViewModel Records { get; }
   public IMapViewModel Map { get; }
 
-  private string text_ = "Welcome to FitEdit. Please load a FIT file.";
-
   public ObservableCollection<string> LogEntries { get; } = new();
 
-  public string Text
-  {
-    get => text_;
-    set => this.RaiseAndSetIfChanged(ref text_, value);
-  }
+  [Reactive]
+  public string Text { get; set; } = "Welcome to FitEdit. Please load a FIT file.";
 
   public MainViewModel(
     IStorageAdapter storage,
+    IWindowAdapter window,
     IFitService fit,
     IPlotViewModel plot,
     ILapViewModel laps,
     IRecordViewModel records,
     IMapViewModel map,
-    IWebAuthenticator webAuthn
+    IWebAuthenticator auth
   )
   {
     storage_ = storage;
+    window_ = window;
     fit_ = fit;
     Plot = plot;
     Laps = laps;
     Records = records;
     Map = map;
-    webAuthn_ = webAuthn;
+    auth_ = auth;
+
+    window_.Resized.Subscribe(async tup =>
+    {
+      await Log($"Window resized to {tup.Item1} {tup.Item2}");
+    });
 
     // When the records list selection changes, show it in the plot
     records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
@@ -85,7 +95,6 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       Map.SelectedIndex = property.Value;
     });
 
-    this.Log().Debug($"{nameof(MainViewModel)}.ctor");
     Services.Log.Info($"{nameof(MainViewModel)} ready");
   }
 
@@ -93,7 +102,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   {
     Services.Log.Info($"{nameof(HandleAuthorizeClicked)}");
 
-    webAuthn_.AuthenticateAsync();
+    auth_.AuthenticateAsync();
   }
 
   private async Task Log(string s)

@@ -15,7 +15,6 @@ public partial class App : Application
 
   public override void OnFrameworkInitializationCompleted()
   {
-    IWebAuthenticator authenticator = AvaloniaLocator.Current.GetService<IWebAuthenticator>() ?? new NullWebAuthenticator();
     Log.Level = LogLevel.Info;
 
     var root = new CompositionRoot(ApplicationLifetime).Build();

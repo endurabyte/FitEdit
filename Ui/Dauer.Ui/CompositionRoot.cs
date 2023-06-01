@@ -1,7 +1,7 @@
-﻿using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
+﻿using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Services;
 using Dauer.Ui.Adapters.Storage;
+using Dauer.Ui.Adapters.Windowing;
 using Dauer.Ui.ViewModels;
 
 namespace Dauer.Ui;
@@ -14,7 +14,6 @@ public class CompositionRoot
 
   /// <summary>
   /// Don't use this if at all possible. Used as a wrapper for Avalonia's static service locator.
-  /// https://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/
   /// </summary>
   public static IContainer ServiceLocator { get; } = new AvaloniaContainer();
 
@@ -24,6 +23,14 @@ public class CompositionRoot
     false when lifetime_.IsDesktop(out _) => new DesktopStorageAdapter(),
     false when lifetime_.IsMobile(out _) => new MobileStorageAdapter(),
     _ => new NullStorageAdapter(),
+  };
+
+  private IWindowAdapter Window_ => OperatingSystem.IsBrowser() switch
+  {
+    true => new WebWindowAdapter(),
+    false when lifetime_.IsDesktop(out _) => new DesktopWindowAdapter(),
+    false when lifetime_.IsMobile(out _) => new MobileWindowAdapter(),
+    _ => new NullWindowAdapter(),
   };
 
   public CompositionRoot(IApplicationLifetime? lifetime)
@@ -37,6 +44,7 @@ public class CompositionRoot
 
     var vm = new MainViewModel(
       Storage_,
+      Window_,
       new FitService(),
       new PlotViewModel(),
       new LapViewModel(),

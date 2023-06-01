@@ -4,6 +4,7 @@ using OxyPlot;
 using OxyPlot.Annotations;
 using OxyPlot.Series;
 using OxyPlot.Axes;
+using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -27,13 +28,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
 
   private TrackerHitResult? lastTracker_;
-  private PlotModel? plot_;
 
-  public PlotModel? Plot
-  {
-    get => plot_;
-    private set => this.RaiseAndSetIfChanged(ref plot_, value);
-  }
+  [Reactive]
+  public PlotModel? Plot { get; set; }
 
   private int selectedIndex_;
   public int SelectedIndex
@@ -45,12 +42,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     }
   }
 
-  private ScreenPoint? trackerPosition_;
-  public ScreenPoint? TrackerPosition
-  {
-    get => trackerPosition_;
-    set => this.RaiseAndSetIfChanged(ref trackerPosition_, value);
-  }
+  [Reactive]
+  public ScreenPoint? TrackerPosition { get; set; }
 
   public PlotViewModel()
   {
@@ -75,7 +68,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       Text = $"Record {index}"
     };
 
-    Plot?.PlotView.ShowTracker(hit);
+    Plot?.PlotView?.ShowTracker(hit);
   }
 
   public void Show(FitFile fit)
