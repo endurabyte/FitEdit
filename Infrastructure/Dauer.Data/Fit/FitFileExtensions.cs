@@ -13,8 +13,6 @@ namespace Dauer.Data.Fit
     /// </summary>
     public static FitFile BackfillEvents(this FitFile f, int resolution = 100, Action<int, int> handleProgress = null)
     {
-      handleProgress ??= (_, _) => { };
-
       int li = 0;
       int ri = 0;
       int si = 0;
@@ -30,7 +28,7 @@ namespace Dauer.Data.Fit
       {
         if (i % resolution == 0)
         {
-          handleProgress(i, f.Events.Count);
+          handleProgress?.Invoke(i, f.Events.Count);
         }
         i++;
 
@@ -142,11 +140,16 @@ namespace Dauer.Data.Fit
     /// Recalculate the workout as if each lap was run at the corresponding constant speed.
     /// Return the same modified FitFile.
     /// </summary>
-    public static FitFile ApplySpeeds(this FitFile fitFile, Dictionary<int, Speed> speeds)
+    public static FitFile ApplySpeeds(this FitFile fitFile, Dictionary<int, Speed> speeds, int resolution = 100, Action<int, int> handleProgress = null)
     {
       var laps = fitFile.Get<LapMesg>();
       var records = fitFile.Get<RecordMesg>();
       var sessions = fitFile.Get<SessionMesg>();
+
+      if (!speeds.Any())
+      {
+        return fitFile;
+      }
 
       if (!records.Any())
       {
@@ -167,8 +170,15 @@ namespace Dauer.Data.Fit
 
       System.DateTime lastTimestamp = records.First().Start();
 
+      int recordIndex = 0;
       foreach (RecordMesg record in records)
       {
+        if (recordIndex % resolution == 0)
+        {
+          handleProgress?.Invoke(recordIndex, records.Count);
+        }
+        recordIndex++;
+
         LapMesg lap = record.FindLap(laps);
 
         int j = laps.IndexOf(lap);

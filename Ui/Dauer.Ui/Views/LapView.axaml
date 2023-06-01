@@ -12,16 +12,18 @@
     <vm:DesignLapViewModel />
   </Design.DataContext>
 
-  <Grid>
-    <ListBox Items="{Binding Laps}">
+  <Grid RowDefinitions="Auto, *">
+
+    <Grid Grid.Row="0" ColumnDefinitions="Auto, *">
+      <Button Grid.Column="0" Content="Apply" Command="{Binding HandleApplyClicked}"/>
+      <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
+    </Grid>
+    
+    <ListBox Grid.Row="1" Items="{Binding Laps}">
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="3*"/>
-            </Grid.ColumnDefinitions>
-            
+
+          <Grid ColumnDefinitions="Auto, 3*">
             <Border Grid.Column="1" Background="Gray" CornerRadius="4" Padding="4">
               <StackPanel Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center">
@@ -36,6 +38,7 @@
               </StackPanel>
             </Border>
           </Grid>
+
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>

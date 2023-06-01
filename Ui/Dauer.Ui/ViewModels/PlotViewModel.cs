@@ -29,8 +29,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
   private TrackerHitResult? lastTracker_;
 
-  [Reactive]
-  public PlotModel? Plot { get; set; }
+  [Reactive] public ScreenPoint? TrackerPosition { get; set; }
+  [Reactive] public PlotModel? Plot { get; set; }
 
   private int selectedIndex_;
   public int SelectedIndex
@@ -41,9 +41,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       this.RaiseAndSetIfChanged(ref selectedIndex_, value);
     }
   }
-
-  [Reactive]
-  public ScreenPoint? TrackerPosition { get; set; }
 
   public PlotViewModel()
   {

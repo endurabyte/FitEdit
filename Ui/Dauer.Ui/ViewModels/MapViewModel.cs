@@ -5,16 +5,17 @@ using Mapsui.Nts;
 using Mapsui.Styles;
 using Mapsui.Tiling;
 using Mapsui.UI;
-using Mapsui.UI.Avalonia;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Utilities;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IMapViewModel
 {
   int SelectedIndex { get; set; }
+  IMapControl? Map { get; set; }
 
   void Show(FitFile fit);
 }
@@ -25,7 +26,8 @@ public class DesignMapViewModel : MapViewModel
 
 public class MapViewModel : ViewModelBase, IMapViewModel
 {
-  public IMapControl Map { get; }
+  [Reactive]
+  public IMapControl? Map { get; set; }
   private ILayer? breadcrumbLayer_;
   private FitFile? lastFit_;
 
@@ -41,8 +43,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
   public MapViewModel()
   {
-    Map = new MapControl();
-    Map.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
+    this.ObservableForProperty(x => x.Map).Subscribe(e =>
+    {
+      Map?.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
+    });
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
   }
@@ -69,10 +73,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
     if (breadcrumbLayer_ != null)
     {
-      Map.Map!.Layers.Remove(breadcrumbLayer_);
+      Map?.Map?.Layers.Remove(breadcrumbLayer_);
     }
 
-    Map.Map!.Layers.Add(layer);
+    Map?.Map?.Layers.Add(layer);
     breadcrumbLayer_ = layer;
   }
 
@@ -96,8 +100,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       }
     };
 
-    Map.Map!.Layers.Add(trace);
-    Map.Map!.Home = n => n.CenterOnAndZoomTo(trace.Extent!.Centroid, 10, 2000);
-    Map.Map!.Home.Invoke(Map.Map!.Navigator);
+    if (Map?.Map == null) { return; }
+
+    Map.Map.Layers.Add(trace);
+    Map.Map.Home = n => n.CenterOnAndZoomTo(trace.Extent!.Centroid, 10, 2000);
+    Map.Map.Home.Invoke(Map.Map!.Navigator);
   }
 }

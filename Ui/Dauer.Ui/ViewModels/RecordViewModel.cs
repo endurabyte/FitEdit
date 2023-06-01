@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Dauer.Data.Fit;
 using Dauer.Ui.Models;
-using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -27,8 +27,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 {
   public ObservableCollection<Record> Records { get; set; } = new();
 
-  private int selectedIndex_;
-  public int SelectedIndex { get => selectedIndex_; set => this.RaiseAndSetIfChanged(ref selectedIndex_, value); }
+  [Reactive] public int SelectedIndex { get; set; }
 
   public void Show(FitFile fit)
   {

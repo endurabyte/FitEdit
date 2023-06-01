@@ -17,5 +17,5 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <maps:MapControl Grid.Row="5" Content="{Binding Map}"/>
+  <maps:MapControl x:Name="MapControl"/>
 </UserControl>

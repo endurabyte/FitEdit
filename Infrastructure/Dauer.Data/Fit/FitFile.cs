@@ -17,5 +17,17 @@ namespace Dauer.Data.Fit
       .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])
       .Select(message => message as T)
       .ToList();
+
+    public FitFile Clone() => new()
+    {
+      MessageDefinitions = MessageDefinitions.Select(x => new MesgDefinition(x)).ToList(),
+      Messages = Messages.Select(MessageFactory.Create).ToList(),
+      Events = Events.Select(x => x switch
+      {
+        _ when x is MesgEventArgs mea => (EventArgs)new MesgEventArgs(mea.mesg),
+        _ when x is MesgDefinitionEventArgs mea => new MesgDefinitionEventArgs(mea.mesgDef),
+        _ => null
+      }).Where(x => x is not null).ToList(),
+    };
   }
 }

@@ -1,18 +1,14 @@
-﻿using Splat;
-using Dauer.Ui.Adapters.Storage;
-using Dauer.Services;
-using ReactiveUI;
-using Dauer.Data.Fit;
+﻿using System.Collections.ObjectModel;
 using System.Text;
-using System.Collections.ObjectModel;
+using Dauer.Data.Fit;
 using Dauer.Model.Workouts;
-using DynamicData.Binding;
-using Avalonia.Controls;
+using Dauer.Services;
+using Dauer.Ui.Adapters.Storage;
 using Dauer.Ui.Adapters.Windowing;
-using Dauer.Model;
+using Dauer.Ui.Extensions;
+using DynamicData.Binding;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Avalonia;
-using Dauer.Ui.Adapters;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -40,7 +36,6 @@ public class DesignMainViewModel : MainViewModel
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
   private Models.File? lastFile_ = null;
-  private FitFile? lastFit_ = null;
   private readonly IStorageAdapter storage_;
   private readonly IFitService fit_;
   private readonly IWebAuthenticator auth_;
@@ -53,8 +48,11 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   public ObservableCollection<string> LogEntries { get; } = new();
 
-  [Reactive]
-  public string Text { get; set; } = "Welcome to FitEdit. Please load a FIT file.";
+  [Reactive] public FitFile? FitFile { get; set; }
+  [Reactive] public string Text { get; set; } = "Welcome to FitEdit. Please load a FIT file.";
+  [Reactive] public double Progress { get; set; }
+  [Reactive] public int SliderValue { get; set; }
+  [Reactive] public int SliderMax { get; set; }
 
   public MainViewModel(
     IStorageAdapter storage,
@@ -86,6 +84,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       plot.SelectedIndex = property.Value;
       Map.SelectedIndex = property.Value;
+      SliderValue = property.Value;
     });
 
     // When plot selected data point changes, show it in the records list
@@ -93,6 +92,22 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       records.SelectedIndex = property.Value;
       Map.SelectedIndex = property.Value;
+      SliderValue = property.Value;
+    });
+
+    laps.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      FitFile = property.Value;
+    });
+
+    this.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      Show(FitFile);
+    });
+
+    this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
+    {
+      plot.SelectedIndex = property.Value;
     });
 
     Services.Log.Info($"{nameof(MainViewModel)} ready");
@@ -111,174 +126,107 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     LogEntries.Add(s);
     while (LogEntries.Count > 25) RemoveHead();
 
-    // Give other jobs a chance to run on single-threaded platforms like WASM
-    await Task.Delay(1);
+    await TaskHelp.MaybeYield();
   }
 
   private void RemoveHead() => LogEntries.RemoveAt(0);
-  private void RemoveTail()
-  {
-    if (LogEntries.Count > 0)
-    {
-      LogEntries.RemoveAt(LogEntries.Count - 1);
-    }
-  }
 
   public async void HandleSelectFileClicked()
   {
     Services.Log.Info("Select file clicked");
 
-    // On iOS, the file picker must run on the main thread
-    //_ = Task.Run(async () =>
-    //{
-      try
-      {
-        Models.File? file = await storage_.OpenFileAsync();
-        if (file == null)
-        {
-          Services.Log.Info("Could not load file");
-          return;
-        }
-        Services.Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
-        lastFile_ = file;
-
-        // Handle FIT files
-        string extension = Path.GetExtension(file.Name);
-
-        if (extension.ToLower() != ".fit")
-        {
-          Services.Log.Info($"Unsupported extension {extension}");
-          return;
-        }
-
-        using var ms = new MemoryStream(lastFile_.Bytes);
-        await Log($"Reading FIT file {file.Name}");
-        await Log($"Read progress: ");
-
-        var reader = new Reader();
-        if (!reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
-        {
-          return;
-        }
-
-        long lastPosition = 0;
-        long resolution = 5 * 1024; // report progress every 5 kB
-
-        // Instead of reading all FIT messages at once,
-        // Read just a few FIT messages at a time so that other tasks can run on the main thread e.g. in WASM
-        while (await reader.ReadOneAsync(ms, decoder, 100))
-        {
-          if (ms.Position - resolution > lastPosition)
-          {
-            continue;
-          }
-
-          RemoveTail();
-          string percent = $"{(double)ms.Position / ms.Length * 100:##.##}";
-          await Log($"Reading...{percent}% ({ms.Position}/{ms.Length})");
-          lastPosition = ms.Position;
-        }
-
-        RemoveTail();
-        await Log($"Read progress: 100%");
-
-        var sb = new StringBuilder();
-        fit.Print(s => sb.AppendLine(s), showRecords: false);
-        await Log(sb.ToString());
-
-
-        lastFit_ = fit;
-        Show(fit);
-      }
-      catch (Exception e)
-      {
-        Services.Log.Info($"{e}");
-      }
-    //});
-  }
-
-  public async Task EditLapSpeeds(Speed? speed, int i)
-  {
-    if (lastFit_ == null)
+    try
     {
-      await Log("No file loaded");
-      return;
+      // On iOS, the file picker must run on the main thread
+      Models.File? file = await storage_.OpenFileAsync();
+      if (file == null)
+      {
+        Services.Log.Info("Could not load file");
+        return;
+      }
+      Services.Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
+      lastFile_ = file;
+
+      // Handle FIT files
+      string extension = Path.GetExtension(file.Name);
+
+      if (extension.ToLower() != ".fit")
+      {
+        Services.Log.Info($"Unsupported extension {extension}");
+        return;
+      }
+
+      using var ms = new MemoryStream(lastFile_.Bytes);
+      await Log($"Reading FIT file {file.Name}");
+
+      var reader = new Reader();
+      if (!reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
+      {
+        return;
+      }
+
+      long lastPosition = 0;
+      long resolution = 5 * 1024; // report progress every 5 kB
+
+      // Instead of reading all FIT messages at once,
+      // Read just a few FIT messages at a time so that other tasks can run on the main thread e.g. in WASM
+      Progress = 0;
+      while (await reader.ReadOneAsync(ms, decoder, 100))
+      {
+        if (ms.Position - resolution > lastPosition)
+        {
+          continue;
+        }
+
+        double progress = (double)ms.Position / ms.Length * 100;
+        Progress = progress;
+        await TaskHelp.MaybeYield();
+        lastPosition = ms.Position;
+      }
+
+      Progress = 100;
+      await Log($"Done reading FIT file");
+
+      FitFile = fit;
     }
-
-    FitFile fit = lastFit_;
-
-    await Log("Applying new lap speeds");
-
-    fit.ApplySpeeds(new Dictionary<int, Speed?> { [i] = speed });
-
-    await Log("Backfilling: ");
-
-    fit.BackfillEvents(100, async (i, total) =>
+    catch (Exception e)
     {
-      RemoveTail();
-      await Log($"Backfilling: {(double)i / total * 100:##.##}% ({i}/{total})");
-    });
-    RemoveTail();
-    await Log("Backfilling: 100%");
-
-    var sb = new StringBuilder();
-    fit.Print(s => sb.AppendLine(s), showRecords: false);
-    await Log(sb.ToString());
+      Services.Log.Info($"{e}");
+    }
   }
 
   public async void HandleDownloadFileClicked()
   {
     Services.Log.Info("Download file clicked...");
 
-    // On macOS, the file save dialog must run on the main thread
-    //_ = Task.Run(async () =>
-    //{
-      try
+    try
+    {
+      if (lastFile_ == null)
       {
-        if (lastFile_ == null)
-        {
-          await Log("Cannot download file; none has been uploaded");
-          return;
-        }
+        await Log("Cannot download file; none has been uploaded");
+        return;
+      }
 
-        string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
-        string extension = Path.GetExtension(lastFile_.Name);
-        await storage_.SaveAsync(new Models.File($"{name}_edit.{extension}", lastFile_.Bytes));
-      }
-      catch (Exception e)
-      {
-        Services.Log.Info($"{e}");
-      }
-    //});
+      string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
+      string extension = Path.GetExtension(lastFile_.Name);
+      // On macOS, the file save dialog must run on the main thread
+      await storage_.SaveAsync(new Models.File($"{name}_edit.{extension}", lastFile_.Bytes));
+    }
+    catch (Exception e)
+    {
+      Services.Log.Info($"{e}");
+    }
   }
 
-  private void Show(FitFile fit)
+  private void Show(FitFile? fit)
   {
+    if (fit == null) { return; }
+
     Plot.Show(fit);
-    Laps.Show(fit);
+    Laps.FitFile = fit;
     Records.Show(fit);
     Map.Show(fit);
-
-    var pairs = Laps.Laps.Select((lap, i) => new { lap.Speed, i }).ToList();
-
-    foreach (var pair in pairs)
-    {
-      var speed = pair.Speed!;
-      speed.WhenPropertyChanged(x => x.Value).Subscribe(async property =>
-      {
-        await SetLapSpeed(fit, pair.i, property.Sender);
-        Plot.Show(fit);
-      });
-    }
+    SliderMax = fit.Records.Count - 1;
   }
 
-  private async Task SetLapSpeed(FitFile fit, int i, Speed? speed)
-  {
-    var spd = fit.Laps[i].GetEnhancedAvgSpeed() ?? 0;
-    if (Math.Abs(speed?.Value ?? 0 - spd) < 1e-5)
-    {
-      return;
-    }
-    await EditLapSpeeds(speed, i);
-  }
 }
