@@ -69,6 +69,18 @@
       <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="FitLicoriceBlackBrush" />
 
       <StaticResource x:Key="ButtonBorderBrush" ResourceKey="FitLicoriceBlackBrush" />
+
+      <Color x:Key="SystemAccentColor">#7981FE</Color>
+      <Color x:Key="SystemAccentColorDark1">#FF717AFE</Color>
+      <Color x:Key="SystemAccentColorDark2">#FF5D67FE</Color>
+      <Color x:Key="SystemAccentColorDark3">#FF4854FE</Color>
+      <Color x:Key="SystemAccentColorLight1">#FF9AA0FE</Color>
+      <Color x:Key="SystemAccentColorLight2">#FFAEB3FF</Color>
+      <Color x:Key="SystemAccentColorLight3">#FFC2C6FF</Color>
+
+      <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{StaticResource FitLeadBlack}" />
+      <Thickness x:Key="ButtonBorderThemeThickness">2</Thickness>
+      <CornerRadius x:Key="ControlCornerRadius">5</CornerRadius>
     </ResourceDictionary>
   </Styles.Resources>
 

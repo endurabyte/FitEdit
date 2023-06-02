@@ -10,6 +10,14 @@
     <local:ViewLocator/>
   </Application.DataTemplates>
 
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <StyleInclude Source="./Styles.axaml"/>
+      </ResourceDictionary.MergedDictionaries> 
+    </ResourceDictionary>
+  </Application.Resources>
+  
   <Application.Styles>
     <FluentTheme DensityStyle="Normal" />
     <oxythemes:Default />

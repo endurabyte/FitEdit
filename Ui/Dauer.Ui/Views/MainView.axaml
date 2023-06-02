@@ -43,7 +43,7 @@
 
         <Grid RowDefinitions="*, Auto, *, Auto">
           <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
-          <GridSplitter Grid.Row="1" Background="{DynamicResource FitPurpleCrayonBrush}" ResizeDirection="Rows"/>
+          <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
           <views:MapView Grid.Row="2" DataContext="{Binding Map}"/>
           <Slider Grid.Row="4" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
         </Grid>
