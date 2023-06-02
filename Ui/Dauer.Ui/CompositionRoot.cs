@@ -38,6 +38,15 @@ public class CompositionRoot
     lifetime_ = lifetime;
   }
 
+  static CompositionRoot()
+  {
+    // Not necessary; Console.WriteLine already writes to web browser console
+    //if (OperatingSystem.IsBrowser())
+    //{
+    //  Log.Sinks.Add(Adapters.WebConsoleAdapter.Log);
+    //}
+  }
+
   public CompositionRoot Build()
   {
     Container = new Container();

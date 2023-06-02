@@ -9,7 +9,7 @@ public partial class WebConsoleAdapter
   public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Adapters)}.{nameof(WebConsoleAdapter)}";
 
   [JSImport("globalThis.console.log")]
-  public static partial void Log(string message);
+  public static partial void Log(string? message);
 
   [JSImport("setMessage", ModuleName)]
   public static partial string SetMessage();

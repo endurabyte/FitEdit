@@ -1,12 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text;
 using Dauer.Data.Fit;
-using Dauer.Model.Workouts;
+using Dauer.Model;
 using Dauer.Services;
 using Dauer.Ui.Adapters.Storage;
 using Dauer.Ui.Adapters.Windowing;
 using Dauer.Ui.Extensions;
-using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -76,7 +75,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
     window_.Resized.Subscribe(async tup =>
     {
-      await Log($"Window resized to {tup.Item1} {tup.Item2}");
+      await LogMessage($"Window resized to {tup.Item1} {tup.Item2}");
     });
 
     // When the records list selection changes, show it in the plot
@@ -110,19 +109,19 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       plot.SelectedIndex = property.Value;
     });
 
-    Services.Log.Info($"{nameof(MainViewModel)} ready");
+    Log.Info($"{nameof(MainViewModel)} ready");
   }
 
   public void HandleAuthorizeClicked()
   {
-    Services.Log.Info($"{nameof(HandleAuthorizeClicked)}");
+    Log.Info($"{nameof(HandleAuthorizeClicked)}");
 
     auth_.AuthenticateAsync();
   }
 
-  private async Task Log(string s)
+  private async Task LogMessage(string s)
   {
-    Services.Log.Info(s);
+    Log.Info(s);
     LogEntries.Add(s);
     while (LogEntries.Count > 25) RemoveHead();
 
@@ -133,7 +132,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   public async void HandleSelectFileClicked()
   {
-    Services.Log.Info("Select file clicked");
+    Log.Info("Select file clicked");
 
     try
     {
@@ -141,10 +140,10 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       Models.File? file = await storage_.OpenFileAsync();
       if (file == null)
       {
-        Services.Log.Info("Could not load file");
+        Log.Info("Could not load file");
         return;
       }
-      Services.Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
+      Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
       lastFile_ = file;
 
       // Handle FIT files
@@ -152,12 +151,12 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
       if (extension.ToLower() != ".fit")
       {
-        Services.Log.Info($"Unsupported extension {extension}");
+        Log.Info($"Unsupported extension {extension}");
         return;
       }
 
       using var ms = new MemoryStream(lastFile_.Bytes);
-      await Log($"Reading FIT file {file.Name}");
+      await LogMessage($"Reading FIT file {file.Name}");
 
       var reader = new Reader();
       if (!reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
@@ -185,25 +184,25 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       }
 
       Progress = 100;
-      await Log($"Done reading FIT file");
+      await LogMessage($"Done reading FIT file");
 
       FitFile = fit;
     }
     catch (Exception e)
     {
-      Services.Log.Info($"{e}");
+      Log.Info($"{e}");
     }
   }
 
   public async void HandleDownloadFileClicked()
   {
-    Services.Log.Info("Download file clicked...");
+    Log.Info("Download file clicked...");
 
     try
     {
       if (lastFile_ == null)
       {
-        await Log("Cannot download file; none has been uploaded");
+        await LogMessage("Cannot download file; none has been uploaded");
         return;
       }
 
@@ -214,7 +213,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     }
     catch (Exception e)
     {
-      Services.Log.Info($"{e}");
+      Log.Info($"{e}");
     }
   }
 
