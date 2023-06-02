@@ -1,9 +1,11 @@
-﻿using Dauer.Data.Fit;
+﻿using BruTile.Predefined;
+using BruTile.Web;
+using Dauer.Data.Fit;
 using Dauer.Ui.Extensions;
 using Mapsui.Layers;
 using Mapsui.Nts;
 using Mapsui.Styles;
-using Mapsui.Tiling;
+using Mapsui.Tiling.Layers;
 using Mapsui.UI;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Utilities;
@@ -28,7 +30,18 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 {
   [Reactive]
   public IMapControl? Map { get; set; }
-  private ILayer? breadcrumbLayer_;
+  private readonly GeometryFeature breadcrumbFeature_ = new();
+  private ILayer BreadcrumbLayer_ => new MemoryLayer
+  {
+    Name = "Breadcrumb",
+    Features = new[] { breadcrumbFeature_ },
+    Style = new VectorStyle
+    {
+      Fill = new Brush(Palette.FitSkyBlue.Map()),
+      Outline = new Pen(Palette.FitLeadBlack2.Map(), 4),
+    }
+  };
+
   private FitFile? lastFit_;
 
   private int selectedIndex_;
@@ -45,7 +58,24 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   {
     this.ObservableForProperty(x => x.Map).Subscribe(e =>
     {
-      Map?.Map?.Layers.Add(OpenStreetMap.CreateTileLayer());
+      // Jawg.io
+      string token = "vANNdIJHPNGMEQyIhxvoWGgKQKP4kPUdaOtMDxqaNDTxere8oUgFk9vhHdHjq0n5";
+      string url = $"https://tile.jawg.io/jawg-dark/{{z}}/{{x}}/{{y}}.png" +
+        $"?access-token={token}";
+
+      // MapBox
+      //string token = "pk.eyJ1Ijoic2xhdGVyMCIsImEiOiJjbGllZnRwd3cxMHJxM2tuYmw4MmNtOTAzIn0.E6GxSlg70MogL-sla15bgA";
+      //string url = $"https://api.mapbox.com/v4/mapbox.satellite/{{z}}/{{x}}/{{y}}@2x.png" +
+      //  $"?access_token={token}";
+
+      var source = new HttpTileSource(new GlobalSphericalMercator(), url, userAgent: "fitedit");
+      var layer = new TileLayer(source) { Name = "Base Map" };
+
+      // OpenStreetMap
+      //var layer = OpenStreetMap.CreateTileLayer("fitedit");
+
+      Map?.Map?.Layers.Add(layer); // layer 0
+      Map?.Map?.Layers.Add(BreadcrumbLayer_); // layer 1
     });
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
@@ -57,27 +87,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   {
     if (lastFit_ == null) { return; }
 
-    var coord = lastFit_.Records[index].MapCoordinate();
-    var circle = new GeometricShapeFactory().CreateCircle(coord, 8.0);
-    var layer = new MemoryLayer
-    {
-      Features = new[] {new GeometryFeature { Geometry = circle } },
-      Name = "Breadcrumb",
-      Style = new VectorStyle
-      {
-#pragma warning disable CS8670 // Object or collection initializer implicitly dereferences possibly null member.
-        Fill = { Color = Color.FromString("Red"), },
-        Outline = { Color = Color.FromString("Blue"), Width = 2 }
-      }
-    };
+    var r = lastFit_.Records[index];
+    Coordinate coord = r.MapCoordinate();
 
-    if (breadcrumbLayer_ != null)
-    {
-      Map?.Map?.Layers.Remove(breadcrumbLayer_);
-    }
-
-    Map?.Map?.Layers.Add(layer);
-    breadcrumbLayer_ = layer;
+    var circle = new GeometricShapeFactory { NumPoints = 16 }.CreateCircle(coord, 16.0);
+    breadcrumbFeature_.Geometry = circle;
   }
 
   public void Show(FitFile fit)
@@ -95,14 +109,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       Name = "GPS Trace",
       Style = new VectorStyle
       {
-#pragma warning disable CS8670 // Object or collection initializer implicitly dereferences possibly null member.
-        Line = { Color = Color.FromString("YellowGreen"), Width = 4 }
+        Line = new(Palette.FitLimeCrayon.Map(), 4)
       }
     };
 
     if (Map?.Map == null) { return; }
 
-    Map.Map.Layers.Add(trace);
+    Map.Map.Layers.Insert(1, trace); // Above tile layer, below breadcrumb layer
     Map.Map.Home = n => n.CenterOnAndZoomTo(trace.Extent!.Centroid, 10, 2000);
     Map.Map.Home.Invoke(Map.Map!.Navigator);
   }

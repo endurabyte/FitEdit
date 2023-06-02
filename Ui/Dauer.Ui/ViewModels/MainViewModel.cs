@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using System.Text;
+using System.Reactive.Linq;
 using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Services;
@@ -73,12 +73,12 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Map = map;
     auth_ = auth;
 
-    window_.Resized.Subscribe(async tup =>
+    window_.Resized.Subscribe(tup =>
     {
-      await LogMessage($"Window resized to {tup.Item1} {tup.Item2}");
+      Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
     });
 
-    // When the records list selection changes, show it in the plot
+    // When the records list selection changes, show it in the plot and on the map and update the slider
     records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       plot.SelectedIndex = property.Value;
@@ -86,7 +86,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       SliderValue = property.Value;
     });
 
-    // When plot selected data point changes, show it in the records list
+    // When plot selected data point changes, show it on the map and in the records list and update the slider
     plot.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       records.SelectedIndex = property.Value;
@@ -94,22 +94,24 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       SliderValue = property.Value;
     });
 
+    // When the slider moves, update the plot, which also updates the map and records list.
+    this.ObservableForProperty(x => x.SliderValue)
+     .Subscribe(property =>
+    {
+      plot.SelectedIndex = property.Value;
+    });
+
+    // When a fit file is edited in the laps view, show it in the plot, records list, and map
     laps.ObservableForProperty(x => x.FitFile).Subscribe(property =>
     {
       FitFile = property.Value;
     });
 
+    // When a fit file is loaded, show it in the plot, recods list, and map
     this.ObservableForProperty(x => x.FitFile).Subscribe(property =>
     {
       Show(FitFile);
     });
-
-    this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
-    {
-      plot.SelectedIndex = property.Value;
-    });
-
-    Log.Info($"{nameof(MainViewModel)} ready");
   }
 
   public void HandleAuthorizeClicked()
@@ -136,7 +138,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
     try
     {
-      // On iOS, the file picker must run on the main thread
+      // On macOS and iOS, the file picker must run on the main thread
       Models.File? file = await storage_.OpenFileAsync();
       if (file == null)
       {
@@ -208,7 +210,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
       string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
       string extension = Path.GetExtension(lastFile_.Name);
-      // On macOS, the file save dialog must run on the main thread
+      // On macOS and iOS, the file save dialog must run on the main thread
       await storage_.SaveAsync(new Models.File($"{name}_edit.{extension}", lastFile_.Bytes));
     }
     catch (Exception e)
