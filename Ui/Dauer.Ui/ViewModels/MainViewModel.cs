@@ -125,7 +125,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     LogEntries.Add(s);
     while (LogEntries.Count > 25) RemoveHead();
 
-    await TaskHelp.MaybeYield();
+    await TaskUtil.MaybeYield();
   }
 
   private void RemoveHead() => LogEntries.RemoveAt(0);
@@ -179,7 +179,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
         double progress = (double)ms.Position / ms.Length * 100;
         Progress = progress;
-        await TaskHelp.MaybeYield();
+        await TaskUtil.MaybeYield();
         lastPosition = ms.Position;
       }
 

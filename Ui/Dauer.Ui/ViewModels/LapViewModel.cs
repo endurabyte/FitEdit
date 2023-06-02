@@ -118,7 +118,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     {
       Progress = 0.5 * i / count * 100;
       Log.Info($"Applying speeds: {Progress:##.##}% ({i}/{count})");
-      await TaskHelp.MaybeYield();
+      await TaskUtil.MaybeYield();
     });
     Progress = 50;
 
@@ -129,7 +129,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
       double progress = 50 + 0.5 * i / count * 100;
       //Progress = progress;
       Log.Info($"Backfilling: {progress:##.##}% ({i}/{count})");
-      await TaskHelp.MaybeYield();
+      await TaskUtil.MaybeYield();
     });
     Progress = 100;
 
