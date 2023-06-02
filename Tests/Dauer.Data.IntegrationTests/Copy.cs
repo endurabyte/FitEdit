@@ -84,7 +84,7 @@ namespace Dauer.Data.IntegrationTests
       Assert.AreEqual(a.Name, b.Name);
       Assert.AreEqual(a.Num, b.Num);
       Assert.AreEqual(a.LocalNum, b.LocalNum);
-      List<Field> fields = a.Fields.ToList();
+      List<Field> fields = a.Fields.Values.ToList();
 
       Assert.AreEqual(fields.Count, fields.Count);
 

@@ -439,8 +439,10 @@ namespace Dynastream.Fit
           }
         }
 
-        foreach (Field field in newMesg.FieldsList)
+        foreach (var kvp in newMesg.Fields)
         {
+          Field field = kvp.Value;
+
           if (field.IsAccumulated)
           {
             int i;
@@ -448,10 +450,12 @@ namespace Dynastream.Fit
             {
               long value = Convert.ToInt64(field.GetRawValue(i));
 
-              foreach (Field fieldIn in newMesg.FieldsList)
+              foreach (var kvp2 in newMesg.Fields)
               {
-                foreach (FieldComponent fc in fieldIn.components)
+                Field fieldIn = kvp2.Value;
+                foreach (var kvp3 in fieldIn.Components)
                 {
+                  FieldComponent fc = kvp3.Value;
                   if ((fc.fieldNum == field.Num) && (fc.accumulate))
                   {
                     value = (long)((((value / field.Scale) - field.Offset) + fc.offset) * fc.scale);

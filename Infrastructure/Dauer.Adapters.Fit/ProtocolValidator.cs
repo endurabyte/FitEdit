@@ -97,8 +97,9 @@ namespace Dynastream.Fit
                 return false;
             }
 
-            foreach (var fld in mesg.Fields)
+            foreach (var kvp in mesg.Fields)
             {
+                Field fld = kvp.Value;
                 int typeNum = fld.Type & Fit.BaseTypeNumMask;
 
                 if (typeNum > Fit.Byte)

@@ -20,57 +20,57 @@ using System.IO;
 
 namespace Dynastream.Fit
 {
-    /// <summary>
-    ///
-    /// </summary>
-    internal class FieldComponent
+  /// <summary>
+  ///
+  /// </summary>
+  public class FieldComponent
+  {
+    #region Fields
+    internal byte fieldNum;
+    internal bool accumulate;
+    internal int bits;
+    internal double scale;
+    internal double offset;
+
+    internal long accumulatedValue = 0;
+    internal long lastValue = 0;
+    #endregion // Fields
+
+    #region Properties
+    #endregion // Properties
+
+    #region Constructors
+    internal FieldComponent(byte fieldNum, bool accumulate, int bits, double scale, double offset)
     {
-        #region Fields
-        internal byte fieldNum;
-        internal bool accumulate;
-        internal int bits;
-        internal double scale;
-        internal double offset;
+      this.fieldNum = fieldNum;
+      this.accumulate = accumulate;
+      this.bits = bits;
+      this.scale = scale;
+      this.offset = offset;
+    }
 
-        internal long accumulatedValue = 0;
-        internal long lastValue = 0;
-        #endregion // Fields
+    internal FieldComponent(FieldComponent component)
+    {
+      this.fieldNum = component.fieldNum;
+      this.accumulate = component.accumulate;
+      this.bits = component.bits;
+      this.scale = component.scale;
+      this.offset = component.offset;
+      this.accumulatedValue = component.accumulatedValue;
+      this.lastValue = component.lastValue;
+    }
+    #endregion // Constructors
 
-        #region Properties
-        #endregion // Properties
+    #region Methods
+    public long Accumulate(long value)
+    {
+      long mask = (1L << bits) - 1;
 
-        #region Constructors
-        internal FieldComponent(byte fieldNum, bool accumulate, int bits, double scale, double offset)
-        {
-            this.fieldNum = fieldNum;
-            this.accumulate = accumulate;
-            this.bits = bits;
-            this.scale = scale;
-            this.offset = offset;
-        }
+      accumulatedValue += (value - lastValue) & mask;
+      lastValue = value;
 
-        internal FieldComponent(FieldComponent component)
-        {
-            this.fieldNum = component.fieldNum;
-            this.accumulate = component.accumulate;
-            this.bits = component.bits;
-            this.scale = component.scale;
-            this.offset = component.offset;
-            this.accumulatedValue = component.accumulatedValue;
-            this.lastValue = component.lastValue;
-        }
-        #endregion // Constructors
-
-        #region Methods
-        public long Accumulate(long value)
-        {
-            long mask = (1L << bits) - 1;
-
-            accumulatedValue += (value - lastValue) & mask;
-            lastValue = value;
-
-            return accumulatedValue;
-        }
-        #endregion // Methods
-    } // Class
+      return accumulatedValue;
+    }
+    #endregion // Methods
+  } // Class
 } // namespace

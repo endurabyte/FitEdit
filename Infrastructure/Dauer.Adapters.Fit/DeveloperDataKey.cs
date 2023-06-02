@@ -17,7 +17,7 @@ using System.IO;
 
 namespace Dynastream.Fit
 {
-    internal class DeveloperDataKey
+    public class DeveloperDataKey
         : IComparable
     {
         public byte DeveloperDataIndex { get; private set; }
