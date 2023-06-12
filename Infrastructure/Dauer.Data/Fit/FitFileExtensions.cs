@@ -1,5 +1,6 @@
-﻿using System.Text.Json;
-using Dauer.Model;
+﻿using System.Text;
+using System.Text.Json;
+using Dauer.Model.Extensions;
 using Dauer.Model.Units;
 using Dauer.Model.Workouts;
 using Dynastream.Fit;
@@ -8,6 +9,24 @@ namespace Dauer.Data.Fit
 {
   public static class FitFileExtensions
   {
+    public static List<T> Get<T>(this FitFile f) where T : Mesg => f.Messages
+      .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])
+      .Select(message => message as T)
+      .ToList();
+
+    /// <summary>
+    /// Compute Session, Records, and Laps from Events
+    /// </summary>
+    public static FitFile ForwardfillEvents(this FitFile f)
+    {
+      f.Sessions = f.Get<SessionMesg>();
+      f.Laps = f.Get<LapMesg>();
+      // Expensive; 2000 records take ~0.3s in WASM
+      f.Records = f.Get<RecordMesg>().Sorted(MessageExtensions.Sort);
+
+      return f;
+    }
+
     /// <summary>
     /// Fill modified Session, Records, Laps, etc, into Events
     /// </summary>
@@ -19,9 +38,12 @@ namespace Dauer.Data.Fit
 
       int i = 0;
 
+      // Sources
       var sessions = f.Sessions;
       var laps = f.Laps;
       var records = f.Records;
+
+      // Destination
       var events = f.Events.OfType<MesgEventArgs>().ToList();
 
       foreach (MesgEventArgs e in events)
@@ -66,6 +88,13 @@ namespace Dauer.Data.Fit
       _ when f.Sessions.Count > 1 => $"From {f.Sessions.First().Start()} to {f.Sessions.Last().End()}: {f.Sessions.TotalDistance()} m in {f.Sessions.TotalElapsedTime()}s",
       _ => "No sessions",
     };
+
+    public static string Print(this FitFile f, bool showRecords)
+    {
+      var sb = new StringBuilder();
+      f.Print(s => sb.AppendLine(s), showRecords);
+      return sb.ToString();
+    }
 
     /// <summary>
     /// Pretty-print useful information from a fit file: Session, Laps, and Records
@@ -142,9 +171,9 @@ namespace Dauer.Data.Fit
     /// </summary>
     public static FitFile ApplySpeeds(this FitFile fitFile, Dictionary<int, Speed> speeds, int resolution = 100, Action<int, int> handleProgress = null)
     {
-      var laps = fitFile.Get<LapMesg>();
-      var records = fitFile.Get<RecordMesg>();
-      var sessions = fitFile.Get<SessionMesg>();
+      var laps = fitFile.Laps;
+      var records = fitFile.Records;
+      var sessions = fitFile.Sessions;
 
       if (!speeds.Any())
       {
@@ -183,21 +212,19 @@ namespace Dauer.Data.Fit
 
         int j = laps.IndexOf(lap);
 
-        if (speeds.TryGetValue(j, out Speed value))
-        {
-          double speed = value.MetersPerSecond();
+        double speed = speeds.TryGetValue(j, out Speed value) 
+          ? value.MetersPerSecond() 
+          : record.GetEnhancedSpeed() ?? 0;
 
-          System.DateTime timestamp = record.Start();
-          double elapsedSeconds = (timestamp - lastTimestamp).TotalSeconds;
-          lastTimestamp = timestamp;
+        System.DateTime timestamp = record.Start();
+        double elapsedSeconds = (timestamp - lastTimestamp).TotalSeconds;
+        lastTimestamp = timestamp;
 
-          distance.Value += speed * elapsedSeconds;
-
-          record.SetEnhancedSpeed((float)speed);
-        }
+        distance.Value += speed * elapsedSeconds;
 
         lap.SetTotalDistance((float)distance.Meters());
         record.SetDistance((float)distance.Meters());
+        record.SetEnhancedSpeed((float)speed);
       }
 
       SessionMesg session = sessions.FirstOrDefault();

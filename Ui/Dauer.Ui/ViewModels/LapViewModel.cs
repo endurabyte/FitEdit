@@ -48,7 +48,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
         return;
       }
 
-      uneditedFitFile_ = property.Value.Clone();
+      uneditedFitFile_ = new FitFile(property.Value).ForwardfillEvents();
       Show(property.Value);
     });
   }
@@ -104,6 +104,8 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
   public void ApplyLapSpeeds(Dictionary<int, Model.Workouts.Speed> speeds)
   {
+    if (uneditedFitFile_ == null) { return; }
+
     FitFile? fit = uneditedFitFile_;
 
     if (fit == null)
@@ -134,10 +136,6 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     Progress = 100;
 
     Log.Info("Backfilling: 100%");
-
-    var sb = new StringBuilder();
-    fit.Print(s => sb.AppendLine(s), showRecords: false);
-    Log.Info(sb.ToString());
 
     FitFile = fit;
   }

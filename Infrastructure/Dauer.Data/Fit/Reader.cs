@@ -43,6 +43,7 @@ namespace Dauer.Data.Fit
         }
 
         Log.Info($"Found {fitFile.Messages.Count} messages");
+        fitFile.ForwardfillEvents();
         return fitFile;
 
       }
