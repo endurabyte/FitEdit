@@ -51,15 +51,20 @@ public class CompositionRoot
   {
     Container = new Container();
 
+    var log = new LogViewModel();
+
+    var auth = ServiceLocator.Get<IWebAuthenticator>() ?? new NullWebAuthenticator();
+
     var vm = new MainViewModel(
-      Storage_,
-      Window_,
       new FitService(),
+      Window_,
       new PlotViewModel(),
       new LapViewModel(),
       new RecordViewModel(),
       new MapViewModel(),
-      ServiceLocator.Get<IWebAuthenticator>() ?? new NullWebAuthenticator());
+      new FileViewModel(Storage_, auth, log),
+      log
+    );
 
     Container.Register<IMainViewModel, MainViewModel>(vm);
     return this;

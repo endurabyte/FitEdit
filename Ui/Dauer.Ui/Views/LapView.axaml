@@ -19,7 +19,7 @@
       <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
     </Grid>
     
-    <ListBox Grid.Row="1" Items="{Binding Laps}">
+    <ListBox Grid.Row="1" ItemsSource="{Binding Laps}">
       <ListBox.ItemTemplate>
         <DataTemplate>
 

@@ -13,7 +13,7 @@
   </Design.DataContext>
 
   <Grid>
-    <ListBox Items="{Binding Records}" SelectedIndex="{Binding SelectedIndex}">
+    <ListBox ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}">
       <ListBox.ItemTemplate>
         <DataTemplate>
           <Grid>
@@ -26,10 +26,11 @@
               <StackPanel Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center">
                   <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}: {1} ({2})">
+                    <MultiBinding StringFormat="{}{0}: {1} ({2}): {3}">
                       <Binding Path="Index"/>
                       <Binding Path="Name"/>
                       <Binding Path="MessageNum"/>
+                      <Binding Path="Detail"/>
                     </MultiBinding>
                   </TextBlock.Text>
                 </TextBlock>
