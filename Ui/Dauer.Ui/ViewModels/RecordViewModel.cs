@@ -33,14 +33,23 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   {
     Records.Clear();
 
+    if (!fit.Records.Any()) { return; }
+
     int i = 0;
+    DateTime start = fit.Records[0].Start();
     foreach (var record in fit.Records)
     {
+      double elapsedSeconds = (record.Start() - start).TotalSeconds;
+      double speed = record.GetEnhancedSpeed() ?? 0;
+      double dist = record.GetDistance() ?? 0;
+      double hr = record.GetHeartRate() ?? 0;
+
       Records.Add(new Record
       {
         Index = i++,
         MessageNum = record.Num,
         Name = record.Name,
+        Detail = $"{elapsedSeconds} {speed} {dist} {hr}",
       }); ;
     }
   }
