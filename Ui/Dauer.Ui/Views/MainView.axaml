@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             xmlns:views="clr-namespace:Dauer.Ui.Views"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="Dauer.Ui.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <vm:DesignMainViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <TabControl>
+      <TabItem Header="File">
+
+        <StackPanel Orientation="Vertical">
+          <TextBlock Text="{Binding Text}"/>
+          <views:FileView DataContext="{Binding File}"/>
+        </StackPanel>
+      </TabItem>
+      <TabItem Header="Laps">
+        <views:LapView DataContext="{Binding Laps}"/>
+      </TabItem>
+      <TabItem Header="Records">
+        <views:RecordView DataContext="{Binding Records}"/>
+      </TabItem>
+      <TabItem Header="Chart">
+
+        <Grid RowDefinitions="*, Auto, *, Auto">
+          <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
+          <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
+          <views:MapView Grid.Row="2" DataContext="{Binding Map}"/>
+          <Slider Grid.Row="4" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
+        </Grid>
+
+      </TabItem>
+
+      <TabItem Header="Log">
+        <views:LogView DataContext="{Binding Log}"/>
+      </TabItem>
+    </TabControl>
+
+  </Grid>
+</UserControl>

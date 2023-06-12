@@ -15,7 +15,7 @@ public interface ICompositionRoot
 public class CompositionRoot : ICompositionRoot
 {
   public ServiceRegistry Registry { get; }
-  private IContainer container_ { get; }
+  private IContainer Container_ { get; }
 
   public CompositionRoot()
   {
@@ -29,5 +29,5 @@ public class CompositionRoot : ICompositionRoot
     Registry.For<FinalSurgeCalendarSearch>().Use<FinalSurgeCalendarSearch>();
   }
 
-  public T Get<T>() => container_.GetInstance<T>();
+  public T Get<T>() => Container_.GetInstance<T>();
 }

@@ -30,12 +30,12 @@ namespace Dauer.Model.UnitTests
         }
 
         [Test]
-        public void Map_MapsFitToWorkout()
+        public async Task Map_MapsFitToWorkout()
         {
             const string source = @"..\..\..\..\data\devices\forerunner-945\sports\running\"
                 + @"generic\2019-12-18\35min-easy-4x20s-strides\garmin-connect\activity.fit";
 
-            var fit = new Data.Fit.Reader().Read(source);
+            var fit = await new Data.Fit.Reader().ReadAsync(source);
             var workout = new Data.Fit.Mapper().Map(fit);
         }
     }

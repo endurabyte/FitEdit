@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             xmlns:views="clr-namespace:Dauer.Ui.Views"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="Dauer.Ui.Views.FileView"
+             x:DataType="vm:FileViewModel">
+  <Design.DataContext>
+    <vm:DesignFileViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*, Auto">
+    <StackPanel Grid.Row="0" Orientation="Vertical">
+      <Button Command="{Binding HandleSelectFileClicked}" Content="Select file"/>
+      <Button Command="{Binding HandleAuthorizeClicked}" Content="Authorize"/>
+      <Button Command="{Binding HandleDownloadFileClicked}" Content="Download file"/>
+    </StackPanel>
+    <ProgressBar Grid.Row="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
+  </Grid>
+    
+</UserControl>

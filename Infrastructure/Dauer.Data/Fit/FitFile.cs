@@ -1,5 +1,4 @@
 using Dynastream.Fit;
-using Dauer.Model.Extensions;
 
 namespace Dauer.Data.Fit
 {
@@ -9,13 +8,22 @@ namespace Dauer.Data.Fit
     public List<Mesg> Messages { get; set; } = new List<Mesg>();
     public List<EventArgs> Events { get; set; } = new List<EventArgs>();
 
-    public List<SessionMesg> Sessions => Get<SessionMesg>();
-    public List<LapMesg> Laps => Get<LapMesg>();
-    public List<RecordMesg> Records => Get<RecordMesg>().Sorted(MessageExtensions.Sort);
+    public List<SessionMesg> Sessions { get; set; }
+    public List<LapMesg> Laps { get; set; }
+    public List<RecordMesg> Records { get; set; }
 
-    public List<T> Get<T>() where T : Mesg => Messages
-      .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])
-      .Select(message => message as T)
-      .ToList();
+    public FitFile() { }
+
+    public FitFile(FitFile other)
+    {
+      MessageDefinitions = other.MessageDefinitions.Select(x => new MesgDefinition(x)).ToList();
+      Messages = other.Messages.Select(MessageFactory.Create).ToList();
+      Events = other.Events.Select(x => x switch
+      {
+        _ when x is MesgEventArgs mea => (EventArgs)new MesgEventArgs(mea.mesg),
+        _ when x is MesgDefinitionEventArgs mea => new MesgDefinitionEventArgs(mea.mesgDef),
+        _ => null,
+      }).Where(x => x is not null).ToList();
+    }
   }
 }

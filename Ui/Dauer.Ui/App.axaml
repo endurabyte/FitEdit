@@ -1,0 +1,25 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:Dauer.Ui"
+             xmlns:oxythemes="clr-namespace:OxyPlot.Avalonia.Themes;assembly=OxyPlot.Avalonia"
+             x:Class="Dauer.Ui.App"
+             RequestedThemeVariant="Dark">
+  <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+  <Application.DataTemplates>
+    <local:ViewLocator/>
+  </Application.DataTemplates>
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <StyleInclude Source="./Styles.axaml"/>
+      </ResourceDictionary.MergedDictionaries> 
+    </ResourceDictionary>
+  </Application.Resources>
+  
+  <Application.Styles>
+    <FluentTheme DensityStyle="Normal" />
+    <oxythemes:Default />
+  </Application.Styles>
+</Application>

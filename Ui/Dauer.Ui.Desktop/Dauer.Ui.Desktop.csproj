@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+  
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
+    One for Windows with net7.0-windows TFM, one for MacOS with net7.0-macos and one with net7.0 TFM for Linux.-->
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PackageIcon>PackageIcon.png</PackageIcon>
+    <AssemblyName>FitEdit</AssemblyName>
+    <ApplicationIcon>hourglass.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="hourglass.ico" />
+    <None Update="PackageIcon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Dauer.Ui.Desktop.nrproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+  </ItemGroup>
+
+  <Target Name="Protect" AfterTargets="Build" Condition="'$(Configuration)' == 'Deploy'">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File deploy.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+  </ItemGroup>
+
+</Project>

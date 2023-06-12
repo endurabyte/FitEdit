@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+  
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <WasmExtraFilesToDeploy Include="AppBundle\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Dauer.Ui.Browser.nrproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="2.1.0-av11-preview6" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
+  </ItemGroup>
+
+  <Target Name="Protect" AfterTargets="Build" Condition="'$(Configuration)' == 'Deploy'">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File deploy.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
+  </Target>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+  </ItemGroup>
+</Project>

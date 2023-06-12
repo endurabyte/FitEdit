@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             xmlns:views="clr-namespace:Dauer.Ui.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Dauer.Ui.Views.LapView"
+             x:DataType="vm:LapViewModel">
+
+  <Design.DataContext>
+    <vm:DesignLapViewModel />
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto, *">
+
+    <Grid Grid.Row="0" ColumnDefinitions="Auto, *">
+      <Button Grid.Column="0" Content="Apply" Command="{Binding HandleApplyClicked}"/>
+      <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
+    </Grid>
+    
+    <ListBox Grid.Row="1" ItemsSource="{Binding Laps}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+
+          <Grid ColumnDefinitions="Auto, 3*">
+            <Border Grid.Column="1" Background="Gray" CornerRadius="4" Padding="4">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center">
+                  <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0:HH:mm:ss} ({1}s)">
+                      <Binding Path="Start"/>
+                      <Binding Path="DurationSeconds"/>
+                    </MultiBinding>
+                  </TextBlock.Text>
+                </TextBlock>
+                <NumericUpDown Value="{Binding Speed.Value}" AllowSpin="False" ShowButtonSpinner="False" />
+              </StackPanel>
+            </Border>
+          </Grid>
+
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

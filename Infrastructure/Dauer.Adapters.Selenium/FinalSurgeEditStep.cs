@@ -85,7 +85,7 @@ public class FinalSurgeEditStep : Step, IStep
       return dt.Hour == date.Hour && dt.Minute == date.Minute;
     });
 
-    // Opens the workout modal
+    // Opens workout modal
     if (!await workout.TryClick().AnyContext())
     {
       Log.Error("Could not click on workout");
@@ -94,15 +94,16 @@ public class FinalSurgeEditStep : Step, IStep
 
     if (!day.TryFindElement(By.CssSelector(".workout-modal-container"), out IWebElement modal))
     {
-      Log.Error("Could not click on workout");
+      Log.Error("Could find workout modal");
       return null;
     }
 
+    // Opens quick edit modal
     if (!await driver
       .TryClick(By.CssSelector(".fs-responsive-modal > [id='fs-modal-content'] > div > div.content > div.fs-workout-preview > div.header > div.button-group > div.button"))
       .AnyContext())
     {
-      Log.Error("Could not click edit button");
+      Log.Error("In workout modal, could not click edit button");
       return null;
     }
 
@@ -112,6 +113,7 @@ public class FinalSurgeEditStep : Step, IStep
       return null;
     }
 
+    // Verify we opened the correct modal
     string title = await quickEditModal.TryGetText(By.CssSelector("[id='fs-modal-content'] > div.header > span.fs-modal-title")).AnyContext();
 
     if (title != "Quick edit")

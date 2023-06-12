@@ -3,17 +3,8 @@
   <Import Project="$(SolutionDir)Common.props" />
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Dynastream.Fit.Portable">
-      <HintPath>../../lib/Dynastream.Fit.Portable.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,90 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:oxy="clr-namespace:OxyPlot.Avalonia;assembly=OxyPlot.Avalonia">
+  <Design.PreviewWith>
+    <Border Padding="20">
+      <StackPanel>
+        <TextBlock Text="TextBlock"/>
+        <Button Content="Button"/>
+        <Button Content="Button (Disabled)" IsEnabled="False"/>
+        <TextBox Text="TextBox"/>
+        <Label Content="Label"/>
+      </StackPanel>
+    </Border>
+  </Design.PreviewWith>
+
+  <Styles.Resources>
+    <ResourceDictionary>
+      <Color x:Key="FitOceanBlue">#005C8D</Color>
+      <Color x:Key="FitSkyBlue">#8CD1F4</Color>
+      <Color x:Key="FitLicoriceBlack">#000000</Color>
+      <Color x:Key="FitLeadBlack2">#363636</Color>
+      <Color x:Key="FitLeadBlack">#262626</Color>
+      <Color x:Key="FitMercuryGrey">#eeeeee</Color>
+      <Color x:Key="FitSnowWhite">#ffffff</Color>
+
+      <Color x:Key="FitTealCrayon">#5FDFC8</Color>
+      <Color x:Key="FitBlueCrayon">#0096FF</Color>
+      <Color x:Key="FitPurpleCrayon">#7981FE</Color>
+      <Color x:Key="FitOrangeCrayon">#FF9400</Color>
+      <Color x:Key="FitPinkCrayon">#FF85FE</Color>
+      <Color x:Key="FitRedCrayon">#FF2F91</Color>
+      <Color x:Key="FitGreenCrayon">#00FA91</Color>
+      <Color x:Key="FitLimeCrayon">#D4FB7A</Color>
+      <Color x:Key="FitTanCrayon">#FFD478</Color>
+      <Color x:Key="FitPeachCrayon">#FF7E79</Color>
+
+      <SolidColorBrush x:Key="FitOceanBlueBrush" Color="{StaticResource FitOceanBlue}" />
+      <SolidColorBrush x:Key="FitSkyBlueBrush" Color="{StaticResource FitSkyBlue}" />
+      <SolidColorBrush x:Key="FitLicoriceBlackBrush" Color="{StaticResource FitLicoriceBlack}" />
+      <SolidColorBrush x:Key="FitLeadBlack2Brush" Color="{StaticResource FitLeadBlack2}" />
+      <SolidColorBrush x:Key="FitLeadBlackBrush" Color="{StaticResource FitLeadBlack}" />
+      <SolidColorBrush x:Key="FitMercuryGreyBrush" Color="{StaticResource FitMercuryGrey}" />
+      <SolidColorBrush x:Key="FitSnowWhiteBrush" Color="{StaticResource FitSnowWhite}" />
+
+      <SolidColorBrush x:Key="FitTealCrayonBrush" Color="{StaticResource FitTealCrayon}" />
+      <SolidColorBrush x:Key="FitBlueCrayonBrush" Color="{StaticResource FitBlueCrayon}" />
+      <SolidColorBrush x:Key="FitPurpleCrayonBrush" Color="{StaticResource FitPurpleCrayon}" />
+      <SolidColorBrush x:Key="FitOrangeCrayonBrush" Color="{StaticResource FitOrangeCrayon}" />
+      <SolidColorBrush x:Key="FitPinkCrayonBrush" Color="{StaticResource FitPinkCrayon}" />
+      <SolidColorBrush x:Key="FitRedCrayonBrush" Color="{StaticResource FitRedCrayon}" />
+      <SolidColorBrush x:Key="FitGreenCrayonBrush" Color="{StaticResource FitGreenCrayon}" />
+      <SolidColorBrush x:Key="FitLimeCrayonBrush" Color="{StaticResource FitLimeCrayon}" />
+      <SolidColorBrush x:Key="FitTanCrayonBrush" Color="{StaticResource FitTanCrayon}" />
+      <SolidColorBrush x:Key="FitPeachCrayonBrush" Color="{StaticResource FitPeachCrayon}" />
+
+      <!-- Override colors for fluent theme -->
+      <StaticResource x:Key="ButtonBackground" ResourceKey="FitLeadBlackBrush" />
+      <StaticResource x:Key="ButtonForeground" ResourceKey="FitSkyBlueBrush" />
+      
+      <StaticResource x:Key="ButtonBackgroundPointerOver" ResourceKey="FitLeadBlack2Brush" />
+      <StaticResource x:Key="ButtonForegroundPointerOver" ResourceKey="FitSkyBlueBrush" />
+      <StaticResource x:Key="ButtonBorderBrushPointerOver" ResourceKey="FitLicoriceBlackBrush" />
+
+      <StaticResource x:Key="ButtonBackgroundPressed" ResourceKey="FitSkyBlueBrush" />
+      <StaticResource x:Key="ButtonForegroundPressed" ResourceKey="FitLeadBlackBrush" />
+      <StaticResource x:Key="ButtonBorderBrushPressed" ResourceKey="FitLicoriceBlackBrush" />
+
+      <StaticResource x:Key="ButtonBackgroundDisabled" ResourceKey="FitLeadBlack2Brush" />
+      <StaticResource x:Key="ButtonForegroundDisabled" ResourceKey="FitLicoriceBlackBrush" />
+
+      <StaticResource x:Key="ButtonBorderBrush" ResourceKey="FitLicoriceBlackBrush" />
+
+      <Color x:Key="SystemAccentColor">#7981FE</Color>
+      <Color x:Key="SystemAccentColorDark1">#FF717AFE</Color>
+      <Color x:Key="SystemAccentColorDark2">#FF5D67FE</Color>
+      <Color x:Key="SystemAccentColorDark3">#FF4854FE</Color>
+      <Color x:Key="SystemAccentColorLight1">#FF9AA0FE</Color>
+      <Color x:Key="SystemAccentColorLight2">#FFAEB3FF</Color>
+      <Color x:Key="SystemAccentColorLight3">#FFC2C6FF</Color>
+
+      <SolidColorBrush x:Key="SystemControlBackgroundAltHighBrush" Color="{StaticResource FitLeadBlack}" />
+      <Thickness x:Key="ButtonBorderThemeThickness">2</Thickness>
+      <CornerRadius x:Key="ControlCornerRadius">5</CornerRadius>
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <Style Selector="oxy|PlotView">
+    <Setter Property="Background" Value="Transparent" />
+  </Style>
+</Styles>
