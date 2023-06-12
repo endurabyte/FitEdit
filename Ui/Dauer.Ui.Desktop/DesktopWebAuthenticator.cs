@@ -1,4 +1,5 @@
-﻿using Dauer.Model;
+﻿using System.Diagnostics;
+using Dauer.Model;
 
 namespace Dauer.Ui.Desktop;
 
@@ -8,24 +9,15 @@ public class DesktopWebAuthenticator : IWebAuthenticator
   {
     Log.Info($"{nameof(DesktopWebAuthenticator)}.{nameof(AuthenticateAsync)}");
 
-    //_ = Task.Run(async () =>
-    //{
-    //  string username = "dougslater@gmail.com";
-    //  var client = new HttpClient();
-    //  var request = new HttpRequestMessage(HttpMethod.Get, $"https://localhost:7117/Auth?username={username}");
+    var url = "https://auth.fitedit.io/login?response_type=code&client_id=667gbn7s1enf2jjnmnai6gc8o5&redirect_uri=https://app.fitedit.io";
 
-    //  try
-    //  {
-    //    var response = await client.SendAsync(request);
-    //    await Log($"Got response {response.StatusCode}");
-    //    string responseContent = await response.Content.ReadAsStringAsync();
-    //    await Log(responseContent);
-    //  }
-    //  catch (Exception e)
-    //  {
-    //    await Log($"{e}");
-    //  }
-    //});
+    var psi = new ProcessStartInfo
+    {
+      FileName = url,
+      UseShellExecute = true,
+    };
+
+    Process.Start(psi);
     return Task.CompletedTask;
   }
 }

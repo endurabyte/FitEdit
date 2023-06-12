@@ -1,5 +1,4 @@
 ﻿using Android.Content.PM;
-using Microsoft.Maui.Authentication;
 using Android.Content;
 namespace Dauer.Ui.Android;
 

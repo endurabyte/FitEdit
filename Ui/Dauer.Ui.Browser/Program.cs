@@ -10,6 +10,7 @@ using Dauer.Ui.Adapters.Storage;
 using Dauer.Ui.Adapters.Windowing;
 
 [assembly: SupportedOSPlatform("browser")]
+namespace Dauer.Ui.Browser;
 
 internal partial class Program
 {
@@ -40,8 +41,11 @@ internal partial class Program
       {
         WebConsoleAdapter.Log($"{WebWindowAdapterImpl.ModuleName} ready");
         WebWindowAdapterImpl.ListenForResize();
+        WebWindowAdapterImpl.ListenForMessages();
       });
 
+    CompositionRoot.ServiceLocator.Register<IWebAuthenticator>(new BrowserWebAuthenticator());
+    
     await BuildAvaloniaApp()
       .UseReactiveUI()
       .StartBrowserAppAsync("out");

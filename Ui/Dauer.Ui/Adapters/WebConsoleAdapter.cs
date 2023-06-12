@@ -18,5 +18,5 @@ public partial class WebConsoleAdapter
   /// Called from JavaScript, console.js
   /// </summary>
   [JSExport]
-  internal static string GetMessage() => $"Hello from {ModuleName}";
+  internal static string GetMessage() => $"{ModuleName} test";
 }

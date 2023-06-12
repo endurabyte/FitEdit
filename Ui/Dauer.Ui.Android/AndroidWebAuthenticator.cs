@@ -5,7 +5,7 @@ namespace Dauer.Ui.Android;
 
 public class AndroidWebAuthenticator : IWebAuthenticator
 {
-  private const string authenticationUrl_ = "https://xamarin-essentials-auth-sample.azurewebsites.net/mobileauth/";
+  private const string authenticationUrl_ = "https://auth.fitedit.io/login?response_type=code&client_id=667gbn7s1enf2jjnmnai6gc8o5&redirect_uri=fitedit://app.fitedit.io";
   public async Task AuthenticateAsync()
   {
     Log.Info($"{nameof(AndroidWebAuthenticator)}.{nameof(AuthenticateAsync)}");
