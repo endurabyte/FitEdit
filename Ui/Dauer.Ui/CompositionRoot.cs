@@ -15,7 +15,7 @@ public class CompositionRoot
   /// <summary>
   /// Don't use this if at all possible. Used as a wrapper for Avalonia's static service locator.
   /// </summary>
-  public static IContainer ServiceLocator { get; } = new AvaloniaContainer();
+  public static IContainer ServiceLocator { get; } = new Container();
 
   private IStorageAdapter Storage_ => OperatingSystem.IsBrowser() switch
   {
@@ -66,7 +66,7 @@ public class CompositionRoot
       log
     );
 
-    Container.Register<IMainViewModel, MainViewModel>(vm);
+    Container.Register<IMainViewModel>(vm);
     return this;
   }
 }

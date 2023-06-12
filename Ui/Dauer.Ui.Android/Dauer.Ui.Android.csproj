@@ -25,12 +25,11 @@
     <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <!--For WebAuthenticator, part of Avalonia.Essentials-->
     <PackageReference Include="Xamarin.AndroidX.Browser" Version="1.5.0.1" />
+    <PackageReference Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--This DLL is hand-built since the MapsUi branch for Avalonia11 requires preview8 but we use preview6 -->
-    <Reference Include="Mapsui.UI.Avalonia" HintPath="..\Dauer.Ui\lib\Mapsui\Mapsui.UI.Avalonia.dll" />
-    <!--This DLL is hand-built since Avalonia.Essentials requires preview8 but we use preview6 -->
+    <!--This DLL is hand-built since Avalonia.Essentials is not yet on NuGet -->
     <Reference Include="Avalonia.Essentials" HintPath="..\Dauer.Ui\lib\Avalonia.Essentials\net7.0-android\Avalonia.Essentials.dll"/>
   </ItemGroup>
   

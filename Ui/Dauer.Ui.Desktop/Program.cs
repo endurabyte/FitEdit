@@ -11,7 +11,7 @@ internal class Program
   [STAThread]
   public static void Main(string[] args)
   {
-    CompositionRoot.ServiceLocator.Register<IWebAuthenticator, DesktopWebAuthenticator>(new DesktopWebAuthenticator());
+    CompositionRoot.ServiceLocator.Register<IWebAuthenticator>(new DesktopWebAuthenticator());
 
     BuildAvaloniaApp()
       .StartWithClassicDesktopLifetime(args);
