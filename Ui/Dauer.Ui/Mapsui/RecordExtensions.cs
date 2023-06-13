@@ -1,8 +1,9 @@
 ﻿using NetTopologySuite.Geometries;
 using Mapsui.Nts.Extensions;
 using Mapsui.Projections;
+using Dauer.Ui.Extensions;
 
-namespace Dauer.Ui.Extensions;
+namespace Dauer.Ui.Mapsui;
 
 public static class RecordExtensions
 {

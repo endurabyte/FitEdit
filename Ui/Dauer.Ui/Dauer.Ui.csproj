@@ -7,9 +7,10 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0--> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseMapsui>false</UseMapsui>
+    <DefineConstants Condition="$(UseMapsui) == true">USE_MAPSUI</DefineConstants>
   </PropertyGroup>
 
-  
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
@@ -18,7 +19,7 @@
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
+    <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
     <PackageReference Include="ReactiveUI.Fody" Version="18.4.44" />
     
@@ -33,15 +34,13 @@
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Views\MapView.axaml.cs">
-      <DependentUpon>MapView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\PlotView.axaml.cs">
-      <DependentUpon>PlotView.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\LapView.axaml.cs">
-      <DependentUpon>LapView.axaml</DependentUpon>
-    </Compile>
+  <ItemGroup Condition="$(UseMapsui) != true">
+    <Compile Remove="Mapsui\**" />
+    <Compile Remove="Views\MapView.axaml.cs" />
+    <AvaloniaXaml Remove="Views\MapView.axaml" />
+  </ItemGroup>
+  <ItemGroup Condition="$(UseMapsui) == true">
+    <Compile Remove="Views\FakeMapView.axaml.cs" />
+    <AvaloniaXaml Remove="Views\FakeMapView.axaml" />
   </ItemGroup>
 </Project>

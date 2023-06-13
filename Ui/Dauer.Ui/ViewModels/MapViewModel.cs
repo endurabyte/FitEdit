@@ -1,7 +1,11 @@
-﻿using BruTile.Predefined;
+﻿using Dauer.Data.Fit;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+
+#if USE_MAPSUI
+using BruTile.Predefined;
 using BruTile.Web;
-using Dauer.Data.Fit;
-using Dauer.Ui.Extensions;
+using Dauer.Ui.Mapsui;
 using Mapsui.Layers;
 using Mapsui.Nts;
 using Mapsui.Styles;
@@ -9,15 +13,14 @@ using Mapsui.Tiling.Layers;
 using Mapsui.UI;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Utilities;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+#endif
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IMapViewModel
 {
   int SelectedIndex { get; set; }
-  IMapControl? Map { get; set; }
+  //IMapControl? Map { get; set; }
 
   void Show(FitFile fit);
 }
@@ -26,10 +29,17 @@ public class DesignMapViewModel : MapViewModel
 {
 }
 
+#if !USE_MAPSUI
 public class MapViewModel : ViewModelBase, IMapViewModel
 {
-  [Reactive]
-  public IMapControl? Map { get; set; }
+  [Reactive] public int SelectedIndex { get; set; }
+  public void Show(FitFile? fit) { }
+}
+
+#else
+public class MapViewModel : ViewModelBase, IMapViewModel
+{
+  [Reactive] public IMapControl? Map { get; set; }
   private readonly GeometryFeature breadcrumbFeature_ = new();
   private ILayer BreadcrumbLayer_ => new MemoryLayer
   {
@@ -120,3 +130,4 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     Map.Map.Home.Invoke(Map.Map!.Navigator);
   }
 }
+#endif

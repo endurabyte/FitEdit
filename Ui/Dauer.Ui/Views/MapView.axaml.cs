@@ -12,7 +12,7 @@ public partial class MapView : UserControl
 
     this.ObservableForProperty(x => x.DataContext).Subscribe(e =>
     {
-      if (DataContext is IMapViewModel map)
+      if (DataContext is MapViewModel map)
       {
         map.Map = MapControl;
       }

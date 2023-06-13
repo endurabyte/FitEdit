@@ -1,7 +1,8 @@
-﻿using NetTopologySuite.Geometries;
+﻿using Dauer.Ui.Mapsui;
+using NetTopologySuite.Geometries;
 using NetTopologySuite.Utilities;
 
-namespace Dauer.Ui.Extensions;
+namespace Dauer.Ui.Mapsui;
 
 public static class GeometryShapeFactoryExtensions
 {
