@@ -1,5 +1,6 @@
 ﻿using Dauer.Adapters.Selenium;
 using Dauer.Model.Services;
+using Dauer.Model.Web;
 using Dauer.Services;
 using Lamar;
 using OpenQA.Selenium;

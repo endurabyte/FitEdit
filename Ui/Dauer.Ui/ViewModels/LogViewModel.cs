@@ -19,7 +19,7 @@ public class LogViewModel : ViewModelBase, ILogViewModel
 
   public async Task Log(string s)
   {
-    Model.Log.Info(s);
+    Dauer.Model.Log.Info(s);
     LogEntries.Add(s);
     while (LogEntries.Count > 25) RemoveHead();
 

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+  
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0--> 
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="System.Reactive" Version="6.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
+    <ProjectReference Include="..\Dauer.Ui.Model\Dauer.Ui.Model.csproj" />
+  </ItemGroup>
+
+</Project>

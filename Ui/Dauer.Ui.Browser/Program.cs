@@ -4,10 +4,10 @@ using Avalonia.Logging;
 using Avalonia.ReactiveUI;
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
-using Dauer.Ui;
-using Dauer.Ui.Adapters;
-using Dauer.Ui.Adapters.Storage;
-using Dauer.Ui.Adapters.Windowing;
+using Dauer.Ui.Infra;
+using Dauer.Ui.Infra.Adapters;
+using Dauer.Ui.Infra.Adapters.Storage;
+using Dauer.Ui.Infra.Adapters.Windowing;
 
 [assembly: SupportedOSPlatform("browser")]
 namespace Dauer.Ui.Browser;

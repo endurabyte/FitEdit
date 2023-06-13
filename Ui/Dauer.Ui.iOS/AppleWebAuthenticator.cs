@@ -3,7 +3,7 @@ using Microsoft.Maui.Authentication;
 
 namespace Dauer.Ui.iOS;
 
-public class AppleWebAuthenticator : IWebAuthenticator
+public class AppleWebAuthenticator : Infra.IWebAuthenticator
 {
   public async Task AuthenticateAsync()
   {

@@ -1,7 +1,8 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Services;
-using Dauer.Ui.Adapters.Storage;
-using Dauer.Ui.Adapters.Windowing;
+using Dauer.Ui.Infra;
+using Dauer.Ui.Infra.Adapters.Storage;
+using Dauer.Ui.Infra.Adapters.Windowing;
 using Dauer.Ui.ViewModels;
 
 namespace Dauer.Ui;

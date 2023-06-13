@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Dauer.Model;
+using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.Desktop;
 

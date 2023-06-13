@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(SolutionDir)Common.props" />
+
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />
+    <ProjectReference Include="..\Dauer.Data\Dauer.Data.csproj" />
+  </ItemGroup>
+
+</Project>

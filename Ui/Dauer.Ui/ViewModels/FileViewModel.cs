@@ -1,7 +1,8 @@
 ﻿using Dauer.Data.Fit;
 using Dauer.Model;
-using Dauer.Ui.Adapters.Storage;
 using Dauer.Ui.Extensions;
+using Dauer.Ui.Infra;
+using Dauer.Ui.Infra.Adapters.Storage;
 using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
@@ -19,7 +20,7 @@ public class DesignFileViewModel : FileViewModel
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
-  private Models.File? lastFile_ = null;
+  private Model.File? lastFile_ = null;
   private readonly IStorageAdapter storage_;
   private readonly IWebAuthenticator auth_;
   private readonly ILogViewModel log_;
@@ -41,7 +42,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     try
     {
       // On macOS and iOS, the file picker must run on the main thread
-      Models.File? file = await storage_.OpenFileAsync();
+      Model.File? file = await storage_.OpenFileAsync();
       if (file == null)
       {
         Log.Info("Could not load file");
@@ -115,7 +116,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
       string extension = Path.GetExtension(lastFile_.Name);
       // On macOS and iOS, the file save dialog must run on the main thread
-      await storage_.SaveAsync(new Models.File($"{name}_edit.{extension}", lastFile_.Bytes));
+      await storage_.SaveAsync(new Model.File($"{name}_edit.{extension}", lastFile_.Bytes));
     }
     catch (Exception e)
     {

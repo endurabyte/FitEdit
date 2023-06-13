@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using Dauer.Data.Fit;
 using Dauer.Model.Units;
-using Dauer.Ui.Models;
+using Dauer.Ui.Model;
 using ReactiveUI.Fody.Helpers;
 using Dauer.Model;
 using System.Text;
@@ -32,7 +32,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 {
   public ObservableCollection<Lap> Laps { get; set; } = new();
 
-  private readonly Dictionary<int, Model.Workouts.Speed> editedLaps_ = new();
+  private readonly Dictionary<int, Dauer.Model.Workouts.Speed> editedLaps_ = new();
 
   private readonly List<IDisposable> subscriptions_ = new();
   private FitFile? uneditedFitFile_;
@@ -102,7 +102,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
   public void HandleApplyClicked() => _ = Task.Run(() => ApplyLapSpeeds(editedLaps_));
 
-  public void ApplyLapSpeeds(Dictionary<int, Model.Workouts.Speed> speeds)
+  public void ApplyLapSpeeds(Dictionary<int, Dauer.Model.Workouts.Speed> speeds)
   {
     if (uneditedFitFile_ == null) { return; }
 

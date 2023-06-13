@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using Dauer.Data.Fit;
-using Dauer.Ui.Models;
+using Dauer.Ui.Model;
 using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;

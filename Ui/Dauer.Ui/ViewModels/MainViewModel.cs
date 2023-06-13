@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Linq;
 using Dauer.Data.Fit;
 using Dauer.Services;
-using Dauer.Ui.Adapters.Windowing;
+using Dauer.Ui.Infra.Adapters.Windowing;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -66,7 +66,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
     window_.Resized.Subscribe(tup =>
     {
-      Model.Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
+      Dauer.Model.Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
     });
 
     // When the records list selection changes, show it in the plot and on the map and update the slider

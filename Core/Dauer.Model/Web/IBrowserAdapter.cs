@@ -1,6 +1,4 @@
-﻿using Dauer.Model.Web;
-
-namespace Dauer.Services;
+﻿namespace Dauer.Model.Web;
 
 public interface IBrowserAdapter
 {

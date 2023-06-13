@@ -7,7 +7,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0--> 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseMapsui>false</UseMapsui>
+    <UseMapsui>true</UseMapsui>
     <DefineConstants Condition="$(UseMapsui) == true">USE_MAPSUI</DefineConstants>
   </PropertyGroup>
 
@@ -32,6 +32,8 @@
     <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
+    <ProjectReference Include="..\Dauer.Ui.Infra\Dauer.Ui.Infra.csproj" />
+    <ProjectReference Include="..\Dauer.Ui.Model\Dauer.Ui.Model.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="$(UseMapsui) != true">
