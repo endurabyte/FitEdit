@@ -21,7 +21,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
     <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
-    <PackageReference Include="ReactiveUI.Fody" Version="18.4.44" />
+    <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
     
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />

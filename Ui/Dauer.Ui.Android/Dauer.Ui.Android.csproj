@@ -24,13 +24,13 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <!--For WebAuthenticator, part of Avalonia.Essentials-->
-    <PackageReference Include="Xamarin.AndroidX.Browser" Version="1.5.0.1" />
+    <PackageReference Include="Xamarin.AndroidX.Browser" Version="1.5.0.2" />
     <PackageReference Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <!--This DLL is hand-built since Avalonia.Essentials is not yet on NuGet -->
-    <Reference Include="Avalonia.Essentials" HintPath="..\Dauer.Ui\lib\Avalonia.Essentials\net7.0-android\Avalonia.Essentials.dll"/>
+    <Reference Include="Avalonia.Essentials" HintPath="..\Dauer.Ui\lib\Avalonia.Essentials\net7.0-android\Avalonia.Essentials.dll" />
   </ItemGroup>
   
   <ItemGroup>
