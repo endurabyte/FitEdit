@@ -10,6 +10,9 @@ public static class LifetimeExtensions
     return desktop is not null;
   }
 
+  /// <summary>
+  /// Return true if we are running on a mobile device or browser
+  /// </summary>
   public static bool IsMobile(this IApplicationLifetime? lt, out ISingleViewApplicationLifetime? mobile)
   {
     mobile = lt as ISingleViewApplicationLifetime;

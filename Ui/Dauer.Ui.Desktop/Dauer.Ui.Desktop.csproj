@@ -4,6 +4,7 @@
   
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <AssemblyName>FitEdit</AssemblyName>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
     One for Windows with net7.0-windows TFM, one for MacOS with net7.0-macos and one with net7.0 TFM for Linux.-->
     <TargetFramework>net7.0</TargetFramework>
@@ -14,7 +15,6 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <PackageIcon>PackageIcon.png</PackageIcon>
-    <AssemblyName>FitEdit</AssemblyName>
     <ApplicationIcon>hourglass.ico</ApplicationIcon>
   </PropertyGroup>
 

@@ -1,4 +1,6 @@
-﻿namespace Dauer.Ui.Infra.Adapters.Storage;
+﻿using Dauer.Ui.Infra.Adapters.Storage;
+
+namespace Dauer.Ui.Browser.Adapters.Storage;
 
 public class WebStorageAdapter : IStorageAdapter
 {

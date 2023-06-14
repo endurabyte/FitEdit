@@ -1,7 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 
-namespace Dauer.Ui.Infra.Adapters.Windowing;
+namespace Dauer.Ui.Browser.Adapters.Windowing;
 
 public class WebControl : Control
 {

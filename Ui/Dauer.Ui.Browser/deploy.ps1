@@ -1,6 +1,9 @@
 param (
   [string]$configuration,
-  [string]$targetFramework
+  [string]$targetFramework,
+
+  [Parameter(Mandatory=$false)]
+  [bool]$upload = $false
 )
 
 $distributionId = "E3FTX8LWBZEGE7"
@@ -14,10 +17,41 @@ function Log {
     Write-Host "[$scriptName] $Message"
 }
 
+function Remove-DauerAssemblies {
+    param (
+        [string]$Path
+    )
+    
+    # Load the JSON file
+    $json = Get-Content $Path | ConvertFrom-Json
+   
+    # Remove all entries starting with "Dauer"
+    $json.assets = $json.assets | Where-Object {
+        $_.name -notmatch '^Dauer'
+    }
+
+    # Save the JSON file
+    $json | ConvertTo-Json -Depth 100 | Set-Content $Path
+}
+
 pushd $PSScriptRoot
 
 Log "Securing assemblies..."
 . "C:\Program Files (x86)\Eziriz\.NET Reactor\dotNET_Reactor.Console.exe" -project .\Dauer.Ui.Browser.nrproj -nodialog
+
+Log "Removing unsecured assemblies from AppBundle..."
+pushd $PSScriptRoot\bin\$configuration\$targetFramework\browser-wasm\AppBundle
+Remove-DauerAssemblies -Path 'mono-config.json'
+popd
+
+pushd $PSScriptRoot\bin\$configuration\$targetFramework\browser-wasm\AppBundle\managed
+rm Dauer.*.dll
+rm *.pdb
+popd
+
+if ($upload -eq $false) {
+  return;
+}
 
 Log "Syncing with S3..."
 pushd $PSScriptRoot\bin\$configuration\$targetFramework\browser-wasm\AppBundle

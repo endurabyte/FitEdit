@@ -1,5 +1,5 @@
-﻿using Dauer.Ui.Infra;
-using Dauer.Ui.Infra.Adapters.Windowing;
+﻿using Dauer.Ui.Browser.Adapters.Windowing;
+using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.Browser;
 

@@ -1,7 +1,7 @@
 ﻿export async function listenForMessages() {
   const { getAssemblyExports } = await globalThis.getDotnetRuntime(0);
-  var exports = await getAssemblyExports("Dauer.Ui.dll");
-  var notify = exports.Dauer.Ui.Adapters.Windowing.WebWindowAdapterImpl.NotifyMessageReceived;
+  var exports = await getAssemblyExports("FitEdit.dll");
+  var notify = exports.Dauer.Ui.Browser.Adapters.Windowing.WebWindowAdapterImpl.NotifyMessageReceived;
 
   window.addEventListener('message', function (event) {
     // For security reasons, check the origin of the message
@@ -20,8 +20,8 @@
 export async function listenForResize() {
 
   const { getAssemblyExports } = await globalThis.getDotnetRuntime(0);
-  var exports = await getAssemblyExports("Dauer.Ui.dll");
-  var notify = exports.Dauer.Ui.Adapters.Windowing.WebWindowAdapterImpl.NotifyWindowResized;
+  var exports = await getAssemblyExports("FitEdit.dll");
+  var notify = exports.Dauer.Ui.Browser.Adapters.Windowing.WebWindowAdapterImpl.NotifyWindowResized;
 
   window.addEventListener('resize', e => {
     notify(e.target.innerWidth, e.target.innerHeight);

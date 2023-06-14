@@ -1,13 +1,12 @@
 ﻿using Avalonia.Controls;
 using Dauer.Model;
+using Dauer.Ui.Infra.Adapters.Windowing;
 
-namespace Dauer.Ui.Infra.Adapters.Windowing;
+namespace Dauer.Ui.Browser.Adapters.Windowing;
 
 public class WebWindowAdapter : WindowAdapter, IWindowAdapter
 {
-  private static readonly WebControl main_ = new();
-
-  public Control? Main => main_;
+  public Control? Main => null;
 
   static WebWindowAdapter()
   {
@@ -16,11 +15,7 @@ public class WebWindowAdapter : WindowAdapter, IWindowAdapter
       return;
     }
 
-    WebWindowAdapterImpl.Resized.Subscribe(tuple =>
-    {
-      resized_.OnNext(tuple);
-      main_.SetBounds(tuple.Item1, tuple.Item2);
-    });
+    WebWindowAdapterImpl.Resized.Subscribe(resized_.OnNext);
 
     WebWindowAdapterImpl.MessageReceived.Subscribe(msg =>
     {

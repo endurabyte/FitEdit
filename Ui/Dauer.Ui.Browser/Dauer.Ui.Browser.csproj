@@ -7,6 +7,9 @@
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
     <OutputType>Exe</OutputType>
+    <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0-->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>FitEdit</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,7 +25,7 @@
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
   </ItemGroup>
 
-  <Target Name="Protect" AfterTargets="Build" Condition="'$(Configuration)' == 'Deploy'">
+  <Target Name="Protect" AfterTargets="_WasmGenerateAppBundle" Condition="'$(Configuration)' == 'Deploy'">
     <Exec Command="pwsh -ExecutionPolicy Bypass -File deploy.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
   </Target>
   

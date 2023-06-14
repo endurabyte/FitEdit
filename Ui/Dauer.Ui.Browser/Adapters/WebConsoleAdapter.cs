@@ -1,12 +1,12 @@
 ﻿using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
 
-namespace Dauer.Ui.Infra.Adapters;
+namespace Dauer.Ui.Browser.Adapters;
 
 [SupportedOSPlatform("browser")]
 public partial class WebConsoleAdapter
 {
-  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Adapters)}.{nameof(WebConsoleAdapter)}";
+  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Browser)}.{nameof(Adapters)}.{nameof(WebConsoleAdapter)}";
 
   [JSImport("globalThis.console.log")]
   public static partial void Log(string? message);

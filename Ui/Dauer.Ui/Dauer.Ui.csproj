@@ -5,9 +5,7 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0--> 
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseMapsui>true</UseMapsui>
+    <UseMapsui>false</UseMapsui>
     <DefineConstants Condition="$(UseMapsui) == true">USE_MAPSUI</DefineConstants>
   </PropertyGroup>
 

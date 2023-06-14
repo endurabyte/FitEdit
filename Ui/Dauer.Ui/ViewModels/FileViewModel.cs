@@ -14,7 +14,6 @@ public interface IFileViewModel
 
 public class DesignFileViewModel : FileViewModel
 {
-
   public DesignFileViewModel() : base(new NullStorageAdapter(), new NullWebAuthenticator(), new DesignLogViewModel()) { }
 }
 

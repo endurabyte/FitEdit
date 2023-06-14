@@ -18,19 +18,17 @@ public class CompositionRoot
   /// </summary>
   public static IContainer ServiceLocator { get; } = new Container();
 
-  private IStorageAdapter Storage_ => OperatingSystem.IsBrowser() switch
+  private IStorageAdapter Storage_ => true switch
   {
-    true => new WebStorageAdapter(),
-    false when lifetime_.IsDesktop(out _) => new DesktopStorageAdapter(),
-    false when lifetime_.IsMobile(out _) => new MobileStorageAdapter(),
+    _ when lifetime_.IsDesktop(out _) => new DesktopStorageAdapter(),
+    _ when lifetime_.IsMobile(out _) => new MobileStorageAdapter(),
     _ => new NullStorageAdapter(),
   };
 
-  private IWindowAdapter Window_ => OperatingSystem.IsBrowser() switch
+  private IWindowAdapter Window_ => true switch
   {
-    true => new WebWindowAdapter(),
-    false when lifetime_.IsDesktop(out _) => new DesktopWindowAdapter(),
-    false when lifetime_.IsMobile(out _) => new MobileWindowAdapter(),
+    _ when lifetime_.IsDesktop(out _) => new DesktopWindowAdapter(),
+    _ when lifetime_.IsMobile(out _) => new MobileWindowAdapter(),
     _ => new NullWindowAdapter(),
   };
 
@@ -55,15 +53,17 @@ public class CompositionRoot
     var log = new LogViewModel();
 
     var auth = ServiceLocator.Get<IWebAuthenticator>() ?? new NullWebAuthenticator();
+    var window = ServiceLocator.Get<IWindowAdapter>() ?? Window_;
+    var storage = ServiceLocator.Get<IStorageAdapter>() ?? Storage_;
 
     var vm = new MainViewModel(
       new FitService(),
-      Window_,
+      window,
       new PlotViewModel(),
       new LapViewModel(),
       new RecordViewModel(),
       new MapViewModel(),
-      new FileViewModel(Storage_, auth, log),
+      new FileViewModel(storage, auth, log),
       log
     );
 

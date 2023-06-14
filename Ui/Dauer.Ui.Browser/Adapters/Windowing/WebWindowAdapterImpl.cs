@@ -2,12 +2,12 @@
 using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
 
-namespace Dauer.Ui.Infra.Adapters.Windowing;
+namespace Dauer.Ui.Browser.Adapters.Windowing;
 
 [SupportedOSPlatform("browser")]
 public partial class WebWindowAdapterImpl
 {
-  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Adapters)}.{nameof(Windowing)}.{nameof(WebWindowAdapterImpl)}";
+  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Browser)}.{nameof(Adapters)}.{nameof(Windowing)}.{nameof(WebWindowAdapterImpl)}";
 
   public static IObservable<(double, double)> Resized => resizedSubject_;
   private static readonly ISubject<(double, double)> resizedSubject_ = new Subject<(double, double)>();

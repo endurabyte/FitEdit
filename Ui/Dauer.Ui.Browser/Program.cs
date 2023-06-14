@@ -1,11 +1,13 @@
-﻿using Avalonia;
+﻿using System.Runtime.InteropServices.JavaScript;
+using System.Runtime.Versioning;
+using Avalonia;
 using Avalonia.Browser;
 using Avalonia.Logging;
 using Avalonia.ReactiveUI;
-using System.Runtime.InteropServices.JavaScript;
-using System.Runtime.Versioning;
+using Dauer.Ui.Browser.Adapters;
+using Dauer.Ui.Browser.Adapters.Storage;
+using Dauer.Ui.Browser.Adapters.Windowing;
 using Dauer.Ui.Infra;
-using Dauer.Ui.Infra.Adapters;
 using Dauer.Ui.Infra.Adapters.Storage;
 using Dauer.Ui.Infra.Adapters.Windowing;
 
@@ -45,7 +47,9 @@ internal partial class Program
       });
 
     CompositionRoot.ServiceLocator.Register<IWebAuthenticator>(new BrowserWebAuthenticator());
-    
+    CompositionRoot.ServiceLocator.Register<IWindowAdapter>(new WebWindowAdapter());
+    CompositionRoot.ServiceLocator.Register<IStorageAdapter>(new WebStorageAdapter());
+
     await BuildAvaloniaApp()
       .UseReactiveUI()
       .StartBrowserAppAsync("out");

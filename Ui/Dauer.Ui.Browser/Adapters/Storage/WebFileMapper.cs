@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices.JavaScript;
 
-namespace Dauer.Ui.Infra.Adapters.Storage;
+namespace Dauer.Ui.Browser.Adapters.Storage;
 
 public static class WebFileMapper
 {

@@ -1,12 +1,12 @@
 ﻿using System.Runtime.InteropServices.JavaScript;
 using System.Runtime.Versioning;
 
-namespace Dauer.Ui.Infra.Adapters.Storage;
+namespace Dauer.Ui.Browser.Adapters.Storage;
 
 [SupportedOSPlatform("browser")]
 public partial class WebStorageAdapterImpl
 {
-  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Adapters)}.{nameof(Storage)}.{nameof(WebStorageAdapterImpl)}";
+  public const string ModuleName = $"{nameof(Dauer)}.{nameof(Ui)}.{nameof(Browser)}.{nameof(Adapters)}.{nameof(Storage)}.{nameof(WebStorageAdapterImpl)}";
 
   [JSImport("setLocalStorage", ModuleName)]
   public static partial void SetLocalStorage(string key, string value);

@@ -17,11 +17,7 @@ Log "Securing exe..."
 . "C:\Program Files (x86)\Eziriz\.NET Reactor\dotNET_Reactor.Console.exe" -project .\Dauer.Ui.Desktop.nrproj -nodialog
 
 pushd $PSScriptRoot\bin\$configuration\$targetFramework\
-rm Dauer.Adapters.Fit.dll
-rm Dauer.Data.dll
-rm Dauer.Model.dll
-rm Dauer.Services.dll
-rm Dauer.Ui.dll
+rm Dauer.*.dll
 rm *.pdb
 popd
 popd
