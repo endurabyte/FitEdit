@@ -1,4 +1,5 @@
 ﻿using Avalonia.Platform.Storage;
+using Dauer.Model;
 
 namespace Dauer.Ui.Infra.Adapters.Storage;
 
@@ -6,7 +7,7 @@ public abstract class StorageAdapter : IStorageAdapter
 {
   protected abstract IStorageProvider? Provider_ { get; }
 
-  public async Task<Model.File?> OpenFileAsync()
+  public async Task<BlobFile?> OpenFileAsync()
   {
     if (Provider_ == null) return null;
     IReadOnlyList<IStorageFile> files = await Provider_.OpenFilePickerAsync(new FilePickerOpenOptions { AllowMultiple = false });
@@ -17,10 +18,10 @@ public abstract class StorageAdapter : IStorageAdapter
     using var ms = new MemoryStream();
     await stream.CopyToAsync(ms);
     byte[] data = ms.ToArray();
-    return new Model.File(files[0].Name, data);
+    return new BlobFile(files[0].Name, data);
   }
 
-  public async Task SaveAsync(Model.File file)
+  public async Task SaveAsync(BlobFile file)
   {
     if (Provider_ == null) return;
     using IStorageFile? sf = await Provider_.SaveFilePickerAsync(new FilePickerSaveOptions { });

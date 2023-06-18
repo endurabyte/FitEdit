@@ -23,13 +23,14 @@ loadState.lores = lores;
 
 function log(msg) {
   if (verbose) {
-    console.log(msg);
+    console.log("main.js:", msg);
   }
 }
 
 loadState.start();
 
-log("main.js: Starting dotnet runtime");
+log("Starting dotnet runtime");
+
 const dotnetRuntime = await dotnet
     .withDiagnosticTracing(verbose)
     .withApplicationArgumentsFromQuery()
@@ -39,5 +40,5 @@ loadState.complete();
 
 const config = dotnetRuntime.getConfig();
 
-log(`main.js: Running dotnet with config: ${JSON.stringify(config)}`)
+log("Running dotnet with config ", config);
 await dotnetRuntime.runMainAndExit(config.mainAssemblyName, [window.location.search]);

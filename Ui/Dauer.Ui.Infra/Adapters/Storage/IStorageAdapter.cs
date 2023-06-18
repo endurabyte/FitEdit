@@ -1,7 +1,9 @@
-﻿namespace Dauer.Ui.Infra.Adapters.Storage;
+﻿using Dauer.Model;
+
+namespace Dauer.Ui.Infra.Adapters.Storage;
 
 public interface IStorageAdapter
 {
-  Task<Model.File?> OpenFileAsync();
-  Task SaveAsync(Model.File file);
+  Task<BlobFile?> OpenFileAsync();
+  Task SaveAsync(BlobFile file);
 }

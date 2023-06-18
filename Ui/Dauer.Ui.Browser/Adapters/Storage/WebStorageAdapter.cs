@@ -1,16 +1,17 @@
-﻿using Dauer.Ui.Infra.Adapters.Storage;
+﻿using Dauer.Model;
+using Dauer.Ui.Infra.Adapters.Storage;
 
 namespace Dauer.Ui.Browser.Adapters.Storage;
 
 public class WebStorageAdapter : IStorageAdapter
 {
-  public async Task<Model.File?> OpenFileAsync() => true switch
+  public async Task<BlobFile?> OpenFileAsync() => true switch
   {
     true when OperatingSystem.IsBrowser() => (await WebStorageAdapterImpl.OpenFileAsync()).Map(),
     _ => null,
   };
 
-  public async Task SaveAsync(Model.File file)
+  public async Task SaveAsync(BlobFile file)
   {
     await Task.Run(() =>
     {

@@ -3,13 +3,18 @@
   <Import Project="$(SolutionDir)Common.props" />
   
   <PropertyGroup>
+    <AssemblyName>FitEdit</AssemblyName>
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
     <OutputType>Exe</OutputType>
     <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>FitEdit</AssemblyName>
+    <!-- Enable Emscripten support for IDBFS. We only care about IDBFS but include the others because we can't append to EXPORTED_RUNTIME_METHODS -->
+    <EmccExtraLDFlags>-lidbfs.js -s 'EXPORTED_RUNTIME_METHODS=["IDBFS", "FS", "setValue", "UTF8ToString", "UTF8ArrayToString", "ccall", "cwrap"]' -s ASSERTIONS=1</EmccExtraLDFlags>
+    <!-- EXTRA_EXPORTED_RUNTIME_METHODS generates a deprecated warning-->
+    <!-- See https://github.com/emscripten-core/emscripten/pull/13895/files-->
+    <!--<EmccExtraLDFlags>-lidbfs.js -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["IDBFS"]'</EmccExtraLDFlags>-->
   </PropertyGroup>
 
   <ItemGroup>

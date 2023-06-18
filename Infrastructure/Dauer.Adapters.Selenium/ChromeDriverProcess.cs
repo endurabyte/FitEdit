@@ -1,5 +1,4 @@
-﻿using Dauer.Model;
-using Dauer.Model.Extensions;
+﻿using Dauer.Model.Extensions;
 using Dauer.Model.Factories;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -13,10 +12,10 @@ public class ChromeDriverProcess
   public static readonly string Input = IsWindows ? "chromedriver.in.exe" : "chromedriver.in";
   public static readonly string Output = IsWindows ? "chromedriver.exe" : "chromedriver";
 
-  private static string ProcessDir => Path.GetDirectoryName(Environment.ProcessPath);
+  private static string ProcessDir_ => Path.GetDirectoryName(Environment.ProcessPath);
 
-  public static string FullInput => Path.Combine(ProcessDir, Input);
-  public static string FullOutput => Path.Combine(ProcessDir, Output);
+  public static string FullInput => Path.Combine(ProcessDir_, Input);
+  public static string FullOutput => Path.Combine(ProcessDir_, Output);
 
   /// <summary>
   /// Kill the current chromedriver process, randomize its fingerprinting signature, and make it executable.

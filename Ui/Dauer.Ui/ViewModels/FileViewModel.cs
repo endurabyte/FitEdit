@@ -1,8 +1,14 @@
-﻿using Dauer.Data.Fit;
+﻿using System.Collections.ObjectModel;
+using Dauer.Adapters.Sqlite;
+using Dauer.Data.Fit;
 using Dauer.Model;
+using Dauer.Model.Data;
+using Dauer.Model.Extensions;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
+using DynamicData;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
@@ -14,39 +20,113 @@ public interface IFileViewModel
 
 public class DesignFileViewModel : FileViewModel
 {
-  public DesignFileViewModel() : base(new NullStorageAdapter(), new NullWebAuthenticator(), new DesignLogViewModel()) { }
+  public DesignFileViewModel() : base(new NullDatabaseAdapter(), new NullStorageAdapter(), new NullWebAuthenticator(), new DesignLogViewModel()) { }
 }
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
-  private Model.File? lastFile_ = null;
+  private BlobFile? lastFile_ = null;
+  private readonly IDatabaseAdapter db_;
   private readonly IStorageAdapter storage_;
   private readonly IWebAuthenticator auth_;
   private readonly ILogViewModel log_;
 
   [Reactive] public double Progress { get; set; }
   [Reactive] public FitFile? FitFile { get; set; }
+  [Reactive] public ObservableCollection<BlobFile> Files { get; set; } = new();
+  [Reactive] public int SelectedIndex { get; set; }
 
-  public FileViewModel(IStorageAdapter storage, IWebAuthenticator auth, ILogViewModel log)
+  public FileViewModel(IDatabaseAdapter db, IStorageAdapter storage, IWebAuthenticator auth, ILogViewModel log)
   {
+    db_ = db;
     storage_ = storage;
     auth_ = auth;
     log_ = log;
+
+    SyncFilesList();
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      _ = Task.Run(async () =>
+      {
+        int index = property.Value;
+        if (index < 0 || index >= Files.Count) { return; }
+
+        await LoadFile(Files[index]).AnyContext();
+      });
+    });
+
+    SyncFilesList();
+  }
+
+  private void SyncFilesList()
+  {
+    _ = Task.Run(async () =>
+    {
+      List<BlobFile> files = await db_.GetAllAsync();
+      Files.Clear();
+      Files.AddRange(files);
+    });
   }
 
   public async void HandleSelectFileClicked()
   {
     Log.Info("Select file clicked");
 
+    // On macOS and iOS, the file picker must run on the main thread
+    BlobFile? file = await storage_.OpenFileAsync();
+
+    if (file == null)
+    {
+      Log.Info("No file selected in the file dialog");
+      return;
+    }
+
+    _ = Task.Run(async () =>
+    {
+      bool ok = await db_.InsertAsync(file).AnyContext();
+
+      if (ok) { Log.Info($"Persisted file {file}"); }
+      else { Log.Error($"Could not persist file {file}"); }
+
+      SyncFilesList();
+      await LoadFile(file).AnyContext();
+    });
+  }
+
+  public async void HandleForgetFileClicked()
+  {
+    int index = SelectedIndex;
+    if (index < 0 || Files.Count == 0)
+    {
+      Log.Info("No file selected; cannot forget file");
+      return;
+    }
+
+    var file = Files[index];
+    if (file == null) { return; }
+
+    await db_.DeleteAsync(file).AnyContext();
+    SyncFilesList();
+
+    SelectedIndex = Math.Min(index, Files.Count);
+  }
+
+  public async Task LoadFile(BlobFile? file)
+  {
+    if (file == null)
+    {
+      Log.Info("Could not load null file");
+      return;
+    }
+
+    if (ReferenceEquals(file, lastFile_))
+    {
+      Log.Info($"File {file.Name} already loaded");
+      return;
+    }
+
     try
     {
-      // On macOS and iOS, the file picker must run on the main thread
-      Model.File? file = await storage_.OpenFileAsync();
-      if (file == null)
-      {
-        Log.Info("Could not load file");
-        return;
-      }
       Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
       lastFile_ = file;
 
@@ -115,7 +195,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
       string extension = Path.GetExtension(lastFile_.Name);
       // On macOS and iOS, the file save dialog must run on the main thread
-      await storage_.SaveAsync(new Model.File($"{name}_edit.{extension}", lastFile_.Bytes));
+      await storage_.SaveAsync(new BlobFile($"{name}_edit.{extension}", lastFile_.Bytes));
     }
     catch (Exception e)
     {

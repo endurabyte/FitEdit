@@ -19,4 +19,10 @@ public partial class WebStorageAdapterImpl
 
   [JSImport("downloadByteArray", ModuleName)]
   public static partial void DownloadByteArray(string fileName, byte[] bytes);
+
+  [JSImport("mountAndInitializeDb", ModuleName)]
+  public static partial Task MountAndInitializeDb();
+
+  [JSImport("syncDb", ModuleName)]
+  public static partial Task SyncDb(bool populate);
 }

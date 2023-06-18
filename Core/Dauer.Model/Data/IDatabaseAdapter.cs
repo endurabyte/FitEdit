@@ -2,9 +2,16 @@
 
 public interface IDatabaseAdapter
 {
-  Task DeleteAsync<T>(T t);
-  Task<List<T>> GetAllAsync<T>() where T : new();
-  Task InsertAsync<T>(T t);
-  Task UpdateAsync<T>(T t);
+  Task DeleteAsync(BlobFile t);
+  Task<List<BlobFile>> GetAllAsync();
+  Task<bool> InsertAsync(BlobFile t);
+  Task UpdateAsync(BlobFile t);
 }
 
+public class NullDatabaseAdapter : IDatabaseAdapter
+{
+  public Task DeleteAsync(BlobFile t) => Task.CompletedTask;
+  public Task<List<BlobFile>> GetAllAsync() => Task.FromResult(new List<BlobFile>());
+  public Task<bool> InsertAsync(BlobFile t) => Task.FromResult(true);
+  public Task UpdateAsync(BlobFile t) => Task.CompletedTask;
+}

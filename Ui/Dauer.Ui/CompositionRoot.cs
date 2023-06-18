@@ -1,4 +1,6 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
+using Dauer.Adapters.Sqlite;
+using Dauer.Model.Data;
 using Dauer.Services;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
@@ -56,6 +58,16 @@ public class CompositionRoot
     var window = ServiceLocator.Get<IWindowAdapter>() ?? Window_;
     var storage = ServiceLocator.Get<IStorageAdapter>() ?? Storage_;
 
+    string dbPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.Personal),
+        "fitedit.sqlite3");
+
+    IDatabaseAdapter db = OperatingSystem.IsBrowser() switch 
+    {
+      true => ServiceLocator.Get<IDatabaseAdapter>() ?? new SqliteAdapter(dbPath),
+      _ => new SqliteAdapter(dbPath),
+    };
+
     var vm = new MainViewModel(
       new FitService(),
       window,
@@ -63,7 +75,7 @@ public class CompositionRoot
       new LapViewModel(),
       new RecordViewModel(),
       new MapViewModel(),
-      new FileViewModel(storage, auth, log),
+      new FileViewModel(db, storage, auth, log),
       log
     );
 

@@ -15,13 +15,21 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="*, Auto">
-    <StackPanel Grid.Row="0" Orientation="Vertical">
+  <DockPanel>
+    <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
       <Button Command="{Binding HandleSelectFileClicked}" Content="Select file"/>
       <Button Command="{Binding HandleAuthorizeClicked}" Content="Authorize"/>
       <Button Command="{Binding HandleDownloadFileClicked}" Content="Download file"/>
+      <Button Command="{Binding HandleForgetFileClicked}" Content="Forget file"/>
     </StackPanel>
-    <ProgressBar Grid.Row="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
-  </Grid>
+    <ListBox DockPanel.Dock="Top" ItemsSource="{Binding Files}" SelectedIndex="{Binding SelectedIndex}">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding Name}"/>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <ProgressBar DockPanel.Dock="Top" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
+  </DockPanel>
     
 </UserControl>

@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Browser;
 using Avalonia.Logging;
 using Avalonia.ReactiveUI;
+using Dauer.Model.Data;
 using Dauer.Ui.Browser.Adapters;
 using Dauer.Ui.Browser.Adapters.Storage;
 using Dauer.Ui.Browser.Adapters.Windowing;
@@ -18,16 +19,22 @@ internal partial class Program
 {
   private static async Task Main(string[] args)
   {
-    _ = JSHost
-      .ImportAsync(WebStorageAdapterImpl.ModuleName, "./store.js")
-      .ContinueWith(_ =>
-      {
-        WebConsoleAdapter.Log($"{WebStorageAdapterImpl.ModuleName} ready");
-        string key = "testKey";
-        WebStorageAdapterImpl.SetLocalStorage(key, "{ \"jsonKey\" : \"jsonValue\" }");
-        string data = WebStorageAdapterImpl.GetLocalStorage(key);
-        WebConsoleAdapter.Log($"Got from storage: {key} => {data}");
-      });
+    await JSHost.ImportAsync(WebStorageAdapterImpl.ModuleName, "./store.js");
+
+    WebConsoleAdapter.Log($"{WebStorageAdapterImpl.ModuleName} ready");
+    string key = "testKey";
+    WebStorageAdapterImpl.SetLocalStorage(key, "{ \"jsonKey\" : \"jsonValue\" }");
+    string data = WebStorageAdapterImpl.GetLocalStorage(key);
+    WebConsoleAdapter.Log($"Got from storage: {key} => {data}");
+
+    await WebStorageAdapterImpl.MountAndInitializeDb();
+
+    string db = "/database/fitedit.sqlite3";
+    if (!File.Exists(db))
+    {
+      Dauer.Model.Log.Info($"Creating file {db}");
+      File.Create(db).Close();
+    }
 
     _ = JSHost
       .ImportAsync(WebConsoleAdapter.ModuleName, "./console.js")
@@ -49,6 +56,21 @@ internal partial class Program
     CompositionRoot.ServiceLocator.Register<IWebAuthenticator>(new BrowserWebAuthenticator());
     CompositionRoot.ServiceLocator.Register<IWindowAdapter>(new WebWindowAdapter());
     CompositionRoot.ServiceLocator.Register<IStorageAdapter>(new WebStorageAdapter());
+
+    // More info on browser persistence: https://sqlite.org/wasm/doc/tip/persistence.md
+
+    // Possible filenames:
+
+    // Key-Value VFS
+    // "local" for localStorage. "session" for sessionStorage.
+    //true => "file:local?vfs=kvvfs", 
+
+    // Origin-Private FileSystem
+    //true => "file:fitedit.sqlite3?vfs=opfs", 
+
+    // Manual sync of IndexedDB File System (IDBFS) via JavaScript. Each sync saves the whole in-memory to to disk.
+    // https://www.thinktecture.com/blazor/ef-core-and-sqlite-in-browser/
+    CompositionRoot.ServiceLocator.Register<IDatabaseAdapter>(new WasmSqliteAdapter("/database/fitedit.sqlite3"));
 
     await BuildAvaloniaApp()
       .UseReactiveUI()
