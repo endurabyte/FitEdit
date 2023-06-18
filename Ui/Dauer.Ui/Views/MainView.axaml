@@ -45,9 +45,9 @@
 
       </TabItem>
 
-      <TabItem Header="Log">
+      <!--<TabItem Header="Log">
         <views:LogView DataContext="{Binding Log}"/>
-      </TabItem>
+      </TabItem>-->
     </TabControl>
 
   </Grid>
