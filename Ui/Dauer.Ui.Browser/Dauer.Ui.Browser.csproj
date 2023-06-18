@@ -8,21 +8,26 @@
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
     <OutputType>Exe</OutputType>
+
     <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
     <!-- Enable Emscripten support for IDBFS. We only care about IDBFS but include the others because we can't append to EXPORTED_RUNTIME_METHODS -->
     <EmccExtraLDFlags>-lidbfs.js -s 'EXPORTED_RUNTIME_METHODS=["IDBFS", "FS", "setValue", "UTF8ToString", "UTF8ArrayToString", "ccall", "cwrap"]' -s ASSERTIONS=1</EmccExtraLDFlags>
-    <!-- EXTRA_EXPORTED_RUNTIME_METHODS generates a deprecated warning-->
+    <!-- Terser option equivalent to above but EXTRA_EXPORTED_RUNTIME_METHODS generates a deprecated warning-->
     <!-- See https://github.com/emscripten-core/emscripten/pull/13895/files-->
     <!--<EmccExtraLDFlags>-lidbfs.js -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["IDBFS"]'</EmccExtraLDFlags>-->
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+  
   <ItemGroup>
     <WasmExtraFilesToDeploy Include="AppBundle\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Dauer.Ui.Browser.nrproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,11 +35,16 @@
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+  </ItemGroup>
+  
   <Target Name="Protect" AfterTargets="_WasmGenerateAppBundle" Condition="'$(Configuration)' == 'Deploy'">
     <Exec Command="pwsh -ExecutionPolicy Bypass -File deploy.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
   </Target>
   
   <ItemGroup>
-    <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
+    <None Include="Dauer.Ui.Browser.nrproj" />
   </ItemGroup>
+
 </Project>
