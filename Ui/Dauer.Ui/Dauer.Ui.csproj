@@ -5,7 +5,7 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <UseMapsui>false</UseMapsui>
+    <UseMapsui>true</UseMapsui>
     <DefineConstants Condition="$(UseMapsui) == true">USE_MAPSUI</DefineConstants>
   </PropertyGroup>
 

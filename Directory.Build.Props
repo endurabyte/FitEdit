@@ -2,6 +2,6 @@
   <PropertyGroup>
     <AvaloniaVersion>11.0.0-rc1.1</AvaloniaVersion>
     <OxyPlotVersion>2.1.2-av11-rc1.1</OxyPlotVersion>
-    <MapsuiVersion>4.0.0-rc.3</MapsuiVersion>
+    <MapsuiVersion>4.0.0</MapsuiVersion>
   </PropertyGroup>
 </Project>
