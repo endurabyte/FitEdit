@@ -5,7 +5,6 @@ using Dauer.Model.Units;
 using Dauer.Ui.Model;
 using ReactiveUI.Fody.Helpers;
 using Dauer.Model;
-using System.Text;
 using DynamicData.Binding;
 using Dauer.Ui.Extensions;
 
@@ -14,12 +13,11 @@ namespace Dauer.Ui.ViewModels;
 public interface ILapViewModel
 {
   ObservableCollection<Lap> Laps { get; }
-  FitFile? FitFile { get; set; }
 }
 
 public class DesignLapViewModel : LapViewModel
 {
-  public DesignLapViewModel() 
+  public DesignLapViewModel() : base(new FileService())
   {
     var now = DateTime.Now;
     Laps.Add(new Lap { Start = now, End = now + TimeSpan.FromSeconds(60), Speed = new(3.12345, SpeedUnit.MetersPerSecond) });
@@ -31,23 +29,24 @@ public class DesignLapViewModel : LapViewModel
 public class LapViewModel : ViewModelBase, ILapViewModel
 {
   public ObservableCollection<Lap> Laps { get; set; } = new();
+  [Reactive] public double Progress { get; set; }
 
   private readonly Dictionary<int, Dauer.Model.Workouts.Speed> editedLaps_ = new();
 
   private readonly List<IDisposable> subscriptions_ = new();
   private FitFile? uneditedFitFile_;
-  [Reactive] public FitFile? FitFile { get; set; }
-  [Reactive] public double Progress { get; set; }
 
-  public LapViewModel()
+  private readonly IFileService fileService_;
+
+  public LapViewModel(
+    IFileService fileService
+  )
   {
-    this.ObservableForProperty(x => x.FitFile).Subscribe(property =>
-    {
-      if (property.Value == null)
-      {
-        return;
-      }
+    fileService_ = fileService;
 
+    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      if (property.Value == null) { return; }
       uneditedFitFile_ = new FitFile(property.Value).ForwardfillEvents();
       Show(property.Value);
     });
@@ -137,6 +136,6 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Backfilling: 100%");
 
-    FitFile = fit;
+    fileService_.FitFile = fit;
   }
 }

@@ -10,14 +10,11 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IPlotViewModel
 {
-  int SelectedIndex { get; set; }
-
-  void Show(FitFile fit);
 }
 
 public class DesignPlotViewModel : PlotViewModel
 {
-  public DesignPlotViewModel()
+  public DesignPlotViewModel() : base (new FileService())
   {
     Show(new FitFileFactory().CreateFake());
   }
@@ -26,7 +23,6 @@ public class DesignPlotViewModel : PlotViewModel
 public class PlotViewModel : ViewModelBase, IPlotViewModel
 {
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
-
   private TrackerHitResult? lastTracker_;
 
   [Reactive] public ScreenPoint? TrackerPosition { get; set; }
@@ -42,8 +38,25 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     }
   }
 
-  public PlotViewModel()
+  private readonly IFileService fileService_;
+
+  public PlotViewModel(
+    IFileService fileService
+  )
   {
+    fileService_ = fileService;
+
+    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      if (property.Value == null) { return; }
+      Show(property.Value);
+    });
+
+    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      SelectedIndex = property.Value;
+    });
+
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
   }
 

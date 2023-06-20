@@ -19,14 +19,14 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IMapViewModel
 {
-  int SelectedIndex { get; set; }
-  //IMapControl? Map { get; set; }
-
-  void Show(FitFile fit);
 }
 
 public class DesignMapViewModel : MapViewModel
 {
+  public DesignMapViewModel() : base(new FileService())
+  {
+
+  }
 }
 
 #if !USE_MAPSUI
@@ -41,6 +41,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 {
   [Reactive] public IMapControl? Map { get; set; }
   private readonly GeometryFeature breadcrumbFeature_ = new();
+
   private ILayer BreadcrumbLayer_ => new MemoryLayer
   {
     Name = "Breadcrumb",
@@ -64,8 +65,25 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     }
   }
 
-  public MapViewModel()
+  private readonly IFileService fileService_;
+
+  public MapViewModel(
+    IFileService fileService
+  )
   {
+    fileService_ = fileService;
+
+    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      if (property.Value == null) { return; }
+      Show(property.Value);
+    });
+
+    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      SelectedIndex = property.Value;
+    });
+
     this.ObservableForProperty(x => x.Map).Subscribe(e =>
     {
       // Jawg.io

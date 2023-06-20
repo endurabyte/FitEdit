@@ -1,5 +1,4 @@
 ﻿using System.Reactive.Linq;
-using Dauer.Data.Fit;
 using Dauer.Services;
 using Dauer.Ui.Infra.Adapters.Windowing;
 using ReactiveUI;
@@ -15,7 +14,7 @@ public interface IMainViewModel
 public class DesignMainViewModel : MainViewModel
 {
   public DesignMainViewModel() : base(
-    new NullFitService(),
+    new FileService(),
     new NullWindowAdapter(),
     new DesignPlotViewModel(),
     new DesignLapViewModel(),
@@ -30,9 +29,6 @@ public class DesignMainViewModel : MainViewModel
 
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
-  private readonly IWindowAdapter window_;
-  private readonly IFitService fit_;
-
   public IPlotViewModel Plot { get; }
   public ILapViewModel Laps { get; }
   public IRecordViewModel Records { get; }
@@ -44,8 +40,11 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   [Reactive] public int SliderValue { get; set; }
   [Reactive] public int SliderMax { get; set; }
 
+  private readonly IWindowAdapter window_;
+  private readonly IFileService fileService_;
+
   public MainViewModel(
-    IFitService fit,
+    IFileService fileService,
     IWindowAdapter window,
     IPlotViewModel plot,
     ILapViewModel laps,
@@ -56,7 +55,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   )
   {
     window_ = window;
-    fit_ = fit;
+    fileService_ = fileService;
     Plot = plot;
     Laps = laps;
     Records = records;
@@ -69,50 +68,20 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       Dauer.Model.Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
     });
 
-    // When the records list selection changes, show it in the plot and on the map and update the slider
-    records.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
     {
-      plot.SelectedIndex = property.Value;
-      Map.SelectedIndex = property.Value;
+      fileService.SelectedIndex = property.Value;
+    });
+
+    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      if (property.Value == null) { return; }
+      SliderMax = property.Value.Records.Count - 1;
+    });
+
+    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
       SliderValue = property.Value;
     });
-
-    // When plot selected data point changes, show it on the map and in the records list and update the slider
-    plot.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      records.SelectedIndex = property.Value;
-      Map.SelectedIndex = property.Value;
-      SliderValue = property.Value;
-    });
-
-    // When the slider moves, update the plot, which also updates the map and records list.
-    this.ObservableForProperty(x => x.SliderValue)
-     .Subscribe(property =>
-    {
-      plot.SelectedIndex = property.Value;
-    });
-
-    // When a fit file is edited in the laps view, show it in the plot, records list, and map
-    laps.ObservableForProperty(x => x.FitFile).Subscribe(property =>
-    {
-      File.FitFile = property.Value;
-    });
-
-    // When a fit file is loaded, show it in the plot, recods list, and map
-    File.ObservableForProperty(x => x.FitFile).Subscribe(property =>
-    {
-      Show(File.FitFile);
-    });
-  }
-
-  private void Show(FitFile? fit)
-  {
-    if (fit == null) { return; }
-
-    Plot.Show(fit);
-    Laps.FitFile = fit;
-    Records.Show(fit);
-    Map.Show(fit);
-    SliderMax = fit.Records.Count - 1;
   }
 }

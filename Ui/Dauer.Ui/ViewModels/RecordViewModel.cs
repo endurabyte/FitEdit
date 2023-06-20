@@ -1,20 +1,18 @@
 ﻿using System.Collections.ObjectModel;
 using Dauer.Data.Fit;
 using Dauer.Ui.Model;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IRecordViewModel
 {
-  int SelectedIndex { get; set; }
-
-  void Show(FitFile fit);
 }
 
 public class DesignRecordViewModel : RecordViewModel
 {
-  public DesignRecordViewModel()
+  public DesignRecordViewModel() : base(new FileService())
   {
     Records.Add(new Record { MessageNum = 2 });
     Records.Add(new Record { MessageNum = 1 });
@@ -28,6 +26,31 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   public ObservableCollection<Record> Records { get; set; } = new();
 
   [Reactive] public int SelectedIndex { get; set; }
+
+  private readonly IFileService fileService_;
+
+  public RecordViewModel(
+    IFileService fileService
+  )
+  {
+    fileService_ = fileService;
+
+    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    {
+      if (property.Value == null) { return; }
+      Show(property.Value);
+    });
+
+    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      SelectedIndex = property.Value;
+    });
+
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      fileService_.SelectedIndex = property.Value;
+    });
+  }
 
   public void Show(FitFile fit)
   {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using Dauer.Adapters.Sqlite;
 using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -15,29 +14,41 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IFileViewModel
 {
-  public FitFile? FitFile { get; set; }
 }
 
 public class DesignFileViewModel : FileViewModel
 {
-  public DesignFileViewModel() : base(new NullDatabaseAdapter(), new NullStorageAdapter(), new NullWebAuthenticator(), new DesignLogViewModel()) { }
+  public DesignFileViewModel() : base(
+    new FileService(),
+    new NullDatabaseAdapter(),
+    new NullStorageAdapter(),
+    new NullWebAuthenticator(),
+    new DesignLogViewModel()) { }
 }
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
   private BlobFile? lastFile_ = null;
+
+  [Reactive] public double Progress { get; set; }
+  [Reactive] public ObservableCollection<BlobFile> Files { get; set; } = new();
+  [Reactive] public int SelectedIndex { get; set; }
+
+  private readonly IFileService fileService_;
   private readonly IDatabaseAdapter db_;
   private readonly IStorageAdapter storage_;
   private readonly IWebAuthenticator auth_;
   private readonly ILogViewModel log_;
 
-  [Reactive] public double Progress { get; set; }
-  [Reactive] public FitFile? FitFile { get; set; }
-  [Reactive] public ObservableCollection<BlobFile> Files { get; set; } = new();
-  [Reactive] public int SelectedIndex { get; set; }
-
-  public FileViewModel(IDatabaseAdapter db, IStorageAdapter storage, IWebAuthenticator auth, ILogViewModel log)
+  public FileViewModel(
+    IFileService fileService,
+    IDatabaseAdapter db,
+    IStorageAdapter storage,
+    IWebAuthenticator auth,
+    ILogViewModel log
+  )
   {
+    fileService_ = fileService;
     db_ = db;
     storage_ = storage;
     auth_ = auth;
@@ -172,7 +183,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await log_.Log($"Done reading FIT file");
 
       Log.Info(fit.Print(showRecords: false));
-      FitFile = fit;
+      fileService_.FitFile = fit;
     }
     catch (Exception e)
     {

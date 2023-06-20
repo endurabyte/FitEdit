@@ -68,14 +68,16 @@ public class CompositionRoot
       _ => new SqliteAdapter(dbPath),
     };
 
+    IFileService fileService = new FileService();
+
     var vm = new MainViewModel(
-      new FitService(),
+      fileService,
       window,
-      new PlotViewModel(),
-      new LapViewModel(),
-      new RecordViewModel(),
-      new MapViewModel(),
-      new FileViewModel(db, storage, auth, log),
+      new PlotViewModel(fileService),
+      new LapViewModel(fileService),
+      new RecordViewModel(fileService),
+      new MapViewModel(fileService),
+      new FileViewModel(fileService, db, storage, auth, log),
       log
     );
 
