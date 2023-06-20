@@ -192,10 +192,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         return;
       }
 
+      var ms = new MemoryStream();
+      new Writer().Write(fileService_.FitFile, ms);
+      byte[] bytes = ms.ToArray();
+
       string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
       string extension = Path.GetExtension(lastFile_.Name);
       // On macOS and iOS, the file save dialog must run on the main thread
-      await storage_.SaveAsync(new BlobFile($"{name}_edit.{extension}", lastFile_.Bytes));
+      await storage_.SaveAsync(new BlobFile($"{name}_edit.{extension}", bytes));
     }
     catch (Exception e)
     {

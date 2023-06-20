@@ -12,9 +12,14 @@ namespace Dauer.Data.Fit
         return;
       }
 
-      var encoder = new Encode(ProtocolVersion.V20);
       using var dest = new FileStream(destination, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+      Write(fitFile, dest);
+      Log.Info($"Finished writing {destination}");
+    }
 
+    public void Write(FitFile fitFile, Stream dest)
+    {
+      var encoder = new Encode(ProtocolVersion.V20);
       encoder.Open(dest);
 
       // Preserve the original message order
@@ -30,7 +35,7 @@ namespace Dauer.Data.Fit
         write();
       }
 
-      Log.Info($"Wrote {fitFile.Messages.Count} messages and {fitFile.MessageDefinitions.Count} definitions to {destination}");
+      Log.Info($"Wrote {fitFile.Messages.Count} messages and {fitFile.MessageDefinitions.Count} definitions");
       encoder.Close();
     }
   }
