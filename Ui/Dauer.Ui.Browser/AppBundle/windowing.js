@@ -53,3 +53,7 @@ export async function closeWindow(windowName) {
     delete openedWindows[windowName];
   }
 }
+
+export function getOrigin() {
+  return window.location.origin;
+}

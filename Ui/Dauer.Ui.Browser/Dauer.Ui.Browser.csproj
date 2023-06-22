@@ -28,6 +28,7 @@
   
   <ItemGroup>
     <WasmExtraFilesToDeploy Include="AppBundle\**" />
+    <WasmExtraFilesToDeploy Include="..\Dauer.Ui\db\**" />
   </ItemGroup>
 
   <ItemGroup>

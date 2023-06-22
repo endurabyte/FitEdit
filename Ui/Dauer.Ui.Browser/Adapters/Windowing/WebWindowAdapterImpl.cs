@@ -33,6 +33,9 @@ public partial class WebWindowAdapterImpl
   [JSImport("closeWindow", ModuleName)]
   public static partial void CloseWindow(string windowName);
 
+  [JSImport("getOrigin", ModuleName)]
+  public static partial string GetOrigin();
+
   /// <summary>
   /// Called from JavaScript, windowing.js
   /// </summary>

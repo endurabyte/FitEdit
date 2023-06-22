@@ -23,6 +23,11 @@ public partial class WebStorageAdapterImpl
   [JSImport("mountAndInitializeDb", ModuleName)]
   public static partial Task MountAndInitializeDb();
 
+  /// <summary>
+  /// Save or load the database to persistent storage
+  /// See https://emscripten.org/docs/api_reference/Filesystem-API.html#filesystem-api-idbfs
+  /// </summary>
+  /// <param name="populate">true: load from file into memory. false: load from memory into file</param>
   [JSImport("syncDb", ModuleName)]
   public static partial Task SyncDb(bool populate);
 }
