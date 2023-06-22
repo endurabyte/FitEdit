@@ -37,6 +37,27 @@
       [DistanceUnit.Mile] = 1609.34,
     };
 
+    public static double Convert(this DistanceUnit from, DistanceUnit to, double d)
+    {
+      return to switch
+      {
+        DistanceUnit.Meter => Meters(from, d),
+        DistanceUnit.Mile => Miles(from, d),
+        _ => throw new ArgumentException($"Unsupported {nameof(DistanceUnit)} {to}"),
+      };
+    }
+
+    public static double Convert(this SpeedUnit from, SpeedUnit to, double d)
+    {
+      return to switch
+      {
+        SpeedUnit.MetersPerSecond => MetersPerSecond(from, d),
+        SpeedUnit.MiPerHour => MilesPerHour(from, d),
+        SpeedUnit.MinPerMi => MinutesPerMile(from, d),
+        _ => throw new ArgumentException($"Unsupported {nameof(SpeedUnit)} {to}"),
+      };
+    }
+
     /// <summary>
     /// Convert the given speed unit to per second
     /// </summary>
@@ -46,6 +67,11 @@
     /// Convert the given speed unit to meters per second
     /// </summary>
     public static double MetersPerSecond(this SpeedUnit unit, double d) => d * MetersPerSecondConversions[unit];
+
+    /// <summary>
+    /// Convert the given speed unit to miles per hour
+    /// </summary>
+    public static double MilesPerHour(this SpeedUnit unit, double d) => unit.MetersPerSecond(d) / MetersPerSecondConversions[SpeedUnit.MiPerHour];
 
     /// <summary>
     /// Convert the given speed unit to minutes per mile
@@ -60,6 +86,6 @@
     /// <summary>
     /// Convert the given distance unit to miles
     /// </summary>
-    public static double Miles(this DistanceUnit unit, double d) => d * DistanceMeterConversions[unit] / DistanceMeterConversions[DistanceUnit.Mile];
+    public static double Miles(this DistanceUnit unit, double d) => unit.Meters(d) / DistanceMeterConversions[DistanceUnit.Mile];
   }
 }

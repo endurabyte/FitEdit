@@ -28,9 +28,10 @@
               <StackPanel Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center">
                   <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:HH:mm:ss} ({1}s)">
+                    <MultiBinding StringFormat="{}{0:HH:mm:ss} {1:0.##}mi ({2:hh}h {2:mm}min {2:ss}s)">
                       <Binding Path="Start"/>
-                      <Binding Path="DurationSeconds"/>
+                      <Binding Path="DistanceMiles"/>
+                      <Binding Path="Duration"/>
                     </MultiBinding>
                   </TextBlock.Text>
                 </TextBlock>

@@ -9,6 +9,8 @@ public class Lap : ReactiveObject
   [Reactive] public DateTime Start { get; set; }
   [Reactive] public DateTime End { get; set; }
   [Reactive] public Speed? Speed { get; set; }
+  [Reactive] public Distance? Distance { get; set; }
 
-  public double DurationSeconds => (End - Start).TotalSeconds;
+  public TimeSpan Duration => End - Start;
+  public double DistanceMiles => Distance?.Miles() ?? 0;
 }

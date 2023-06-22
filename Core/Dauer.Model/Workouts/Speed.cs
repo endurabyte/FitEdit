@@ -23,6 +23,8 @@ namespace Dauer.Model.Workouts
       
     }
 
+    public Speed Convert(SpeedUnit to) => new(Unit.Convert(to, Value), to);
+
     public double MetersPerSecond() => Unit.MetersPerSecond(Value);
     public double MinutesPerMile() => Unit.MinutesPerMile(Value);
 

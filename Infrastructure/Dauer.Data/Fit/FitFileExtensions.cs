@@ -169,13 +169,13 @@ namespace Dauer.Data.Fit
     /// Recalculate the workout as if each lap was run at the corresponding constant speed.
     /// Return the same modified FitFile.
     /// </summary>
-    public static FitFile ApplySpeeds(this FitFile fitFile, Dictionary<int, Speed> speeds, int resolution = 100, Action<int, int> handleProgress = null)
+    public static FitFile ApplySpeeds(this FitFile fitFile, Dictionary<int, Speed> lapSpeeds, int resolution = 100, Action<int, int> handleProgress = null)
     {
       var laps = fitFile.Laps;
       var records = fitFile.Records;
       var sessions = fitFile.Sessions;
 
-      if (!speeds.Any())
+      if (!lapSpeeds.Any())
       {
         return fitFile;
       }
@@ -190,12 +190,15 @@ namespace Dauer.Data.Fit
         throw new ArgumentException($"Could not find any sessions");
       }
 
-      foreach (int i in speeds.Keys)
+      foreach (int i in lapSpeeds.Keys)
       {
-        laps[i].Apply(speeds[i]);
+        laps[i].Apply(lapSpeeds[i]);
       }
 
       var distance = new Distance { Unit = DistanceUnit.Meter };
+      var lapDistances = Enumerable.Range(0, laps.Count)
+        .Select(_ => new Distance { Unit = DistanceUnit.Meter })
+        .ToList();
 
       System.DateTime lastTimestamp = records.First().Start();
 
@@ -210,9 +213,9 @@ namespace Dauer.Data.Fit
 
         LapMesg lap = record.FindLap(laps);
 
-        int j = laps.IndexOf(lap);
+        int lapIndex = laps.IndexOf(lap);
 
-        double speed = speeds.TryGetValue(j, out Speed value) 
+        double speed = lapSpeeds.TryGetValue(lapIndex, out Speed value) 
           ? value.MetersPerSecond() 
           : record.GetEnhancedSpeed() ?? 0;
 
@@ -221,14 +224,19 @@ namespace Dauer.Data.Fit
         lastTimestamp = timestamp;
 
         distance.Value += speed * elapsedSeconds;
+        lapDistances[lapIndex].Value += speed * elapsedSeconds;
 
-        lap.SetTotalDistance((float)distance.Meters());
         record.SetDistance((float)distance.Meters());
         record.SetEnhancedSpeed((float)speed);
       }
 
+      foreach (int i in Enumerable.Range(0, laps.Count))
+      {
+        laps[i].SetTotalDistance((float)lapDistances[i].Meters());
+      }
+
       SessionMesg session = sessions.FirstOrDefault();
-      session?.Apply(distance, speeds.Values.MaxBy(s => s.Value));
+      session?.Apply(distance, lapSpeeds.Values.MaxBy(s => s.Value));
 
       return fitFile;
     }

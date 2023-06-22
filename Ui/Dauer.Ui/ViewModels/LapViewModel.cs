@@ -65,9 +65,10 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     {
       var rl = new Lap
       {
-        Start = lap.Start(),
-        End = lap.End(),
-        Speed = new(lap.GetEnhancedAvgSpeed() ?? 0, SpeedUnit.MetersPerSecond)
+        Start = lap.Start().ToLocalTime(),
+        End = lap.End().ToLocalTime(),
+        Speed = new Dauer.Model.Workouts.Speed(lap.GetEnhancedAvgSpeed() ?? 0, SpeedUnit.MetersPerSecond).Convert(SpeedUnit.MiPerHour),
+        Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, DistanceUnit.Meter).Convert(DistanceUnit.Mile),
       };
       Laps.Add(rl);
     }
