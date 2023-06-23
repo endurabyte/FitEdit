@@ -1,5 +1,4 @@
 ﻿using System.Reactive.Linq;
-using Dauer.Services;
 using Dauer.Ui.Infra.Adapters.Windowing;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -8,7 +7,7 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IMainViewModel
 {
-
+  IMapViewModel Map { get; }
 }
 
 public class DesignMainViewModel : MainViewModel
@@ -39,6 +38,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   [Reactive] public string Text { get; set; } = "Welcome to FitEdit. Please load a FIT file.";
   [Reactive] public int SliderValue { get; set; }
   [Reactive] public int SliderMax { get; set; }
+  [Reactive] public int SelectedTabIndex { get; set; }
 
   private readonly IWindowAdapter window_;
   private readonly IFileService fileService_;
@@ -77,6 +77,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       if (property.Value == null) { return; }
       SliderMax = property.Value.Records.Count - 1;
+      SelectedTabIndex = 1; // Chart. TODO for some reason this freezes the app when the debugger is attached
     });
 
     fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>

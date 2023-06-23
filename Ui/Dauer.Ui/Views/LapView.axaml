@@ -26,17 +26,13 @@
 
     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <ListBox ItemsSource="{Binding Laps}">
+
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Orientation="Horizontal"/>
           </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
 
-        <ListBox.Styles>
-          <Style Selector="ListBox /template/ VirtualizingStackPanel">
-            <Setter Property="Orientation" Value="Horizontal"/>
-          </Style> 
-        </ListBox.Styles>
         <ListBox.ItemTemplate>
           <DataTemplate>
 
@@ -54,7 +50,7 @@
       </ListBox>
     </ScrollViewer>
 
-    <Grid  ColumnDefinitions="Auto, *">
+    <Grid ColumnDefinitions="Auto, *">
       <Button Grid.Column="0" Content="Apply" Command="{Binding HandleApplyClicked}"/>
       <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
     </Grid>

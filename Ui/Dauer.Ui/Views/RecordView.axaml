@@ -12,33 +12,29 @@
     <vm:DesignRecordViewModel />
   </Design.DataContext>
 
-  <Grid>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
     <ListBox ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}">
+
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Horizontal"/>
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto"/>
-              <ColumnDefinition Width="3*"/>
-            </Grid.ColumnDefinitions>
-            
-            <Border Grid.Column="1" Background="Gray" CornerRadius="4" Padding="4">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center">
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}: {1} ({2}): {3}">
-                      <Binding Path="Index"/>
-                      <Binding Path="Name"/>
-                      <Binding Path="MessageNum"/>
-                      <Binding Path="Detail"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
-              </StackPanel>
-            </Border>
-          </Grid>
+          <Border Background="Gray" CornerRadius="4" Padding="4">
+            <StackPanel Orientation="Vertical">
+              <TextBlock Text="{Binding Index}"/>
+              <!--<TextBlock Text="{Binding Name}"/>
+              <TextBlock Text="{Binding MessageNum}"/>-->
+              <TextBlock Text="{Binding HR, StringFormat='HR: {0}'}"/>
+              <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"/>
+              <TextBlock Text="{Binding Distance, StringFormat='Dist: {0}'}"/>
+            </StackPanel>
+          </Border>
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
-  </Grid>
+  </ScrollViewer>
 </UserControl>

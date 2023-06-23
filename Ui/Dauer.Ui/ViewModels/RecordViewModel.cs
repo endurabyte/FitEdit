@@ -72,7 +72,9 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
         Index = i++,
         MessageNum = record.Num,
         Name = record.Name,
-        Detail = $"{elapsedSeconds} {speed} {dist} {hr}",
+        HR = $"{hr}",
+        Speed = $"{speed:0.##}m/s",
+        Distance = $"{dist:0.##}m",
       }); ;
     }
   }

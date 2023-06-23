@@ -17,5 +17,5 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <maps:MapControl x:Name="MapControl"/>
+  <maps:MapControl x:Name="MapControl" />
 </UserControl>

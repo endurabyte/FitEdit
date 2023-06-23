@@ -19,6 +19,7 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IMapViewModel
 {
+  bool HasCoordinates { get; set; }
 }
 
 public class DesignMapViewModel : MapViewModel
@@ -40,6 +41,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 public class MapViewModel : ViewModelBase, IMapViewModel
 {
   [Reactive] public IMapControl? Map { get; set; }
+  [Reactive] public bool HasCoordinates { get; set; }
+
   private readonly GeometryFeature breadcrumbFeature_ = new();
 
   private ILayer BreadcrumbLayer_ => new MemoryLayer
@@ -130,6 +133,12 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       .Select(r => r.MapCoordinate())
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
+
+    HasCoordinates = coords.Any();
+    if (!HasCoordinates)
+    {
+      return;
+    }
 
     var trace = new MemoryLayer
     {

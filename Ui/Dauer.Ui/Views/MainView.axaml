@@ -20,7 +20,7 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <TabControl>
+    <TabControl SelectedIndex="{Binding SelectedTabIndex}">
       <TabItem Header="File">
 
         <StackPanel Orientation="Vertical">
@@ -28,19 +28,22 @@
           <views:FileView DataContext="{Binding File}"/>
         </StackPanel>
       </TabItem>
-      <TabItem Header="Laps">
-        <views:LapView DataContext="{Binding Laps}"/>
-      </TabItem>
-      <TabItem Header="Records">
-        <views:RecordView DataContext="{Binding Records}"/>
-      </TabItem>
       <TabItem Header="Chart">
 
-        <Grid RowDefinitions="*, Auto, *, Auto">
+        <Grid x:Name="ChartGrid" RowDefinitions="*, Auto, 0, Auto, Auto">
           <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
           <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
-          <views:MapView Grid.Row="2" DataContext="{Binding Map}"/>
-          <Slider Grid.Row="4" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
+          <views:MapView Grid.Row="2" DataContext="{Binding Map}" />
+          <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
+
+          <TabControl Grid.Row="4" TabStripPlacement="Left">
+            <TabItem Header="Laps">
+              <views:LapView DataContext="{Binding Laps}"/>
+            </TabItem>
+            <TabItem Header="Records">
+              <views:RecordView DataContext="{Binding Records}"/>
+            </TabItem>
+          </TabControl>
         </Grid>
 
       </TabItem>
