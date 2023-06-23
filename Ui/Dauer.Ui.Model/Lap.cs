@@ -12,5 +12,4 @@ public class Lap : ReactiveObject
   [Reactive] public Distance? Distance { get; set; }
 
   public TimeSpan Duration => End - Start;
-  public double DistanceMiles => Distance?.Miles() ?? 0;
 }

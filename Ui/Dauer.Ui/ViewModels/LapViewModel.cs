@@ -1,12 +1,12 @@
 ﻿using ReactiveUI;
 using System.Collections.ObjectModel;
 using Dauer.Data.Fit;
-using Dauer.Model.Units;
 using Dauer.Ui.Model;
 using ReactiveUI.Fody.Helpers;
 using Dauer.Model;
 using DynamicData.Binding;
 using Dauer.Ui.Extensions;
+using Units;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -20,15 +20,15 @@ public class DesignLapViewModel : LapViewModel
   public DesignLapViewModel() : base(new FileService())
   {
     var now = DateTime.Now;
-    Laps.Add(new Lap { Start = now, End = now + TimeSpan.FromSeconds(60), Speed = new(3.12345, SpeedUnit.MetersPerSecond) });
-    Laps.Add(new Lap { Start = now + TimeSpan.FromSeconds(60), End = now + TimeSpan.FromSeconds(120), Speed = new(3.5, SpeedUnit.MetersPerSecond) });
-    Laps.Add(new Lap { Start = now + TimeSpan.FromSeconds(120), End = now + TimeSpan.FromSeconds(180), Speed = new(2.7, SpeedUnit.MetersPerSecond) });
+    Laps.Add(new Lap { Start = now, End = now + TimeSpan.FromSeconds(60), Speed = new(3.12345, Unit.MetersPerSecond) });
+    Laps.Add(new Lap { Start = now + TimeSpan.FromSeconds(60), End = now + TimeSpan.FromSeconds(120), Speed = new(3.5, Unit.MetersPerSecond) });
+    Laps.Add(new Lap { Start = now + TimeSpan.FromSeconds(120), End = now + TimeSpan.FromSeconds(180), Speed = new(2.7, Unit.MetersPerSecond) });
   }
 }
 
 public class LapViewModel : ViewModelBase, ILapViewModel
 {
-  public ObservableCollection<Lap> Laps { get; set; } = new();
+  [Reactive] public ObservableCollection<Lap> Laps { get; set; } = new();
   [Reactive] public double Progress { get; set; }
 
   private readonly Dictionary<int, Dauer.Model.Workouts.Speed> editedLaps_ = new();
@@ -54,8 +54,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
   public void Show(FitFile fit)
   {
-    Laps.Clear();
-    editedLaps_.Clear();
+    ClearLaps();
 
     // Unsubscribe from previous laps
     foreach (var sub in subscriptions_) { sub.Dispose(); }
@@ -67,8 +66,8 @@ public class LapViewModel : ViewModelBase, ILapViewModel
       {
         Start = lap.Start().ToLocalTime(),
         End = lap.End().ToLocalTime(),
-        Speed = new Dauer.Model.Workouts.Speed(lap.GetEnhancedAvgSpeed() ?? 0, SpeedUnit.MetersPerSecond).Convert(SpeedUnit.MiPerHour),
-        Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, DistanceUnit.Meter).Convert(DistanceUnit.Mile),
+        Speed = new Dauer.Model.Workouts.Speed(lap.GetEnhancedAvgSpeed() ?? 0, Unit.MetersPerSecond).Convert(Unit.MilesPerHour),
+        Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, Unit.Meter).Convert(Unit.Mile),
       };
       Laps.Add(rl);
     }
@@ -76,28 +75,52 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     SubscribeToLapChanges(Laps);
   }
 
+  private void ClearLaps()
+  {
+    //Laps.Clear(); // Results in duplicated list
+    while (Laps.Count != 0)
+    {
+      Laps.RemoveAt(0);
+    }
+    editedLaps_.Clear();
+  }
+
   private void SubscribeToLapChanges(IEnumerable<Lap> laps)
   {
-    var pairs = laps.Select((lap, i) => new { lap.Speed, i }).ToList();
+    var lapsByIndex = laps.Select((lap, i) => new { lap, i }).ToList();
 
-    foreach (var pair in pairs)
+    foreach (var pair in lapsByIndex)
     {
-      var speed = pair.Speed!;
-      var sub = speed.WhenPropertyChanged(x => x.Value).Subscribe(property =>
-      {
-        // Ignore small changes
-        double originalSpeed = uneditedFitFile_?.Laps[pair.i].GetEnhancedAvgSpeed() ?? 0;
-
-        if (Math.Abs(originalSpeed - property.Value) < 1e-5)
-        {
-          return;
-        }
-
-        editedLaps_[pair.i] = speed;
-      });
-
-      subscriptions_.Add(sub);
+      SubscribeToLapSpeedChanges(pair.i, pair.lap);
     }
+  }
+
+  private void SubscribeToLapSpeedChanges(int i, Lap lap)
+  {
+    var sub = lap.WhenPropertyChanged(x => x.Speed).Subscribe(property =>
+    {
+      SubscribeToLapSpeedValueChanges(i, lap.Speed!);
+    });
+
+    subscriptions_.Add(sub);
+  }
+
+  private void SubscribeToLapSpeedValueChanges(int i, Dauer.Model.Workouts.Speed speed)
+  {
+    var sub = speed.WhenPropertyChanged(x => x.Value).Subscribe(property =>
+    {
+      // Ignore small changes
+      double originalSpeed = uneditedFitFile_?.Laps[i].GetEnhancedAvgSpeed() ?? 0;
+
+      if (Math.Abs(originalSpeed - property.Value) < 1e-5)
+      {
+        return;
+      }
+
+      editedLaps_[i] = speed;
+    });
+
+    subscriptions_.Add(sub);
   }
 
   public void HandleApplyClicked() => _ = Task.Run(() => ApplyLapSpeeds(editedLaps_));

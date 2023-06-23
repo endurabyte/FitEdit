@@ -1,16 +1,16 @@
 ﻿using Dauer.Model;
-using Dauer.Model.Units;
+using Units;
 
 namespace Dauer.Services
 {
   public interface IWorkoutService
   {
-    void Recalculate(Workout workout, List<double> lapSpeeds, SpeedUnit unit);
+    void Recalculate(Workout workout, List<double> lapSpeeds, Unit unit);
   }
 
   public class WorkoutService : IWorkoutService
   {
-    public void Recalculate(Workout workout, List<double> lapSpeeds, SpeedUnit unit)
+    public void Recalculate(Workout workout, List<double> lapSpeeds, Unit unit)
     {
       var leaves = SelectLeaves(workout);
 

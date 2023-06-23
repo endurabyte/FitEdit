@@ -34,6 +34,7 @@
     <ProjectReference Include="..\..\Core\Dauer.Services\Dauer.Services.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
+    <ProjectReference Include="..\..\units\Units\Units.csproj" />
     <ProjectReference Include="..\Dauer.Ui.Infra\Dauer.Ui.Infra.csproj" />
     <ProjectReference Include="..\Dauer.Ui.Model\Dauer.Ui.Model.csproj" />
   </ItemGroup>

@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using System.Text.Json;
 using Dauer.Model.Extensions;
-using Dauer.Model.Units;
 using Dauer.Model.Workouts;
 using Dynastream.Fit;
+using Units;
 
 namespace Dauer.Data.Fit
 {
@@ -136,23 +136,10 @@ namespace Dauer.Data.Fit
 
         foreach (var rec in lapRecords)
         {
-          var speed = new Speed { Unit = SpeedUnit.MetersPerSecond, Value = (double)rec.GetEnhancedSpeed() };
-          var distance = new Distance { Unit = DistanceUnit.Meter, Value = (double)rec.GetDistance() };
+          var speed = new Speed { Unit = Unit.MetersPerSecond, Value = (double)rec.GetEnhancedSpeed() };
+          var distance = new Distance { Unit = Unit.Meter, Value = (double)rec.GetDistance() };
 
-          // Print the fractional part of the given number as
-          // seconds of a minute e.g. 8.9557 => 8:57
-          string pretty(double minPerMile)
-          {
-            if (minPerMile == double.PositiveInfinity || minPerMile == double.NegativeInfinity)
-            {
-              return "0:00";
-            }
-
-            int floor = (int)Math.Floor(minPerMile);
-            return $"{floor}:{(int)((minPerMile - floor)*60):00}";
-          }
-
-          print($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {pretty(speed.MinutesPerMile())} min/mi, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+          print($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {speed.Convert(Unit.MinutesPerMile)}, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
           //print($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
         }
       }
@@ -195,9 +182,9 @@ namespace Dauer.Data.Fit
         laps[i].Apply(lapSpeeds[i]);
       }
 
-      var distance = new Distance { Unit = DistanceUnit.Meter };
+      var distance = new Distance { Unit = Unit.Meter };
       var lapDistances = Enumerable.Range(0, laps.Count)
-        .Select(_ => new Distance { Unit = DistanceUnit.Meter })
+        .Select(_ => new Distance { Unit = Unit.Meter })
         .ToList();
 
       System.DateTime lastTimestamp = records.First().Start();
@@ -216,7 +203,7 @@ namespace Dauer.Data.Fit
         int lapIndex = laps.IndexOf(lap);
 
         double speed = lapSpeeds.TryGetValue(lapIndex, out Speed value) 
-          ? value.MetersPerSecond() 
+          ? value.Convert(Unit.MetersPerSecond).Value 
           : record.GetEnhancedSpeed() ?? 0;
 
         System.DateTime timestamp = record.Start();

@@ -1,8 +1,6 @@
 using Dauer.Model;
-using Dauer.Model.Units;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
+using Units;
 
 namespace Dauer.Services.UnitTests
 {
@@ -22,7 +20,7 @@ namespace Dauer.Services.UnitTests
             (
                 GetWorkout(),
                 new List<double> { 2.0 }, 
-                SpeedUnit.MetersPerSecond
+                Unit.MetersPerSecond
             );
         }
 

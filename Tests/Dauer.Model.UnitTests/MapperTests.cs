@@ -3,7 +3,7 @@ using NUnit.Framework;
 
 namespace Dauer.Model.UnitTests
 {
-    public class MapperTests
+  public class MapperTests
     {
         [SetUp]
         public void Setup()

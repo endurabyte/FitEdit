@@ -3,45 +3,61 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             xmlns:controls="clr-namespace:Dauer.Ui.Controls"
+             xmlns:converters="using:Dauer.Ui.Converters"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Dauer.Ui.Views.LapView"
              x:DataType="vm:LapViewModel">
 
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <converters:SpeedToStringValueConverter x:Key="SpeedToStringValueConverter"/>
+      <converters:TimeSpanToStringValueConverter x:Key="TimeSpanToStringValueConverter"/>
+      <converters:DistanceToStringValueConverter x:Key="DistanceToStringValueConverter"/>
+    </ResourceDictionary> 
+  </UserControl.Resources>
+  
   <Design.DataContext>
     <vm:DesignLapViewModel />
   </Design.DataContext>
 
-  <Grid RowDefinitions="Auto, *">
+  <StackPanel>
 
-    <Grid Grid.Row="0" ColumnDefinitions="Auto, *">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+      <ListBox ItemsSource="{Binding Laps}">
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal"/>
+          </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
+
+        <ListBox.Styles>
+          <Style Selector="ListBox /template/ VirtualizingStackPanel">
+            <Setter Property="Orientation" Value="Horizontal"/>
+          </Style> 
+        </ListBox.Styles>
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+
+            <Border Background="Gray" CornerRadius="4" Padding="4">
+              <StackPanel Orientation="Vertical">
+                <TextBlock Text="{Binding Start, StringFormat={}{0:HH:mm:ss}}"/>
+                <TextBlock Text="{Binding Distance, Converter={StaticResource DistanceToStringValueConverter}}"/>
+                <TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanToStringValueConverter}}"/>
+                <controls:EditableTextBlock Text="{Binding Speed, Mode=TwoWay, Converter={StaticResource SpeedToStringValueConverter}}" />
+              </StackPanel>
+            </Border>
+
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </ScrollViewer>
+
+    <Grid  ColumnDefinitions="Auto, *">
       <Button Grid.Column="0" Content="Apply" Command="{Binding HandleApplyClicked}"/>
       <ProgressBar Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
     </Grid>
-    
-    <ListBox Grid.Row="1" ItemsSource="{Binding Laps}">
-      <ListBox.ItemTemplate>
-        <DataTemplate>
 
-          <Grid ColumnDefinitions="Auto, 3*">
-            <Border Grid.Column="1" Background="Gray" CornerRadius="4" Padding="4">
-              <StackPanel Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center">
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0:HH:mm:ss} {1:0.##}mi ({2:hh}h {2:mm}min {2:ss}s)">
-                      <Binding Path="Start"/>
-                      <Binding Path="DistanceMiles"/>
-                      <Binding Path="Duration"/>
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
-                <NumericUpDown Value="{Binding Speed.Value}" AllowSpin="False" ShowButtonSpinner="False" />
-              </StackPanel>
-            </Border>
-          </Grid>
-
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
-  </Grid>
+  </StackPanel>
 </UserControl>

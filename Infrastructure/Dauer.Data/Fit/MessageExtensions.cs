@@ -1,5 +1,6 @@
 ﻿using Dauer.Model.Workouts;
 using Dynastream.Fit;
+using Units;
 
 namespace Dauer.Data.Fit
 {
@@ -7,17 +8,21 @@ namespace Dauer.Data.Fit
   {
     public static LapMesg Apply(this LapMesg lap, Speed speed)
     {
-      lap?.SetEnhancedAvgSpeed((float)speed.MetersPerSecond());
-      lap?.SetEnhancedMaxSpeed((float)speed.MetersPerSecond());
+      var metersPerSecond = (float)speed.Convert(Unit.MetersPerSecond).Value;
+
+      lap?.SetEnhancedAvgSpeed(metersPerSecond);
+      lap?.SetEnhancedMaxSpeed(metersPerSecond);
 
       return lap;
     }
 
     public static SessionMesg Apply(this SessionMesg session, Distance distance, Speed speed)
     {
+      var metersPerSecond = (float)speed.Convert(Unit.MetersPerSecond).Value;
+
       session?.SetTotalDistance((float)distance.Meters());
       session?.SetEnhancedAvgSpeed((float)(distance.Meters() / session.GetTotalTimerTime()));
-      session?.SetEnhancedMaxSpeed((float)speed.MetersPerSecond());
+      session?.SetEnhancedMaxSpeed(metersPerSecond);
 
       return session;
     }

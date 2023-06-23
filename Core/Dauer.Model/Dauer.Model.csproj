@@ -2,4 +2,8 @@
 
   <Import Project="$(SolutionDir)Common.props" />
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\units\Units\Units.csproj" />
+  </ItemGroup>
+
 </Project>
