@@ -19,7 +19,7 @@
 
   <Grid>
 
-    <oxy:PlotView Model="{Binding Plot}">
+    <oxy:PlotView x:Name="OxyPlotView" Model="{Binding Plot}" Controller="{Binding PlotController}" >
       <oxy:PlotView.DefaultTrackerTemplate>
         <ControlTemplate>
           <oxy:TrackerControl Position="{Binding TrackerPosition, Mode=TwoWay}" Background="Transparent" BorderBrush="Gray">

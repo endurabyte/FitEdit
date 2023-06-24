@@ -5,11 +5,13 @@ using OxyPlot.Annotations;
 using OxyPlot.Series;
 using OxyPlot.Axes;
 using ReactiveUI.Fody.Helpers;
+using Avalonia.Input;
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IPlotViewModel
 {
+  void HandleWheel(double delta);
 }
 
 public class DesignPlotViewModel : PlotViewModel
@@ -27,6 +29,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
   [Reactive] public ScreenPoint? TrackerPosition { get; set; }
   [Reactive] public PlotModel? Plot { get; set; }
+  [Reactive] public PlotController PlotController { get; set; } = new();
 
   private int selectedIndex_;
   public int SelectedIndex
@@ -102,9 +105,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       SubtitleFontSize = 0,
     };
 
-    var controller = new PlotController();
-
-
 #pragma warning disable CS0618 // Type or member is obsolete
     plot.TrackerChanged += HandleTrackerChanged;
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -177,5 +177,18 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     Plot?.PlotView.InvalidatePlot(updateData: false);
     Plot?.ResetAllAxes();
+  }
+
+  private double zoomScale_ = 50;
+
+  public void HandleWheel(double delta)
+  {
+    zoomScale_ += delta / 10;
+
+    // -1 => wheel down, 1 => wheel up
+    //double x = Plot?.Axes[0].Transform(2000) ?? 0;
+    Plot?.Axes[0].Zoom(zoomScale_, 0);
+
+    Plot?.PlotView.InvalidatePlot(updateData: false);
   }
 }
