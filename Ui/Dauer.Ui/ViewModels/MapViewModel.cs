@@ -33,8 +33,7 @@ public class DesignMapViewModel : MapViewModel
 #if !USE_MAPSUI
 public class MapViewModel : ViewModelBase, IMapViewModel
 {
-  [Reactive] public int SelectedIndex { get; set; }
-  public void Show(FitFile? fit) { }
+  [Reactive] public bool HasCoordinates { get; set; }
 }
 
 #else
@@ -114,7 +113,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
   private void HandleSelectedIndexChanged(int index) => ShowCoordinate(index);
 
-  public void ShowCoordinate(int index)
+  private void ShowCoordinate(int index)
   {
     if (lastFit_ == null) { return; }
 
@@ -125,7 +124,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  public void Show(FitFile fit)
+  private void Show(FitFile fit)
   {
     lastFit_ = fit;
 

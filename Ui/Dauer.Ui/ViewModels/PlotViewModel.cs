@@ -86,7 +86,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Plot?.PlotView?.ShowTracker(hit);
   }
 
-  public void Show(FitFile fit)
+  protected void Show(FitFile fit)
   {
     var plot = new PlotModel
     {

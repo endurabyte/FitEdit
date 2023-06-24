@@ -52,7 +52,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     });
   }
 
-  public void Show(FitFile fit)
+  private void Show(FitFile fit)
   {
     ClearLaps();
 
