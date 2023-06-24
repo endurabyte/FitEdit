@@ -94,9 +94,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       PlotAreaBorderColor = OxyColors.Transparent,
       DefaultColors = new List<OxyColor>()
       {
-        OxyColors.Red,
-        OxyColors.Purple,
-        OxyColor.Parse("#64b5cd00"),
+        FitColor.RedCrayon.MapOxyColor(),
+        FitColor.PurpleCrayon.MapOxyColor(),
+        FitColor.LimeCrayon.MapOxyColor(),
       },
       TitleFontSize = 0,
       SubtitleFontSize = 0,
@@ -149,7 +149,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       var ann = new LineAnnotation
       {
         Layer = AnnotationLayer.BelowAxes,
-        Color = OxyColors.Blue,
+        Color = FitColor.BlueCrayon.MapOxyColor(),
         StrokeThickness = 1,
         LineStyle = LineStyle.Dash,
         Type = LineAnnotationType.Vertical,
