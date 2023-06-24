@@ -25,7 +25,7 @@
   <StackPanel>
 
     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-      <ListBox ItemsSource="{Binding Laps}">
+      <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}">
 
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>

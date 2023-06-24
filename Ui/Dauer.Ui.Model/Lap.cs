@@ -11,5 +11,10 @@ public class Lap : ReactiveObject
   [Reactive] public Speed? Speed { get; set; }
   [Reactive] public Distance? Distance { get; set; }
 
+  /// <summary>
+  /// Index of first record for this lap.
+  /// </summary>
+  public int RecordIndex { get; set; }
+
   public TimeSpan Duration => End - Start;
 }

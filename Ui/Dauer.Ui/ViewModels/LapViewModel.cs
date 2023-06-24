@@ -30,6 +30,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 {
   [Reactive] public ObservableCollection<Lap> Laps { get; set; } = new();
   [Reactive] public double Progress { get; set; }
+  [Reactive] public int SelectedIndex { get; set; }
 
   private readonly Dictionary<int, Dauer.Model.Workouts.Speed> editedLaps_ = new();
 
@@ -43,6 +44,13 @@ public class LapViewModel : ViewModelBase, ILapViewModel
   )
   {
     fileService_ = fileService;
+
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      Lap lap = Laps[property.Value];
+
+      fileService_.SelectedIndex = lap.RecordIndex;
+    });
 
     fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
     {
@@ -68,6 +76,9 @@ public class LapViewModel : ViewModelBase, ILapViewModel
         End = lap.End().ToLocalTime(),
         Speed = new Dauer.Model.Workouts.Speed(lap.GetEnhancedAvgSpeed() ?? 0, Unit.MetersPerSecond).Convert(Unit.MilesPerHour),
         Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, Unit.Meter).Convert(Unit.Mile),
+
+        // Find first record of lap by timestamp
+        RecordIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.Start()),
       };
       Laps.Add(rl);
     }
