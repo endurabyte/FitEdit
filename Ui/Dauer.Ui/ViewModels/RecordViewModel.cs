@@ -44,6 +44,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       SelectedIndex = property.Value;
+
+      // Lazy-load more records.
+      if (SelectedIndex > Records.Count && fileService_.FitFile != null)
+      {
+        FillUpTo(fileService_.FitFile, SelectedIndex + 100);
+      }
     });
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
@@ -52,16 +58,28 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     });
   }
 
-  public void Show(FitFile fit)
+  private void Show(FitFile fit)
   {
     Records.Clear();
 
     if (!fit.Records.Any()) { return; }
 
-    int i = 0;
+    // Showing all records at once hangs the UI for a few seconds.
+    // Show only the first few. We'll lazy-load more as needed.
+    FillUpTo(fit, 100);
+  }
+
+  private void FillUpTo(FitFile fit, int endIdx)
+  { 
     DateTime start = fit.Records[0].Start();
-    foreach (var record in fit.Records)
+
+    int startIdx = Records.Count;
+    endIdx = Math.Min(endIdx, fit.Records.Count);
+
+    foreach (int i in Enumerable.Range(startIdx, endIdx - startIdx))
     {
+      var record = fit.Records[i];
+
       double elapsedSeconds = (record.Start() - start).TotalSeconds;
       double speed = record.GetEnhancedSpeed() ?? 0;
       double dist = record.GetDistance() ?? 0;
@@ -69,7 +87,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
       Records.Add(new Record
       {
-        Index = i++,
+        Index = i,
         MessageNum = record.Num,
         Name = record.Name,
         HR = $"{hr}",

@@ -46,6 +46,11 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     fileService_ = fileService;
 
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      fileService.SelectedIndex = SelectedIndex;
+    });
+
     fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
     {
       if (property.Value == null) { return; }

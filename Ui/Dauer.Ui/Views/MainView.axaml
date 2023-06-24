@@ -37,10 +37,10 @@
           <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
 
           <TabControl Grid.Row="4" TabStripPlacement="Left">
-            <TabItem Header="Laps">
+            <TabItem Header="Laps" FontSize="12">
               <views:LapView DataContext="{Binding Laps}"/>
             </TabItem>
-            <TabItem Header="Records">
+            <TabItem Header="Records" FontSize="12">
               <views:RecordView DataContext="{Binding Records}"/>
             </TabItem>
           </TabControl>
