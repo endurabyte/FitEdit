@@ -54,7 +54,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     auth_ = auth;
     log_ = log;
 
-    SyncFilesList();
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       _ = Task.Run(async () =>
