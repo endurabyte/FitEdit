@@ -47,7 +47,9 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
-      Lap lap = Laps[property.Value];
+      int index = property.Value;
+      if (index < 0 || index >= Laps.Count) { return; }
+      Lap lap = Laps[index];
 
       fileService_.SelectedIndex = lap.RecordIndex;
     });

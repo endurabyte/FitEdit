@@ -1,4 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Controls;
+using Avalonia.Platform.Interop;
+using Avalonia.Threading;
 using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -28,13 +31,9 @@ public class DesignFileViewModel : FileViewModel
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
-  private BlobFile? lastFile_ = null;
-
-  [Reactive] public double Progress { get; set; }
-  [Reactive] public ObservableCollection<BlobFile> Files { get; set; } = new();
   [Reactive] public int SelectedIndex { get; set; }
 
-  private readonly IFileService fileService_;
+  public IFileService FileService { get; }
   private readonly IDatabaseAdapter db_;
   private readonly IStorageAdapter storage_;
   private readonly IWebAuthenticator auth_;
@@ -48,33 +47,43 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     ILogViewModel log
   )
   {
-    fileService_ = fileService;
+    FileService = fileService;
     db_ = db;
     storage_ = storage;
     auth_ = auth;
     log_ = log;
 
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      _ = Task.Run(async () =>
-      {
-        int index = property.Value;
-        if (index < 0 || index >= Files.Count) { return; }
-
-        await LoadFile(Files[index]).AnyContext();
-      });
-    });
-
-    SyncFilesList();
+    InitFilesList();
   }
 
-  private void SyncFilesList()
+  private void InitFilesList()
   {
     _ = Task.Run(async () =>
     {
-      List<BlobFile> files = await db_.GetAllAsync();
-      Files.Clear();
-      Files.AddRange(files);
+      List<BlobFile> files = await db_.GetAllAsync().AnyContext();
+
+      var sfs = files.Select(file => new SelectedFile
+      {
+        FitFile = null, // Don't parse the blobs, that would be too slow
+        Blob = file,
+      }).ToList();
+
+      _ = Dispatcher.UIThread?.InvokeAsync(() => FileService.Files.AddRange(sfs));
+
+      foreach (var sf in sfs)
+      {
+        sf.SubscribeToIsLoaded(sf =>
+        {
+          if (sf.IsLoaded)
+          {
+            _ = Task.Run(async () => await LoadFile(sf).AnyContext());
+          }
+          else
+          {
+            UnloadFile(sf);
+          }
+        });
+      }
     });
   }
 
@@ -91,54 +100,63 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    _ = Task.Run(async () =>
+    SelectedFile sf = await Task.Run(async () =>
     {
       bool ok = await db_.InsertAsync(file).AnyContext();
 
       if (ok) { Log.Info($"Persisted file {file}"); }
       else { Log.Error($"Could not persist file {file}"); }
 
-      SyncFilesList();
-      await LoadFile(file).AnyContext();
+      return new SelectedFile { Blob = file };
     });
+
+    FileService.Files.Add(sf);
   }
 
   public async void HandleForgetFileClicked()
   {
     int index = SelectedIndex;
-    if (index < 0 || Files.Count == 0)
+    if (index < 0 || FileService.Files.Count == 0)
     {
       Log.Info("No file selected; cannot forget file");
       return;
     }
 
-    var file = Files[index];
+    var file = FileService.Files[index];
     if (file == null) { return; }
 
-    await db_.DeleteAsync(file).AnyContext();
-    SyncFilesList();
+    await db_.DeleteAsync(file.Blob);
+    FileService.Files.Remove(file);
+    InitFilesList();
 
-    SelectedIndex = Math.Min(index, Files.Count);
+    SelectedIndex = Math.Min(index, FileService.Files.Count);
   }
 
-  public async Task LoadFile(BlobFile? file)
+  private void UnloadFile(SelectedFile? sf)
   {
-    if (file == null)
+    if (sf == null) { return; }
+    sf.FitFile = null;
+  }
+
+  private async Task LoadFile(SelectedFile? sf)
+  {
+    if (sf == null || sf.Blob == null)
     {
       Log.Info("Could not load null file");
       return;
     }
 
-    if (ReferenceEquals(file, lastFile_))
+    if (sf.FitFile != null) 
     {
-      Log.Info($"File {file.Name} already loaded");
+      Log.Info($"File {sf.Blob.Name} is already loaded");
       return;
     }
+
+    BlobFile file = sf.Blob;
 
     try
     {
       Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
-      lastFile_ = file;
 
       // Handle FIT files
       string extension = Path.GetExtension(file.Name);
@@ -149,7 +167,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         return;
       }
 
-      using var ms = new MemoryStream(lastFile_.Bytes);
+      using var ms = new MemoryStream(file.Bytes);
       await log_.Log($"Reading FIT file {file.Name}");
 
       var reader = new Reader();
@@ -163,7 +181,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       // Instead of reading all FIT messages at once,
       // Read just a few FIT messages at a time so that other tasks can run on the main thread e.g. in WASM
-      Progress = 0;
+      sf.Progress = 0;
       while (await reader.ReadOneAsync(ms, decoder, 100))
       {
         if (ms.Position - resolution > lastPosition)
@@ -172,42 +190,51 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         }
 
         double progress = (double)ms.Position / ms.Length * 100;
-        Progress = progress;
+        sf.Progress = progress;
         await TaskUtil.MaybeYield();
         lastPosition = ms.Position;
       }
 
       fit.ForwardfillEvents();
-      Progress = 100;
-      await log_.Log($"Done reading FIT file");
 
+      _ = Dispatcher.UIThread?.InvokeAsync(() =>
+      {
+        sf.FitFile = fit;
+        FileService.FitFile = fit;
+      });
+
+      sf.Progress = 100;
+      await log_.Log($"Done reading FIT file");
       Log.Info(fit.Print(showRecords: false));
-      fileService_.FitFile = fit;
     }
     catch (Exception e)
     {
       Log.Error($"{e}");
+      return;
     }
   }
 
-  public async void HandleDownloadFileClicked()
+  public async void HandleDownloadFilesClicked()
   {
-    Log.Info("Download file clicked...");
+    Log.Info("Download files clicked...");
+    foreach (var file in FileService.Files)
+    {
+      await DownloadFile(file);
+    }
+  }
+
+  private async Task DownloadFile(SelectedFile file)
+  { 
+    if (file?.Blob == null) { return; }
 
     try
     {
-      if (lastFile_ == null)
-      {
-        await log_.Log("Cannot download file; none has been uploaded");
-        return;
-      }
-
       var ms = new MemoryStream();
-      new Writer().Write(fileService_.FitFile, ms);
+      new Writer().Write(file.FitFile, ms);
       byte[] bytes = ms.ToArray();
 
-      string name = Path.GetFileNameWithoutExtension(lastFile_.Name);
-      string extension = Path.GetExtension(lastFile_.Name);
+      string name = Path.GetFileNameWithoutExtension(file.Blob.Name);
+      string extension = Path.GetExtension(file.Blob.Name);
       // On macOS and iOS, the file save dialog must run on the main thread
       await storage_.SaveAsync(new BlobFile($"{name}_edit.{extension}", bytes));
     }

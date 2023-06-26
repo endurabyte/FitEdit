@@ -1,4 +1,5 @@
-﻿using Dauer.Data.Fit;
+﻿using System.Collections.ObjectModel;
+using Dauer.Data.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -8,6 +9,7 @@ public interface IFileService
 {
   FitFile? FitFile { get; set; }
   int SelectedIndex { get; set; }
+  ObservableCollection<SelectedFile> Files { get; set; }
 }
 
 /// <summary>
@@ -17,5 +19,6 @@ public class FileService : ReactiveObject, IFileService
 {
   [Reactive] public FitFile? FitFile { get; set; }
   [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public ObservableCollection<SelectedFile> Files { get; set; } = new();
 }
 

@@ -1,6 +1,11 @@
 ﻿using Dauer.Data.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System.Reactive.Linq;
+using DynamicData.Binding;
+using System.Reactive;
+using System.Collections.Specialized;
+using Mapsui;
 
 #if USE_MAPSUI
 using BruTile.Predefined;
@@ -44,6 +49,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
   private readonly GeometryFeature breadcrumbFeature_ = new();
 
+  /// <summary>
+  /// Key: File ID, Value: layer
+  /// </summary>
+  private readonly Dictionary<int, MemoryLayer> traces_ = new();
+
+  private readonly Dictionary<SelectedFile, IDisposable> addSubs_ = new();
+
   private ILayer BreadcrumbLayer_ => new MemoryLayer
   {
     Name = "Breadcrumb",
@@ -75,16 +87,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   {
     fileService_ = fileService;
 
-    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
-    {
-      if (property.Value == null) { return; }
-      Show(property.Value);
-    });
-
-    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      SelectedIndex = property.Value;
-    });
+    fileService.SubscribeAdds(HandleFileAdded);
+    fileService.SubscribeRemoves(HandleFileRemoved);
 
     this.ObservableForProperty(x => x.Map).Subscribe(e =>
     {
@@ -111,6 +115,55 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
   }
 
+  private void HandleFileAdded(SelectedFile? sf)
+  {
+    if (sf == null) { return; }
+
+    // Added
+    sf.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => SelectedIndex = property.Value);
+
+    // Loaded/Unloaded
+    if (addSubs_.ContainsKey(sf)) { return; }
+
+    addSubs_[sf] = sf.SubscribeToFitFile(HandleFitFileChanged);
+    HandleFitFileChanged(sf);
+  }
+
+  private void HandleFitFileChanged(SelectedFile sf)
+  {
+    if (sf.Blob == null) { return; }
+
+    // Handle file loaded
+    if (sf.FitFile != null)
+    {
+      Show(sf.Blob.Id, sf.FitFile);
+    }
+    else
+    {
+      // Handle file unloaded
+      if (!traces_.TryGetValue(sf.Blob.Id, out MemoryLayer? trace))
+      {
+        return;
+      }
+
+      traces_.Remove(sf.Blob.Id);
+      Map!.Map.Layers.Remove(trace);
+    }
+
+    HasCoordinates = GetHasCoordinates();
+    UpdateExtent();
+  }
+
+  private void HandleFileRemoved(SelectedFile? sf)
+  {
+    if (sf == null) { return; }
+    if (addSubs_.TryGetValue(sf, out IDisposable? sub))
+    {
+      sub.Dispose();
+    }
+    addSubs_.Remove(sf);
+  }
+
   private void HandleSelectedIndexChanged(int index) => ShowCoordinate(index);
 
   private void ShowCoordinate(int index)
@@ -124,8 +177,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private void Show(FitFile fit)
+  private void Show(int id, FitFile fit)
   {
+    if (Map?.Map == null) { return; }
+
     lastFit_ = fit;
 
     Coordinate[] coords = fit.Records
@@ -133,8 +188,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
-    HasCoordinates = coords.Any();
-    if (!HasCoordinates)
+    if (!coords.Any())
     {
       return;
     }
@@ -149,11 +203,29 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       }
     };
 
-    if (Map?.Map == null) { return; }
-
+    traces_[id] = trace;
     Map.Map.Layers.Insert(1, trace); // Above tile layer, below breadcrumb layer
-    Map.Map.Home = n => n.CenterOnAndZoomTo(trace.Extent!.Centroid, 10, 2000);
+  }
+
+  private void UpdateExtent()
+  {
+    if (!traces_.Any()) { return; }
+    if (Map == null) { return; }
+
+    MRect extent = traces_.Values.First().Extent!;
+    foreach (var t in traces_.Values)
+    {
+      extent = extent.Join(t.Extent);
+    }
+
+    Map.Map.Home = n => n.CenterOnAndZoomTo(extent.Centroid, 10, 2000);
     Map.Map.Home.Invoke(Map.Map!.Navigator);
   }
+
+  private bool GetHasCoordinates() => traces_.Values.Any(trace =>
+    trace.Features.Any(feat =>
+      feat is GeometryFeature geom && geom.Geometry is LineString ls && !ls.IsEmpty
+    ));
 }
+
 #endif

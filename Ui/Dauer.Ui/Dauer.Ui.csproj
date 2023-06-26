@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.0-rc1.1" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
     <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
@@ -47,5 +48,10 @@
   <ItemGroup Condition="$(UseMapsui) == true">
     <Compile Remove="Views\FakeMapView.axaml.cs" />
     <AvaloniaXaml Remove="Views\FakeMapView.axaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Controls\PieProgressIndicator.axaml.cs">
+      <DependentUpon>PieProgressIndicator.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@
   
   <Application.Styles>
     <FluentTheme DensityStyle="Normal" />
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
     <oxythemes:Default />
   </Application.Styles>
 </Application>
