@@ -10,7 +10,7 @@ public static class FitColor
   public static Color LicoriceBlack { get; set; }
   public static Color LeadBlack { get; set; }
   public static Color LeadBlack2 { get; set; }
-  public static Color MercuryGray { get; set; }
+  public static Color MercuryGrey { get; set; }
   public static Color SnowWhite { get; set; }
 
   public static Color TealCrayon { get; set; }

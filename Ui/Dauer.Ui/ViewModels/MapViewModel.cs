@@ -50,8 +50,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     Features = new[] { breadcrumbFeature_ },
     Style = new VectorStyle
     {
-      Fill = new Brush(Palette.FitSkyBlue.Map()),
-      Outline = new Pen(Palette.FitLeadBlack2.Map(), 4),
+      Fill = new Brush(FitColor.LeadBlack2.Map()),
+      Outline = new Pen(FitColor.SkyBlue.Map(), 4),
     }
   };
 
@@ -145,7 +145,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       Name = "GPS Trace",
       Style = new VectorStyle
       {
-        Line = new(Palette.FitLimeCrayon.Map(), 4)
+        Line = new(FitColor.LimeCrayon.Map(), 4)
       }
     };
 

@@ -10,15 +10,28 @@ public static class StyleExtensions
   {
     var style = (IStyle)AvaloniaXamlLoader.Load(new Uri("avares://Dauer.Ui/Styles.axaml"), baseUri: null);
 
-    FitColor.RedCrayon = style.GetColor("FitRedCrayon");
+    FitColor.OceanBlue = style.GetColor("FitOceanBlue");
+    FitColor.SkyBlue = style.GetColor("FitSkyBlue");
+    FitColor.LicoriceBlack = style.GetColor("FitLicoriceBlack");
+    FitColor.LeadBlack2 = style.GetColor("FitLeadBlack2");
+    FitColor.LeadBlack = style.GetColor("FitLeadBlack");
+    FitColor.MercuryGrey = style.GetColor("FitMercuryGrey");
+    FitColor.SnowWhite = style.GetColor("FitSnowWhite");
+
+    FitColor.TealCrayon = style.GetColor("FitTealCrayon");
     FitColor.BlueCrayon = style.GetColor("FitBlueCrayon");
-    FitColor.PinkCrayon = style.GetColor("FitPinkCrayon");
-    FitColor.LimeCrayon = style.GetColor("FitLimeCrayon");
     FitColor.PurpleCrayon = style.GetColor("FitPurpleCrayon");
+    FitColor.OrangeCrayon = style.GetColor("FitOrangeCrayon");
+    FitColor.PinkCrayon = style.GetColor("FitPinkCrayon");
+    FitColor.RedCrayon = style.GetColor("FitRedCrayon");
+    FitColor.GreenCrayon = style.GetColor("FitGreenCrayon");
+    FitColor.LimeCrayon = style.GetColor("FitLimeCrayon");
+    FitColor.TanCrayon = style.GetColor("FitTanCrayon");
+    FitColor.PeachCrayon = style.GetColor("FitPeachCrayon");
   }
 
   public static Color GetColor(this IStyle style, string key) =>
     style.TryGetResource(key, null, out object? colorResource) && colorResource is Color c
       ? c
-      : Colors.Gray;
+      : throw new ArgumentException($"Could not find style {key}");
 }
