@@ -139,6 +139,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private void UnloadFile(SelectedFile? sf)
   {
     if (sf == null) { return; }
+    sf.Progress = 0;
     sf.FitFile = null;
   }
 

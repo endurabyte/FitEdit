@@ -14,9 +14,26 @@
 
   <UserControl.Styles>
     <StyleInclude Source="../Styles.axaml"/>
+   
+    <!--Horizontal Separator style-->
+    <Style Selector="Separator">
+      <Setter Property="Height" Value="NaN"/>
+      <Setter Property="Margin" Value="8,0"/>
+      <Setter Property="MinHeight" Value="0"/>
+      <Setter Property="MinWidth" Value="1"/>
+      <Setter Property="Width" Value="1"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}" BorderThickness="0">
+            <Rectangle Width="1" Fill="{TemplateBinding BorderBrush}"
+                       HorizontalAlignment="Center" VerticalAlignment="Stretch"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto, *" >
+  <Grid RowDefinitions="Auto, Auto">
     
     <StackPanel Grid.Row="0" Orientation="Vertical" >
       <Button Command="{Binding HandleSelectFileClicked}" Content="Select file"/>
@@ -25,25 +42,20 @@
       <Button Command="{Binding HandleForgetFileClicked}" Content="Forget file"/>
     </StackPanel>
 
-    <DataGrid Grid.Row="1" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}" >
-      <DataGrid.Columns>
-        <DataGridTemplateColumn Header="Loaded">
-          <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
+    <ScrollViewer Grid.Row="1">
+      <ListBox ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <StackPanel Orientation="Horizontal">
               <CheckBox IsChecked="{Binding IsLoaded}"/>
-            </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-        <DataGridTextColumn Header="File Name" Binding="{Binding Blob.Name}" />
-        <DataGridTemplateColumn Header="Progress">
-          <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-              <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" />
-            </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-      </DataGrid.Columns>
-    </DataGrid>
+              <controls:PieProgressIndicator Maximum="100" VerticalAlignment="Center" Value="{Binding Progress}" />
+              <Separator/>
+              <TextBlock VerticalAlignment="Center" Text="{Binding Blob.Name}"/>
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </ScrollViewer>
   </Grid>
 
 </UserControl>
