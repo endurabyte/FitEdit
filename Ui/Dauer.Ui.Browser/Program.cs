@@ -56,7 +56,7 @@ internal partial class Program
     CompositionRoot.ServiceLocator.Register<IWindowAdapter>(new WebWindowAdapter());
     CompositionRoot.ServiceLocator.Register<IStorageAdapter>(new WebStorageAdapter());
 
-    CompositionRoot.ServiceLocator.Register<IDatabaseAdapter>(new IdbfsSqliteAdapter($"{dir}{Path.PathSeparator}{db}"));
+    CompositionRoot.ServiceLocator.Register<IDatabaseAdapter>(new IdbfsSqliteAdapter($"{dir}{Path.DirectorySeparatorChar}{db}"));
 
     await BuildAvaloniaApp()
       .UseReactiveUI()
@@ -73,7 +73,7 @@ internal partial class Program
       BaseAddress = new Uri(origin)
     };
 
-    string dest = $"{dir}{Path.PathSeparator}{db}";
+    string dest = $"{dir}{Path.DirectorySeparatorChar}{db}";
 
     if (File.Exists(dest))
     {
