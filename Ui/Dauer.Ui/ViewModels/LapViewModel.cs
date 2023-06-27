@@ -122,10 +122,12 @@ public class LapViewModel : ViewModelBase, ILapViewModel
   {
     var sub = speed.WhenPropertyChanged(x => x.Value).Subscribe(property =>
     {
+      var metric = speed.Convert(Unit.MetersPerSecond);
+
       // Ignore small changes
       double originalSpeed = uneditedFitFile_?.Laps[i].GetEnhancedAvgSpeed() ?? 0;
 
-      if (Math.Abs(originalSpeed - property.Value) < 1e-5)
+      if (Math.Abs(originalSpeed - metric.Value) < 1e-5)
       {
         return;
       }

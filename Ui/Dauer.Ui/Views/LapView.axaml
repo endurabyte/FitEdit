@@ -6,6 +6,7 @@
              xmlns:controls="clr-namespace:Dauer.Ui.Controls"
              xmlns:converters="using:Dauer.Ui.Converters"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Dauer.Ui.Views.LapView"
              x:DataType="vm:LapViewModel">
@@ -15,7 +16,9 @@
       <converters:SpeedToStringValueConverter x:Key="SpeedToStringValueConverter"/>
       <converters:TimeSpanToStringValueConverter x:Key="TimeSpanToStringValueConverter"/>
       <converters:DistanceToStringValueConverter x:Key="DistanceToStringValueConverter"/>
-    </ResourceDictionary> 
+    </ResourceDictionary>
+    <sys:Boolean x:Key="TrueBool">true</sys:Boolean>
+    <sys:Boolean x:Key="FalseBool">false</sys:Boolean>
   </UserControl.Resources>
   
   <Design.DataContext>
@@ -41,7 +44,10 @@
                 <TextBlock Text="{Binding Start, StringFormat={}{0:HH:mm:ss}}"/>
                 <TextBlock Text="{Binding Distance, Converter={StaticResource DistanceToStringValueConverter}}"/>
                 <TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanToStringValueConverter}}"/>
-                <controls:EditableTextBlock Text="{Binding Speed, Mode=TwoWay, Converter={StaticResource SpeedToStringValueConverter}}" />
+                <controls:EditableTextBlock DisplayText="{Binding Speed, Mode=OneWay, Converter={StaticResource SpeedToStringValueConverter}, 
+                                                                                      ConverterParameter={StaticResource FalseBool}}" 
+                                            Text="{Binding Speed, Mode=TwoWay, Converter={StaticResource SpeedToStringValueConverter},
+                                                                               ConverterParameter={StaticResource TrueBool}}" />
               </StackPanel>
             </Border>
 
