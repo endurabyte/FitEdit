@@ -72,17 +72,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       foreach (var sf in sfs)
       {
-        sf.SubscribeToIsLoaded(sf =>
-        {
-          if (sf.IsLoaded)
-          {
-            _ = Task.Run(async () => await LoadFile(sf).AnyContext());
-          }
-          else
-          {
-            UnloadFile(sf);
-          }
-        });
+        sf.SubscribeToIsLoaded(LoadOrUnload);
       }
     });
   }
@@ -107,7 +97,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       if (ok) { Log.Info($"Persisted file {file}"); }
       else { Log.Error($"Could not persist file {file}"); }
 
-      return new SelectedFile { Blob = file };
+      var sf = new SelectedFile { Blob = file };
+      sf.SubscribeToIsLoaded(LoadOrUnload);
+      return sf;
     });
 
     FileService.Files.Add(sf);
@@ -130,6 +122,18 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     InitFilesList();
 
     SelectedIndex = Math.Min(index, FileService.Files.Count);
+  }
+
+  private void LoadOrUnload(SelectedFile sf)
+  {
+    if (sf.IsLoaded)
+    {
+      _ = Task.Run(async () => await LoadFile(sf).AnyContext());
+    }
+    else
+    {
+      UnloadFile(sf);
+    }
   }
 
   private void UnloadFile(SelectedFile? sf)
