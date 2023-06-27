@@ -12,7 +12,7 @@ public class DistanceToStringValueConverter : IValueConverter
     if (value is not Distance d) { return $"{value}"; }
 
     bool isMetric = d.Unit.IsMetric();
-    bool isSmall = d.Value < 1;
+    bool isSmall = d.Value < 0.99;
     bool isLarge = d.Value > 1000;
 
     return d.Unit switch
