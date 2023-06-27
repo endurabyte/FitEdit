@@ -8,6 +8,13 @@ namespace Dauer.Model.Workouts
     public Unit Unit { get; set; }
 
     public Distance() { }
+
+    public Distance(Distance other)
+    {
+      Value =other.Value;
+      Unit = other.Unit;
+    }
+
     public Distance(double value, Unit unit)
     {
       Value = value;

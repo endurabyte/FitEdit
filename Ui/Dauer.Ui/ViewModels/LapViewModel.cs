@@ -7,6 +7,7 @@ using Dauer.Model;
 using DynamicData.Binding;
 using Dauer.Ui.Extensions;
 using Units;
+using Dauer.Services;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -35,7 +36,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
   private readonly Dictionary<int, Dauer.Model.Workouts.Speed> editedLaps_ = new();
 
   private readonly List<IDisposable> subscriptions_ = new();
-  private FitFile? uneditedFitFile_;
+  private List<Lap>? uneditedLaps_;
 
   private readonly IFileService fileService_;
 
@@ -57,7 +58,6 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
     {
       if (property.Value == null) { return; }
-      uneditedFitFile_ = new FitFile(property.Value).ForwardfillEvents();
       Show(property.Value);
     });
   }
@@ -84,6 +84,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
       };
       Laps.Add(rl);
     }
+    uneditedLaps_ = Laps.Select(l => new Lap(l)).ToList();
 
     SubscribeToLapChanges(Laps);
   }
@@ -125,7 +126,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
       var metric = speed.Convert(Unit.MetersPerSecond);
 
       // Ignore small changes
-      double originalSpeed = uneditedFitFile_?.Laps[i].GetEnhancedAvgSpeed() ?? 0;
+      double originalSpeed = uneditedLaps_?[i].Speed?.Convert(Unit.MetersPerSecond)?.Value ?? 0;
 
       if (Math.Abs(originalSpeed - metric.Value) < 1e-5)
       {
@@ -142,9 +143,9 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
   public void ApplyLapSpeeds(Dictionary<int, Dauer.Model.Workouts.Speed> speeds)
   {
-    if (uneditedFitFile_ == null) { return; }
+    if (uneditedLaps_ == null) { return; }
 
-    FitFile? fit = uneditedFitFile_;
+    FitFile? fit = fileService_.FitFile;
 
     if (fit == null)
     {
@@ -175,6 +176,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Backfilling: 100%");
 
+    fileService_.FitFile = null; // trigger property change
     fileService_.FitFile = fit;
   }
 }

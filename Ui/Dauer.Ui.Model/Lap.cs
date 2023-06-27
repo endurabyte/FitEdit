@@ -17,4 +17,15 @@ public class Lap : ReactiveObject
   public int RecordIndex { get; set; }
 
   public TimeSpan Duration => End - Start;
+
+  public Lap() { }
+
+  public Lap(Lap other)
+  {
+    Start = other.Start;
+    End = other.End;
+    Speed = new Speed(other.Speed);
+    Distance = new Distance(other.Distance);
+    RecordIndex = other.RecordIndex;
+  }
 }

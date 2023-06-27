@@ -12,6 +12,12 @@ namespace Dauer.Model.Workouts
 
     public Speed() { }
 
+    public Speed(Speed other)
+    {
+      Value = other.Value;
+      Unit = other.Unit;
+    }
+
     public Speed(double value, Unit unit)
     {
       Value = value;

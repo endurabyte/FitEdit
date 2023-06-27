@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Dauer.Model.Extensions;
 using Dauer.Model.Workouts;
 using Dynastream.Fit;
 using Units;
@@ -21,8 +20,9 @@ namespace Dauer.Data.Fit
     {
       f.Sessions = f.Get<SessionMesg>();
       f.Laps = f.Get<LapMesg>();
+      f.Records = f.Get<RecordMesg>();
       // Expensive; 2000 records take ~0.3s in WASM
-      f.Records = f.Get<RecordMesg>().Sorted(MessageExtensions.Sort);
+      //f.Records = f.Get<RecordMesg>().Sorted(MessageExtensions.Sort);
 
       return f;
     }

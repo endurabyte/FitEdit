@@ -24,6 +24,10 @@ namespace Dauer.Data.Fit
         _ when x is MesgDefinitionEventArgs mea => new MesgDefinitionEventArgs(mea.mesgDef),
         _ => null,
       }).Where(x => x is not null).ToList();
+
+      Sessions = other.Sessions.Select(x => new SessionMesg(x)).ToList();
+      Laps = other.Laps.Select(x => new LapMesg(x)).ToList();
+      Records = other.Records.Select(x => new RecordMesg(x)).ToList();
     }
   }
 }
