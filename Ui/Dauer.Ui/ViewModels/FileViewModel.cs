@@ -68,7 +68,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         Blob = file,
       }).ToList();
 
-      _ = Dispatcher.UIThread?.InvokeAsync(() => FileService.Files.AddRange(sfs));
+      await Dispatcher.UIThread.InvokeAsync(() => FileService.Files.AddRange(sfs));
 
       foreach (var sf in sfs)
       {

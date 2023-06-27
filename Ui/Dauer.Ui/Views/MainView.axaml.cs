@@ -22,9 +22,9 @@ public partial class MainView : UserControl
     }
 
     // Show the map if it has coordinates, else hide it.
-    vm.Map.ObservableForProperty(x => x.HasCoordinates).Subscribe(x =>
+    vm.Map.ObservableForProperty(x => x.HasCoordinates).Subscribe(async x =>
     {
-      _ = Dispatcher.UIThread?.InvokeAsync(() =>
+      await Dispatcher.UIThread.InvokeAsync(() =>
       {
         var value = x.Value ? GridLength.Star : new GridLength(0);
         ChartGrid.RowDefinitions[2].Height = value;
