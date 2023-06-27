@@ -20,6 +20,11 @@ namespace Dauer.Model.Workouts
 
     public Speed(string s)
     {
+      if (string.IsNullOrEmpty(s))
+      {
+        return;
+      }
+
       if (s.Contains(':'))
       {
         var time = new ParsedTime(s);
@@ -47,10 +52,13 @@ namespace Dauer.Model.Workouts
 
     public override int GetHashCode() => HashCode.Combine(Value, Unit);
 
-    public override string ToString() => Unit switch
+    public override string ToString() => ToString(fullPrecision: false);
+
+    public string ToString(bool fullPrecision) => Unit switch
     {
       Unit.MinutesPerMile => $"{MinuteString(Value)}{Unit.MapString()}",
       Unit.MinutesPerKilometer => $"{MinuteString(Value)}{Unit.MapString()}",
+      _ when fullPrecision => $"{Value}{Unit.MapString()}",
       _ => $"{Value:0.##}{Unit.MapString()}",
     };
 
