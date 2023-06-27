@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Browser;
 using Avalonia.Logging;
 using Avalonia.ReactiveUI;
+using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Model.Factories;
@@ -74,7 +75,12 @@ internal partial class Program
 
     string dest = $"{dir}{Path.PathSeparator}{db}";
 
-    if (!File.Exists(dest))
+    if (File.Exists(dest))
+    {
+      return;
+    }
+
+    try
     {
       Task<byte[]> task1 = client.GetByteArrayAsync(db);
       Task<byte[]> task2 = client.GetByteArrayAsync($"{db}-shm");
@@ -91,6 +97,10 @@ internal partial class Program
       Task task6 = File.WriteAllBytesAsync($"{dest}-wal", wal);
 
       await Task.WhenAll(task4, task5, task6);
+    }
+    catch (Exception e)
+    {
+      Log.Error(e);
     }
   }
 
