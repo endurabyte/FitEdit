@@ -197,7 +197,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       fit.ForwardfillEvents();
 
-      _ = Dispatcher.UIThread?.InvokeAsync(() =>
+      // Do on the main thread because there are subscribers which update the UI
+      await Dispatcher.UIThread.InvokeAsync(() =>
       {
         sf.FitFile = fit;
         FileService.FitFile = fit;
