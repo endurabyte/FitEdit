@@ -11,12 +11,12 @@ public class SqliteAdapter : IDatabaseAdapter
   private readonly string dbPath_;
   private readonly SQLiteOpenFlags flags_ = SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex;
 
-  private readonly AsyncLazy<SQLiteAsyncConnection> db_;
+  private SQLiteAsyncConnection db_;
 
   public SqliteAdapter(string dbPath)
   {
     dbPath_ = dbPath;
-    db_ = new(async () => await GetConnection().AnyContext());
+    _ = Task.Run(async () => db_ = await GetConnection().AnyContext());
   }
 
   private async Task<SQLiteAsyncConnection> GetConnection()
@@ -40,13 +40,13 @@ public class SqliteAdapter : IDatabaseAdapter
     }
   }
 
-  public virtual async Task<bool> InsertAsync(Model.BlobFile t) => 1 == await db_.Value.InsertAsync(t.Map()).AnyContext();
-  public async Task UpdateAsync(Model.BlobFile t) => await db_.Value.UpdateAsync(t.Map()).AnyContext();
-  public async Task DeleteAsync(Model.BlobFile t) => await db_.Value.DeleteAsync(t.Map()).AnyContext();
+  public virtual async Task<bool> InsertAsync(Model.BlobFile t) => 1 == await db_?.InsertAsync(t.Map()).AnyContext();
+  public async Task UpdateAsync(Model.BlobFile t) => await db_?.UpdateAsync(t.Map()).AnyContext();
+  public async Task DeleteAsync(Model.BlobFile t) => await db_?.DeleteAsync(t.Map()).AnyContext();
   public async Task<List<Model.BlobFile>> GetAllAsync()
   {
     Log.Info($"{nameof(SqliteAdapter)}.{nameof(GetAllAsync)}()");
-    List<SqliteFile> files = await db_.Value.Table<SqliteFile>().ToListAsync().AnyContext();
-    return files.Select(SqliteFileMapper.Map).ToList();
+    List<SqliteFile> files = await db_?.Table<SqliteFile>().ToListAsync().AnyContext();
+    return files?.Select(SqliteFileMapper.Map).ToList();
   }
 }
