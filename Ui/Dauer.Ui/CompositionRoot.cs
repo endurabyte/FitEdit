@@ -59,8 +59,9 @@ public class CompositionRoot
     var storage = ServiceLocator.Get<IStorageAdapter>() ?? Storage_;
 
     string dbPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.Personal),
-        "fitedit.sqlite3");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "fitedit", "fitedit.sqlite3");
+
+    Directory.CreateDirectory(Directory.GetParent(dbPath)!.FullName);
 
     IDatabaseAdapter db = OperatingSystem.IsBrowser() switch 
     {
