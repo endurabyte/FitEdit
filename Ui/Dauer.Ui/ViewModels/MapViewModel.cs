@@ -121,7 +121,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     }
 
     if (SelectionCount < 0) { return; }
-    if (SelectedIndex + SelectedIndex >= fileService_.MainFile!.FitFile!.Records.Count) { return; }
+    if (SelectedIndex + SelectionCount >= fileService_.MainFile!.FitFile!.Records.Count) { return; }
 
     Show(magic, fileService_.MainFile!.FitFile!, "Selection", FitColor.RedCrayon, SelectedIndex, SelectionCount);
   }

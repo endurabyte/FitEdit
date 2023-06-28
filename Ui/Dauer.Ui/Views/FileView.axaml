@@ -47,7 +47,7 @@
         <ListBox.ItemTemplate>
           <DataTemplate>
             <StackPanel Orientation="Horizontal">
-              <CheckBox IsChecked="{Binding IsLoaded}"/>
+              <CheckBox IsChecked="{Binding IsVisible}"/>
               <controls:PieProgressIndicator Maximum="100" VerticalAlignment="Center" Value="{Binding Progress}" />
               <Separator/>
               <TextBlock VerticalAlignment="Center" Text="{Binding Blob.Name}"/>

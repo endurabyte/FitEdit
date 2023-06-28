@@ -132,7 +132,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private void LoadOrUnload(SelectedFile sf)
   {
-    if (sf.IsLoaded)
+    if (sf.IsVisible)
     {
       _ = Task.Run(async () => await LoadFile(sf).AnyContext());
     }
@@ -145,8 +145,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private void UnloadFile(SelectedFile? sf)
   {
     if (sf == null) { return; }
+    FileService.MainFile = null;
     sf.Progress = 0;
-    sf.FitFile = null;
   }
 
   private async Task LoadFile(SelectedFile? sf)
@@ -160,6 +160,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (sf.FitFile != null) 
     {
       Log.Info($"File {sf.Blob.Name} is already loaded");
+      sf.Progress = 100;
       return;
     }
 

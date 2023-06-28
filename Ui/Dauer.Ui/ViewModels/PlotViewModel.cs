@@ -18,7 +18,8 @@ public class DesignPlotViewModel : PlotViewModel
 {
   public DesignPlotViewModel() : base (new FileService())
   {
-    Show(new FitFileFactory().CreateFake());
+    var file = new SelectedFile { FitFile = new FitFileFactory().CreateFake() };
+    Show(file);
   }
 }
 
@@ -32,6 +33,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       MinimumY = -1,
       MaximumY = 10000
     };
+
+  private readonly Dictionary<SelectedFile, List<PlotElement>> plots_ = new();
+  private readonly Dictionary<SelectedFile, IDisposable> isVisibleSubs_ = new();
 
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
   private TrackerHitResult? lastTracker_;
@@ -61,12 +65,30 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     fileService_ = fileService;
 
+    CreatePlot();
+
+    fileService.SubscribeAdds(file =>
+    {
+      // If we already have this file, remove it before adding it again
+      if (isVisibleSubs_.TryGetValue(file, out var sub))
+      {
+        Remove(file);
+      }
+      Show(file);
+
+      isVisibleSubs_[file] = file.ObservableForProperty(x => x.IsVisible).Subscribe(property =>
+      {
+        if (property.Value) { Show(property.Sender); }
+        else { Remove(property.Sender); }
+      });
+    });
+
+    fileService.SubscribeRemoves(Remove);
+
     fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
     {
-      SelectedFile? file = fileService.MainFile;
+      SelectedFile? file = property.Value;
       if (file == null) { return; }
-      if (file.FitFile == null) { return; }
-      Show(file.FitFile);
 
       selectedIndexSub_?.Dispose();
       selectedCountSub_?.Dispose();
@@ -77,7 +99,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
-      if (fileService_?.MainFile ==null ) { return; }
+      if (fileService_?.MainFile == null ) { return; }
       fileService_.MainFile.SelectedIndex = property.Value;
     });
   }
@@ -110,7 +132,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
   private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
 
-  protected void Show(FitFile fit)
+  private void CreatePlot()
   {
     var plot = new PlotModel
     {
@@ -126,9 +148,50 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       SubtitleFontSize = 0,
     };
 
+    // Axes are created automatically if they are not defined
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "HR", IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "Cadence", IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Right, Key = "Speed", IsAxisVisible = false });
+
+    plot.Annotations.Add(selection_);
+
 #pragma warning disable CS0618 // Type or member is obsolete
     plot.TrackerChanged += HandleTrackerChanged;
 #pragma warning restore CS0618 // Type or member is obsolete
+
+    Plot = plot;
+  }
+
+  private void Remove(SelectedFile file)
+  {
+    if (Plot == null) { return; }
+
+    if (plots_.TryGetValue(file, out List<PlotElement>? elems)) 
+    {
+      foreach (var elem in elems)
+      {
+        if (elem is Annotation ann) { Plot.Annotations.Remove(ann); }
+        if (elem is Series series) { Plot.Series.Remove(series); }
+      }
+
+      plots_.Remove(file);
+    }
+
+    if (isVisibleSubs_.TryGetValue(file, out IDisposable? sub)) 
+    {
+      isVisibleSubs_.Remove(file);
+      sub.Dispose();
+    }
+
+    Redraw(true);
+  }
+
+  protected void Show(SelectedFile file)
+  {
+    if (Plot == null) { return; }
+    if (file.FitFile == null) { return; }
+    FitFile fit = file.FitFile;
 
     // Plot heart rate and speed data points
     string str = "{0}\n{1:0.0}: {2:0.0}\n{3:0.0}: {4:0.0}";
@@ -151,15 +214,16 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       speedSeries.Points.Add(new(elapsedSeconds, speed));
     }
 
-    plot.Series.Add(hrSeries);
-    plot.Series.Add(cadenceSeries);
-    plot.Series.Add(speedSeries);
+    Plot.Series.Add(hrSeries);
+    Plot.Series.Add(cadenceSeries);
+    Plot.Series.Add(speedSeries);
 
-    // Axes are created automatically if they are not defined
-    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, IsAxisVisible = false });
-    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "HR", IsAxisVisible = false });
-    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "Cadence", IsAxisVisible = false });
-    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Right, Key = "Speed", IsAxisVisible = false });
+    plots_[file] = new List<PlotElement>
+    {
+      hrSeries,
+      cadenceSeries,
+      speedSeries,
+    };
 
     // Render a vertical line at the end of each lap
     foreach (int i in Enumerable.Range(0, fit.Laps.Count))
@@ -179,12 +243,17 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
         TextLinePosition = 0.1,
       };
 
-      plot.Annotations.Add(ann);
+      Plot.Annotations.Add(ann);
+      plots_[file].Add(ann);
     }
 
-    plot.Annotations.Remove(selection_);
-    plot.Annotations.Add(selection_);
-    Plot = plot;
+    Redraw(true);
+  }
+
+  private void Redraw(bool updateData = false)
+  {
+    if (Plot == null) { return; }
+    Plot.PlotView.InvalidatePlot(updateData);
   }
 
   private void HandleTrackerChanged(object? sender, TrackerEventArgs e)
@@ -198,7 +267,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
   public void HandleResetPlotClicked()
   {
-    Plot?.PlotView.InvalidatePlot(updateData: false);
+    Redraw();
     Plot?.ResetAllAxes();
   }
 
@@ -210,14 +279,14 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     //double x = Plot?.Axes[0].Transform(2000) ?? 0;
     Plot?.Axes[0].Zoom(zoomScale_, 0);
 
-    Plot?.PlotView.InvalidatePlot(updateData: false);
+    Redraw();
   }
 
   public void SelectCoordinates(double minX, double maxX)
   {
     selection_.MinimumX = minX;
     selection_.MaximumX = maxX;
-    Plot?.PlotView.InvalidatePlot(updateData: false);
+    Redraw();
   }
 
   public void SelectIndices(int minX, int maxX)
@@ -231,7 +300,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     }
 
     selection_.MinimumX = HrSeries_.Points[minX].X; 
-    selection_.MaximumX = HrSeries_.Points[maxX].X; 
-    Plot?.PlotView.InvalidatePlot(updateData: false);
+    selection_.MaximumX = HrSeries_.Points[maxX].X;
+
+    Redraw();
   }
 }
