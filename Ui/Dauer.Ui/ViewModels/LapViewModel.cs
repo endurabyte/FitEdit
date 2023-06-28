@@ -7,7 +7,6 @@ using Dauer.Model;
 using DynamicData.Binding;
 using Dauer.Ui.Extensions;
 using Units;
-using Dauer.Services;
 
 namespace Dauer.Ui.ViewModels;
 

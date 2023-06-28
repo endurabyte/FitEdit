@@ -7,6 +7,7 @@ using System.Reactive;
 using System.Collections.Specialized;
 using Mapsui;
 using NetTopologySuite.Noding;
+using Mapsui.Limiting;
 
 #if USE_MAPSUI
 using BruTile.Predefined;
@@ -110,7 +111,24 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       // OpenStreetMap
       //var layer = OpenStreetMap.CreateTileLayer("fitedit");
 
-      Map?.Map?.Layers.Add(layer); // layer 0
+      double extent = 20037508; // Mercator projection world extent
+      var canvas = new MemoryLayer 
+      {
+        Name = "Canvas",
+        Features = new[] { new GeometryFeature { Geometry = new Polygon(new LinearRing(new[]
+        {
+            new Coordinate(-extent, -extent),
+            new Coordinate(extent, -extent),
+            new Coordinate(extent, extent),
+            new Coordinate(-extent, extent),
+            new Coordinate(-extent, -extent),
+        }))}},
+        Style = new VectorStyle { Fill = new Brush { Color = FitColor.LicoriceBlack.Map() } },
+      };
+
+      Map?.Map?.Layers.Add(canvas);
+      Map?.Map?.Layers.Add(layer);
+      Map!.Map.Navigator.Limiter = new ViewportLimiterKeepWithinExtent();
     });
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => HandleSelectedIndexChanged(prop.Value));
@@ -250,7 +268,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       extent = extent.Join(t.Extent);
     }
 
-    Map.Map.Home = n => n.CenterOnAndZoomTo(extent.Centroid, 10, 2000);
+    Map.Map.Home = n => n.CenterOnAndZoomTo(extent.Centroid, 4, 1000);
     Map.Map.Home.Invoke(Map.Map!.Navigator);
   }
 
