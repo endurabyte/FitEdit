@@ -14,7 +14,12 @@ public class Lap : ReactiveObject
   /// <summary>
   /// Index of first record for this lap.
   /// </summary>
-  public int RecordIndex { get; set; }
+  public int RecordFirstIndex { get; set; }
+
+  /// <summary>
+  /// Index of the last record for this lap
+  /// </summary>
+  public int RecordLastIndex { get; set; }
 
   public TimeSpan Duration => End - Start;
 
@@ -26,6 +31,7 @@ public class Lap : ReactiveObject
     End = other.End;
     Speed = new Speed(other.Speed);
     Distance = new Distance(other.Distance);
-    RecordIndex = other.RecordIndex;
+    RecordFirstIndex = other.RecordFirstIndex;
+    RecordLastIndex = other.RecordLastIndex;
   }
 }

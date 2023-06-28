@@ -25,4 +25,5 @@ public static class FitColor
   public static Color PeachCrayon { get; set; }
 
   public static OxyColor MapOxyColor(this Color c) => OxyColor.FromArgb(c.A, c.R, c.G, c.B);
+  public static OxyColor MapOxyColor(this Color c, byte alpha) => OxyColor.FromArgb(alpha, c.R, c.G, c.B);
 }

@@ -52,7 +52,8 @@ public class LapViewModel : ViewModelBase, ILapViewModel
       if (index < 0 || index >= Laps.Count) { return; }
       Lap lap = Laps[index];
 
-      fileService_.SelectedIndex = lap.RecordIndex;
+      fileService_.SelectedIndex = lap.RecordFirstIndex;
+      fileService_.SelectionCount = lap.RecordLastIndex - lap.RecordFirstIndex;
     });
 
     fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
@@ -80,7 +81,8 @@ public class LapViewModel : ViewModelBase, ILapViewModel
         Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, Unit.Meter).Convert(Unit.Mile),
 
         // Find first record of lap by timestamp
-        RecordIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.Start()),
+        RecordFirstIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.Start()),
+        RecordLastIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.End()),
       };
       Laps.Add(rl);
     }

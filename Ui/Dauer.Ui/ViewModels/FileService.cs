@@ -9,6 +9,7 @@ public interface IFileService
 {
   FitFile? FitFile { get; set; }
   int SelectedIndex { get; set; }
+  int SelectionCount { get; set; }
   ObservableCollection<SelectedFile> Files { get; set; }
 }
 
@@ -19,6 +20,7 @@ public class FileService : ReactiveObject, IFileService
 {
   [Reactive] public FitFile? FitFile { get; set; }
   [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public int SelectionCount { get; set; }
   [Reactive] public ObservableCollection<SelectedFile> Files { get; set; } = new();
 }
 

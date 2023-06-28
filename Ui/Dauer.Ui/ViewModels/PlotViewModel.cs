@@ -6,12 +6,14 @@ using OxyPlot.Series;
 using OxyPlot.Axes;
 using ReactiveUI.Fody.Helpers;
 using Avalonia.Input;
+using Avalonia;
 
 namespace Dauer.Ui.ViewModels;
 
 public interface IPlotViewModel
 {
   void HandleWheel(double delta);
+  void SelectCoordinates(double minX, double maxX);
 }
 
 public class DesignPlotViewModel : PlotViewModel
@@ -24,8 +26,18 @@ public class DesignPlotViewModel : PlotViewModel
 
 public class PlotViewModel : ViewModelBase, IPlotViewModel
 {
+  private RectangleAnnotation selection_ = new()
+  {
+      Fill = FitColor.TanCrayon.MapOxyColor(alpha: 50),
+      MinimumX = 0,
+      MaximumX = 0,
+      MinimumY = -1,
+      MaximumY = 10000
+    };
+
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
   private TrackerHitResult? lastTracker_;
+  private double zoomScale_ = 50;
 
   [Reactive] public ScreenPoint? TrackerPosition { get; set; }
   [Reactive] public PlotModel? Plot { get; set; }
@@ -49,27 +61,23 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     fileService_ = fileService;
 
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      fileService.SelectedIndex = SelectedIndex;
-    });
-
     fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
     {
       if (property.Value == null) { return; }
       Show(property.Value);
     });
 
-    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      SelectedIndex = property.Value;
-    });
-
+    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => SelectedIndex = e.Value);
+    fileService.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
   }
 
+  private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
+
   private void HandleSelectedIndexChanged(int index)
   {
+    fileService_.SelectedIndex = SelectedIndex;
+
     if (lastTracker_ != null && lastTracker_.Index == index) { return; }
 
     LineSeries? series = HrSeries_;
@@ -162,6 +170,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       plot.Annotations.Add(ann);
     }
 
+    plot.Annotations.Add(selection_);
     Plot = plot;
   }
 
@@ -180,8 +189,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Plot?.ResetAllAxes();
   }
 
-  private double zoomScale_ = 50;
-
   public void HandleWheel(double delta)
   {
     zoomScale_ += delta / 10;
@@ -190,6 +197,28 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     //double x = Plot?.Axes[0].Transform(2000) ?? 0;
     Plot?.Axes[0].Zoom(zoomScale_, 0);
 
+    Plot?.PlotView.InvalidatePlot(updateData: false);
+  }
+
+  public void SelectCoordinates(double minX, double maxX)
+  {
+    selection_.MinimumX = minX;
+    selection_.MaximumX = maxX;
+    Plot?.PlotView.InvalidatePlot(updateData: false);
+  }
+
+  public void SelectIndices(int minX, int maxX)
+  {
+    if (HrSeries_ == null) { return; }
+
+    if (maxX < minX || minX < 0 || maxX >= HrSeries_.Points.Count) 
+    {
+      minX = 0;
+      maxX = 0;
+    }
+
+    selection_.MinimumX = HrSeries_.Points[minX].X; 
+    selection_.MaximumX = HrSeries_.Points[maxX].X; 
     Plot?.PlotView.InvalidatePlot(updateData: false);
   }
 }
