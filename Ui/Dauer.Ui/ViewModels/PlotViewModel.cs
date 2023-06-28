@@ -19,7 +19,7 @@ public class DesignPlotViewModel : PlotViewModel
   public DesignPlotViewModel() : base (new FileService())
   {
     var file = new SelectedFile { FitFile = new FitFileFactory().CreateFake() };
-    Show(file);
+    Add(file);
   }
 }
 
@@ -34,8 +34,11 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       MaximumY = 10000
     };
 
-  private readonly Dictionary<SelectedFile, List<PlotElement>> plots_ = new();
+  private IDisposable? selectedIndexSub_;
+  private IDisposable? selectedCountSub_;
+
   private readonly Dictionary<SelectedFile, IDisposable> isVisibleSubs_ = new();
+  private readonly Dictionary<SelectedFile, List<PlotElement>> plots_ = new();
 
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
   private TrackerHitResult? lastTracker_;
@@ -56,10 +59,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   }
 
   private readonly IFileService fileService_;
-  private IDisposable? selectedIndexSub_;
-  private IDisposable? selectedCountSub_;
 
-  public PlotViewModel(
+  public PlotViewModel
+  (
     IFileService fileService
   )
   {
@@ -67,36 +69,10 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     CreatePlot();
 
-    fileService.SubscribeAdds(file =>
-    {
-      // If we already have this file, remove it before adding it again
-      if (isVisibleSubs_.TryGetValue(file, out var sub))
-      {
-        Remove(file);
-      }
-      Show(file);
+    fileService.SubscribeAdds(HandleFileAdded);
+    fileService.SubscribeRemoves(HandleFileRemoved);
 
-      isVisibleSubs_[file] = file.ObservableForProperty(x => x.IsVisible).Subscribe(property =>
-      {
-        if (property.Value) { Show(property.Sender); }
-        else { Remove(property.Sender); }
-      });
-    });
-
-    fileService.SubscribeRemoves(Remove);
-
-    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
-    {
-      SelectedFile? file = property.Value;
-      if (file == null) { return; }
-
-      selectedIndexSub_?.Dispose();
-      selectedCountSub_?.Dispose();
-
-      selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
-      selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
-    });
-
+    fileService.ObservableForProperty(x => x.MainFile).Subscribe(HandleMainFileChanged);
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       if (fileService_?.MainFile == null ) { return; }
@@ -104,33 +80,17 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     });
   }
 
-  private void HandleSelectedIndexChanged(int index)
+  private void HandleMainFileChanged(IObservedChange<IFileService, SelectedFile?> property)
   {
-    SelectedIndex = index;
-    if (fileService_.MainFile == null) { return; }
-    fileService_.MainFile.SelectedIndex = SelectedIndex;
+    SelectedFile? file = property.Value;
+    if (file == null) { return; }
 
-    if (lastTracker_ != null && lastTracker_.Index == index) { return; }
+    selectedIndexSub_?.Dispose();
+    selectedCountSub_?.Dispose();
 
-    LineSeries? series = HrSeries_;
-    if (series == null) { return; }
-    if (index < 0 || index >= series.Points.Count) { return; }
-
-    DataPoint selection = series.Points[index];
-    ScreenPoint position = series.Transform(selection);
-
-    TrackerPosition = position;
-
-    var hit = new TrackerHitResult
-    {
-      Position = position,
-      Text = $"Record {index}"
-    };
-
-    Plot?.PlotView?.ShowTracker(hit);
+    selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
+    selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
   }
-
-  private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
 
   private void CreatePlot()
   {
@@ -163,34 +123,28 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Plot = plot;
   }
 
-  private void Remove(SelectedFile file)
+  private void HandleFileAdded(SelectedFile file)
   {
-    if (Plot == null) { return; }
+    // If we already have this file, don't add it again
+    if (isVisibleSubs_.ContainsKey(file)) { return; }
 
-    if (plots_.TryGetValue(file, out List<PlotElement>? elems)) 
-    {
-      foreach (var elem in elems)
-      {
-        if (elem is Annotation ann) { Plot.Annotations.Remove(ann); }
-        if (elem is Series series) { Plot.Series.Remove(series); }
-      }
-
-      plots_.Remove(file);
-    }
-
-    if (isVisibleSubs_.TryGetValue(file, out IDisposable? sub)) 
-    {
-      isVisibleSubs_.Remove(file);
-      sub.Dispose();
-    }
-
-    Redraw(true);
+    isVisibleSubs_[file] = file.ObservableForProperty(x => x.IsVisible).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
+    HandleFileIsVisibleChanged(file);
   }
 
-  protected void Show(SelectedFile file)
+  private void HandleFileRemoved(SelectedFile file) => Remove(file);
+
+  private void HandleFileIsVisibleChanged(SelectedFile file)
+  {
+    if (file.IsVisible) { Add(file); }
+    else { Remove(file); }
+  }
+
+  protected void Add(SelectedFile file)
   {
     if (Plot == null) { return; }
     if (file.FitFile == null) { return; }
+
     FitFile fit = file.FitFile;
 
     // Plot heart rate and speed data points
@@ -250,11 +204,57 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Redraw(true);
   }
 
-  private void Redraw(bool updateData = false)
-  {
+  private void Remove(SelectedFile file)
+  { 
     if (Plot == null) { return; }
-    Plot.PlotView.InvalidatePlot(updateData);
+
+    if (plots_.TryGetValue(file, out List<PlotElement>? elems)) 
+    {
+      foreach (var elem in elems)
+      {
+        if (elem is Annotation ann) { Plot.Annotations.Remove(ann); }
+        if (elem is Series series) { Plot.Series.Remove(series); }
+      }
+
+      plots_.Remove(file);
+    }
+
+    if (isVisibleSubs_.TryGetValue(file, out IDisposable? sub)) 
+    {
+      isVisibleSubs_.Remove(file);
+      sub.Dispose();
+    }
+
+    Redraw(true);
   }
+
+  private void HandleSelectedIndexChanged(int index)
+  {
+    SelectedIndex = index;
+    if (fileService_.MainFile == null) { return; }
+    fileService_.MainFile.SelectedIndex = SelectedIndex;
+
+    if (lastTracker_ != null && lastTracker_.Index == index) { return; }
+
+    LineSeries? series = HrSeries_;
+    if (series == null) { return; }
+    if (index < 0 || index >= series.Points.Count) { return; }
+
+    DataPoint selection = series.Points[index];
+    ScreenPoint position = series.Transform(selection);
+
+    TrackerPosition = position;
+
+    var hit = new TrackerHitResult
+    {
+      Position = position,
+      Text = $"Record {index}"
+    };
+
+    Plot?.PlotView?.ShowTracker(hit);
+  }
+
+  private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
 
   private void HandleTrackerChanged(object? sender, TrackerEventArgs e)
   {
@@ -303,5 +303,11 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     selection_.MaximumX = HrSeries_.Points[maxX].X;
 
     Redraw();
+  }
+
+  private void Redraw(bool updateData = false)
+  {
+    if (Plot == null) { return; }
+    Plot.PlotView.InvalidatePlot(updateData);
   }
 }

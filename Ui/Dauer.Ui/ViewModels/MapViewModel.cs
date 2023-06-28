@@ -107,7 +107,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       Map?.Map?.Layers.Add(layer); // layer 0
     });
 
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => ShowSelection());
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => HandleSelectedIndexChanged(prop.Value));
     this.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => ShowSelection());
   }
 
@@ -120,10 +120,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       Map!.Map.Layers.Remove(value);
     }
 
-    if (SelectionCount < 0) { return; }
-    if (SelectedIndex + SelectionCount >= fileService_.MainFile!.FitFile!.Records.Count) { return; }
+    FitFile? file = fileService_.MainFile?.FitFile;
 
-    Show(magic, fileService_.MainFile!.FitFile!, "Selection", FitColor.RedCrayon, SelectedIndex, SelectionCount);
+    if (file == null) { return; }
+    if (SelectionCount < 2) { return; } // Need at least 2 points selected to draw a line between them
+    if (SelectedIndex + SelectionCount >= file.Records.Count) { return; }
+
+    Show(magic, file, "Selection", FitColor.RedCrayon, lineWidth: 6, SelectedIndex, SelectionCount);
   }
 
   private void HandleFileAdded(SelectedFile? sf)
@@ -173,6 +176,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
   private void HandleSelectedIndexChanged(int index)
   {
+    SelectionCount = 0;
     ShowCoordinate(fileService_.MainFile?.FitFile, index);
   }
 
@@ -188,7 +192,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private void Show(int id, FitFile fit, string name, Avalonia.Media.Color color, int index = -1, int count = -1)
+  private void Show(int id, FitFile fit, string name, Avalonia.Media.Color color, int lineWidth = 4, int index = -1, int count = -1)
   {
     var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
 
@@ -198,10 +202,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
-    Show(id, coords, name, color);
+    Show(id, coords, name, color, lineWidth);
   }
 
-  private void Show(int id, Coordinate[] coords, string name, Avalonia.Media.Color color)
+  private void Show(int id, Coordinate[] coords, string name, Avalonia.Media.Color color, int lineWidth)
   { 
     if (coords.Length < 2) { return; }
     if (Map?.Map == null) { return; }
@@ -212,7 +216,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       Name = name,
       Style = new VectorStyle
       {
-        Line = new(color.Map(), 4)
+        Line = new(color.Map(), lineWidth)
       }
     };
 
