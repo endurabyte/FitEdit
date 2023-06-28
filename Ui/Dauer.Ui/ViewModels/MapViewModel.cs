@@ -6,6 +6,7 @@ using DynamicData.Binding;
 using System.Reactive;
 using System.Collections.Specialized;
 using Mapsui;
+using NetTopologySuite.Noding;
 
 #if USE_MAPSUI
 using BruTile.Predefined;
@@ -46,6 +47,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 {
   [Reactive] public IMapControl? Map { get; set; }
   [Reactive] public bool HasCoordinates { get; set; }
+  [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public int SelectionCount { get; set; }
 
   private readonly GeometryFeature breadcrumbFeature_ = new();
 
@@ -77,6 +80,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
     fileService.SubscribeAdds(HandleFileAdded);
     fileService.SubscribeRemoves(HandleFileRemoved);
+    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
+    {
+      property.Value.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => SelectedIndex = prop.Value);
+      property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
+    });
 
     this.ObservableForProperty(x => x.Map).Subscribe(e =>
     {
@@ -97,8 +105,25 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       //var layer = OpenStreetMap.CreateTileLayer("fitedit");
 
       Map?.Map?.Layers.Add(layer); // layer 0
-      Map?.Map?.Layers.Add(BreadcrumbLayer_); // layer 1
     });
+
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => ShowSelection());
+    this.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => ShowSelection());
+  }
+
+  private void ShowSelection()
+  {
+    int magic = 101;
+    if (traces_.TryGetValue(magic, out MemoryLayer? value))
+    {
+      traces_.Remove(magic);
+      Map!.Map.Layers.Remove(value);
+    }
+
+    if (SelectionCount < 0) { return; }
+    if (SelectedIndex + SelectedIndex >= fileService_.MainFile!.FitFile!.Records.Count) { return; }
+
+    Show(magic, fileService_.MainFile!.FitFile!, "Selection", FitColor.RedCrayon, SelectedIndex, SelectionCount);
   }
 
   private void HandleFileAdded(SelectedFile? sf)
@@ -117,7 +142,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     // Handle file loaded
     if (sf.FitFile != null)
     {
-      Show(sf.Blob.Id, sf.FitFile);
+      Show(sf.Blob.Id, sf.FitFile, "GPS Trace", FitColor.LimeCrayon);
       sf.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     }
     else
@@ -163,7 +188,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private void Show(int id, FitFile fit, int index = -1, int count = -1)
+  private void Show(int id, FitFile fit, string name, Avalonia.Media.Color color, int index = -1, int count = -1)
   {
     var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
 
@@ -173,12 +198,12 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
-    Show(id, coords, "GPS Trace", FitColor.LimeCrayon);
+    Show(id, coords, name, color);
   }
 
   private void Show(int id, Coordinate[] coords, string name, Avalonia.Media.Color color)
   { 
-    if (!coords.Any()) { return; }
+    if (coords.Length < 2) { return; }
     if (Map?.Map == null) { return; }
 
     var trace = new MemoryLayer
@@ -192,7 +217,9 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     };
 
     traces_[id] = trace;
-    Map.Map.Layers.Insert(1, trace); // Above tile layer, below breadcrumb layer
+    Map.Map.Layers.Remove(BreadcrumbLayer_);
+    Map.Map.Layers.Add(trace); // Above tile layer
+    Map.Map.Layers.Add(BreadcrumbLayer_);
   }
 
   private void UpdateExtent()
