@@ -1,4 +1,5 @@
-﻿using Dauer.Model;
+﻿using System.Security.Cryptography;
+using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using SQLite;
@@ -27,7 +28,7 @@ public class SqliteAdapter : IDatabaseAdapter
       var connString = new SQLiteConnectionString(dbPath_, flags_, storeDateTimeAsTicks: false);
       var db = new SQLiteAsyncConnection(connString);
       await db.EnableWriteAheadLoggingAsync().AnyContext(); // TODO Call only once at DB creation
-      await db.CreateTablesAsync(CreateFlags.None, new[] { typeof(SqliteFile) }).AnyContext();
+      await db.CreateTablesAsync(CreateFlags.None, new[] { typeof(SqliteFile), typeof(MapTile) }).AnyContext();
 
       string providerName = raw.GetNativeLibraryName();
       Log.Info($"sqlite provider is {providerName}");
@@ -36,6 +37,21 @@ public class SqliteAdapter : IDatabaseAdapter
     catch (Exception e)
     {
       Log.Error(e);
+      return null;
+    }
+  }
+
+  public async Task<bool> InsertAsync(Model.MapTile t) => 1 == await db_?.InsertOrReplaceAsync(t.Map()).AnyContext();
+  public async Task DeleteAsync(Model.MapTile t) => await db_?.DeleteAsync(t.Map()).AnyContext();
+  public async Task<Model.MapTile> GetAsync(string id)
+  {
+    try
+    {
+      var tile = await db_?.GetAsync<MapTile>(id).AnyContext();
+      return tile.Map();
+    }
+    catch (InvalidOperationException) // Not in db
+    {
       return null;
     }
   }

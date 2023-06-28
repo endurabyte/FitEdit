@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Adapters.Sqlite;
+using Dauer.Model;
 using Dauer.Model.Data;
-using Dauer.Services;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
 using Dauer.Ui.Infra.Adapters.Windowing;
@@ -76,7 +76,7 @@ public class CompositionRoot
       new PlotViewModel(fileService),
       new LapViewModel(fileService),
       new RecordViewModel(fileService),
-      new MapViewModel(fileService),
+      new MapViewModel(fileService, db, TileSource.Jawg),
       new FileViewModel(fileService, db, storage, auth, log),
       log
     );
