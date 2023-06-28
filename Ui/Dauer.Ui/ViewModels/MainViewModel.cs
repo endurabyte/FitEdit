@@ -76,7 +76,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       if (property.Value == null) { return; }
       SliderMax = property.Value.Records.Count - 1;
-      //SelectedTabIndex = 1; // Chart. TODO for some reason this freezes the app when the debugger is attached
+      //SelectedTabIndex = 1; // Laps
     });
 
     fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>

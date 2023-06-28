@@ -12,7 +12,7 @@
     <vm:DesignRecordViewModel />
   </Design.DataContext>
 
-  <DataGrid x:Name="MainDataGrid" ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}" MaxHeight="300" 
+  <DataGrid x:Name="MainDataGrid" ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}" 
             CanUserSortColumns="true"
             CanUserReorderColumns="true"
             CanUserResizeColumns="true">

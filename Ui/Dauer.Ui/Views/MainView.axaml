@@ -20,13 +20,8 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <Grid x:Name="ChartGrid" RowDefinitions="*, Auto, 0, Auto, Auto">
-      <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
-      <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
-      <views:MapView Grid.Row="2" DataContext="{Binding Map}" />
-      <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
-
-      <TabControl Grid.Row="4" TabStripPlacement="Left" SelectedIndex="{Binding SelectedTabIndex}">
+    <Grid RowDefinitions="*, Auto, 3*, Auto">
+      <TabControl Grid.Row="0" TabStripPlacement="Left" SelectedIndex="{Binding SelectedTabIndex}">
         <TabItem Header="File" FontSize="12">
           <views:FileView DataContext="{Binding File}"/>
         </TabItem>
@@ -40,6 +35,14 @@
             <views:LogView DataContext="{Binding Log}"/>
           </TabItem>-->
       </TabControl>
+
+      <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
+      <Grid Grid.Row="2" x:Name="ChartGrid" ColumnDefinitions="*, Auto, *">
+        <views:PlotView Grid.Column="0" DataContext="{Binding Plot}"/>
+        <GridSplitter Grid.Column="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Columns"/>
+        <views:MapView Grid.Column="2" DataContext="{Binding Map}" />
+      </Grid>
+      <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
     </Grid>
 
 

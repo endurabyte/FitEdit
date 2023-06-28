@@ -27,7 +27,7 @@ public partial class MainView : UserControl
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
         var value = x.Value ? GridLength.Star : new GridLength(0);
-        ChartGrid.RowDefinitions[2].Height = value;
+        ChartGrid.ColumnDefinitions[2].Width = value;
       });
     });
   }
