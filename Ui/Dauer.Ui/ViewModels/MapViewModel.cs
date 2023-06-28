@@ -160,6 +160,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   {
     if (file.IsVisible) { Add(file); }
     else { Remove(file); }
+
+    HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
   private void HandleFitFileChanged(SelectedFile sf)

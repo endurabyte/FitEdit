@@ -145,7 +145,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private void UnloadFile(SelectedFile? sf)
   {
     if (sf == null) { return; }
-    FileService.MainFile = null;
+    FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsVisible);
     sf.Progress = 0;
   }
 
