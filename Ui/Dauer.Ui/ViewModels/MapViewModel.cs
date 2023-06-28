@@ -62,22 +62,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     Features = new[] { breadcrumbFeature_ },
     Style = new VectorStyle
     {
-      Fill = new Brush(FitColor.LeadBlack2.Map()),
-      Outline = new Pen(FitColor.SkyBlue.Map(), 4),
+      Fill = new Brush(FitColor.SkyBlue.Map()),
+      Outline = new Pen(FitColor.LeadBlack2.Map(), 2),
     }
   };
-
-  private FitFile? lastFit_;
-
-  private int selectedIndex_;
-  public int SelectedIndex
-  {
-    get => selectedIndex_; set
-    {
-      if (value < 0 || value > (lastFit_?.Records.Count ?? 0)) { return; }
-      this.RaiseAndSetIfChanged(ref selectedIndex_, value);
-    }
-  }
 
   private readonly IFileService fileService_;
 
@@ -111,18 +99,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       Map?.Map?.Layers.Add(layer); // layer 0
       Map?.Map?.Layers.Add(BreadcrumbLayer_); // layer 1
     });
-
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
   }
 
   private void HandleFileAdded(SelectedFile? sf)
   {
     if (sf == null) { return; }
-
-    // Added
-    sf.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => SelectedIndex = property.Value);
-
-    // Loaded/Unloaded
     if (addSubs_.ContainsKey(sf)) { return; }
 
     addSubs_[sf] = sf.SubscribeToFitFile(HandleFitFileChanged);
@@ -137,6 +118,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (sf.FitFile != null)
     {
       Show(sf.Blob.Id, sf.FitFile);
+      sf.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     }
     else
     {
@@ -164,42 +146,48 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     addSubs_.Remove(sf);
   }
 
-  private void HandleSelectedIndexChanged(int index) => ShowCoordinate(index);
-
-  private void ShowCoordinate(int index)
+  private void HandleSelectedIndexChanged(int index)
   {
-    if (lastFit_ == null) { return; }
+    ShowCoordinate(fileService_.MainFile?.FitFile, index);
+  }
 
-    var r = lastFit_.Records[index];
+  private void ShowCoordinate(FitFile? f, int index)
+  {
+    if (f == null) { return; }
+    if (index < 0 || index >= f.Records.Count) { return; }
+
+    var r = f.Records[index];
     Coordinate coord = r.MapCoordinate();
 
     var circle = new GeometricShapeFactory { NumPoints = 16 }.CreateCircle(coord, 16.0);
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private void Show(int id, FitFile fit)
+  private void Show(int id, FitFile fit, int index = -1, int count = -1)
   {
-    if (Map?.Map == null) { return; }
+    var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
 
-    lastFit_ = fit;
-
-    Coordinate[] coords = fit.Records
+    Coordinate[] coords = range
+      .Select(i => fit.Records[i])
       .Select(r => r.MapCoordinate())
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
-    if (!coords.Any())
-    {
-      return;
-    }
+    Show(id, coords, "GPS Trace", FitColor.LimeCrayon);
+  }
+
+  private void Show(int id, Coordinate[] coords, string name, Avalonia.Media.Color color)
+  { 
+    if (!coords.Any()) { return; }
+    if (Map?.Map == null) { return; }
 
     var trace = new MemoryLayer
     {
       Features = new[] { new GeometryFeature { Geometry = new LineString(coords) } },
-      Name = "GPS Trace",
+      Name = name,
       Style = new VectorStyle
       {
-        Line = new(FitColor.LimeCrayon.Map(), 4)
+        Line = new(color.Map(), 4)
       }
     };
 

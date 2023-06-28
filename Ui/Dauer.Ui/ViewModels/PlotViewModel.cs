@@ -5,8 +5,6 @@ using OxyPlot.Annotations;
 using OxyPlot.Series;
 using OxyPlot.Axes;
 using ReactiveUI.Fody.Helpers;
-using Avalonia.Input;
-using Avalonia;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -26,7 +24,7 @@ public class DesignPlotViewModel : PlotViewModel
 
 public class PlotViewModel : ViewModelBase, IPlotViewModel
 {
-  private RectangleAnnotation selection_ = new()
+  private readonly RectangleAnnotation selection_ = new()
   {
       Fill = FitColor.TanCrayon.MapOxyColor(alpha: 50),
       MinimumX = 0,
@@ -54,6 +52,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   }
 
   private readonly IFileService fileService_;
+  private IDisposable? selectedIndexSub_;
+  private IDisposable? selectedCountSub_;
 
   public PlotViewModel(
     IFileService fileService
@@ -61,22 +61,32 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     fileService_ = fileService;
 
-    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
     {
-      if (property.Value == null) { return; }
-      Show(property.Value);
+      SelectedFile? file = fileService.MainFile;
+      if (file == null) { return; }
+      if (file.FitFile == null) { return; }
+      Show(file.FitFile);
+
+      selectedIndexSub_?.Dispose();
+      selectedCountSub_?.Dispose();
+
+      selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
+      selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
     });
 
-    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => SelectedIndex = e.Value);
-    fileService.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      if (fileService_?.MainFile ==null ) { return; }
+      fileService_.MainFile.SelectedIndex = property.Value;
+    });
   }
-
-  private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
 
   private void HandleSelectedIndexChanged(int index)
   {
-    fileService_.SelectedIndex = SelectedIndex;
+    SelectedIndex = index;
+    if (fileService_.MainFile == null) { return; }
+    fileService_.MainFile.SelectedIndex = SelectedIndex;
 
     if (lastTracker_ != null && lastTracker_.Index == index) { return; }
 
@@ -98,11 +108,13 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Plot?.PlotView?.ShowTracker(hit);
   }
 
+  private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
+
   protected void Show(FitFile fit)
   {
     var plot = new PlotModel
     {
-      TextColor = OxyColors.White,
+      TextColor = FitColor.SnowWhite.MapOxyColor(),
       PlotAreaBorderColor = OxyColors.Transparent,
       DefaultColors = new List<OxyColor>()
       {
@@ -170,6 +182,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       plot.Annotations.Add(ann);
     }
 
+    plot.Annotations.Remove(selection_);
     plot.Annotations.Add(selection_);
     Plot = plot;
   }

@@ -12,5 +12,6 @@ public class SelectedFile : ReactiveObject
   [Reactive] public BlobFile? Blob { get; set; }
   [Reactive] public double Progress { get; set; }
   [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public int SelectionCount { get; set; }
 }
 

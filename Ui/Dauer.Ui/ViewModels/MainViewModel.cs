@@ -1,5 +1,6 @@
 ﻿using System.Reactive.Linq;
 using Dauer.Ui.Infra.Adapters.Windowing;
+using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -41,6 +42,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   private readonly IWindowAdapter window_;
   private readonly IFileService fileService_;
+  private IDisposable? recordIndexSub_;
 
   public MainViewModel(
     IFileService fileService,
@@ -69,19 +71,26 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
     this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
     {
-      fileService.SelectedIndex = property.Value;
+      SelectedFile? file = fileService.MainFile;
+      if (file == null) { return; }
+
+      file.SelectedIndex = property.Value;
     });
 
-    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
+    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
     {
-      if (property.Value == null) { return; }
-      SliderMax = property.Value.Records.Count - 1;
+      SelectedFile? file = fileService.MainFile;
+      if (file == null) { return; }
+
+      recordIndexSub_?.Dispose();
+      recordIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+      {
+        SliderValue = property.Value;
+      });
+
+      if (file.FitFile == null) { return; }
+      SliderMax = file.FitFile.Records.Count - 1;
       //SelectedTabIndex = 1; // Laps
-    });
-
-    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      SliderValue = property.Value;
     });
   }
 }

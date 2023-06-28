@@ -8,6 +8,8 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IRecordViewModel
 {
+  int SelectedIndex { get; set; }
+  int SelectionCount { get; set; }
 }
 
 public class DesignRecordViewModel : RecordViewModel
@@ -26,8 +28,11 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   public ObservableCollection<Record> Records { get; set; } = new();
 
   [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public int SelectionCount { get; set; }
 
   private readonly IFileService fileService_;
+  private IDisposable? selectedIndexSub_;
+  private IDisposable? selectedCountSub_;
 
   public RecordViewModel(
     IFileService fileService
@@ -35,28 +40,43 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   {
     fileService_ = fileService;
 
-    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
-    {
-      if (property.Value == null) { return; }
-      Show(property.Value);
-    });
-
-    fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      if (SelectedIndex == property.Value) { return; }
-      SelectedIndex = property.Value;
-
-      // Lazy-load more records.
-      if (SelectedIndex > Records.Count && fileService_.FitFile != null)
-      {
-        FillUpTo(fileService_.FitFile, SelectedIndex + 100);
-      }
-    });
+    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property => HandleMainFileChanged(fileService.MainFile));
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
-      fileService_.SelectedIndex = property.Value;
+      if (fileService_.MainFile == null) { return; }
+      fileService_.MainFile.SelectedIndex = property.Value;
     });
+  }
+
+  private void HandleMainFileChanged(SelectedFile? file)
+  {
+    if (file == null) { return; }
+    if (file.FitFile == null) { return; }
+    Show(file.FitFile);
+
+    selectedIndexSub_?.Dispose();
+    selectedCountSub_?.Dispose();
+
+    selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
+    selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
+  }
+
+  private void HandleSelectedIndexChanged(int index)
+  {
+    if (SelectedIndex == index) { return; }
+    SelectedIndex = index;
+
+    // Lazy-load more records.
+    if (SelectedIndex > Records.Count && fileService_.MainFile?.FitFile != null)
+    {
+      FillUpTo(fileService_.MainFile.FitFile, SelectedIndex + 100);
+    }
+  }
+
+  private void HandleSelectionCountChanged(int count)
+  {
+    SelectionCount = count;
   }
 
   private void Show(FitFile fit)

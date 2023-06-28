@@ -53,6 +53,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     auth_ = auth;
     log_ = log;
 
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
+    {
+      int i = property.Value;
+      if (i < 0 || i >= fileService.Files.Count) { return; }
+      fileService.MainFile = fileService.Files[i];
+    });
     InitFilesList();
   }
 
@@ -206,7 +212,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
         sf.FitFile = fit;
-        FileService.FitFile = fit;
+        FileService.MainFile = sf;
       });
 
       sf.Progress = 100;

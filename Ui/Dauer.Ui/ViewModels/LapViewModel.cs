@@ -40,27 +40,33 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
   private readonly IFileService fileService_;
 
-  public LapViewModel(
+  public LapViewModel
+  (
     IFileService fileService
   )
   {
     fileService_ = fileService;
 
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      int index = property.Value;
-      if (index < 0 || index >= Laps.Count) { return; }
-      Lap lap = Laps[index];
+    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property => HandleMainFileChanged(fileService.MainFile));
+    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => HandleSelectedIndexChanged(property.Value));
+  }
 
-      fileService_.SelectedIndex = lap.RecordFirstIndex;
-      fileService_.SelectionCount = lap.RecordLastIndex - lap.RecordFirstIndex;
-    });
+  private void HandleMainFileChanged(SelectedFile? file)
+  {
+    if (file?.FitFile == null) { return; }
+    Show(file.FitFile);
+  }
 
-    fileService.ObservableForProperty(x => x.FitFile).Subscribe(property =>
-    {
-      if (property.Value == null) { return; }
-      Show(property.Value);
-    });
+  private void HandleSelectedIndexChanged(int index)
+  {
+    if (index < 0 || index >= Laps.Count) { return; }
+    Lap lap = Laps[index];
+
+    SelectedFile? file = fileService_.MainFile;
+    if (file == null) { return; }
+
+    file.SelectedIndex = lap.RecordFirstIndex;
+    file.SelectionCount = lap.RecordLastIndex - lap.RecordFirstIndex;
   }
 
   private void Show(FitFile fit)
@@ -147,7 +153,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
   {
     if (uneditedLaps_ == null) { return; }
 
-    FitFile? fit = fileService_.FitFile;
+    FitFile? fit = fileService_.MainFile?.FitFile;
 
     if (fit == null)
     {
@@ -178,7 +184,9 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Backfilling: 100%");
 
-    fileService_.FitFile = null; // trigger property change
-    fileService_.FitFile = fit;
+    // Trigger property change
+    var file = fileService_.MainFile;
+    fileService_.MainFile = null; 
+    fileService_.MainFile = file;
   }
 }
