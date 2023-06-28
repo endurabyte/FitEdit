@@ -57,7 +57,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   /// </summary>
   private readonly Dictionary<int, MemoryLayer> traces_ = new();
 
-  private readonly Dictionary<SelectedFile, IDisposable> addSubs_ = new();
+  private IDisposable? selectedIndexSub_;
+  private IDisposable? selectedCountSub_;
+
+  private readonly Dictionary<SelectedFile, IDisposable> isVisibleSubs_ = new();
 
   private ILayer BreadcrumbLayer_ => new MemoryLayer
   {
@@ -65,7 +68,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     Features = new[] { breadcrumbFeature_ },
     Style = new VectorStyle
     {
-      Fill = new Brush(FitColor.SkyBlue.Map()),
+      Fill = new Brush(FitColor.RedCrayon.Map()),
       Outline = new Pen(FitColor.LeadBlack2.Map(), 2),
     }
   };
@@ -82,8 +85,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     fileService.SubscribeRemoves(HandleFileRemoved);
     fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
     {
-      property.Value.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => SelectedIndex = prop.Value);
-      property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
+      selectedIndexSub_?.Dispose();
+      selectedCountSub_?.Dispose();
+
+      selectedIndexSub_ = property.Value.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => SelectedIndex = prop.Value);
+      selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
     });
 
     this.ObservableForProperty(x => x.Map).Subscribe(e =>
@@ -126,16 +132,25 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (SelectionCount < 2) { return; } // Need at least 2 points selected to draw a line between them
     if (SelectedIndex + SelectionCount >= file.Records.Count) { return; }
 
-    Show(magic, file, "Selection", FitColor.RedCrayon, lineWidth: 6, SelectedIndex, SelectionCount);
+    Add(magic, file, "Selection", FitColor.RedCrayon, lineWidth: 6, SelectedIndex, SelectionCount);
   }
 
-  private void HandleFileAdded(SelectedFile? sf)
-  {
-    if (sf == null) { return; }
-    if (addSubs_.ContainsKey(sf)) { return; }
+  private void HandleFileAdded(SelectedFile? sf) => Add(sf);
 
-    addSubs_[sf] = sf.SubscribeToFitFile(HandleFitFileChanged);
+  private void Add(SelectedFile? sf)
+  { 
+    if (sf == null) { return; }
+    if (isVisibleSubs_.ContainsKey(sf)) { isVisibleSubs_[sf].Dispose(); }
+
+    isVisibleSubs_[sf] = sf.ObservableForProperty(x => x.IsVisible).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
+
     HandleFitFileChanged(sf);
+  }
+
+  private void HandleFileIsVisibleChanged(SelectedFile file)
+  {
+    if (file.IsVisible) { Add(file); }
+    else { Remove(file); }
   }
 
   private void HandleFitFileChanged(SelectedFile sf)
@@ -145,33 +160,31 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     // Handle file loaded
     if (sf.FitFile != null)
     {
-      Show(sf.Blob.Id, sf.FitFile, "GPS Trace", FitColor.LimeCrayon);
-      sf.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
+      Add(sf.Blob.Id, sf.FitFile, "GPS Trace", FitColor.LimeCrayon);
     }
     else
     {
-      // Handle file unloaded
-      if (!traces_.TryGetValue(sf.Blob.Id, out MemoryLayer? trace))
-      {
-        return;
-      }
-
-      traces_.Remove(sf.Blob.Id);
-      Map!.Map.Layers.Remove(trace);
+      Remove(sf);
     }
 
     HasCoordinates = GetHasCoordinates();
     UpdateExtent();
   }
 
-  private void HandleFileRemoved(SelectedFile? sf)
-  {
+  private void HandleFileRemoved(SelectedFile? sf) => Remove(sf);
+
+  private void Remove(SelectedFile? sf)
+  { 
     if (sf == null) { return; }
-    if (addSubs_.TryGetValue(sf, out IDisposable? sub))
+    if (sf.Blob == null) { return; }
+
+    if (!traces_.TryGetValue(sf.Blob.Id, out MemoryLayer? trace))
     {
-      sub.Dispose();
+      return;
     }
-    addSubs_.Remove(sf);
+
+    traces_.Remove(sf.Blob.Id);
+    Map!.Map.Layers.Remove(trace);
   }
 
   private void HandleSelectedIndexChanged(int index)
@@ -192,7 +205,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private void Show(int id, FitFile fit, string name, Avalonia.Media.Color color, int lineWidth = 4, int index = -1, int count = -1)
+  private void Add(int id, FitFile fit, string name, Avalonia.Media.Color color, int lineWidth = 4, int index = -1, int count = -1)
   {
     var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
 
@@ -202,10 +215,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
-    Show(id, coords, name, color, lineWidth);
+    Add(id, coords, name, color, lineWidth);
   }
 
-  private void Show(int id, Coordinate[] coords, string name, Avalonia.Media.Color color, int lineWidth)
+  private void Add(int id, Coordinate[] coords, string name, Avalonia.Media.Color color, int lineWidth)
   { 
     if (coords.Length < 2) { return; }
     if (Map?.Map == null) { return; }

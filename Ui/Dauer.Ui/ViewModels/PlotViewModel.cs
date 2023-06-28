@@ -219,12 +219,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       plots_.Remove(file);
     }
 
-    if (isVisibleSubs_.TryGetValue(file, out IDisposable? sub)) 
-    {
-      isVisibleSubs_.Remove(file);
-      sub.Dispose();
-    }
-
     Redraw(true);
   }
 
