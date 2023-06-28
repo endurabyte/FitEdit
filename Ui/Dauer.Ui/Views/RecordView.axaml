@@ -12,29 +12,18 @@
     <vm:DesignRecordViewModel />
   </Design.DataContext>
 
-  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-    <ListBox ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}">
-
-      <ListBox.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel Orientation="Horizontal"/>
-        </ItemsPanelTemplate>
-      </ListBox.ItemsPanel>
-
-      <ListBox.ItemTemplate>
-        <DataTemplate>
-          <Border Background="Gray" CornerRadius="4" Padding="4">
-            <StackPanel Orientation="Vertical">
-              <TextBlock Text="{Binding Index}"/>
-              <!--<TextBlock Text="{Binding Name}"/>
-              <TextBlock Text="{Binding MessageNum}"/>-->
-              <TextBlock Text="{Binding HR, StringFormat='HR: {0}'}"/>
-              <TextBlock Text="{Binding Speed, StringFormat='Speed: {0}'}"/>
-              <TextBlock Text="{Binding Distance, StringFormat='Dist: {0}'}"/>
-            </StackPanel>
-          </Border>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
-  </ScrollViewer>
+  <DataGrid x:Name="MainDataGrid" ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}" MaxHeight="300" 
+            CanUserSortColumns="true"
+            CanUserReorderColumns="true"
+            CanUserResizeColumns="true">
+    <DataGrid.Columns>
+      <DataGridTextColumn Header="Index" Binding="{Binding Index}" IsReadOnly="true"/>
+      <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
+      <DataGridTextColumn Header="MessageNum" Binding="{Binding MessageNum}"/>
+      <DataGridTextColumn Header="HR" Binding="{Binding HR}"/>
+      <DataGridTextColumn Header="Speed" Binding="{Binding Speed}"/>
+      <DataGridTextColumn Header="Distance" Binding="{Binding Distance}"/>
+    </DataGrid.Columns>
+  </DataGrid>
+  
 </UserControl>

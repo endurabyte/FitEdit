@@ -20,38 +20,28 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <TabControl SelectedIndex="{Binding SelectedTabIndex}">
-      <TabItem Header="File">
+    <Grid x:Name="ChartGrid" RowDefinitions="*, Auto, 0, Auto, Auto">
+      <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
+      <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
+      <views:MapView Grid.Row="2" DataContext="{Binding Map}" />
+      <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
 
-        <StackPanel Orientation="Vertical">
-          <TextBlock Text="{Binding Text}"/>
+      <TabControl Grid.Row="4" TabStripPlacement="Left" SelectedIndex="{Binding SelectedTabIndex}">
+        <TabItem Header="File" FontSize="12">
           <views:FileView DataContext="{Binding File}"/>
-        </StackPanel>
-      </TabItem>
-      <TabItem Header="Chart">
+        </TabItem>
+        <TabItem Header="Laps" FontSize="12">
+          <views:LapView DataContext="{Binding Laps}"/>
+        </TabItem>
+        <TabItem Header="Records" FontSize="12">
+          <views:RecordView DataContext="{Binding Records}"/>
+        </TabItem>
+        <!--<TabItem Header="Log">
+            <views:LogView DataContext="{Binding Log}"/>
+          </TabItem>-->
+      </TabControl>
+    </Grid>
 
-        <Grid x:Name="ChartGrid" RowDefinitions="*, Auto, 0, Auto, Auto">
-          <views:PlotView Grid.Row="0" DataContext="{Binding Plot}"/>
-          <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
-          <views:MapView Grid.Row="2" DataContext="{Binding Map}" />
-          <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
-
-          <TabControl Grid.Row="4" TabStripPlacement="Left">
-            <TabItem Header="Laps" FontSize="12">
-              <views:LapView DataContext="{Binding Laps}"/>
-            </TabItem>
-            <TabItem Header="Records" FontSize="12">
-              <views:RecordView DataContext="{Binding Records}"/>
-            </TabItem>
-          </TabControl>
-        </Grid>
-
-      </TabItem>
-
-      <!--<TabItem Header="Log">
-        <views:LogView DataContext="{Binding Log}"/>
-      </TabItem>-->
-    </TabControl>
 
   </Grid>
 </UserControl>

@@ -43,6 +43,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
+      if (SelectedIndex == property.Value) { return; }
       SelectedIndex = property.Value;
 
       // Lazy-load more records.

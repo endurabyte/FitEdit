@@ -74,6 +74,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     LineSeries? series = HrSeries_;
     if (series == null) { return; }
+    if (index < 0 || index >= series.Points.Count) { return; }
 
     DataPoint selection = series.Points[index];
     ScreenPoint position = series.Transform(selection);

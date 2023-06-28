@@ -35,7 +35,6 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IFileViewModel File { get; }
   public ILogViewModel Log { get; }
 
-  [Reactive] public string Text { get; set; } = "Welcome to FitEdit. Please load a FIT file.";
   [Reactive] public int SliderValue { get; set; }
   [Reactive] public int SliderMax { get; set; }
   [Reactive] public int SelectedTabIndex { get; set; }
@@ -77,7 +76,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       if (property.Value == null) { return; }
       SliderMax = property.Value.Records.Count - 1;
-      SelectedTabIndex = 1; // Chart. TODO for some reason this freezes the app when the debugger is attached
+      //SelectedTabIndex = 1; // Chart. TODO for some reason this freezes the app when the debugger is attached
     });
 
     fileService.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>

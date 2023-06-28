@@ -35,11 +35,11 @@
 
   <Grid RowDefinitions="Auto, Auto">
     
-    <StackPanel Grid.Row="0" Orientation="Vertical" >
-      <Button Command="{Binding HandleSelectFileClicked}" Content="Select file"/>
-      <Button Command="{Binding HandleAuthorizeClicked}" Content="Authorize"/>
-      <Button Command="{Binding HandleDownloadFilesClicked}" Content="Download file"/>
-      <Button Command="{Binding HandleForgetFileClicked}" Content="Forget file"/>
+    <StackPanel Grid.Row="0" Orientation="Horizontal" >
+      <Button Command="{Binding HandleSelectFileClicked}" Content="Import"/>
+      <!--<Button Command="{Binding HandleAuthorizeClicked}" Content="Authorize"/>-->
+      <Button Command="{Binding HandleDownloadFilesClicked}" Content="Export"/>
+      <Button Command="{Binding HandleForgetFileClicked}" Content="Remove"/>
     </StackPanel>
 
     <ScrollViewer Grid.Row="1">
