@@ -83,7 +83,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     });
   }
 
-  public async void HandleSelectFileClicked()
+  public async void HandleImportClicked()
   {
     Log.Info("Select file clicked");
 
@@ -96,6 +96,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
+    await Persist(file);
+  }
+
+  private async Task<SelectedFile> Persist(BlobFile file)
+  { 
     SelectedFile sf = await Task.Run(async () =>
     {
       bool ok = await db_.InsertAsync(file).AnyContext();
@@ -109,25 +114,30 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     });
 
     FileService.Files.Add(sf);
+    FileService.MainFile = sf;
+
+    return sf;
   }
 
-  public async void HandleForgetFileClicked()
+  public async void HandleRemoveClicked()
   {
     int index = SelectedIndex;
     if (index < 0 || FileService.Files.Count == 0)
     {
-      Log.Info("No file selected; cannot forget file");
+      Log.Info("No file selected; cannot remove file");
       return;
     }
 
-    var file = FileService.Files[index];
-    if (file == null) { return; }
+    await Remove(index);
+    SelectedIndex = Math.Min(index, FileService.Files.Count);
+  }
+
+  private async Task Remove(int index)
+  {
+    SelectedFile file = FileService.Files[index];
 
     await db_.DeleteAsync(file.Blob);
     FileService.Files.Remove(file);
-    InitFilesList();
-
-    SelectedIndex = Math.Min(index, FileService.Files.Count);
   }
 
   private void LoadOrUnload(SelectedFile sf)
@@ -227,24 +237,30 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public async void HandleDownloadFilesClicked()
+  public async void HandleExportClicked()
   {
-    Log.Info("Download files clicked...");
-    foreach (var file in FileService.Files)
+    int index = SelectedIndex;
+    if (index < 0 || FileService.Files.Count == 0)
     {
-      await DownloadFile(file);
+      Log.Info("No file selected; cannot export file");
+      return;
     }
+
+    await Export(FileService.Files[index]);
   }
 
-  private async Task DownloadFile(SelectedFile file)
+  private async Task Export(SelectedFile? file)
   { 
-    if (file?.Blob == null) { return; }
+    if (file == null) { return; }
+    if (file.Blob == null) { return; }
+    if (file.FitFile == null) { return; }
+
+    Log.Info($"Exporting {file.Blob.Name}...");
 
     try
     {
-      var ms = new MemoryStream();
-      new Writer().Write(file.FitFile, ms);
-      byte[] bytes = ms.ToArray();
+      byte[] bytes = file.FitFile.GetBytes();
+      file.Blob.Bytes = bytes;
 
       string name = Path.GetFileNameWithoutExtension(file.Blob.Name);
       string extension = Path.GetExtension(file.Blob.Name);
@@ -255,6 +271,31 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     {
       Log.Info($"{e}");
     }
+  }
+
+  public async void HandleMergeClicked()
+  {
+    List<SelectedFile> files = FileService.Files.Where(f => f.IsVisible).ToList();
+    if (files.Count < 2) { return; }
+    if (files.Any(f => f.FitFile == null)) { return; }
+
+    var merged = new FitFile();
+
+    foreach (var file in files)
+    {
+      merged.Append(file.FitFile);
+    }
+
+    var blob = new BlobFile
+    {
+      Bytes = merged.GetBytes(),
+      Name = $"Merged {string.Join("-", files.Select(f => f.Blob?.Name).Where(s => !string.IsNullOrEmpty(s)))}"
+    };
+
+    SelectedFile sf = await Persist(blob);
+    sf.FitFile = merged;
+    sf.IsVisible = true;
+    sf.Progress = 100;
   }
 
   public void HandleAuthorizeClicked()

@@ -8,6 +8,24 @@ namespace Dauer.Data.Fit
 {
   public static class FitFileExtensions
   {
+    public static void Append(this FitFile f, FitFile other)
+    {
+      f.MessageDefinitions.AddRange(other.MessageDefinitions);
+      f.Messages.AddRange(other.Messages);
+      f.Events.AddRange(other.Events);
+
+      f.Sessions.AddRange(other.Sessions);
+      f.Laps.AddRange(other.Laps);
+      f.Records.AddRange(other.Records);
+    }
+
+    public static byte[] GetBytes(this FitFile f)
+    {
+      var ms = new MemoryStream();
+      new Writer().Write(f, ms);
+      return ms.ToArray();
+    }
+
     public static List<T> Get<T>(this FitFile f) where T : Mesg => f.Messages
       .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])
       .Select(message => message as T)

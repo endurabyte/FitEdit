@@ -4,13 +4,13 @@ namespace Dauer.Data.Fit
 {
   public class FitFile
   {
-    public List<MesgDefinition> MessageDefinitions { get; set; } = new List<MesgDefinition>();
-    public List<Mesg> Messages { get; set; } = new List<Mesg>();
-    public List<EventArgs> Events { get; set; } = new List<EventArgs>();
+    public List<MesgDefinition> MessageDefinitions { get; set; } = new();
+    public List<Mesg> Messages { get; set; } = new();
+    public List<EventArgs> Events { get; set; } = new();
 
-    public List<SessionMesg> Sessions { get; set; }
-    public List<LapMesg> Laps { get; set; }
-    public List<RecordMesg> Records { get; set; }
+    public List<SessionMesg> Sessions { get; set; } = new();
+    public List<LapMesg> Laps { get; set; } = new();
+    public List<RecordMesg> Records { get; set; } = new();
 
     public FitFile() { }
 
