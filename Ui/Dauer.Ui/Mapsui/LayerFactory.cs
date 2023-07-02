@@ -1,6 +1,7 @@
 ﻿using BruTile;
 using BruTile.Predefined;
 using BruTile.Web;
+using Dauer.Ui.Views;
 using Mapsui.Layers;
 using Mapsui.Nts;
 using Mapsui.Styles;
@@ -70,6 +71,22 @@ public class LayerFactory
       new GeometryFeature
       {
         Geometry = new LineString(coords)
+      }
+    },
+    Name = name,
+    Style = new VectorStyle
+    {
+      Line = new(color.Map(), lineWidth)
+    }
+  };
+
+  public static ILayer CreateCoordinates(Coordinate[] coords, string name, Avalonia.Media.Color color, int lineWidth) => new MemoryLayer
+  {
+    Features = new[]
+    {
+      new GeometryFeature
+      {
+        Geometry = new GeometryCollection(coords.Select(c => c.MapNtsPoint()).ToArray())
       }
     },
     Name = name,

@@ -4,6 +4,7 @@ using ReactiveUI.Fody.Helpers;
 using System.Reactive.Linq;
 using Dauer.Model.Data;
 using Dauer.Model;
+using Mapsui.UI.Avalonia;
 
 #if USE_MAPSUI
 using Mapsui;
@@ -23,6 +24,7 @@ namespace Dauer.Ui.ViewModels;
 public interface IMapViewModel
 {
   bool HasCoordinates { get; set; }
+  IMapControl? Map { get; set; }
 }
 
 public class DesignMapViewModel : MapViewModel
@@ -124,7 +126,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     Map.Map.Layers.Add(LayerFactory.CreateTileLayer(tileSource_));
     Map.Map.Layers.Insert(3, BreadcrumbLayer_);
     Map.Map.Navigator.Limiter = new ViewportLimiterKeepWithinExtent();
-  }
+    }
 
   private void ShowSelection()
   {
@@ -234,7 +236,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (coords.Length < 2) { return; }
     if (Map?.Map == null) { return; }
 
-    var trace = LayerFactory.CreateLineString(coords, name, color, lineWidth); 
+    var trace = LayerFactory.CreateCoordinates(coords, name, color, lineWidth); 
     traces_[id] = trace;
     Map.Map.Layers.Insert(2, trace); // Above tile layer, below breadcrumb
   }
