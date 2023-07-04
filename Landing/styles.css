@@ -22,7 +22,6 @@ header {
 }
 
 main {
-	max-width: 1200px;
 	margin: 0 auto;
 	padding: 2rem;
 }
@@ -74,7 +73,7 @@ footer {
 
 .signup {
 	display: block;
-  width: 425px;
+  width: 341px;
   height: 500px;
   border: none;
   margin-left: auto;
