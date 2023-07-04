@@ -42,21 +42,28 @@ nav a:hover {
 h1 {
 	font-size: 4rem;
 	margin-bottom: 1rem;
+	text-align: center;
+	color: #7981fe;
 }
 
 h2 {
 	font-size: 2rem;
 	margin-bottom: 2rem;
+	color: #7981fe;
 }
 
 .cta-button {
-	display: inline-block;
+	display: block;
+	width: 12rem;
 	background-color: #7981fe;
 	color: #fff;
 	padding: 1rem 2rem;
-	border-radius: 2rem;
+	border-radius: 1rem;
 	margin-top: 2rem;
+  margin-left: auto;
+  margin-right: auto;
 	text-decoration: none;
+	text-align: center;
 }
 
 .cta-button:hover {
@@ -74,8 +81,9 @@ main {
 }
 
 .features h3 {
-	font-size: 2.5rem;
-	margin-bottom: 2rem;
+	font-size: 1.2rem;
+	margin-bottom: 1rem;
+	color: #7981fe;
 }
 
 .features li {
@@ -132,9 +140,12 @@ main {
 }
 
 .signup {
-  width: 800px;
-  height: 500px;
+	display: block;
+  width: 575px;
+  height: 490px;
   border: none;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 form label {
