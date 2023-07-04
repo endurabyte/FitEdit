@@ -1,3 +1,5 @@
+@import url("FiraCode/fira_code.css");
+
 /* Global styles */
 * {
 	box-sizing: border-box;
@@ -10,12 +12,19 @@ body {
 	background-color: #222;
 	width: 100%;
 	color: #eee;
+	font-size: 1.2rem;
 }
 
 header {
 	background-color: #1a1a1a;
 	color: #eee;
 	padding: 1rem;
+}
+
+main {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 2rem;
 }
 
 nav {
@@ -27,16 +36,11 @@ nav {
 nav a {
 	color: #eee;
 	text-decoration: none;
-	font-size: 1.2rem;
 	margin: 0 1rem;
 }
 
 nav a:hover {
 	color: #7981fe;
-}
-
-.header-content {
-	margin-top: 2rem;
 }
 
 h1 {
@@ -48,8 +52,45 @@ h1 {
 
 h2 {
 	font-size: 2rem;
-	margin-bottom: 2rem;
+	margin-bottom: 1rem;
 	color: #7981fe;
+}
+
+h3 {
+	margin-bottom: 1rem;
+	color: #7981fe;
+}
+
+.brand {
+	font-family: "Fira Code"
+}
+
+.brand-suffix {
+	color: #7981fe;
+	font-family: "Fira Code"
+}
+
+.header-content {
+	margin-top: 2rem;
+	text-align: center;
+	font-size: 10rem;
+}
+
+.section {
+	margin-top: 2rem;
+}
+
+.section li {
+	margin-bottom: 1rem;
+}
+
+.signup {
+	display: block;
+  width: 425px;
+  height: 500px;
+  border: none;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .cta-button {
@@ -67,122 +108,5 @@ h2 {
 }
 
 .cta-button:hover {
-	background-color: #6a1be2;
-}
-
-main {
-	max-width: 1200px;
-	margin: 0 auto;
-	padding: 2rem;
-}
-
-.features {
-	margin-top: 4rem;
-}
-
-.features h3 {
-	font-size: 1.2rem;
-	margin-bottom: 1rem;
-	color: #7981fe;
-}
-
-.features li {
-	font-size: 1.2rem;
-	margin-bottom: 1rem;
-}
-
-.pricing {
-	margin-top: 4rem;
-}
-
-.pricing h3 {
-	font-size: 2.5rem;
-	margin-bottom: 2rem;
-}
-
-.pricing-table {
-	display: flex;
-	justify-content: center;
-	margin-top: 2rem;
-}
-
-.plan {
-	background-color: #1a1a1a;
-	color: #eee;
-	padding: 2rem;
-	border-radius: 1rem;
-	box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-	margin: 0 2rem;
-}
-
-.plan h4 {
-	font-size: 2rem;
-	margin-bottom: 1rem;
-}
-
-.plan p {
-	font-size: 1.2rem;
-	margin-bottom: 1rem;
-}
-
-.plan .cta-button {
-	display: block;
-	margin-top: 2rem;
-}
-
-.contact {
-	margin-top: 4rem;
-}
-
-.contact h3 {
-	font-size: 2.5rem;
-	margin-bottom: 2rem;
-}
-
-.signup {
-	display: block;
-  width: 575px;
-  height: 490px;
-  border: none;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-form label {
-	display: block;
-	font-size: 1.2rem;
-	margin-bottom: 0.5rem;
-}
-
-form input[type="text"],
-form input[type="email"],
-form textarea {
-	display: block;
-	width: 100%;
-	padding: 1rem;
-	margin-bottom: 1rem;
-	border: none;
-	border-radius: 0.5rem;
-	background-color: #333;
-	color: #eee;
-}
-
-form textarea {
-	height: 10rem;
-}
-
-form button[type="submit"] {
-	display: block;
-	background-color: #7981fe;
-	color: #fff;
-	padding: 1rem 2rem;
-	border-radius: 2rem;
-	margin-top: 2rem;
-	border: none;
-	font-size: 1.2rem;
-	text-transform: uppercase;
-}
-
-form button[type="submit"]:hover {
-	background-color: #6a1be2;
+	background-color: #5863ff;
 }
