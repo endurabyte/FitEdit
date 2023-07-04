@@ -12,7 +12,7 @@ body {
 	background-color: #222;
 	width: 100%;
 	color: #eee;
-	font-size: 1.2rem;
+	font-size: 5vw;
 }
 
 header {
@@ -27,31 +27,15 @@ main {
 	padding: 2rem;
 }
 
-nav {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-nav a {
-	color: #eee;
-	text-decoration: none;
-	margin: 0 1rem;
-}
-
-nav a:hover {
-	color: #7981fe;
-}
-
 h1 {
-	font-size: 4rem;
+	font-size: 15vw;
 	margin-bottom: 1rem;
 	text-align: center;
 	color: #7981fe;
 }
 
 h2 {
-	font-size: 2rem;
+	font-size: 10vw;
 	margin-bottom: 1rem;
 	color: #7981fe;
 }
@@ -59,6 +43,10 @@ h2 {
 h3 {
 	margin-bottom: 1rem;
 	color: #7981fe;
+}
+
+footer {
+	text-align: center;
 }
 
 .brand {
@@ -73,7 +61,7 @@ h3 {
 .header-content {
 	margin-top: 2rem;
 	text-align: center;
-	font-size: 10rem;
+	font-size: 20vw;
 }
 
 .section {
@@ -95,7 +83,7 @@ h3 {
 
 .cta-button {
 	display: block;
-	width: 12rem;
+	width: 75vw;
 	background-color: #7981fe;
 	color: #fff;
 	padding: 1rem 2rem;
