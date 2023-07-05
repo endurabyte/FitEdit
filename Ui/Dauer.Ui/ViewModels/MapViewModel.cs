@@ -124,7 +124,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private void HandleEditingChanged()
   {
     traces_.Remove(editTraceId_);
-    layers_.Remove(editTraceId_);
+    layers_.Remove(editLayerIndex_);
     HandleLayersChanged();
 
     if (!Editing)
