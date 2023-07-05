@@ -90,6 +90,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
+
+    Remove(file);
+    Add(file);
   }
 
   private void CreatePlot()
