@@ -17,5 +17,10 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <maps:MapControl x:Name="MapControl" />
+  <Grid>
+    <maps:MapControl x:Name="MapControl" />
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+      <CheckBox Content="Edit" IsChecked="{Binding Editing}" VerticalAlignment="Bottom"/>
+    </StackPanel>
+  </Grid>
 </UserControl>

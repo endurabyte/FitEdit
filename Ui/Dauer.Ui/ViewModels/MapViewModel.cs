@@ -56,6 +56,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 {
   [Reactive] public IMapControl? Map { get; set; }
   [Reactive] public bool HasCoordinates { get; set; }
+  [Reactive] public bool Editing { get; set; }
   [Reactive] public int SelectedIndex { get; set; }
   [Reactive] public int SelectionCount { get; set; }
 
@@ -66,10 +67,24 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   /// </summary>
   private readonly Dictionary<int, ILayer> traces_ = new();
 
+  /// <summary>
+  /// Key: Layer index, Value: layer
+  /// </summary>
+  private readonly Dictionary<int, ILayer> layers_ = new();
+
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
 
   private readonly Dictionary<SelectedFile, IDisposable> isVisibleSubs_ = new();
+
+  private int canvasLayerIndex_ = 0; 
+  private int tileLayerIndex_ = 1; 
+  private int traceLayerIndex_ = 2; 
+  private int selectionLayerIndex_ = 3; 
+  private int editLayerIndex_ = 4; 
+  private int breadcrumbLayerIndex_ = 5; 
+  private int selectionTraceId_ = 101;
+  private int editTraceId_ = 200;
 
   private ILayer BreadcrumbLayer_ => new MemoryLayer
   {
@@ -103,6 +118,32 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     this.ObservableForProperty(x => x.Map).Subscribe(e => HandleMapControlChanged());
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => HandleSelectedIndexChanged(prop.Value));
     this.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => ShowSelection());
+    this.ObservableForProperty(x => x.Editing).Subscribe(e => HandleEditingChanged());
+  }
+
+  private void HandleEditingChanged()
+  {
+    traces_.Remove(editTraceId_);
+    layers_.Remove(editTraceId_);
+    HandleLayersChanged();
+
+    if (!Editing)
+    {
+      return;
+    }
+    
+    SelectedFile? sf = fileService_.MainFile;
+    if (sf == null) { return; }
+    if (sf.Blob == null) { return; }
+    if (sf.FitFile == null) { return; }
+
+    ILayer? layer = Add(sf.FitFile, "GPS Editor", editLayerIndex_, FitColor.LimeCrayon, editable: true);
+
+    if (layer == null) { return; }
+    traces_[editTraceId_] = layer;
+    layers_[editLayerIndex_] = layer;
+
+    HandleLayersChanged();
   }
 
   private void HandleMainFileChanged(IObservedChange<IFileService, SelectedFile?> property)
@@ -112,6 +153,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
     selectedIndexSub_ = property.Value.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => SelectedIndex = prop.Value);
     selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
+
+    Editing = false;
   }
 
   private void HandleMapControlChanged()
@@ -121,20 +164,39 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     // TODO move to infrastructure
     LayerFactory.DefaultCache = new PersistentCache($"{tileSource_}", db_);
     OpenStreetMap.DefaultCache = LayerFactory.DefaultCache;
+    
+    layers_[canvasLayerIndex_] = LayerFactory.CreateCanvas();
+    layers_[tileLayerIndex_] = LayerFactory.CreateTileLayer(tileSource_);
+    layers_[breadcrumbLayerIndex_] = BreadcrumbLayer_;
 
-    Map.Map.Layers.Add(LayerFactory.CreateCanvas());
-    Map.Map.Layers.Add(LayerFactory.CreateTileLayer(tileSource_));
-    Map.Map.Layers.Insert(3, BreadcrumbLayer_);
+    HandleLayersChanged();
+
     Map.Map.Navigator.Limiter = new ViewportLimiterKeepWithinExtent();
+  }
+
+  // Sort layers, update map
+  private void HandleLayersChanged()
+  {
+    if (Map?.Map == null) { return; }
+
+    Map.Map.Layers.Clear();
+
+    List<int> indices = layers_.Keys.Order().ToList();
+    foreach (var index in indices)
+    {
+      Map.Map.Layers.Add(layers_[index]);
     }
+
+    Map.Map.Refresh();
+  }
 
   private void ShowSelection()
   {
-    int magic = 101;
-    if (traces_.TryGetValue(magic, out ILayer? value))
+    if (traces_.TryGetValue(selectionTraceId_, out ILayer? value))
     {
-      traces_.Remove(magic);
-      Map!.Map.Layers.Remove(value);
+      traces_.Remove(selectionTraceId_);
+      layers_.Remove(selectionTraceId_);
+      HandleLayersChanged();
     }
 
     FitFile? file = fileService_.MainFile?.FitFile;
@@ -143,7 +205,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (SelectionCount < 2) { return; } // Need at least 2 points selected to draw a line between them
     if (SelectedIndex + SelectionCount >= file.Records.Count) { return; }
 
-    Add(magic, file, "Selection", FitColor.RedCrayon, lineWidth: 6, SelectedIndex, SelectionCount);
+    ILayer? layer = Add(file, "Selection", selectionLayerIndex_, FitColor.RedCrayon, editable: false, lineWidth: 6, index: SelectedIndex, count: SelectionCount);
+
+    if (layer == null) { return; }
+    traces_[selectionTraceId_] = layer;
+    layers_[selectionLayerIndex_] = layer;
+
+    HandleLayersChanged();
   }
 
   private void HandleFileAdded(SelectedFile? sf) => Add(sf);
@@ -173,7 +241,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     // Handle file loaded
     if (sf.FitFile != null)
     {
-      Add(sf.Blob.Id, sf.FitFile, "GPS Trace", FitColor.LimeCrayon);
+      ILayer? layer = Add(sf.FitFile, "GPS Trace", traceLayerIndex_, FitColor.LimeCrayon);
+
+      if (layer == null) { return; }
+      traces_[sf.Blob.Id] = layer;
+      layers_[traceLayerIndex_] = layer;
+
+      HandleLayersChanged();
     }
     else
     {
@@ -197,13 +271,15 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     }
 
     traces_.Remove(sf.Blob.Id);
-    Map!.Map.Layers.Remove(trace);
+    layers_.Remove(traceLayerIndex_);
+    HandleLayersChanged();
   }
 
   private void HandleSelectedIndexChanged(int index)
   {
     SelectionCount = 0;
     ShowCoordinate(fileService_.MainFile?.FitFile, index);
+    Map!.Map.RefreshGraphics();
   }
 
   private void ShowCoordinate(FitFile? f, int index)
@@ -218,7 +294,15 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private void Add(int id, FitFile fit, string name, Avalonia.Media.Color color, int lineWidth = 4, int index = -1, int count = -1)
+  private ILayer? Add(
+    FitFile fit,
+    string name,
+    int layer,
+    Avalonia.Media.Color color,
+    bool editable = false,
+    int lineWidth = 4,
+    int index = -1,
+    int count = -1)
   {
     var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
 
@@ -228,17 +312,30 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
-    Add(id, coords, name, color, lineWidth);
+    return editable 
+      ? AddEditTrace(coords, name, color, FitColor.RedCrayon) 
+      : AddTrace(coords, name, layer, color, lineWidth);
   }
 
-  private void Add(int id, Coordinate[] coords, string name, Avalonia.Media.Color color, int lineWidth)
+  private ILayer? AddTrace(Coordinate[] coords, string name, int layer, Avalonia.Media.Color color, int lineWidth)
   { 
-    if (coords.Length < 2) { return; }
-    if (Map?.Map == null) { return; }
+    if (coords.Length < 2) { return null; }
+    if (Map?.Map == null) { return null; }
 
-    var trace = LayerFactory.CreateCoordinates(coords, name, color, lineWidth); 
-    traces_[id] = trace;
-    Map.Map.Layers.Insert(2, trace); // Above tile layer, below breadcrumb
+    var trace = LayerFactory.CreateLineString(coords, name, color, lineWidth);
+
+    Map.Map.Layers.Insert(layer, trace);
+    return trace;
+  }
+
+  private ILayer? AddEditTrace(Coordinate[] coords, string name, Avalonia.Media.Color color, Avalonia.Media.Color selectedColor)
+  {
+    if (coords.Length < 2) { return null; }
+    if (Map?.Map == null) { return null; }
+
+    var trace = LayerFactory.CreatPointFeatures(coords, name, color, selectedColor, 0.5);
+
+    return trace;
   }
 
   private void UpdateExtent()
