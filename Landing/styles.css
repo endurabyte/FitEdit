@@ -12,7 +12,7 @@ body {
 	background-color: #222;
 	width: 100%;
 	color: #eee;
-	font-size: 5vw;
+	font-size: calc(1rem + 1vw);
 }
 
 header {
@@ -27,14 +27,14 @@ main {
 }
 
 h1 {
-	font-size: 15vw;
+	font-size: calc(2rem + 1vw);
 	margin-bottom: 1rem;
 	text-align: center;
 	color: #7981fe;
 }
 
 h2 {
-	font-size: 10vw;
+	font-size: calc(1.5rem + 1vw);
 	margin-bottom: 1rem;
 	color: #7981fe;
 }
@@ -60,7 +60,7 @@ footer {
 .header-content {
 	margin-top: 2rem;
 	text-align: center;
-	font-size: 20vw;
+	font-size: calc(4rem + 1vw);
 }
 
 .section {
@@ -74,7 +74,7 @@ footer {
 .signup {
 	display: block;
   width: 341px;
-  height: 500px;
+  height: 525px;
   border: none;
   margin-left: auto;
   margin-right: auto;
@@ -82,7 +82,7 @@ footer {
 
 .cta-button {
 	display: block;
-	width: 75vw;
+	width: 25%;
 	background-color: #7981fe;
 	color: #fff;
 	padding: 1rem 2rem;
