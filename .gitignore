@@ -3,5 +3,6 @@ obj
 .idea
 .vs
 .env
+.DS_Store
 *.user
 FluffySpoonAspNetLetsEncrypt*
