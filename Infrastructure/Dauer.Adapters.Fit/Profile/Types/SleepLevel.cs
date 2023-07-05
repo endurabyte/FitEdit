@@ -15,30 +15,18 @@
 namespace Dynastream.Fit
 {
     /// <summary>
-    /// Mode used for Read Operations
+    /// Implements the profile SleepLevel type as an enum
     /// </summary>
-    public enum DecodeMode
+    public enum SleepLevel : byte
     {
-        /// <summary>
-        /// Indicates that file contains valid Header and CRC data
-        /// </summary>
-        Normal,
+        Unmeasurable = 0,
+        Awake = 1,
+        Light = 2,
+        Deep = 3,
+        Rem = 4,
+        Invalid = 0xFF
 
-        /// <summary>
-        /// Indicates that the Stream Contains a Header that is Corrupt
-        /// </summary>
-        InvalidHeader,
 
-        /// <summary>
-        /// Indicates that the Stream does not contain a Header or CRC
-        /// </summary>
-        DataOnly,
-
-        /// <summary>
-        /// Added by FitEdit.
-        /// Indicates that we should only read part of the stream.
-        /// The stream position might be nonzero if messages have already been decoded.
-        /// </summary>
-        Partial,
     }
 }
+

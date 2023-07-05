@@ -15,30 +15,18 @@
 namespace Dynastream.Fit
 {
     /// <summary>
-    /// Mode used for Read Operations
+    /// Implements the profile HrvStatus type as an enum
     /// </summary>
-    public enum DecodeMode
+    public enum HrvStatus : byte
     {
-        /// <summary>
-        /// Indicates that file contains valid Header and CRC data
-        /// </summary>
-        Normal,
+        None = 0,
+        Poor = 1,
+        Low = 2,
+        Unbalanced = 3,
+        Balanced = 4,
+        Invalid = 0xFF
 
-        /// <summary>
-        /// Indicates that the Stream Contains a Header that is Corrupt
-        /// </summary>
-        InvalidHeader,
 
-        /// <summary>
-        /// Indicates that the Stream does not contain a Header or CRC
-        /// </summary>
-        DataOnly,
-
-        /// <summary>
-        /// Added by FitEdit.
-        /// Indicates that we should only read part of the stream.
-        /// The stream position might be nonzero if messages have already been decoded.
-        /// </summary>
-        Partial,
     }
 }
+
