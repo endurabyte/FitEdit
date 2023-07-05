@@ -1,9 +1,12 @@
 ﻿using BruTile;
 using BruTile.Predefined;
 using BruTile.Web;
+using Dauer.Ui.Views;
 using Mapsui.Layers;
 using Mapsui.Nts;
+using Mapsui.Providers;
 using Mapsui.Styles;
+using Mapsui.Styles.Thematics;
 using Mapsui.Tiling;
 using Mapsui.Tiling.Layers;
 using NetTopologySuite.Geometries;
@@ -77,6 +80,25 @@ public class LayerFactory
     {
       Line = new(color.Map(), lineWidth)
     }
+  };
+
+  public static ILayer CreatPointFeatures(Coordinate[] coords, string name, Avalonia.Media.Color color, Avalonia.Media.Color selectedColor, double scale) => new Layer
+  {
+    DataSource = new MemoryProvider(coords.Select(c => new PointFeature(c.MapMPoint()))),
+    Name = name,
+    Style = new ThemeStyle(f => f["selected"]?.ToString() == "true" 
+      ? new StyleCollection
+      {
+        Styles =
+        {
+          new SymbolStyle { Fill = new Brush(selectedColor.Map()), SymbolScale = scale + 0.2, },
+          new SymbolStyle { Fill = new Brush(color.Map()), SymbolScale = scale, }
+        },
+      }
+      //: SymbolStyles.CreatePinStyle(color.Map(), 0.5) // Slow to draw many of these
+      : new SymbolStyle { Fill = new Brush(color.Map()), SymbolScale = scale, }
+    ),
+    IsMapInfoLayer = true
   };
   
   public static bool GetHasCoordinates(IEnumerable<ILayer> layers) => layers.Any(GetHasCoordinates);

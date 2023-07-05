@@ -1085,9 +1085,12 @@ namespace Dynastream.Fit
 
     public void ExpandComponents(Accumulator accumulator)
     {
+      // Iterate over a copy because we may add to the fields while iterating.
+      var fieldsByNum = new Dictionary<byte, Field>(FieldsByNum);
+
       // Traverse the field list
       // Change to for loop so we can add items as we iterate
-      foreach (var kvp in FieldsByNum)
+      foreach (var kvp in fieldsByNum)
       {
         Field field = kvp.Value;
 

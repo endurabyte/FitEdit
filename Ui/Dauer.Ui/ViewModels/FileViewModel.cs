@@ -223,6 +223,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
         sf.FitFile = fit;
+        FileService.MainFile = null; // Trigger notification
         FileService.MainFile = sf;
       });
 

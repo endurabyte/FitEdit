@@ -90,6 +90,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
+
+    Remove(file);
+    Add(file);
   }
 
   private void CreatePlot()
@@ -109,7 +112,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     };
 
     // Axes are created automatically if they are not defined
-    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, IsAxisVisible = false });
+    plot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Key="Time", IsAxisVisible = false });
     plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "HR", IsAxisVisible = false });
     plot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Key = "Cadence", IsAxisVisible = false });
     plot.Axes.Add(new LinearAxis { Position = AxisPosition.Right, Key = "Speed", IsAxisVisible = false });
@@ -149,11 +152,11 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     // Plot heart rate and speed data points
     string str = "{0}\n{1:0.0}: {2:0.0}\n{3:0.0}: {4:0.0}";
-    var hrSeries = new LineSeries { Title = "HR", YAxisKey = "HR", TrackerFormatString = str };
-    var cadenceSeries = new LineSeries { Title = "Cadence", YAxisKey = "Cadence", TrackerFormatString = str };
-    var speedSeries = new LineSeries { Title = "Speed", YAxisKey = "Speed", TrackerFormatString = str };
+    var hrSeries = new LineSeries { Title = "HR", YAxisKey = "HR", TrackerFormatString = str, XAxisKey = "Time" };
+    var cadenceSeries = new LineSeries { Title = "Cadence", YAxisKey = "Cadence", TrackerFormatString = str, XAxisKey = "Time" };
+    var speedSeries = new LineSeries { Title = "Speed", YAxisKey = "Speed", TrackerFormatString = str, XAxisKey = "Time" };
 
-    DateTime start = fit.Sessions.First().Start();
+    DateTime start = fit.Records.First().Start();
 
     foreach (var record in fit.Records)
     {

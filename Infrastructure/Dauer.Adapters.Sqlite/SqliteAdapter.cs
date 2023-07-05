@@ -50,7 +50,7 @@ public class SqliteAdapter : IDatabaseAdapter
       var tile = await db_?.GetAsync<MapTile>(id).AnyContext();
       return tile.Map();
     }
-    catch (InvalidOperationException) // Not in db
+    catch (InvalidOperationException) // "Sequence contains no elements" => Not in db
     {
       return null;
     }

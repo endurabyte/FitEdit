@@ -175,7 +175,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     fit.BackfillEvents(100, async (i, count) =>
     {
       double progress = 50 + 0.5 * i / count * 100;
-      //Progress = progress;
+      Progress = progress;
       Log.Info($"Backfilling: {progress:##.##}% ({i}/{count})");
       await TaskUtil.MaybeYield();
     });

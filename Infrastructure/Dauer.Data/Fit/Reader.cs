@@ -59,11 +59,22 @@ namespace Dauer.Data.Fit
     /// This gives single-threaded environments such as WASM a chance to update the UI,
     /// for example to show a progress bar or a message to the user.
     /// </summary>
-    public async Task<bool> ReadOneAsync(Stream stream, Decode decoder, int messageCount = 1) => stream.Position switch
+    public async Task<bool> ReadOneAsync(Stream stream, Decode decoder, int messageCount = 1)
     {
-      _ when stream.Position >= stream.Length => false,
-      _ => await decoder.ReadAsync(stream, DecodeMode.Partial, messageCount)
-    };
+      try
+      {
+        return stream.Position switch
+        {
+          _ when stream.Position >= stream.Length => false,
+          _ => await decoder.ReadAsync(stream, DecodeMode.Partial, messageCount)
+        };
+      }
+      catch (FitException e)
+      {
+        Log.Error($"{e}");
+        return false;
+      }
+    }
 
     public bool TryGetDecoder(string source, Stream stream, out FitFile fit, out Decode decoder)
     {
