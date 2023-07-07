@@ -1,4 +1,4 @@
 ﻿namespace Dauer.Dto
 {
-  public record AuthRequest(string? Username);
+  public record AuthRequest();
 }

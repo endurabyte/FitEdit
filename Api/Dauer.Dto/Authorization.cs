@@ -1,4 +1,4 @@
 namespace Dauer.Dto
 {
-  public record Authorization(string? AccessToken);
+  public record Authorization();
 }
