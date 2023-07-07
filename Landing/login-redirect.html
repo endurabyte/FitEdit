@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FitEdit login</title>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+<script type="text/javascript">
+
+  function parseExtraState(stateStr) {
+    var params = stateStr.split(".");
+    var extraState = {};
+
+    for (var i = 0; i < params.length; i++) {
+      var pair = params[i].split("=");
+      if (pair.length === 2) {
+        extraState[pair[0]] = pair[1];
+      }
+    }
+
+    var randomId = params[0];
+    return {randomId, extraState};
+  }
+
+  window.onload = function() {
+    var params = new URLSearchParams(window.location.search);
+    var state = params.get('state');
+    var code = params.get('code');
+    var { randomId, extraState } = parseExtraState(state);
+  
+    var port = extraState['port'];
+    var newUrl = 'http://localhost:' + port + "?code=" + code + "&state=" + encodeURIComponent(state);
+    console.log("Redirecting to " + newUrl);
+    window.location.href = newUrl;
+  };
+</script>
+<noscript>
+  Please enable scripts to log in.
+</noscript>
+</body>
+</html>

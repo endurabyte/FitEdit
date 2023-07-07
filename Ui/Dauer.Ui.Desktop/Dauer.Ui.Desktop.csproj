@@ -31,10 +31,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"></FrameworkReference>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="IdentityModel.OidcClient" Version="5.2.2-alpha.0.3" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
+    
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    
+    <PackageReference Include="Serilog" Version="3.0.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    
   </ItemGroup>
 
   <Target Name="Protect" AfterTargets="Build" Condition="'$(Configuration)' == 'Deploy'">

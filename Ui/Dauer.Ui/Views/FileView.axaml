@@ -37,10 +37,10 @@
     
     <StackPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import"/>
-      <!--<Button Command="{Binding HandleAuthorizeClicked}" Content="Authorize"/>-->
       <Button Command="{Binding HandleExportClicked}" Content="Export"/>
       <Button Command="{Binding HandleRemoveClicked}" Content="Remove"/>
       <Button Command="{Binding HandleMergeClicked}" Content="Merge"/>
+      <Button Command="{Binding HandleAuthorizeClicked}" Content="Login"/>
     </StackPanel>
 
     <ScrollViewer Grid.Row="1">
