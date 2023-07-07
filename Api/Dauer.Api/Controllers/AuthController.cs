@@ -1,4 +1,5 @@
 using Dauer.Dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dauer.Api.Controllers;
@@ -14,9 +15,9 @@ public class AuthController : ControllerBase
     _logger = logger;
   }
 
-  [HttpGet(Name = "GetAuthorization")]
-  public async Task<Authorization> Get([FromQuery] AuthRequest req)
+  [HttpGet(Name = "GetAuthorization"), Authorize]
+  public async Task<Authorization> Get([FromQuery] AuthRequest _)
   {
-    return await Task.FromResult(new Authorization(""));
+    return await Task.FromResult(new Authorization());
   }
 }
