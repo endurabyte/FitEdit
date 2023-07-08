@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(SolutionDir)Common.props" />
+  <Import Project="..\..\Common.props" />
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\Dauer.Model\Dauer.Model.csproj" />

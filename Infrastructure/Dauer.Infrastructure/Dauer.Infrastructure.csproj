@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="$(SolutionDir)Common.props" />
+  <Import Project="..\..\Common.props" />
 
   <ItemGroup>
     <PackageReference Include="Lamar" Version="12.0.0" />
