@@ -6,9 +6,13 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
 {
   bool Ready { get; }
 
+  Task<bool> InsertAsync(Authorization t);
+  Task DeleteAsync(Authorization t);
+  Task<Authorization> GetAuthorizationAsync(string id);
+
   Task<bool> InsertAsync(MapTile t);
   Task DeleteAsync(MapTile t);
-  Task<MapTile> GetAsync(string id);
+  Task<MapTile> GetMapTileAsync(string id);
 
   Task DeleteAsync(BlobFile t);
   Task<List<BlobFile>> GetAllAsync();

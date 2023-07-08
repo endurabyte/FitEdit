@@ -19,10 +19,10 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
   public SqliteAdapter(string dbPath)
   {
     dbPath_ = dbPath;
-    _ = Task.Run(async () => db_ = await GetConnection().AnyContext());
+    _ = Task.Run(async () => await OpenDatabase().AnyContext());
   }
 
-  private async Task<SQLiteAsyncConnection> GetConnection()
+  private async Task OpenDatabase()
   {
     Log.Info($"{nameof(SqliteAdapter)}: Attempting to open database \'{dbPath_}\'");
     try
@@ -30,22 +30,36 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
       var connString = new SQLiteConnectionString(dbPath_, flags_, storeDateTimeAsTicks: false);
       var db = new SQLiteAsyncConnection(connString);
       await db.EnableWriteAheadLoggingAsync().AnyContext(); // TODO Call only once at DB creation
-      await db.CreateTablesAsync(CreateFlags.None, new[] { typeof(SqliteFile), typeof(MapTile) }).AnyContext();
+      await db.CreateTablesAsync(CreateFlags.None, new[] { typeof(SqliteFile), typeof(MapTile), typeof(Authorization) }).AnyContext();
 
+      db_ = db;
       Log.Info($"{nameof(SqliteAdapter)} ready. sqlite provider is {raw.GetNativeLibraryName()}");
       Ready = true;
-      return db;
     }
     catch (Exception e)
     {
       Log.Error(e);
+    }
+  }
+
+  public async Task<bool> InsertAsync(Model.Authorization t) => 1 == await db_?.InsertOrReplaceAsync(t.Map()).AnyContext();
+  public async Task DeleteAsync(Model.Authorization t) => await db_?.DeleteAsync(t.Map()).AnyContext();
+  public async Task<Model.Authorization> GetAuthorizationAsync(string id)
+  {
+    try
+    {
+      var auth = await db_?.GetAsync<Authorization>(id).AnyContext();
+      return auth.Map();
+    }
+    catch (InvalidOperationException) // "Sequence contains no elements" => Not in db
+    {
       return null;
     }
   }
 
   public async Task<bool> InsertAsync(Model.MapTile t) => 1 == await db_?.InsertOrReplaceAsync(t.Map()).AnyContext();
   public async Task DeleteAsync(Model.MapTile t) => await db_?.DeleteAsync(t.Map()).AnyContext();
-  public async Task<Model.MapTile> GetAsync(string id)
+  public async Task<Model.MapTile> GetMapTileAsync(string id)
   {
     try
     {

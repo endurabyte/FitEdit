@@ -24,7 +24,7 @@ public class PersistentCache : IPersistentCache<byte[]>
   public byte[] Find(TileIndex index)
 #nullable enable
   {
-    MapTile tile = db_.GetAsync(KeyFor(index)).Await();
+    MapTile tile = db_.GetMapTileAsync(KeyFor(index)).Await();
     return tile?.Bytes;
   }
 

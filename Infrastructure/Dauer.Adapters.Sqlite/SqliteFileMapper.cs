@@ -2,16 +2,32 @@
 
 public static class SqliteFileMapper
 {
-  public static Model.MapTile Map(this MapTile f) => f == null ? null : new()
+  public static Model.Authorization Map(this Authorization a) => a == null ? null : new()
   {
-    Id = f.Id,
-    Bytes = f.Bytes,
+    Id = a.Id,
+    AccessToken = a.AccessToken,
+    RefreshToken = a.RefreshToken,
+    Expiry = a.Expiry,
   };
 
-  public static MapTile Map(this Model.MapTile f) => new()
+  public static Authorization Map(this Model.Authorization a) => new()
   {
-    Id = f.Id,
-    Bytes = f.Bytes,
+    Id = a.Id,
+    AccessToken = a.AccessToken,
+    RefreshToken = a.RefreshToken,
+    Expiry = a.Expiry,
+  };
+
+  public static Model.MapTile Map(this MapTile mt) => mt == null ? null : new()
+  {
+    Id = mt.Id,
+    Bytes = mt.Bytes,
+  };
+
+  public static MapTile Map(this Model.MapTile mt) => new()
+  {
+    Id = mt.Id,
+    Bytes = mt.Bytes,
   };
 
   public static Model.BlobFile Map(this SqliteFile f) => new()

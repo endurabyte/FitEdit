@@ -7,7 +7,7 @@ public class DesktopCompositionRoot : CompositionRoot
 {
   protected override async Task ConfigureAsync(ContainerBuilder builder)
   {
-    builder.RegisterType<DesktopWebAuthenticator>().As<IWebAuthenticator>();
+    builder.RegisterType<DesktopWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();
     await base.ConfigureAsync(builder);
   }
 }
