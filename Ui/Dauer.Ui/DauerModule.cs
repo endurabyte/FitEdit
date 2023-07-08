@@ -46,23 +46,29 @@ public class DauerModule : Autofac.Module
       Log.Debug($" {assembly}");
     }
 
-    // Bind IThing to Thing in matching assemblies
+    var ignoreList = new string[] 
+    {
+      "CompiledAvaloniaXaml",
+      "DynamicSetters",
+      "XamlClosure",
+      "ProcessedByFody",
+      "Dynastream"
+    };
+
+    // In matching assemblies...
     var types = builder
       .RegisterAssemblyTypes(assemblies.ToArray())
       .Where(t => t.IsClass)
-      .Where(t => !t.FullName?.Contains("CompiledAvaloniaXaml") ?? true)
-      .Where(t => !t.FullName?.Contains("DynamicSetters") ?? true)
-      .Where(t => !t.FullName?.Contains("XamlClosure") ?? true)
-      .Where(t => !t.FullName?.Contains("ProcessedByFody") ?? true)
-      .Where(t => !t.FullName?.Contains("Dynastream") ?? true);
+      .Where(t => ignoreList.All(ignoreStr => !t.FullName?.Contains(ignoreStr) ?? true));
 
+    // ...bind IThing to Thing
     types.As(t =>
     {
       Type? iface = t.GetInterfaces().FirstOrDefault(i => i.Name == "I" + t.Name);
 
       if (iface != null)
       {
-        Log.Debug($"Registering {t} as {iface}");
+        Log.Debug($"Binding {iface} to {t}");
       }
 
       return iface ?? t;
