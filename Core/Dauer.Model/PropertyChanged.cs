@@ -3,9 +3,21 @@ using System.Runtime.CompilerServices;
 
 namespace Dauer.Model
 {
-  public class PropertyChangedBase : INotifyPropertyChanged
+  public class PropertyChanged : INotifyPropertyChanged
   {
     public event PropertyChangedEventHandler PropertyChanged;
+
+    public bool Set<T>(ref T current, T newValue, [CallerMemberName] string propertyName = null)
+    {
+      if (EqualityComparer<T>.Default.Equals(current, newValue))
+      {
+        return false;
+      }
+
+      current = newValue;
+      NotifyPropertyChanged(propertyName);
+      return true;
+    }
 
     public void NotifyPropertyChanged(params string[] propertyNames)
     {

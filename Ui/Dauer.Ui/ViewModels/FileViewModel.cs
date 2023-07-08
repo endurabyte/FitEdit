@@ -59,7 +59,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       if (i < 0 || i >= fileService.Files.Count) { return; }
       fileService.MainFile = fileService.Files[i];
     });
-    InitFilesList();
+
+    db.ObservableForProperty(x => x.Ready).Subscribe(property =>
+    {
+      if (!property.Value) { return; }
+      InitFilesList();
+    });
   }
 
   private void InitFilesList()

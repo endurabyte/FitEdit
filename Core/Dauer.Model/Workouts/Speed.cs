@@ -2,7 +2,7 @@
 
 namespace Dauer.Model.Workouts
 {
-  public class Speed : ModelBase
+  public class Speed : PropertyChanged
   {
     private double value_;
     private Unit unit_;

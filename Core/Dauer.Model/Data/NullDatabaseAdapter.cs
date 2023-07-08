@@ -1,7 +1,9 @@
 ﻿namespace Dauer.Model.Data;
 
-public class NullDatabaseAdapter : IDatabaseAdapter
+public class NullDatabaseAdapter : PropertyChanged, IDatabaseAdapter
 {
+  public bool Ready => true;
+
   public Task<bool> InsertAsync(MapTile t) => Task.FromResult(true);
   public Task DeleteAsync(MapTile t) => Task.CompletedTask;
   public Task<MapTile> GetAsync(string id) => Task.FromResult(new MapTile { Id = id });

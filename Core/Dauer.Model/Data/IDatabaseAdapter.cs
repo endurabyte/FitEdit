@@ -1,7 +1,11 @@
-﻿namespace Dauer.Model.Data;
+﻿using System.ComponentModel;
 
-public interface IDatabaseAdapter
+namespace Dauer.Model.Data;
+
+public interface IDatabaseAdapter : INotifyPropertyChanged
 {
+  bool Ready { get; }
+
   Task<bool> InsertAsync(MapTile t);
   Task DeleteAsync(MapTile t);
   Task<MapTile> GetAsync(string id);

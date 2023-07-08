@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using Dauer.Model;
+﻿using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using SQLite;
@@ -7,12 +6,15 @@ using SQLitePCL;
 
 namespace Dauer.Adapters.Sqlite;
 
-public class SqliteAdapter : IDatabaseAdapter
+public class SqliteAdapter : PropertyChanged, IDatabaseAdapter 
 {
   private readonly string dbPath_;
   private readonly SQLiteOpenFlags flags_ = SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex;
 
   private SQLiteAsyncConnection db_;
+
+  private bool ready_;
+  public bool Ready { get => ready_; set => Set(ref ready_, value); }
 
   public SqliteAdapter(string dbPath)
   {
@@ -30,8 +32,8 @@ public class SqliteAdapter : IDatabaseAdapter
       await db.EnableWriteAheadLoggingAsync().AnyContext(); // TODO Call only once at DB creation
       await db.CreateTablesAsync(CreateFlags.None, new[] { typeof(SqliteFile), typeof(MapTile) }).AnyContext();
 
-      string providerName = raw.GetNativeLibraryName();
-      Log.Info($"sqlite provider is {providerName}");
+      Log.Info($"{nameof(SqliteAdapter)} ready. sqlite provider is {raw.GetNativeLibraryName()}");
+      Ready = true;
       return db;
     }
     catch (Exception e)
