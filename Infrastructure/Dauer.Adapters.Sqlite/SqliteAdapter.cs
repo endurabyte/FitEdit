@@ -6,7 +6,7 @@ using SQLitePCL;
 
 namespace Dauer.Adapters.Sqlite;
 
-public class SqliteAdapter : PropertyChanged, IDatabaseAdapter 
+public class SqliteAdapter : HasProperties, IDatabaseAdapter 
 {
   private readonly string dbPath_;
   private readonly SQLiteOpenFlags flags_ = SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex;

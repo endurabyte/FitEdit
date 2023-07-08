@@ -1,6 +1,6 @@
 ﻿namespace Dauer.Model.Data;
 
-public class NullDatabaseAdapter : PropertyChanged, IDatabaseAdapter
+public class NullDatabaseAdapter : HasProperties, IDatabaseAdapter
 {
   public bool Ready => true;
 

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Dauer.Model
 {
-  public class PropertyChanged : INotifyPropertyChanged
+  public class HasProperties : INotifyPropertyChanged
   {
     public event PropertyChangedEventHandler PropertyChanged;
 
