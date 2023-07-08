@@ -40,7 +40,6 @@
       <Button Command="{Binding HandleExportClicked}" Content="Export"/>
       <Button Command="{Binding HandleRemoveClicked}" Content="Remove"/>
       <Button Command="{Binding HandleMergeClicked}" Content="Merge"/>
-      <Button Command="{Binding HandleLoginClicked}" Content="Login"/>
     </StackPanel>
 
     <ScrollViewer Grid.Row="1">

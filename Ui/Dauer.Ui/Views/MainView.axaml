@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
+             xmlns:converters="using:Dauer.Ui.Converters"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="Dauer.Ui.Views.MainView"
              x:DataType="vm:MainViewModel">
@@ -15,12 +16,19 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <converters:BooleanToColorConverter x:Key="BooleanToColorConverter"/>
+      <converters:BooleanToLoginStatusConverter x:Key="BooleanToLoginStatusConverter" />
+    </ResourceDictionary>
+  </UserControl.Resources>
+  
   <Grid>
     <Grid.RowDefinitions>
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <Grid RowDefinitions="*, Auto, 3*, Auto">
+    <Grid RowDefinitions="*, Auto, 3*, Auto, Auto">
       <TabControl Grid.Row="0" TabStripPlacement="Left" SelectedIndex="{Binding SelectedTabIndex}">
         <TabItem Header="File" FontSize="12">
           <views:FileView DataContext="{Binding File}"/>
@@ -43,6 +51,24 @@
         <views:MapView Grid.Column="2" DataContext="{Binding Map}" />
       </Grid>
       <Slider Grid.Row="3" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
+
+      <!-- Logged in indicator -->
+      <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" >
+        <TextBlock Text="{Binding Authenticator.Username}" VerticalAlignment="Center" Margin="10,0,10,0">
+          <TextBlock.ContextMenu>
+            <ContextMenu>
+              <Button Command="{Binding HandleLoginClicked}" Content="Login" IsEnabled="{Binding !Authenticator.LoggedIn}"/>
+              <Button Command="{Binding HandleLogoutClicked}" Content="Logout" IsEnabled="{Binding Authenticator.LoggedIn}"/>
+            </ContextMenu>
+          </TextBlock.ContextMenu>
+        </TextBlock>
+        <Ellipse 
+                 Fill="{Binding Authenticator.LoggedIn, Converter={StaticResource BooleanToColorConverter}}" 
+                 ToolTip.Tip="{Binding Authenticator.LoggedIn, Converter={StaticResource BooleanToLoginStatusConverter}}"
+                 Width="20" Height="20">
+        </Ellipse>
+      </StackPanel>
+      
     </Grid>
 
 

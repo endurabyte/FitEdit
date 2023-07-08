@@ -7,7 +7,9 @@ public static class SqliteFileMapper
     Id = a.Id,
     AccessToken = a.AccessToken,
     RefreshToken = a.RefreshToken,
+    IdentityToken = a.IdentityToken,
     Expiry = a.Expiry,
+    Username = a.Username,
   };
 
   public static Authorization Map(this Model.Authorization a) => new()
@@ -15,7 +17,9 @@ public static class SqliteFileMapper
     Id = a.Id,
     AccessToken = a.AccessToken,
     RefreshToken = a.RefreshToken,
+    IdentityToken = a.IdentityToken,
     Expiry = a.Expiry,
+    Username = a.Username,
   };
 
   public static Model.MapTile Map(this MapTile mt) => mt == null ? null : new()

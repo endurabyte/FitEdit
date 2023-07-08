@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Linq;
+using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Windowing;
-using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -21,7 +21,8 @@ public class DesignMainViewModel : MainViewModel
     new DesignRecordViewModel(),
     new DesignMapViewModel(),
     new DesignFileViewModel(),
-    new DesignLogViewModel()
+    new DesignLogViewModel(),
+    new NullWebAuthenticator()
   )
   { 
   }
@@ -35,6 +36,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IMapViewModel Map { get; }
   public IFileViewModel File { get; }
   public ILogViewModel Log { get; }
+  public IWebAuthenticator Authenticator { get; }
 
   [Reactive] public int SliderValue { get; set; }
   [Reactive] public int SliderMax { get; set; }
@@ -52,7 +54,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IRecordViewModel records,
     IMapViewModel map,
     IFileViewModel file,
-    ILogViewModel log
+    ILogViewModel log,
+    IWebAuthenticator authenticator
   )
   {
     window_ = window;
@@ -63,6 +66,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Map = map;
     File = file;
     Log = log;
+    Authenticator = authenticator;
 
     window_.Resized.Subscribe(tup =>
     {
@@ -92,5 +96,21 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       SliderMax = file.FitFile.Records.Count - 1;
       //SelectedTabIndex = 1; // Laps
     });
+  }
+
+  public void HandleLoginClicked()
+  {
+    Dauer.Model.Log.Info($"{nameof(HandleLoginClicked)}");
+    Dauer.Model.Log.Info($"Starting {Authenticator.GetType()}.{nameof(IWebAuthenticator.AuthenticateAsync)}");
+
+    Authenticator.AuthenticateAsync();
+  }
+
+  public void HandleLogoutClicked()
+  {
+    Dauer.Model.Log.Info($"{nameof(HandleLogoutClicked)}");
+    Dauer.Model.Log.Info($"Starting {Authenticator.GetType()}.{nameof(IWebAuthenticator.LogoutAsync)}");
+
+    Authenticator.LogoutAsync();
   }
 }

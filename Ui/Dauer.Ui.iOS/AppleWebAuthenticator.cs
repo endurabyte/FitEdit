@@ -3,9 +3,9 @@ using Microsoft.Maui.Authentication;
 
 namespace Dauer.Ui.iOS;
 
-public class AppleWebAuthenticator : Infra.IWebAuthenticator
+public class AppleWebAuthenticator : Infra.WebAuthenticatorBase
 {
-  public async Task<bool> AuthenticateAsync(CancellationToken ct = default)
+  public override async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
     Log.Info($"{nameof(AppleWebAuthenticator)}.{nameof(AuthenticateAsync)}");
 

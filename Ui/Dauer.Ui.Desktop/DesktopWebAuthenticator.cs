@@ -5,11 +5,12 @@ using IdentityModel.Client;
 using IdentityModel.OidcClient;
 using IdentityModel.OidcClient.Results;
 using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using Serilog;
 
 namespace Dauer.Ui.Desktop;
 
-public class DesktopWebAuthenticator : IWebAuthenticator
+public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
   private readonly string redirectUri_ = $"https://www.fitedit.io/login-redirect.html";
   private readonly string authority_ = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_nqQT8APwr";
@@ -17,16 +18,21 @@ public class DesktopWebAuthenticator : IWebAuthenticator
   private readonly string clientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
   private readonly IDatabaseAdapter db_;
   private readonly Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };
+  private static readonly string defaultUsername_ = "(Please log in)";
   private CancellationTokenSource refreshCts_ = new();
 
   private OidcClient? oidcClient_;
   private HttpClient? httpClient_;
 
+  [Reactive] public string Username { get; set; } = defaultUsername_;
+  [Reactive] public bool LoggedIn { get; set; }
+
   public DesktopWebAuthenticator(IDatabaseAdapter db)
   {
-    _ = Task.Run(InitAsync);
     db_ = db;
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ => await LoadCachedAuthorization());
+
+    _ = Task.Run(InitAsync);
   }
 
   private async Task LoadCachedAuthorization()
@@ -39,7 +45,10 @@ public class DesktopWebAuthenticator : IWebAuthenticator
 
     auth_.AccessToken = result.AccessToken;
     auth_.RefreshToken = result.RefreshToken;
+    auth_.IdentityToken = result.IdentityToken;
     auth_.Expiry = result.Expiry;
+    auth_.Username = result.Username;
+    Username = result.Username ?? defaultUsername_;
     await AuthenticateAsync();
   }
 
@@ -74,21 +83,83 @@ public class DesktopWebAuthenticator : IWebAuthenticator
     httpClient_ = new HttpClient { BaseAddress = new Uri(api_) };
   }
 
+  public async Task<bool> LogoutAsync(CancellationToken ct = default)
+  {
+    if (oidcClient_ == null) { LoggedIn = false; return false; }
+
+    try
+    {
+      string uri = $"https://auth.fitedit.io/logout" +
+                $"?client_id={clientId_}" +
+                $"&logout_uri=https://www.fitedit.io/";
+
+      // Cognito OpenID connect discovery does not support logout: https://stackoverflow.com/a/56221548/16246783
+      // Cognito is not even OpenID certified: https://openid.net/certification/
+      //var req = new LogoutRequest { IdTokenHint = auth_.IdentityToken, }
+      //LogoutResult result = await oidcClient_.LogoutAsync(req, ct);
+
+      var client = new HttpClient();
+      HttpResponseMessage resp = await client.GetAsync(uri, ct);
+      bool ok = resp.IsSuccessStatusCode;
+
+      //BrowserResult? result = await oidcClient_.Options.Browser
+      //  .InvokeAsync(new BrowserOptions(uri, "https://www.fitedit.io/") { Timeout = TimeSpan.Zero, });
+      //bool ok = !result.IsError;
+
+      if (!ok) 
+      { 
+        //Log.Error($"Logout error: {result.Error}: {result.ErrorDescription}");
+        return false; 
+      }
+
+      Log.Information("Logged out");
+      LoggedIn = false;
+      Username = defaultUsername_;
+      auth_.IdentityToken = null;
+      auth_.AccessToken = null;
+      auth_.RefreshToken = null;
+      auth_.Username = null;
+      await db_.InsertAsync(auth_);
+
+      return true;
+    }
+    catch (Exception e)
+    {
+      Log.Error($"{e}");
+      return false;
+    }
+  }
+
   public async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
-    // First try to refresh the token
-    if (await RefreshTokenAsync(auth_.RefreshToken, ct)) { return true; }
-
-    // Refresh token didn't work. We need to reuthenticate
     StopRefreshLoop();
 
-    if (oidcClient_ == null) { return false; }
-    LoginResult result = await oidcClient_.LoginAsync(cancellationToken: ct);
+    try
+    {
+      // First try to contact the API with existing token
+      if (await GetIsAuthenticated(auth_.AccessToken, ct)) { LoggedIn = true; return true; }
 
-    if (!await TryParse(result)) { return false; }
+      // Not authorized to use the API. Try to refresh the token
+      if (await RefreshTokenAsync(auth_.RefreshToken, ct)) { LoggedIn = true; return true; }
 
-    StartRefreshLoop();
-    return true;
+      // Refresh token didn't work. We need to reuthenticate
+      if (oidcClient_ == null) { LoggedIn = false; return false; }
+      LoginResult result = await oidcClient_.LoginAsync(cancellationToken: ct);
+
+      if (!await TryParse(result)) { LoggedIn = false; return false; }
+
+      LoggedIn = true;
+      return true;
+    }
+    catch (Exception e)
+    {
+      Log.Error($"{e}");
+      return false;
+    }
+    finally
+    {
+      StartRefreshLoop();
+    }
   }
 
   /// <summary>
@@ -156,6 +227,11 @@ public class DesktopWebAuthenticator : IWebAuthenticator
     foreach (var claim in result.User.Claims)
     {
       Dauer.Model.Log.Info($"{claim.Type}: {claim.Value}");
+      if (claim?.Type == "email")
+      {
+        Username = claim.Value;
+        auth_.Username = claim.Value;
+      }
     }
 
     Dauer.Model.Log.Info($"Identity token: {result.IdentityToken}");
@@ -163,9 +239,10 @@ public class DesktopWebAuthenticator : IWebAuthenticator
     Dauer.Model.Log.Info($"  Expires:  {result.AccessTokenExpiration}");
     Dauer.Model.Log.Info($"Refresh token:  {result.RefreshToken}");
 
+    auth_.IdentityToken = result.IdentityToken;
     auth_.AccessToken = result.AccessToken;
-    auth_.RefreshToken = result.RefreshToken;
     auth_.Expiry = result.AccessTokenExpiration;
+    auth_.RefreshToken = result.RefreshToken;
     await db_.InsertAsync(auth_);
 
     return true;
@@ -185,9 +262,10 @@ public class DesktopWebAuthenticator : IWebAuthenticator
     Dauer.Model.Log.Info($"  Expires:  {result.AccessTokenExpiration}");
     Dauer.Model.Log.Info($"Refresh token:  {result.RefreshToken}");
 
+    auth_.IdentityToken = result.IdentityToken;
     auth_.AccessToken = result.AccessToken;
-    auth_.RefreshToken = result.RefreshToken;
     auth_.Expiry = result.AccessTokenExpiration;
+    auth_.RefreshToken = result.RefreshToken;
     await db_.InsertAsync(auth_);
 
     return true;

@@ -303,12 +303,4 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     sf.IsVisible = true;
     sf.Progress = 100;
   }
-
-  public void HandleLoginClicked()
-  {
-    Log.Info($"{nameof(HandleLoginClicked)}");
-    Log.Info($"Starting {auth_.GetType()}.{nameof(IWebAuthenticator.AuthenticateAsync)}");
-
-    auth_.AuthenticateAsync();
-  }
 }

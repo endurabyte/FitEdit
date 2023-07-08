@@ -64,6 +64,11 @@ public class DesktopBrowser : IBrowser
 
     OpenBrowser(options.StartUrl);
 
+    if (options.Timeout == TimeSpan.Zero)
+    {
+      return new BrowserResult { Response = "Logout success", ResultType = BrowserResultType.Success };
+    }
+
     try
     {
       string? result = await listener.WaitForCallbackAsync();

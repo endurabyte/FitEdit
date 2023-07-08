@@ -3,10 +3,11 @@ using Microsoft.Maui.Authentication;
 
 namespace Dauer.Ui.Android;
 
-public class AndroidWebAuthenticator : Infra.IWebAuthenticator
+public class AndroidWebAuthenticator : Infra.WebAuthenticatorBase
 {
   private const string authenticationUrl_ = "https://auth.fitedit.io/login?response_type=code&client_id=667gbn7s1enf2jjnmnai6gc8o5&redirect_uri=fitedit://app.fitedit.io";
-  public async Task<bool> AuthenticateAsync(CancellationToken ct = default)
+
+  public override async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
     Log.Info($"{nameof(AndroidWebAuthenticator)}.{nameof(AuthenticateAsync)}");
 

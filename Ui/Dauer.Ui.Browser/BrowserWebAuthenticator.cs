@@ -3,9 +3,9 @@ using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.Browser;
 
-public class BrowserWebAuthenticator : IWebAuthenticator
+public class BrowserWebAuthenticator : WebAuthenticatorBase
 {
-  public Task<bool> AuthenticateAsync(CancellationToken ct = default)
+  public override Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
     WebWindowAdapter.OpenWindow("login.html", "login");
     return Task.FromResult(true);
