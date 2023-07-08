@@ -304,9 +304,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     sf.Progress = 100;
   }
 
-  public void HandleAuthorizeClicked()
+  public void HandleLoginClicked()
   {
-    Log.Info($"{nameof(HandleAuthorizeClicked)}");
+    Log.Info($"{nameof(HandleLoginClicked)}");
     Log.Info($"Starting {auth_.GetType()}.{nameof(IWebAuthenticator.AuthenticateAsync)}");
 
     auth_.AuthenticateAsync();
