@@ -5,6 +5,7 @@ using Application = Android.App.Application;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using Autofac;
 
 namespace Dauer.Ui.Android;
 
@@ -13,7 +14,7 @@ public class SplashActivity : AvaloniaSplashActivity<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
-    CompositionRoot.ServiceLocator.Register<Infra.IWebAuthenticator>(new AndroidWebAuthenticator());
+    CompositionRoot.Instance = new AndroidCompositionRoot();
 
     return base.CustomizeAppBuilder(builder)
           .UseReactiveUI();

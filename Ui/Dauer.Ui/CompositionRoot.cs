@@ -1,43 +1,24 @@
-﻿using Avalonia.Controls.ApplicationLifetimes;
-using Dauer.Adapters.Sqlite;
-using Dauer.Model;
-using Dauer.Model.Data;
-using Dauer.Ui.Infra;
-using Dauer.Ui.Infra.Adapters.Storage;
-using Dauer.Ui.Infra.Adapters.Windowing;
-using Dauer.Ui.ViewModels;
+﻿using Autofac;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace Dauer.Ui;
 
-public class CompositionRoot
+public interface ICompositionRoot
 {
-  private readonly IApplicationLifetime? lifetime_;
+  T Get<T>() where T : notnull;
+  ICompositionRoot Build(IApplicationLifetime? lifetime);
 
-  public IContainer Container { get; set; } = new Container();
+  void Register(Type @interface, Type implementation, bool singleton = false);
+  void Register(Type @interface, object implementation, bool singleton = false);
+  void Register(Type @interface, Func<object> factory, bool singleton = false);
+}
 
-  /// <summary>
-  /// Don't use this if at all possible. Used as a wrapper for Avalonia's static service locator.
-  /// </summary>
-  public static IContainer ServiceLocator { get; } = new Container();
+public class CompositionRoot : ICompositionRoot
+{
+  public static ICompositionRoot? Instance { get; set; }
 
-  private IStorageAdapter Storage_ => true switch
-  {
-    _ when lifetime_.IsDesktop(out _) => new DesktopStorageAdapter(),
-    _ when lifetime_.IsMobile(out _) => new MobileStorageAdapter(),
-    _ => new NullStorageAdapter(),
-  };
-
-  private IWindowAdapter Window_ => true switch
-  {
-    _ when lifetime_.IsDesktop(out _) => new DesktopWindowAdapter(),
-    _ when lifetime_.IsMobile(out _) => new MobileWindowAdapter(),
-    _ => new NullWindowAdapter(),
-  };
-
-  public CompositionRoot(IApplicationLifetime? lifetime)
-  {
-    lifetime_ = lifetime;
-  }
+  private ContainerBuilder? builder_;
+  private IContainer? container_;
 
   static CompositionRoot()
   {
@@ -48,41 +29,24 @@ public class CompositionRoot
     //}
   }
 
-  public CompositionRoot Build()
+  public ICompositionRoot Build(IApplicationLifetime? lifetime)
   {
-    Container = new Container();
-
-    var log = new LogViewModel();
-
-    var auth = ServiceLocator.Get<IWebAuthenticator>() ?? new NullWebAuthenticator();
-    var window = ServiceLocator.Get<IWindowAdapter>() ?? Window_;
-    var storage = ServiceLocator.Get<IStorageAdapter>() ?? Storage_;
-
-    string dbPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "fitedit", "fitedit.sqlite3");
-
-    Directory.CreateDirectory(Directory.GetParent(dbPath)!.FullName);
-
-    IDatabaseAdapter db = OperatingSystem.IsBrowser() switch 
-    {
-      true => ServiceLocator.Get<IDatabaseAdapter>() ?? new SqliteAdapter(dbPath),
-      _ => new SqliteAdapter(dbPath),
-    };
-
-    IFileService fileService = new FileService();
-
-    var vm = new MainViewModel(
-      fileService,
-      window,
-      new PlotViewModel(fileService),
-      new LapViewModel(fileService),
-      new RecordViewModel(fileService),
-      new MapViewModel(fileService, db, TileSource.Jawg),
-      new FileViewModel(fileService, db, storage, auth, log),
-      log
-    );
-
-    Container.Register<IMainViewModel>(vm);
+    builder_ = new ContainerBuilder();
+    builder_.AddDauer(lifetime);
+    ConfigureAsync(builder_);
+    container_ = builder_.Build();
     return this;
+  }
+
+  protected virtual Task ConfigureAsync(ContainerBuilder builder) => Task.CompletedTask;
+
+  public void Register(Type @interface, Type implementation, bool singleton = false) => builder_?.RegisterType(implementation).As(@interface).SingletonIf(singleton);
+  public void Register(Type @interface, object implementation, bool singleton = false) => builder_?.RegisterInstance(implementation).As(@interface).SingletonIf(singleton);
+  public void Register(Type @interface, Func<object> factory, bool singleton = false) => builder_?.Register(ctx => factory()).As(@interface).SingletonIf(singleton);
+
+  public T Get<T>() where T : notnull
+  {
+    if (container_ == null) { throw new InvalidOperationException($"Call {nameof(Build)} before calling {nameof(Get)}"); };
+    return container_.Resolve<T>();
   }
 }

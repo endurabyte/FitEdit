@@ -19,8 +19,11 @@ public partial class App : Application
   {
     Log.Level = LogLevel.Info;
 
-    var root = new CompositionRoot(ApplicationLifetime).Build();
-    object? dataContext = root.Container.Get<IMainViewModel>();
+    if (CompositionRoot.Instance == null) { return; }
+
+    object? dataContext = CompositionRoot.Instance
+      .Build(ApplicationLifetime)
+      .Get<IMainViewModel>();
 
     if (ApplicationLifetime.IsDesktop(out var desktop))
     {

@@ -74,7 +74,7 @@ public class DesktopWebAuthenticator : IWebAuthenticator
     Dauer.Model.Log.Info("Claims:");
     foreach (var claim in result.User.Claims)
     {
-      Dauer.Model.Log.Error($"{claim.Type}: {claim.Value}");
+      Dauer.Model.Log.Info($"{claim.Type}: {claim.Value}");
     }
 
     Dauer.Model.Log.Info($"Identity token: {result.IdentityToken}");

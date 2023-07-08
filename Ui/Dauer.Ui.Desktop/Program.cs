@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
-using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.Desktop;
 
@@ -12,7 +11,7 @@ internal class Program
   [STAThread]
   public static void Main(string[] args)
   {
-    CompositionRoot.ServiceLocator.Register<IWebAuthenticator>(new DesktopWebAuthenticator());
+    CompositionRoot.Instance = new DesktopCompositionRoot();
 
     BuildAvaloniaApp()
       .StartWithClassicDesktopLifetime(args);

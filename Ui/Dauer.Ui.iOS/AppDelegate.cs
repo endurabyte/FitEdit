@@ -17,7 +17,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
-    CompositionRoot.ServiceLocator.Register<Infra.IWebAuthenticator>(new AppleWebAuthenticator());
+    CompositionRoot.Instance = new AppleCompositionRoot();
 
     return base.CustomizeAppBuilder(builder)
       .AfterSetup(_ => Platform.Init(() => Window.RootViewController!))
