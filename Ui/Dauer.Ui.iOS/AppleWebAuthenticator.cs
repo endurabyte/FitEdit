@@ -5,7 +5,7 @@ namespace Dauer.Ui.iOS;
 
 public class AppleWebAuthenticator : Infra.IWebAuthenticator
 {
-  public async Task AuthenticateAsync()
+  public async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
     Log.Info($"{nameof(AppleWebAuthenticator)}.{nameof(AuthenticateAsync)}");
 
@@ -18,5 +18,6 @@ public class AppleWebAuthenticator : Infra.IWebAuthenticator
     };
 
     WebAuthenticatorResult? result = await AppleSignInAuthenticator.AuthenticateAsync(options);
+    return result?.AccessToken != null;
   }
 }

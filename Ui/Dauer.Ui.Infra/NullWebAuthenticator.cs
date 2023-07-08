@@ -2,5 +2,5 @@
 
 public class NullWebAuthenticator : IWebAuthenticator
 {
-  public Task AuthenticateAsync() => Task.CompletedTask;
+  public Task<bool> AuthenticateAsync(CancellationToken ct = default) => Task.FromResult(true);
 }

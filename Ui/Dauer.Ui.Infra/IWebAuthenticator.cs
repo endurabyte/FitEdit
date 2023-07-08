@@ -2,5 +2,5 @@
 
 public interface IWebAuthenticator
 {
-  Task AuthenticateAsync();
+  Task<bool> AuthenticateAsync(CancellationToken ct = default);
 }

@@ -1,8 +1,8 @@
-﻿using Dauer.Model;
-using Dauer.Ui.Desktop.Oidc;
+﻿using Dauer.Ui.Desktop.Oidc;
 using Dauer.Ui.Infra;
 using IdentityModel.Client;
 using IdentityModel.OidcClient;
+using IdentityModel.OidcClient.Results;
 using Serilog;
 
 namespace Dauer.Ui.Desktop;
@@ -13,6 +13,10 @@ public class DesktopWebAuthenticator : IWebAuthenticator
   private readonly string authority_ = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_nqQT8APwr";
   private readonly string api_ = "https://api.fitedit.io/";
   private readonly string clientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
+  private string accessToken_ = "";
+  private string refreshToken_ = "";
+  private DateTimeOffset accessTokenExpiry_;
+  private CancellationTokenSource refreshCts_ = new();
 
   private OidcClient? oidcClient_;
   private HttpClient? httpClient_;
@@ -34,6 +38,7 @@ public class DesktopWebAuthenticator : IWebAuthenticator
       Scope = "email openid",
       FilterClaims = false,
       Browser = browser,
+
       // JS on the redirect page will split the state on the .
       // to get the local listen port
       AdditionalState = $".port={browser.Port}"
@@ -52,24 +57,82 @@ public class DesktopWebAuthenticator : IWebAuthenticator
     httpClient_ = new HttpClient { BaseAddress = new Uri(api_) };
   }
 
-  public async Task AuthenticateAsync()
+  public async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
-    Dauer.Model.Log.Info($"{nameof(DesktopWebAuthenticator)}.{nameof(AuthenticateAsync)}");
+    // First try to refresh the token
+    if (await RefreshTokenAsync(refreshToken_, ct)) { return true; }
 
-    if (oidcClient_ == null) { return; }
+    // Refresh token didn't work. We need to reuthenticate
+    StopRefreshLoop();
 
-    var result = await oidcClient_.LoginAsync();
-    LogResult(result);
-    await GetIsAuthenticated(result.AccessToken);
+    if (oidcClient_ == null) { return false; }
+    LoginResult result = await oidcClient_.LoginAsync(cancellationToken: ct);
+
+    if (!TryParse(result)) { return false; }
+
+    StartRefreshLoop();
+    return true;
   }
 
-  private static void LogResult(LoginResult result)
+  /// <summary>
+  /// Stop the automatic refresh loop (no-op if it's not running)
+  /// </summary>
+  private void StopRefreshLoop()
+  {
+    refreshCts_.Cancel();
+    refreshCts_ = new();
+  }
+
+  private void StartRefreshLoop()
+  {
+    CancellationToken refreshCt = refreshCts_.Token;
+    _ = Task.Run(async () => await RunRefreshLoop(refreshCt), refreshCt);
+  }
+
+  /// <summary>
+  /// Run a loop that refreshes the access token just before expiration.
+  /// </summary>
+  private async Task RunRefreshLoop(CancellationToken ct = default)
+  {
+    var margin = TimeSpan.FromMinutes(5); // e.g. refresh 5 minutes before expiry
+
+    accessTokenExpiry_ = DateTimeOffset.UtcNow + TimeSpan.FromMinutes(6);
+    while (!ct.IsCancellationRequested)
+    {
+      // Run an initial check before delaying for a long time
+      if (!await GetIsAuthenticated(accessToken_, ct)) { return; }
+
+      TimeSpan delay = accessTokenExpiry_ - DateTimeOffset.UtcNow - margin;
+      await Task.Delay(delay, ct);
+
+      // The token is almost expired. Are we still authenticated? We need it to refresh.
+      // If not, reauthenticate and exit the loop. On reauth, a new loop will be started.
+      if (!await GetIsAuthenticated(accessToken_, ct)) { await AuthenticateAsync(ct); return; }
+
+      // Could we refresh the access token?
+      // If not, reauthenticate and exit the loop. On reauth, a new loop will be started.
+      if (!await RefreshTokenAsync(refreshToken_, ct)) { await AuthenticateAsync(ct); return; }
+    }
+  }
+
+  private async Task<bool> RefreshTokenAsync(string refreshToken, CancellationToken ct = default)
+  {
+    Dauer.Model.Log.Info($"{nameof(DesktopWebAuthenticator)}.{nameof(RefreshTokenAsync)}");
+    if (oidcClient_ == null) { return false; }
+
+    var result = await oidcClient_.RefreshTokenAsync(refreshToken, cancellationToken: ct);
+    return TryParse(result);
+  }
+
+  private bool TryParse(LoginResult result)
   {
     if (result.IsError)
     {
-      Dauer.Model.Log.Error($"Auth error: {result.Error}");
-      return;
+      Dauer.Model.Log.Error($"Login error: {result.Error}: {result.ErrorDescription}");
+      return false;
     }
+
+    Dauer.Model.Log.Info($"LoginResult:");
 
     Dauer.Model.Log.Info("Claims:");
     foreach (var claim in result.User.Claims)
@@ -79,15 +142,43 @@ public class DesktopWebAuthenticator : IWebAuthenticator
 
     Dauer.Model.Log.Info($"Identity token: {result.IdentityToken}");
     Dauer.Model.Log.Info($"Access token:   {result.AccessToken}");
-    Dauer.Model.Log.Info($"Refresh token:  {result.RefreshToken ?? "none"}");
+    Dauer.Model.Log.Info($"  Expires:  {result.AccessTokenExpiration}");
+    Dauer.Model.Log.Info($"Refresh token:  {result.RefreshToken}");
+
+    accessToken_ = result.AccessToken;
+    refreshToken_ = result.RefreshToken;
+    accessTokenExpiry_ = result.AccessTokenExpiration;
+
+    return true;
   }
 
-  private async Task<bool> GetIsAuthenticated(string accessToken)
+  private bool TryParse(RefreshTokenResult result)
+  {
+    if (result.IsError)
+    {
+      Dauer.Model.Log.Error($"Refresh token error: {result.Error}: {result.ErrorDescription}");
+      return false;
+    }
+
+    Dauer.Model.Log.Info($"RefreshTokenResult:");
+    Dauer.Model.Log.Info($"Identity token: {result.IdentityToken}");
+    Dauer.Model.Log.Info($"Access token:   {result.AccessToken}");
+    Dauer.Model.Log.Info($"  Expires:  {result.AccessTokenExpiration}");
+    Dauer.Model.Log.Info($"Refresh token:  {result.RefreshToken}");
+
+    accessToken_ = result.AccessToken;
+    refreshToken_ = result.RefreshToken;
+    accessTokenExpiry_ = result.AccessTokenExpiration;
+
+    return true;
+  }
+
+  private async Task<bool> GetIsAuthenticated(string accessToken, CancellationToken ct = default)
   {
     if (httpClient_ == null) { return false; }
 
     httpClient_.SetBearerToken(accessToken);
-    var response = await httpClient_.GetAsync("auth");
+    var response = await httpClient_.GetAsync("auth", cancellationToken: ct);
 
     if (response.IsSuccessStatusCode)
     {

@@ -27,7 +27,7 @@ public class BrowserCompositionRoot : CompositionRoot
       .ImportAsync(WebWindowAdapterImpl.ModuleName, "./windowing.js")
       .ContinueWith(_ =>
       {
-        Dauer.Model.Log.Info($"{WebWindowAdapterImpl.ModuleName} ready");
+        Log.Info($"{WebWindowAdapterImpl.ModuleName} ready");
         WebWindowAdapterImpl.ListenForResize();
         WebWindowAdapterImpl.ListenForMessages();
       });

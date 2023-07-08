@@ -5,9 +5,9 @@ namespace Dauer.Ui.Browser;
 
 public class BrowserWebAuthenticator : IWebAuthenticator
 {
-  public Task AuthenticateAsync()
+  public Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
     WebWindowAdapter.OpenWindow("login.html", "login");
-    return Task.CompletedTask;
+    return Task.FromResult(true);
   }
 }
