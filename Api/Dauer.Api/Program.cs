@@ -16,7 +16,7 @@ public static class Program
     builder.Services.AddSwaggerGen();
 
     // Configure Let's Encrypt client
-    builder.Services.AddLettuceEncrypt();
+    //builder.Services.AddLettuceEncrypt(); // Not needed in fly.io
 
     // Configure Oauth
     builder.Services
