@@ -4,6 +4,9 @@ jobs:
   deploy:
     name: Deploy proxy
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Api
     steps:
       # This step checks out a copy of your repository.
       - uses: actions/checkout@v3
