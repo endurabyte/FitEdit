@@ -25,6 +25,7 @@
     <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <!--For WebAuthenticator, part of Avalonia.Essentials-->
     <PackageReference Include="Xamarin.AndroidX.Browser" Version="1.5.0.2" />
+    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1" />
     <PackageReference Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="Avalonia.Essentials" Version="1.0.0" />
   </ItemGroup>
