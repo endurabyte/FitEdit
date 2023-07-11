@@ -86,14 +86,22 @@ namespace Dauer.Data.Fit
         Log.Debug($"Found {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}). Fields = {string.Join(", ", s.mesg.Fields.Values.Select(field => $"({field.Num} \'{field.Name}\')"))}");
         var mesg = MessageFactory.Create(s.mesg); // Convert general Mesg to specific e.g. LapMesg
 
-        tmp.Messages.Add(mesg);
+        if (!tmp.MessagesByDefinition.ContainsKey(mesg.Num))
+        {
+          tmp.MessagesByDefinition[mesg.Num] = new List<Mesg>() { mesg };
+        }
+        else
+        {
+          tmp.MessagesByDefinition[mesg.Num].Add(mesg);
+        }
+
         tmp.Events.Add(new MesgEventArgs(mesg));
       };
 
       decoder.MesgDefinitionEvent += (o, s) =>
       {
         Log.Debug($"Found {nameof(MesgDefinition)}. (GlobalMesgNum, LocalMesgNum) = ({s.mesgDef.GlobalMesgNum}, {s.mesgDef.LocalMesgNum}). Fields = {string.Join(", ", s.mesgDef.GetFields().Select(field => field.Num))}");
-        tmp.MessageDefinitions.Add(s.mesgDef);
+        tmp.MessageDefinitions[s.mesgDef.GlobalMesgNum] = s.mesgDef;
         tmp.Events.Add(s);
       };
 

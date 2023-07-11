@@ -1,6 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using Avalonia.Collections;
+using Avalonia.Controls;
+using Avalonia.Data;
 using Dauer.Data.Fit;
-using Dauer.Ui.Model;
+using Dauer.Ui.Converters;
+using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -16,16 +20,19 @@ public class DesignRecordViewModel : RecordViewModel
 {
   public DesignRecordViewModel() : base(new FileService())
   {
-    Records.Add(new Record { MessageNum = 2 });
-    Records.Add(new Record { MessageNum = 1 });
-    Records.Add(new Record { MessageNum = 4 });
-    Records.Add(new Record { MessageNum = 3 });
   }
+}
+
+public class DisplayedMessageGroup : ReactiveObject
+{
+  public int Num { get; set; }
+  public string? Name { get; set; }
+  [Reactive] public DataGrid? DataGrid { get; set; }
 }
 
 public class RecordViewModel : ViewModelBase, IRecordViewModel
 {
-  public ObservableCollection<Record> Records { get; set; } = new();
+  public ObservableCollection<DisplayedMessageGroup> Groups { get; set; } = new();
 
   [Reactive] public int SelectedIndex { get; set; }
   [Reactive] public int SelectionCount { get; set; }
@@ -33,6 +40,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private readonly IFileService fileService_;
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
+  private DisplayedMessageGroup? records_;
 
   public RecordViewModel(
     IFileService fileService
@@ -47,6 +55,13 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       if (fileService_.MainFile == null) { return; }
       fileService_.MainFile.SelectedIndex = property.Value;
     });
+
+  }
+
+  private void HandleRecordSelectionChanged(object? sender, SelectionChangedEventArgs e)
+  {
+    if (sender is not DataGrid dg) { return; }
+    dg.ScrollIntoView(dg.SelectedItem, dg.CurrentColumn);
   }
 
   private void HandleMainFileChanged(SelectedFile? file)
@@ -67,54 +82,82 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (SelectedIndex == index) { return; }
     SelectedIndex = index;
 
-    // Lazy-load more records.
-    if (SelectedIndex > Records.Count && fileService_.MainFile?.FitFile != null)
-    {
-      FillUpTo(fileService_.MainFile.FitFile, SelectedIndex + 100);
-    }
+    if (records_ == null) { return; }
+    if (records_.DataGrid == null) { return; }
+
+    records_.DataGrid.SelectedIndex = index;
   }
 
   private void HandleSelectionCountChanged(int count)
   {
     SelectionCount = count;
-  }
 
-  private void Show(FitFile fit)
-  {
-    Records.Clear();
+    if (records_?.DataGrid == null) { return; }
+    var dg = records_.DataGrid;
 
-    if (!fit.Records.Any()) { return; }
+    if (dg.ItemsSource == null) { return; }
+    dg.SelectedItems.Clear();
 
-    // Showing all records at once hangs the UI for a few seconds.
-    // Show only the first few. We'll lazy-load more as needed.
-    FillUpTo(fit, 100);
-  }
-
-  private void FillUpTo(FitFile fit, int endIdx)
-  { 
-    DateTime start = fit.Records[0].Start();
-
-    int startIdx = Records.Count;
-    endIdx = Math.Min(endIdx, fit.Records.Count);
-
-    foreach (int i in Enumerable.Range(startIdx, endIdx - startIdx))
+    var items = new DataGridCollectionView(dg.ItemsSource);
+    foreach (int i in Enumerable.Range(SelectedIndex, SelectionCount))
     {
-      var record = fit.Records[i];
-
-      double elapsedSeconds = (record.Start() - start).TotalSeconds;
-      double speed = record.GetEnhancedSpeed() ?? 0;
-      double dist = record.GetDistance() ?? 0;
-      double hr = record.GetHeartRate() ?? 0;
-
-      Records.Add(new Record
-      {
-        Index = i,
-        MessageNum = record.Num,
-        Name = record.Name,
-        HR = $"{hr}",
-        Speed = $"{speed:0.##}m/s",
-        Distance = $"{dist:0.##}m",
-      }); ;
+      dg.SelectedItems.Add(items[i]);
     }
+  }
+
+  private void Show(FitFile ff)
+  {
+    foreach (var kvp in ff.MessagesByDefinition)
+    {
+      MesgDefinition def = ff.MessageDefinitions[kvp.Key];
+      Mesg mesg = Profile.GetMesg(def.GlobalMesgNum);
+      List<string> fields = mesg.FieldsByName.Keys.ToList();
+
+      if (!fields.Any())
+      {
+        // If the definition defines no fields, Fall back to fields defined on the first message
+        fields = kvp.Value.FirstOrDefault()?.FieldsByName.Keys.ToList() ?? new List<string>();
+      }
+
+      var converter = new MesgFieldValueConverter();
+      var columns = fields.Select(field => new DataGridTextColumn
+      {
+        Header = field,
+        Binding = new Binding
+        {
+          Converter = converter,
+          ConverterParameter = field,
+          Mode = BindingMode.OneWay,
+        },
+      });
+
+      var dg = new DataGrid
+      {
+        ItemsSource = kvp.Value,
+        CanUserSortColumns = true,
+        CanUserResizeColumns = true,
+        CanUserReorderColumns = true,
+      };
+
+      foreach (var column in columns)
+      {
+        dg.Columns.Add(column);
+      }
+
+      Groups.Add(new DisplayedMessageGroup
+      {
+        Num = mesg.Num,
+        Name = $"{(mesg.Name == "unknown" ? $"Message Num {mesg.Num}" : mesg.Name)} "
+             + $"({kvp.Value.Count} {(kvp.Value.Count == 1 ? "row" : "rows")})",
+        DataGrid = dg
+      });
+    }
+
+    var records = Groups.FirstOrDefault(g => g.Num == MesgNum.Record);
+    if (records == null) { return; }
+    if (records.DataGrid == null) { return; }
+
+    records.DataGrid.SelectionChanged += HandleRecordSelectionChanged;
+    records_ = records;
   }
 }

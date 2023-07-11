@@ -10,9 +10,17 @@ namespace Dauer.Data.Fit
   {
     public static void Append(this FitFile f, FitFile other)
     {
-      f.MessageDefinitions.AddRange(other.MessageDefinitions);
-      f.Messages.AddRange(other.Messages);
       f.Events.AddRange(other.Events);
+
+      foreach (var kvp in other.MessageDefinitions)
+      {
+        f.MessageDefinitions[kvp.Key] = kvp.Value;
+      }
+
+      foreach (var kvp in other.MessagesByDefinition)
+      {
+        f.MessagesByDefinition[kvp.Key] = kvp.Value;
+      }
 
       f.Sessions.AddRange(other.Sessions);
       f.Laps.AddRange(other.Laps);

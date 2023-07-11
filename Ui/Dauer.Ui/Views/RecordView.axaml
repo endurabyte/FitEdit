@@ -12,18 +12,16 @@
     <vm:DesignRecordViewModel />
   </Design.DataContext>
 
-  <DataGrid x:Name="MainDataGrid" ItemsSource="{Binding Records}" SelectedIndex="{Binding SelectedIndex}" 
-            CanUserSortColumns="true"
-            CanUserReorderColumns="true"
-            CanUserResizeColumns="true">
-    <DataGrid.Columns>
-      <DataGridTextColumn Header="Index" Binding="{Binding Index}" IsReadOnly="true"/>
-      <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
-      <DataGridTextColumn Header="MessageNum" Binding="{Binding MessageNum}"/>
-      <DataGridTextColumn Header="HR" Binding="{Binding HR}"/>
-      <DataGridTextColumn Header="Speed" Binding="{Binding Speed}"/>
-      <DataGridTextColumn Header="Distance" Binding="{Binding Distance}"/>
-    </DataGrid.Columns>
-  </DataGrid>
-  
+  <ScrollViewer>
+    <ItemsControl ItemsSource="{Binding Groups}">
+      <ItemsControl.ItemTemplate>
+          <DataTemplate>
+              <Expander Header="{Binding Name}" HorizontalAlignment="Stretch" MaxHeight="800">
+                <ContentControl Content="{Binding DataGrid}"/>
+              </Expander>
+          </DataTemplate>
+      </ItemsControl.ItemTemplate>
+  </ItemsControl>
+  </ScrollViewer>
+
 </UserControl>

@@ -16,7 +16,7 @@ public class FitFileFactory
     session.SetTimestamp(start);
     session.SetStartTime(start);
 
-    fit.Messages.Add(session);
+    fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Session].Add(session);
 
     var lap1 = new Dynastream.Fit.LapMesg();
     var lap2 = new Dynastream.Fit.LapMesg();
@@ -26,16 +26,16 @@ public class FitFileFactory
     lap2.SetStartTime(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(2)));
     lap3.SetStartTime(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(5)));
 
-    fit.Messages.Add(lap1);
-    fit.Messages.Add(lap2);
-    fit.Messages.Add(lap3);
+    fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Lap].Add(lap1);
+    fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Lap].Add(lap2);
+    fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Lap].Add(lap3);
 
     foreach (int i in Enumerable.Range(0, 2*60))
     {
       var record = new Dynastream.Fit.RecordMesg();
       record.SetEnhancedSpeed(3.7f);
       record.SetTimestamp(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromSeconds(i)));
-      fit.Messages.Add(record);
+      fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Record].Add(record);
     }
 
     foreach (int i in Enumerable.Range(0, 3*60))
@@ -43,7 +43,7 @@ public class FitFileFactory
       var record = new Dynastream.Fit.RecordMesg();
       record.SetEnhancedSpeed(6.7f);
       record.SetTimestamp(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(2) + TimeSpan.FromSeconds(i)));
-      fit.Messages.Add(record);
+      fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Record].Add(record);
     }
 
     foreach (int i in Enumerable.Range(0, 1*60))
@@ -51,7 +51,7 @@ public class FitFileFactory
       var record = new Dynastream.Fit.RecordMesg();
       record.SetEnhancedSpeed(2.5f);
       record.SetTimestamp(new Dynastream.Fit.DateTime(start.GetDateTime() + TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(i)));
-      fit.Messages.Add(record);
+      fit.MessagesByDefinition[Dynastream.Fit.MesgNum.Record].Add(record);
     }
 
     return fit;
