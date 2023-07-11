@@ -1,5 +1,8 @@
-name: Deploy to Fly
-on: [push]
+name: Deploy API to Fly
+on: 
+  push:
+    paths:
+      - 'Api/**'
 jobs:
   deploy:
     name: Deploy proxy

@@ -1,7 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Avalonia.Controls;
-using Avalonia.Platform.Interop;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -101,7 +98,17 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    await Persist(file);
+    if (!file.Name.EndsWith(".zip"))
+    {
+      await Persist(file);
+      return;
+    }
+
+    List<BlobFile> files = Zip.Unzip(file);
+    foreach (BlobFile f in files)
+    {
+      await Persist(f);
+    }
   }
 
   private async Task<SelectedFile> Persist(BlobFile file)
