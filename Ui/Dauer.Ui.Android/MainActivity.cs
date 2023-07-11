@@ -1,13 +1,24 @@
 ﻿using Android.Content;
 using Android.Content.PM;
+using Avalonia;
 using Avalonia.Android;
+using Avalonia.ReactiveUI;
 using Microsoft.Maui.ApplicationModel;
 
 namespace Dauer.Ui.Android;
 
-[Activity(Label = "FitEdit", Theme = "@style/MyTheme.NoActionBar", Icon = "@mipmap/ic_launcher", LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize)]
-public class MainActivity : AvaloniaMainActivity
+[Activity(Label = "FitEdit", Theme = "@style/MyTheme.NoActionBar", Icon = "@mipmap/ic_launcher", MainLauncher = true, 
+  ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
+public class MainActivity : AvaloniaMainActivity<App>
 {
+  protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
+  {
+    CompositionRoot.Instance = new AndroidCompositionRoot();
+
+    return base.CustomizeAppBuilder(builder)
+          .UseReactiveUI();
+  }
+
   protected override void OnCreate(Bundle? savedInstanceState)
   {
     base.OnCreate(savedInstanceState);
