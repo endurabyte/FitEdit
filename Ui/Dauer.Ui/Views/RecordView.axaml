@@ -13,15 +13,28 @@
   </Design.DataContext>
 
   <ScrollViewer>
-    <ItemsControl ItemsSource="{Binding Groups}">
-      <ItemsControl.ItemTemplate>
-          <DataTemplate>
-              <Expander Header="{Binding Name}" HorizontalAlignment="Stretch" MaxHeight="800">
-                <ContentControl Content="{Binding DataGrid}"/>
-              </Expander>
-          </DataTemplate>
-      </ItemsControl.ItemTemplate>
-  </ItemsControl>
-  </ScrollViewer>
+    <StackPanel Orientation="Vertical">
 
+      <Expander Header="Filters">
+        <StackPanel Orientation="Vertical">
+          <CheckBox Content="Hide unused fields" IsChecked="{Binding HideUnusedFields}"/>
+          <CheckBox Content="Hide unnamed fields (Field #)" IsChecked="{Binding HideUnnamedFields}"/>
+          <CheckBox Content="Hide unnamed messages (Message #)" IsChecked="{Binding HideUnnamedMessages}"/>
+          <CheckBox Content="Prettify fields (timestamp, position)" IsChecked="{Binding PrettifyFields}"/>
+        </StackPanel>
+      </Expander>
+
+      <ItemsControl ItemsSource="{Binding Groups}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Expander IsVisible="{Binding IsVisible}" Header="{Binding Name}" HorizontalAlignment="Stretch" MaxHeight="800" Padding="0">
+              <ContentControl Content="{Binding DataGrid}"/>
+            </Expander>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+    </StackPanel>
+  </ScrollViewer>
+  
 </UserControl>

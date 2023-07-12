@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls;
-using Dauer.Ui.ViewModels;
 
 namespace Dauer.Ui.Views;
 

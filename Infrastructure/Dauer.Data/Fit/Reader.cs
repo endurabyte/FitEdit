@@ -84,7 +84,7 @@ namespace Dauer.Data.Fit
       decoder.MesgEvent += (o, s) =>
       {
         Log.Debug($"Found {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}). Fields = {string.Join(", ", s.mesg.Fields.Values.Select(field => $"({field.Num} \'{field.Name}\')"))}");
-        var mesg = MessageFactory.Create(s.mesg); // Convert general Mesg to specific e.g. LapMesg
+        var mesg = MessageFactory.Create(s.mesg);
 
         if (!tmp.MessagesByDefinition.ContainsKey(mesg.Num))
         {
