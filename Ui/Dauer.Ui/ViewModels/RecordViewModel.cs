@@ -3,10 +3,14 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
+using Avalonia.Data.Converters;
 using Dauer.Data.Fit;
 using Dauer.Ui.Converters;
+using DynamicData;
 using Dynastream.Fit;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -41,6 +45,7 @@ public class DisplayedMessageGroup : ReactiveObject
   public List<DisplayedHeader> Headers { get; set; } = new();
 
   [Reactive] public bool IsVisible { get; set; }
+  [Reactive] public bool IsExpanded { get; set; }
   [Reactive] public DataGrid? DataGrid { get; set; }
 }
 
@@ -60,12 +65,14 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
   private DisplayedMessageGroup? records_;
+  private readonly MesgFieldValueConverter converter_;
 
   public RecordViewModel(
     IFileService fileService
   )
   {
     fileService_ = fileService;
+    converter_ = new MesgFieldValueConverter(prettify: PrettifyFields);
 
     fileService.ObservableForProperty(x => x.MainFile).Subscribe(property => HandleMainFileChanged(fileService.MainFile));
 
@@ -84,7 +91,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
         group.IsVisible = !HideUnnamedMessages || group.IsNamed;
       }
     });
-
+    this.ObservableForProperty(x => x.PrettifyFields).Subscribe(_ =>
+    {
+      converter_.Prettify = PrettifyFields;
+      if (fileService_.MainFile?.FitFile == null) { return; }
+      Show(fileService_.MainFile.FitFile);
+    });
   }
 
   private void UpdateColumnVisibility()
@@ -160,98 +172,22 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void Show(FitFile ff)
   {
+    // Remeber which groups were expanded
+    var expandedGroups = Groups
+      .Where(g => g.IsExpanded)
+      .ToDictionary(g => g.Name ?? "", g => g.IsExpanded);
+
+    if (records_?.DataGrid != null)
+    {
+      records_.DataGrid.SelectionChanged -= HandleRecordSelectionChanged;
+    }
+
+    Groups.Clear();
+
     foreach (var kvp in ff.MessagesByDefinition)
     {
-      MesgDefinition def = ff.MessageDefinitions[kvp.Key];
-      Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
-
-      var defMessage = new Message(defMesg);
-      var msgs = kvp.Value.Select(msg => new Message(msg));
-
-      // Categories of fields:
-      // Known/unknown fields:
-      //   known fields have a name, e.g. "timestamp" or "manufacturer"
-      //   unknown fields do not have a name.
-      //     They only have a message num e.g. 15, 253.
-      //     Garmin labels them "unknown" which we replace with "Field <Num>"
-      // Used/unused fields:
-      //   used fields appear on the definition or on a amessage
-      //   unused fields fields are on the definition but not on any message
-
-      var defNames = new HashSet<string>(defMesg.FieldsByName.Keys);
-      var fieldNames = new HashSet<string>(kvp.Value
-        .SelectMany(m => m.FieldsByName.Keys
-        // Replace "unknown" with "Field <Num>"
-        .Select(key => key == "unknown" ? $"Field {m.Num}" : key)));
-
-      // On both the definition and at least one message
-      var onBoth = new HashSet<string>(defNames);
-
-      // On either the definition or a message
-      var onEither = new HashSet<string>(defNames);
-
-      // On only the definition
-      var defOnly = new HashSet<string>(defNames);
-
-      // On only a message
-      var msgOnly = new HashSet<string>(fieldNames);
-
-      onBoth.IntersectWith(fieldNames);
-      onEither.UnionWith(fieldNames);
-      defOnly.ExceptWith(fieldNames);
-      msgOnly.ExceptWith(defNames);
-
-      List<DisplayedHeader> headers = onEither.Select(name => new DisplayedHeader
-      {
-        Name = name,
-        IsUsed = !defOnly.Contains(name),
-      }).ToList();
-
-      var dg = new DataGrid
-      {
-        ItemsSource = msgs,
-        CanUserSortColumns = true,
-        CanUserResizeColumns = true,
-        CanUserReorderColumns = true,
-        IsReadOnly = false,
-      };
-
-      // Create columns
-      var converter = new MesgFieldValueConverter();
-      foreach (var header in headers) 
-      {
-        var col = new DataGridTextColumn
-        {
-          Header = header.Name,
-          Binding = new Binding
-          {
-            Converter = converter,
-            ConverterParameter = header.Name,
-            Mode = BindingMode.TwoWay,
-          },
-          IsReadOnly = false,
-          IsVisible = GetIsVisible(header),
-        };
-
-        header.Column = col;
-      }
-
-      foreach (var header in headers)
-      {
-        dg.Columns.Add(header.Column);
-      }
-
-      var group = new DisplayedMessageGroup
-      {
-        Num = defMesg.Num,
-        Name = $"{(defMesg.Name == "unknown" ? $"Message # {defMesg.Num}" : defMesg.Name)} "
-             + $"({kvp.Value.Count})",
-        DataGrid = dg,
-        IsNamed = defMessage.IsNamed,
-        IsVisible = defMessage.IsNamed || !HideUnnamedMessages,
-      };
-      group.Headers.AddRange(headers);
-
+      DisplayedMessageGroup group = CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
+      group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
       Groups.Add(group);
     }
 
@@ -262,5 +198,99 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     records.DataGrid.SelectionChanged += HandleRecordSelectionChanged;
     records_ = records;
+  }
+
+  private DisplayedMessageGroup CreateGroup(MesgDefinition def, List<Mesg> messages)
+  {
+    Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
+
+    var defMessage = new Message(defMesg);
+    var msgs = messages.Select(msg => new Message(msg));
+
+    // Categories of fields:
+    // Known/unknown fields:
+    //   known fields have a name, e.g. "timestamp" or "manufacturer"
+    //   unknown fields do not have a name.
+    //     They only have a message num e.g. 15, 253.
+    //     Garmin labels them "unknown" which we replace with "Field <Num>"
+    // Used/unused fields:
+    //   used fields appear on the definition or on a amessage
+    //   unused fields fields are on the definition but not on any message
+
+    var defNames = new HashSet<string>(defMesg.FieldsByName.Keys);
+    var fieldNames = new HashSet<string>(messages
+      .SelectMany(m => m.FieldsByName.Keys
+      // Replace "unknown" with "Field <Num>"
+      .Select(key => key == "unknown" ? $"Field {m.Num}" : key)));
+
+    // On both the definition and at least one message
+    var onBoth = new HashSet<string>(defNames);
+
+    // On either the definition or a message
+    var onEither = new HashSet<string>(defNames);
+
+    // On only the definition
+    var defOnly = new HashSet<string>(defNames);
+
+    // On only a message
+    var msgOnly = new HashSet<string>(fieldNames);
+
+    onBoth.IntersectWith(fieldNames);
+    onEither.UnionWith(fieldNames);
+    defOnly.ExceptWith(fieldNames);
+    msgOnly.ExceptWith(defNames);
+
+    List<DisplayedHeader> headers = onEither.Select(name => new DisplayedHeader
+    {
+      Name = name,
+      IsUsed = !defOnly.Contains(name),
+    }).ToList();
+
+    var dg = new DataGrid
+    {
+      ItemsSource = msgs,
+      CanUserSortColumns = true,
+      CanUserResizeColumns = true,
+      CanUserReorderColumns = true,
+      IsReadOnly = false,
+    };
+
+    // Create columns
+    var converter = new MesgFieldValueConverter(prettify: PrettifyFields);
+    foreach (var header in headers)
+    {
+      var col = new DataGridTextColumn
+      {
+        Header = header.Name,
+        Binding = new Binding
+        {
+          Converter = converter,
+          ConverterParameter = header.Name,
+          Mode = BindingMode.TwoWay,
+        },
+        IsReadOnly = false,
+        IsVisible = GetIsVisible(header),
+      };
+
+      header.Column = col;
+    }
+
+    foreach (var header in headers)
+    {
+      dg.Columns.Add(header.Column);
+    }
+
+    var group = new DisplayedMessageGroup
+    {
+      Num = defMesg.Num,
+      Name = $"{(defMesg.Name == "unknown" ? $"Message # {defMesg.Num}" : defMesg.Name)} "
+           + $"({messages.Count})",
+      DataGrid = dg,
+      IsNamed = defMessage.IsNamed,
+      IsVisible = defMessage.IsNamed || !HideUnnamedMessages,
+    };
+    group.Headers.AddRange(headers);
+
+    return group;
   }
 }

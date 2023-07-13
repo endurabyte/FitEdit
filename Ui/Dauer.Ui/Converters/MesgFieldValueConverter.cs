@@ -7,9 +7,16 @@ namespace Dauer.Ui.Converters;
 
 public class MesgFieldValueConverter : IValueConverter
 {
+  public bool Prettify { get; set; }
+
+  public MesgFieldValueConverter(bool prettify)
+  {
+    Prettify = prettify;
+  }
+
   public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
   {
-    _ when value is Message mesg && parameter is string fieldName => $"{mesg.GetValue(fieldName)}",
+    _ when value is Message mesg && parameter is string fieldName => $"{mesg.GetValue(fieldName, Prettify)}",
     _ => BindingOperations.DoNothing,
   };
 

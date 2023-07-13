@@ -27,7 +27,7 @@
       <ItemsControl ItemsSource="{Binding Groups}">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <Expander IsVisible="{Binding IsVisible}" Header="{Binding Name}" HorizontalAlignment="Stretch" MaxHeight="800" Padding="0">
+            <Expander IsExpanded="{Binding IsExpanded}" IsVisible="{Binding IsVisible}" Header="{Binding Name}" HorizontalAlignment="Stretch" MaxHeight="800" Padding="0,0,0,0">
               <ContentControl Content="{Binding DataGrid}"/>
             </Expander>
           </DataTemplate>
