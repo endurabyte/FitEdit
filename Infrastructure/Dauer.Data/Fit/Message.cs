@@ -166,6 +166,22 @@ public partial class Message : HasProperties
       }
     }
 
+    if (Mesg.Name == nameof(MesgNum.Record))
+    {
+      if (name == nameof(RecordMesg.FieldDefNum.Timestamp))
+      {
+        return Mesg.TimestampToDateTime((uint)value).GetDateTime();
+      }
+      if (name == nameof(RecordMesg.FieldDefNum.PositionLat))
+      {
+        return $"{((int)value).ToDegrees()}°N";
+      }
+      if (name == nameof(RecordMesg.FieldDefNum.PositionLong))
+      {
+        return $"{((int)value).ToDegrees()}°W";
+      }
+    }
+
     if (Mesg.Name == nameof(MesgNum.Activity))
     {
       if (name == nameof(ActivityMesg.FieldDefNum.Type))

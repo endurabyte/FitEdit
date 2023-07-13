@@ -1,7 +1,7 @@
 ﻿using NetTopologySuite.Geometries;
 using Mapsui.Nts.Extensions;
 using Mapsui.Projections;
-using Dauer.Ui.Extensions;
+using Dauer.Model.Extensions;
 
 namespace Dauer.Ui.Mapsui;
 

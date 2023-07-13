@@ -1,4 +1,4 @@
-﻿namespace Dauer.Ui.Extensions;
+﻿namespace Dauer.Model.Extensions;
 
 public static class GeospatialExtensions
 {
