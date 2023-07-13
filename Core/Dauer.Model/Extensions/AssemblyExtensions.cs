@@ -42,7 +42,7 @@ public static class AssemblyExtensions
   /// Find the type with the given name within the assembly.
   /// Add the assembly to the cache if is wasn't already.
   /// </summary>
-  private static bool TryFindType(this Assembly assembly, string typeName, out Type? type)
+  public static bool TryFindType(this Assembly assembly, string typeName, out Type? type)
   {
     TryAddToCache(assembly);
     return typeCache_[assembly].TryGetValue(typeName, out type);

@@ -20,5 +20,11 @@ public class MesgFieldValueConverter : IValueConverter
     _ => BindingOperations.DoNothing,
   };
 
-  public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotImplementedException();
+  public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+  {
+    if (value is not Message mesg || parameter is not (string s, object o)) { return BindingOperations.DoNothing; }
+
+    mesg.SetValue(s, o, Prettify);
+    return mesg;
+  }
 }

@@ -52,7 +52,8 @@ public class DauerModule : Autofac.Module
       "DynamicSetters",
       "XamlClosure",
       "ProcessedByFody",
-      "Dynastream"
+      "Dynastream",
+      "RegexGenerator"
     };
 
     // In matching assemblies...

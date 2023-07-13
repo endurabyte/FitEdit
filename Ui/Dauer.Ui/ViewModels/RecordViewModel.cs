@@ -1,6 +1,7 @@
 ﻿
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -182,12 +183,24 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       records_.DataGrid.SelectionChanged -= HandleRecordSelectionChanged;
     }
 
+    foreach (var group in Groups)
+    {
+      if (group.DataGrid != null)
+      {
+        group.DataGrid.CellEditEnding -= HandleCellEditEnding;
+      }
+    }
+
     Groups.Clear();
 
     foreach (var kvp in ff.MessagesByDefinition)
     {
       DisplayedMessageGroup group = CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
       group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
+      if (group.DataGrid != null)
+      {
+        group.DataGrid.CellEditEnding += HandleCellEditEnding;
+      }
       Groups.Add(group);
     }
 
@@ -292,5 +305,28 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     group.Headers.AddRange(headers);
 
     return group;
+  }
+
+  private void HandleCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
+  {
+    var dg = sender as DataGrid;
+
+    var column = e.Column as DataGridTextColumn;
+    var row = e.Row;
+
+    var binding = column?.Binding as Binding;
+    var converter = binding?.Converter as MesgFieldValueConverter;
+
+    var header = column?.Header as string;
+    var message = row.DataContext as Message;
+
+    var editingElement = e.EditingElement as TextBox;
+    var newContent = editingElement?.Text;
+
+    if (message == null) { return; }
+    if (header == null) { return; }
+    if (converter == null) { return; }
+
+    converter.ConvertBack(message, typeof(Message), (header, newContent), CultureInfo.CurrentCulture);
   }
 }

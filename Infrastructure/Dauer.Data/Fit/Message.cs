@@ -1,9 +1,12 @@
 ﻿#nullable enable
+using System.Reflection;
+using System.Runtime.InteropServices.ObjectiveC;
 using System.Text;
 using System.Text.RegularExpressions;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dynastream.Fit;
+using AssemblyExtensions = Dauer.Model.Extensions.AssemblyExtensions;
 
 namespace Dauer.Data.Fit;
 
@@ -27,10 +30,22 @@ public partial class Message : HasProperties
     fit_ = assembly;
   }
 
-  public void SetValue(string name, object? value)
+  public void SetValue(string name, object? value, bool pretty)
   {
-    Mesg.SetFieldValue(name, value);
-    NotifyPropertyChanged(nameof(Mesg));
+    try
+    {
+      if (pretty && TryUnprettifyField(name, value, out object? result))
+      {
+        value = result;
+      }
+
+      Mesg.SetFieldValue(name, value);
+      NotifyPropertyChanged(nameof(Mesg));
+    }
+    catch (Exception e)
+    {
+      Log.Error(e);
+    }
   }
 
   public object? GetValue(string name, bool prettify)
@@ -40,6 +55,96 @@ public partial class Message : HasProperties
     : Mesg.GetFieldValue(name);
 
     return prettify ? PrettifyField(name, value) : value;
+  }
+
+  private bool TryUnprettifyField(string name, object? value, out object? result)
+  {
+    result = null;
+
+    var field = Mesg.GetField(name);
+
+    // Handle enums
+    if (value is string s 
+      && fit_ != null 
+      && fit_.TryFindType($"{field.ProfileType}", out Type? t) 
+      && t == typeof(Enum)
+      && Enum.TryParse(t, s, ignoreCase: true, out result)
+    )
+    {
+      return true;
+    }
+
+    if (Mesg.Name == nameof(MesgNum.FileId))
+    {
+      if (name == nameof(FileIdMesg.FieldDefNum.Product))
+      {
+        name = nameof(GarminProduct);
+      }
+    }
+
+    if (Mesg.Name == nameof(MesgNum.Record))
+    {
+      if (name == nameof(RecordMesg.FieldDefNum.Timestamp))
+      {
+        if (value != null)
+        {
+          if (value is string dtString)
+          {
+            uint timestamp = new Dynastream.Fit.DateTime(System.DateTime.Parse(dtString)).GetTimeStamp();
+            result = timestamp;
+            return true;
+          }
+        }
+      }
+
+      if (name == nameof(RecordMesg.FieldDefNum.PositionLat))
+      {
+        if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
+        {
+          result = d.ToSemicirlces();
+          return true;
+        }
+      }
+
+      if (name == nameof(RecordMesg.FieldDefNum.PositionLong))
+      {
+        if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
+        {
+          result = d.ToSemicirlces();
+          return true;
+        }
+      }
+    }
+
+    // Handle public static literal fields
+    if (value is string s2 
+      && fit_ != null 
+      && fit_.TryFindType(name, out Type? t2) 
+      && t2 != null)
+    {
+      FieldInfo? fieldInfo = t2.GetField(s2, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.Public);
+      
+      if (fieldInfo != null && fieldInfo.IsLiteral)
+      {
+        result = fieldInfo.GetRawConstantValue();
+        return true;
+      }
+    }
+
+    // Manual interventions (just an example)
+    if (Mesg.Name == nameof(MesgNum.UserProfile))
+    {
+      if (name == nameof(Gender) && value is string gender)
+      {
+        if (Enum.TryParse(gender, ignoreCase: true, out Gender g))
+        {
+          result = g;
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   private object? PrettifyField(string name, object? value)
