@@ -1,17 +1,11 @@
-﻿
-using System.Collections;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Collections;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Data;
-using Avalonia.Data.Converters;
 using Dauer.Data.Fit;
 using Dauer.Ui.Converters;
-using DynamicData;
 using Dynastream.Fit;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
