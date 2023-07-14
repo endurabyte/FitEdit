@@ -40,10 +40,12 @@ public static class Program
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
+      app.UseStaticFiles(); // to serve SwaggerDark.css
       app.UseSwagger();
 
       app.UseSwaggerUI(c =>
       {
+        c.InjectStylesheet("/swagger-ui/SwaggerDark.css");
         c.OAuthClientId(oauthClientId_);
         c.OAuthScopes("openid");
         c.OAuthUsePkce();
