@@ -20,8 +20,13 @@ public static class Program
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    // Configure Let's Encrypt client
-    //builder.Services.AddLettuceEncrypt(); // Not needed in fly.io
+    string env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "";
+    if (Debugger.IsAttached || env == Environments.Development)
+    {
+      // Configure Let's Encrypt client
+      // Not needed when hosted on fly.io so we only use it in debug
+      builder.Services.AddLettuceEncrypt(); 
+    }
 
     // Configure Oauth
     builder.Services
