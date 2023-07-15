@@ -69,6 +69,7 @@ public class StripeWebhookController : ControllerBase
     }
     catch (StripeException e)
     {
+      log_.LogError(e, "Stripe webhook exception");
       return BadRequest();
     }
   }

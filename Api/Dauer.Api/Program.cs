@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using Dauer.Api.Config;
+using Dauer.Api.Data;
 using Lamar.Microsoft.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Stripe;
@@ -24,6 +26,7 @@ public static class Program
     string clientId = configuration["Dauer:OAuth:ClientId"] ?? "";
     string securityDefinitionName = configuration["Dauer:OAuth:SecurityDefinitionName"] ?? "";
     string stripeEndpointSecret = configuration["Dauer:Stripe:EndpointSecret"] ?? "";
+    string connectionString = configuration["ConnectionStrings:Default"] ?? "";
 
     var oauthConfig = new OauthConfig
     {
@@ -53,6 +56,11 @@ public static class Program
         .Enrich.FromLogContext());
 
     builder.Services.AddControllers();
+
+    builder.Services.AddDbContext<DataContext>(options =>
+    {
+      options.UseNpgsql(connectionString);
+    });
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

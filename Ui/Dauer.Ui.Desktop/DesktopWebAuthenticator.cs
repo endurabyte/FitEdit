@@ -14,7 +14,8 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
   private readonly string redirectUri_ = $"https://www.fitedit.io/login-redirect.html";
   private readonly string authority_ = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_nqQT8APwr";
-  private readonly string api_ = "https://api2.fitedit.io/";
+  private readonly string api_ = "https://api.fitedit.io/";
+  //private readonly string api_ = "http://localhost/";
   private readonly string clientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
   private readonly IDatabaseAdapter db_;
   private readonly Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };

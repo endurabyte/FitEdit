@@ -1,3 +1,4 @@
+using Dauer.Api.Data;
 using Dauer.Dto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +10,12 @@ namespace Dauer.Api.Controllers;
 public class AuthController : ControllerBase
 {
   private readonly ILogger<AuthController> log_;
+  private readonly DataContext context_;
 
-  public AuthController(ILogger<AuthController> log)
+  public AuthController(ILogger<AuthController> log, DataContext context)
   {
     log_ = log;
+    context_ = context;
   }
 
   [HttpGet(Name = "GetAuthorization"), Authorize]
