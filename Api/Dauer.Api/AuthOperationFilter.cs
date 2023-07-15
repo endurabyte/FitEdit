@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Dauer.Api.Config;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -6,6 +7,13 @@ namespace Dauer.Api;
 
 public class AuthOperationFilter : IOperationFilter
 {
+  private readonly OauthConfig config_;
+
+  public AuthOperationFilter(OauthConfig config)
+  {
+    config_ = config;
+  }
+
   public void Apply(OpenApiOperation operation, OperationFilterContext context)
   {
     var authAttributes = context.MethodInfo
@@ -23,7 +31,7 @@ public class AuthOperationFilter : IOperationFilter
 
     var jwtbearerScheme = new OpenApiSecurityScheme
     {
-      Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "OAuth2" }
+      Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = config_.SecurityDefinitionName }
     };
 
     operation.Security = new List<OpenApiSecurityRequirement>

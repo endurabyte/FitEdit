@@ -1,18 +1,56 @@
 using System.Diagnostics;
+using Dauer.Api.Config;
 using Lamar.Microsoft.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Serilog;
+using Stripe;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Dauer.Api;
 
 public static class Program
 {
-  private const string oauthClientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
-
   public static void Main(string[] args)
   {
-    var cognito = new AwsCognitoClient("us-east-1", "nqQT8APwr", "5n3lvp2jfo1c2kss375jvkhvod");
+    string env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+    IConfiguration configuration = new ConfigurationBuilder()
+       .SetBasePath(Directory.GetCurrentDirectory())
+       .AddJsonFile("appsettings.json")
+       .AddJsonFile($"appsettings.{env}.json", true)
+       .Build();
+
+    string awsRegion = configuration["Dauer:OAuth:AwsRegion"] ?? "";
+    string userPoolId = configuration["Dauer:OAuth:UserPoolId"] ?? "";
+    string clientId = configuration["Dauer:OAuth:ClientId"] ?? "";
+    string securityDefinitionName = configuration["Dauer:OAuth:SecurityDefinitionName"] ?? "";
+    string stripeEndpointSecret = configuration["Dauer:Stripe:EndpointSecret"] ?? "";
+
+    var oauthConfig = new OauthConfig
+    {
+      AwsRegion = awsRegion,
+      UserPoolId = userPoolId,
+      ClientId = clientId,
+      SecurityDefinitionName = securityDefinitionName,
+    };
+
+    string apiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
+    StripeConfiguration.ApiKey = apiKey;
+
+    var logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration)
+        .Enrich.FromLogContext()
+        .CreateBootstrapLogger();
+
+    ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
+
+    var cognito = new AwsCognitoClient(oauthConfig);
+
     var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, services, configuration) => configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
 
     builder.Services.AddControllers();
 
@@ -20,7 +58,6 @@ public static class Program
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
-    string env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "";
     if (Debugger.IsAttached || env == Environments.Development)
     {
       // Configure Let's Encrypt client
@@ -33,11 +70,15 @@ public static class Program
       .AddAuthentication()
       .AddJwtBearer(cognito.ConfigureJwt);
 
+    // Inject IHttpClientFactory
     builder.Services.AddHttpClient();
+
     builder.Host.UseLamar((context, registry) =>
     {
       registry.For<IOauthClient>().Use(cognito);
       registry.For<IConfigureOptions<SwaggerGenOptions>>().Use<DauerSwaggerGenOptions>();
+      registry.For<OauthConfig>().Use(oauthConfig);
+      registry.For<StripeConfig>().Use(new StripeConfig { EndpointSecret = stripeEndpointSecret });
     });
 
     var app = builder.Build();
@@ -51,16 +92,18 @@ public static class Program
       app.UseSwaggerUI(c =>
       {
         c.InjectStylesheet("/swagger-ui/SwaggerDark.css");
-        c.OAuthClientId(oauthClientId_);
+        c.OAuthClientId(clientId);
         c.OAuthScopes("openid");
         c.OAuthUsePkce();
       });
     }
 
+    app.UseSerilogRequestLogging();
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+
     app.Run();
   }
 }

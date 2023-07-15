@@ -8,11 +8,11 @@ namespace Dauer.Api.Controllers;
 [Route("[controller]")]
 public class AuthController : ControllerBase
 {
-  private readonly ILogger<AuthController> _logger;
+  private readonly ILogger<AuthController> log_;
 
-  public AuthController(ILogger<AuthController> logger)
+  public AuthController(ILogger<AuthController> log)
   {
-    _logger = logger;
+    log_ = log;
   }
 
   [HttpGet(Name = "GetAuthorization"), Authorize]

@@ -1,4 +1,5 @@
-﻿using IdentityModel.Client;
+﻿using Dauer.Api.Config;
+using IdentityModel.Client;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -8,13 +9,16 @@ namespace Dauer.Api;
 public class DauerSwaggerGenOptions : IConfigureOptions<SwaggerGenOptions>
 {
   private readonly IHttpClientFactory _httpClientFactory;
+  private readonly OauthConfig config_;
 
   public DauerSwaggerGenOptions
   (
-    IHttpClientFactory httpClientFactory
+    IHttpClientFactory httpClientFactory,
+    OauthConfig config
   )
   {
     _httpClientFactory = httpClientFactory;
+    config_ = config;
   }
 
   public void Configure(SwaggerGenOptions options)
@@ -23,7 +27,7 @@ public class DauerSwaggerGenOptions : IConfigureOptions<SwaggerGenOptions>
 
     if (discoveryDocument == null) { return; }
 
-    options.AddSecurityDefinition("OAuth2", new OpenApiSecurityScheme
+    options.AddSecurityDefinition(config_.SecurityDefinitionName, new OpenApiSecurityScheme
     {
       Type = SecuritySchemeType.OAuth2,
 
@@ -39,18 +43,16 @@ public class DauerSwaggerGenOptions : IConfigureOptions<SwaggerGenOptions>
           }
         }
       },
-      Description = "Balea Server OpenId Security Scheme"
+      Description = "Dauer.Api"
     });
-    options.OperationFilter<AuthOperationFilter>();
+    options.OperationFilter<AuthOperationFilter>(config_);
   }
 
   private DiscoveryDocumentResponse GetDiscoveryDocument()
   {
-    string authority = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_nqQT8APwr";
-
     var req = new DiscoveryDocumentRequest
     {
-      Address = authority
+      Address = config_.Authority
     };
     req.Policy.ValidateEndpoints = false;
 

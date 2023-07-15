@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using Dauer.Api.Config;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -9,19 +10,16 @@ namespace Dauer.Api;
 public class AwsCognitoClient : IOauthClient
 {
   private readonly HttpClient client_ = new(new LoggingHttpHandler(new HttpClientHandler()));
+  private readonly OauthConfig config_;
 
-  private string authority_;
-  private string clientId_;
-
-  public AwsCognitoClient(string region, string userPoolId, string clientId)
+  public AwsCognitoClient(OauthConfig config)
   {
-    authority_ = $"https://cognito-idp.{region}.amazonaws.com/{region}_{userPoolId}";
-    clientId_ = clientId;
+    config_ = config;
   }
 
   public void ConfigureJwt(JwtBearerOptions opts)
   {
-    opts.Authority = authority_;
+    opts.Authority = config_.Authority;
 
     // AWS Cognito does not set "aud" on the JWT. Instead it sets "client_id" which we validate manually
     //opts.Audience = clientId;
@@ -56,7 +54,7 @@ public class AwsCognitoClient : IOauthClient
     var claim = jwt.Claims.FirstOrDefault(c => c.Type == "client_id");
 
     if (claim == null) { ctx.Fail("No client_id given"); return Task.CompletedTask; }
-    if (claim.Value != clientId_) { ctx.Fail("Invalid client_id"); }
+    if (claim.Value != config_.ClientId) { ctx.Fail("Invalid client_id"); }
 
     return Task.CompletedTask;
   }
