@@ -44,6 +44,9 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   private TrackerHitResult? lastTracker_;
   private double zoomScale_ = 50;
 
+  [Reactive] public int SliderValue { get; set; }
+  [Reactive] public int SliderMax { get; set; }
+
   [Reactive] public ScreenPoint? TrackerPosition { get; set; }
   [Reactive] public PlotModel? Plot { get; set; }
   [Reactive] public PlotController PlotController { get; set; } = new();
@@ -78,6 +81,14 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       if (fileService_?.MainFile == null ) { return; }
       fileService_.MainFile.SelectedIndex = property.Value;
     });
+
+    this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
+    {
+      SelectedFile? file = fileService.MainFile;
+      if (file == null) { return; }
+
+      file.SelectedIndex = property.Value;
+    });
   }
 
   private void HandleMainFileChanged(IObservedChange<IFileService, SelectedFile?> property)
@@ -91,6 +102,10 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
 
+    if (file.FitFile != null) 
+    {
+      SliderMax = file.FitFile.Records.Count - 1;
+    }
     Remove(file);
     Add(file);
   }
@@ -229,7 +244,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   {
     SelectedIndex = index;
     if (fileService_.MainFile == null) { return; }
-    fileService_.MainFile.SelectedIndex = SelectedIndex;
+    fileService_.MainFile.SelectedIndex = index;
+    SliderValue = index;
 
     if (lastTracker_ != null && lastTracker_.Index == index) { return; }
 

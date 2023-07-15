@@ -38,13 +38,10 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public ILogViewModel Log { get; }
   public IWebAuthenticator Authenticator { get; }
 
-  [Reactive] public int SliderValue { get; set; }
-  [Reactive] public int SliderMax { get; set; }
   [Reactive] public int SelectedTabIndex { get; set; }
 
   private readonly IWindowAdapter window_;
   private readonly IFileService fileService_;
-  private IDisposable? recordIndexSub_;
 
   public MainViewModel(
     IFileService fileService,
@@ -71,30 +68,6 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     window_.Resized.Subscribe(tup =>
     {
       Dauer.Model.Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
-    });
-
-    this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
-    {
-      SelectedFile? file = fileService.MainFile;
-      if (file == null) { return; }
-
-      file.SelectedIndex = property.Value;
-    });
-
-    fileService.ObservableForProperty(x => x.MainFile).Subscribe(property =>
-    {
-      SelectedFile? file = fileService.MainFile;
-      if (file == null) { return; }
-
-      recordIndexSub_?.Dispose();
-      recordIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-      {
-        SliderValue = property.Value;
-      });
-
-      if (file.FitFile == null) { return; }
-      SliderMax = file.FitFile.Records.Count - 1;
-      //SelectedTabIndex = 1; // Laps
     });
   }
 

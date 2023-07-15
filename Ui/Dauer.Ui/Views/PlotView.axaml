@@ -17,9 +17,9 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <Grid>
+  <Grid RowDefinitions="*, Auto">
 
-    <oxy:PlotView x:Name="OxyPlotView" Model="{Binding Plot}" Controller="{Binding PlotController}" >
+    <oxy:PlotView Grid.Row="0" x:Name="OxyPlotView" Model="{Binding Plot}" Controller="{Binding PlotController}" >
       <oxy:PlotView.DefaultTrackerTemplate>
         <ControlTemplate>
           <oxy:TrackerControl Position="{Binding TrackerPosition, Mode=TwoWay}" Background="Transparent" BorderBrush="Gray">
@@ -36,6 +36,8 @@
             Command="{Binding HandleResetPlotClicked}">
       Reset Plot
     </Button>-->
+
+    <Slider Grid.Row="1" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
 
   </Grid>
 </UserControl>
