@@ -12,6 +12,11 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Dauer.Api;
 
+public class CompositionRoot
+{
+
+}
+
 public static class Program
 {
   public static async Task Main(string[] args)
@@ -77,7 +82,6 @@ public static class Program
     StripeConfiguration.ApiKey = apiKey;
 
     // Db
-    log.LogInformation($"Database connection string: {connectionString}");
     builder.Services.AddDbContext<AppDbContext>(options =>
     {
       string conn = connectionString;
@@ -143,6 +147,9 @@ public static class Program
     var app = builder.Build();
 
     var db = app.Services.GetService<AppDbContext>();
+    log = app.Services.GetService<ILogger<CompositionRoot>>();
+    log.LogInformation($"Database connection string: {connectionString}");
+
     if (db != null)
     {
       await db.InitAsync().ConfigureAwait(false);
