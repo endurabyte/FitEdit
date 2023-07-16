@@ -10,12 +10,12 @@ namespace Dauer.Api.Controllers;
 public class AuthController : ControllerBase
 {
   private readonly ILogger<AuthController> log_;
-  private readonly DataContext context_;
+  private readonly IUserRepo users_;
 
-  public AuthController(ILogger<AuthController> log, DataContext context)
+  public AuthController(ILogger<AuthController> log, IUserRepo users)
   {
     log_ = log;
-    context_ = context;
+    users_ = users;
   }
 
   [HttpGet(Name = "GetAuthorization"), Authorize]

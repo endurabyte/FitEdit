@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 
-namespace Dauer.Api;
+namespace Dauer.Api.Oauth;
 
 public interface IOauthClient
 {

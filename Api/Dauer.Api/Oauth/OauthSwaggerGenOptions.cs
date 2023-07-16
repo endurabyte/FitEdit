@@ -4,14 +4,14 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Dauer.Api;
+namespace Dauer.Api.Oauth;
 
-public class DauerSwaggerGenOptions : IConfigureOptions<SwaggerGenOptions>
+public class OauthSwaggerGenOptions : IConfigureOptions<SwaggerGenOptions>
 {
   private readonly IHttpClientFactory _httpClientFactory;
   private readonly OauthConfig config_;
 
-  public DauerSwaggerGenOptions
+  public OauthSwaggerGenOptions
   (
     IHttpClientFactory httpClientFactory,
     OauthConfig config

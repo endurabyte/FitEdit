@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Dauer.Api;
+namespace Dauer.Api.Oauth;
 
 public class AuthOperationFilter : IOperationFilter
 {

@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Dauer.Api;
+namespace Dauer.Api.Oauth;
 
 public class AwsCognitoClient : IOauthClient
 {

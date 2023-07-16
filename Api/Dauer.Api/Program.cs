@@ -1,6 +1,8 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Dauer.Api.Config;
 using Dauer.Api.Data;
+using Dauer.Api.Oauth;
 using Lamar.Microsoft.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,41 +14,54 @@ namespace Dauer.Api;
 
 public static class Program
 {
-  public static void Main(string[] args)
+  public static async Task Main(string[] args)
   {
+    // Determine environment
     string env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+    bool isProduction = !(Debugger.IsAttached || env == Environments.Development);
+
+    var os = RuntimeInformation.OSDescription;
+    os = os switch
+    {
+      _ when os.Contains("Windows", StringComparison.OrdinalIgnoreCase) => "Windows",
+      _ when os.Contains("mac", StringComparison.OrdinalIgnoreCase) => "macOS",
+      _ => "Linux",
+    };
+
+    // Load config
     IConfiguration configuration = new ConfigurationBuilder()
        .SetBasePath(Directory.GetCurrentDirectory())
        .AddJsonFile("appsettings.json")
        .AddJsonFile($"appsettings.{env}.json", true)
+       .AddJsonFile($"appsettings.{os}.json", true)
+       .AddEnvironmentVariables()
        .Build();
+
+    // Bootstrap log
+    var logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration)
+        .Enrich.FromLogContext()
+        .CreateBootstrapLogger();
+    ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
+    var log = factory.CreateLogger("Bootstrap");
 
     string awsRegion = configuration["Dauer:OAuth:AwsRegion"] ?? "";
     string userPoolId = configuration["Dauer:OAuth:UserPoolId"] ?? "";
     string clientId = configuration["Dauer:OAuth:ClientId"] ?? "";
     string securityDefinitionName = configuration["Dauer:OAuth:SecurityDefinitionName"] ?? "";
     string stripeEndpointSecret = configuration["Dauer:Stripe:EndpointSecret"] ?? "";
+
     string connectionString = configuration["ConnectionStrings:Default"] ?? "";
+    bool useSqlite = configuration.GetValue<bool>("UseSqlite");
 
-    var oauthConfig = new OauthConfig
+    bool isFly = configuration["FLY_APP_NAME"] != null;
+    string? flyDb = configuration["DATABASE_URL"];
+
+    if (isFly && flyDb != null)
     {
-      AwsRegion = awsRegion,
-      UserPoolId = userPoolId,
-      ClientId = clientId,
-      SecurityDefinitionName = securityDefinitionName,
-    };
-
-    string apiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
-    StripeConfiguration.ApiKey = apiKey;
-
-    var logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(configuration)
-        .Enrich.FromLogContext()
-        .CreateBootstrapLogger();
-
-    ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
-
-    var cognito = new AwsCognitoClient(oauthConfig);
+      log.LogInformation($"Detected we are hosted on fly.io");
+      connectionString = flyDb;
+    }
 
     var builder = WebApplication.CreateBuilder(args);
 
@@ -57,39 +72,81 @@ public static class Program
 
     builder.Services.AddControllers();
 
-    builder.Services.AddDbContext<DataContext>(options =>
+    // Stripe
+    string apiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
+    StripeConfiguration.ApiKey = apiKey;
+
+    // Db
+    log.LogInformation($"Database connection string: {connectionString}");
+    builder.Services.AddDbContext<AppDbContext>(options =>
     {
-      options.UseNpgsql(connectionString);
+      string conn = connectionString;
+
+      if (!useSqlite && isProduction) { options.UseNpgsql(conn); }
+      else 
+      {
+        // Replace the "%localappdata%" placeholder with the actual path
+        conn = conn.Replace("%localappdata%", Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+
+        // Parse the connection string to get the directory
+        var directory = Path.GetDirectoryName(conn.Substring("Data Source=".Length));
+
+        // Check if the directory exists, if not create it
+        if (directory != null && !Directory.Exists(directory))
+        {
+          Directory.CreateDirectory(directory);
+        }
+        options.UseSqlite(conn); 
+      }
     });
 
-    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    // Swagger
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+    // IHttpClientFactory
+    builder.Services.AddHttpClient();
 
-    if (Debugger.IsAttached || env == Environments.Development)
+    // Oauth
+    var oauthConfig = new OauthConfig
     {
-      // Configure Let's Encrypt client
-      // Not needed when hosted on fly.io so we only use it in debug
-      builder.Services.AddLettuceEncrypt(); 
-    }
+      AwsRegion = awsRegion,
+      UserPoolId = userPoolId,
+      ClientId = clientId,
+      SecurityDefinitionName = securityDefinitionName,
+    };
 
-    // Configure Oauth
+    var cognito = new AwsCognitoClient(oauthConfig);
+
     builder.Services
       .AddAuthentication()
       .AddJwtBearer(cognito.ConfigureJwt);
 
-    // Inject IHttpClientFactory
-    builder.Services.AddHttpClient();
+    // Debug
+    if (!isProduction)
+    {
+      // Configure Let's Encrypt client
+      // Not needed when hosted on fly.io so we only use it in debug
+      builder.Services.AddLettuceEncrypt();
+      builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+    }
 
+    // IoC 
     builder.Host.UseLamar((context, registry) =>
     {
+      registry.For<IUserRepo>().Use<UserRepo>();
       registry.For<IOauthClient>().Use(cognito);
-      registry.For<IConfigureOptions<SwaggerGenOptions>>().Use<DauerSwaggerGenOptions>();
+      registry.For<IConfigureOptions<SwaggerGenOptions>>().Use<OauthSwaggerGenOptions>();
       registry.For<OauthConfig>().Use(oauthConfig);
       registry.For<StripeConfig>().Use(new StripeConfig { EndpointSecret = stripeEndpointSecret });
     });
 
     var app = builder.Build();
+
+    var db = app.Services.GetService<AppDbContext>();
+    if (db != null)
+    {
+      await db.InitAsync().ConfigureAwait(false);
+    }
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -104,6 +161,9 @@ public static class Program
         c.OAuthScopes("openid");
         c.OAuthUsePkce();
       });
+
+      app.UseDeveloperExceptionPage();
+      app.UseMigrationsEndPoint();
     }
 
     app.UseSerilogRequestLogging();
