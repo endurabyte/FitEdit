@@ -13,6 +13,15 @@ namespace Dauer.Ui.Browser;
 
 public class BrowserCompositionRoot : CompositionRoot
 {
+  static BrowserCompositionRoot()
+  {
+    // Not necessary; Console.WriteLine already writes to web browser console
+    //if (OperatingSystem.IsBrowser())
+    //{
+    //  Log.Sinks.Add(Adapters.WebConsoleAdapter.Log);
+    //}
+  }
+
   protected override async Task ConfigureAsync(ContainerBuilder builder)
   {
     _ = JSHost

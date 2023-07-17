@@ -13,6 +13,8 @@ internal class Program
   {
     CompositionRoot.Instance = new DesktopCompositionRoot();
 
+    new AutoUpdater().WatchForUpdates();
+
     BuildAvaloniaApp()
       .StartWithClassicDesktopLifetime(args);
   }

@@ -23,22 +23,13 @@ public class CompositionRoot : ICompositionRoot
   private ContainerBuilder? builder_;
   private IContainer? container_;
 
-  static CompositionRoot()
-  {
-    // Not necessary; Console.WriteLine already writes to web browser console
-    //if (OperatingSystem.IsBrowser())
-    //{
-    //  Log.Sinks.Add(Adapters.WebConsoleAdapter.Log);
-    //}
-  }
-
   public ICompositionRoot Build(IApplicationLifetime? lifetime)
   {
     builder_ = new ContainerBuilder();
 
     // Load configuration
     IConfiguration configuration = new ConfigurationBuilder()
-       .SetBasePath(Directory.GetCurrentDirectory())
+       .SetBasePath(AppContext.BaseDirectory) // exe directory
        .AddJsonFile("appsettings.json")
        .AddEnvironmentVariables()
        .Build();

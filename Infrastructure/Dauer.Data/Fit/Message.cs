@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using System.Reflection;
-using System.Runtime.InteropServices.ObjectiveC;
 using System.Text;
 using System.Text.RegularExpressions;
 using Dauer.Model;
@@ -14,7 +13,7 @@ public partial class Message : HasProperties
 {
   public Mesg Mesg { get; set; }
   public bool IsNamed => Mesg.Name != "unknown";
-  private static System.Reflection.Assembly? fit_;
+  private static Assembly? fit_;
 
   public Message(Mesg mesg)
   {
