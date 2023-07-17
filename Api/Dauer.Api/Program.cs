@@ -60,12 +60,12 @@ public static class Program
     bool useSqlite = configuration.GetValue<bool>("UseSqlite");
 
     bool isFly = configuration["FLY_APP_NAME"] != null;
-    string? flyDb = configuration["DATABASE_URL"];
+    string? dbUrl = configuration["DATABASE_URL"];
 
-    if (isFly && flyDb != null)
+    if (isFly && dbUrl != null)
     {
       log.LogInformation($"Detected we are hosted on fly.io");
-      connectionString = flyDb;
+      connectionString = ConvertPgUrlToDbConnString(dbUrl);
     }
 
     var builder = WebApplication.CreateBuilder(args);
@@ -180,5 +180,20 @@ public static class Program
     app.MapControllers();
 
     app.Run();
+  }
+
+  private static string ConvertPgUrlToDbConnString(string? dbUrl)
+  {
+    if (dbUrl == null) { return ""; }
+    
+    // Example
+    //dbUrl = "postgres://fitedit:supersecret@fitedit-pg.flycast:5432/fitedit?sslmode=disable";
+
+    var uri = new Uri(dbUrl);
+    string[] userInfo = uri.UserInfo.Split(':');
+    string sslMode = string.IsNullOrEmpty(uri.Query) ? "": uri.Query.Replace("?sslmode=", "");
+
+    return $"Server={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};" +
+      $"User Id={userInfo[0]};Password={userInfo[1]};SSL Mode={sslMode}";
   }
 }
