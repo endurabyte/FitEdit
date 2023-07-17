@@ -3,7 +3,7 @@
   <Import Project="..\..\Common.props" />
   
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AssemblyName>FitEdit</AssemblyName>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
     One for Windows with net7.0-windows TFM, one for MacOS with net7.0-macos and one with net7.0 TFM for Linux.-->
@@ -15,11 +15,11 @@
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <PackageIcon>PackageIcon.png</PackageIcon>
-    <ApplicationIcon>hourglass.ico</ApplicationIcon>
+    <ApplicationIcon>logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="hourglass.ico" />
+    <Content Include="logo.ico" />
     <None Update="PackageIcon.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
@@ -33,16 +33,16 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App"></FrameworkReference>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Clowd.Squirrel" Version="3.0.210-g5f9f594" />
     <PackageReference Include="IdentityModel.OidcClient" Version="5.2.2-alpha.0.3" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-    
-    <PackageReference Include="Serilog" Version="3.0.1" />
-    <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     
   </ItemGroup>
 

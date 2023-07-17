@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Markup.Xaml;
-using Dauer.Model;
 using Dauer.Ui.Infra;
 using Dauer.Ui.ViewModels;
 using Dauer.Ui.Views;
@@ -17,8 +16,6 @@ public partial class App : Application
 
   public override void OnFrameworkInitializationCompleted()
   {
-    Log.Level = LogLevel.Info;
-
     if (CompositionRoot.Instance == null) { return; }
 
     object? dataContext = CompositionRoot.Instance

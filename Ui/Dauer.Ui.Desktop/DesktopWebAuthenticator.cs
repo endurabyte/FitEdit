@@ -4,6 +4,7 @@ using Dauer.Ui.Infra;
 using IdentityModel.Client;
 using IdentityModel.OidcClient;
 using IdentityModel.OidcClient.Results;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Serilog;
@@ -18,6 +19,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
   //private readonly string api_ = "http://localhost/";
   private readonly string clientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
   private readonly IDatabaseAdapter db_;
+  private readonly ILoggerFactory factory_;
   private readonly Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };
   private static readonly string defaultUsername_ = "(Please log in)";
   private CancellationTokenSource refreshCts_ = new();
@@ -28,9 +30,10 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
   [Reactive] public string Username { get; set; } = defaultUsername_;
   [Reactive] public bool LoggedIn { get; set; }
 
-  public DesktopWebAuthenticator(IDatabaseAdapter db)
+  public DesktopWebAuthenticator(IDatabaseAdapter db, ILoggerFactory factory)
   {
     db_ = db;
+    factory_ = factory;
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ => await LoadCachedAuthorization());
 
     _ = Task.Run(InitAsync);
@@ -71,14 +74,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
       AdditionalState = $".port={browser.Port}"
     };
     options.Policy.Discovery.ValidateEndpoints = false;
-
-    var serilog = new LoggerConfiguration()
-        .MinimumLevel.Verbose()
-        .Enrich.FromLogContext()
-        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message}{NewLine}{Exception}{NewLine}")
-        .CreateLogger();
-
-    options.LoggerFactory.AddSerilog(serilog);
+    options.LoggerFactory = factory_;
 
     oidcClient_ = new OidcClient(options);
     httpClient_ = new HttpClient { BaseAddress = new Uri(api_) };

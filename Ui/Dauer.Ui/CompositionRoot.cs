@@ -1,5 +1,8 @@
 ﻿using Autofac;
 using Avalonia.Controls.ApplicationLifetimes;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Dauer.Ui;
 
@@ -32,7 +35,29 @@ public class CompositionRoot : ICompositionRoot
   public ICompositionRoot Build(IApplicationLifetime? lifetime)
   {
     builder_ = new ContainerBuilder();
+
+    // Load configuration
+    IConfiguration configuration = new ConfigurationBuilder()
+       .SetBasePath(Directory.GetCurrentDirectory())
+       .AddJsonFile("appsettings.json")
+       .AddEnvironmentVariables()
+       .Build();
+
+    // Setup logging
+    var logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration)
+        .Enrich.FromLogContext()
+        .CreateLogger();
+
+    ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
+    Microsoft.Extensions.Logging.ILogger? log = factory.CreateLogger("Log");
+    Dauer.Model.Log.Logger = log;
+
+    builder_.RegisterInstance(factory).As<ILoggerFactory>();
+    builder_.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).SingleInstance();
+
     builder_.AddDauer(lifetime);
+
     ConfigureAsync(builder_);
     container_ = builder_.Build();
     return this;
