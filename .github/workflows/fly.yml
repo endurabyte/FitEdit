@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'Api/**'
+      - '.github/workflows/fly.yml'
 jobs:
   deploy:
     name: Deploy proxy
