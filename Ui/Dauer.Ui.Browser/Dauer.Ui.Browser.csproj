@@ -40,7 +40,7 @@
     <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
   </ItemGroup>
   
-  <Target Name="Protect" AfterTargets="_WasmGenerateAppBundle" Condition="'$(Configuration)' == 'Deploy'">
+  <Target Name="Protect" AfterTargets="_WasmGenerateAppBundle" Condition="'$(Configuration)' == 'Release'">
     <Exec Command="pwsh -ExecutionPolicy Bypass -File deploy.ps1 -configuration $(Configuration) -targetFramework $(TargetFramework)" />
   </Target>
   

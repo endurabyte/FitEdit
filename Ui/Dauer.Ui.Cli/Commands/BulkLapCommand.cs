@@ -30,9 +30,6 @@ public class BulkLapCommand : ICommand
 
   public async ValueTask ExecuteAsync(IConsole console)
   {
-    // Suppress annoyingly verbose output for an interactive session
-    Log.Level = LogLevel.None;
-
     await BulkLapSpeeds();
   }
 
