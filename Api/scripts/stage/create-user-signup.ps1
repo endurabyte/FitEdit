@@ -24,7 +24,7 @@ function Get-RandomNumber {
 $baseUser = $baseEmailAddress.Split("@")[0]
 $baseDomain = $baseEmailAddress.Split("@")[1]
 $email = "$baseUser+" + [System.Guid]::NewGuid().ToString().Substring(0,6) + "@$baseDomain"
-$phoneNumber = "+614" + (Get-RandomNumber -digits 8)
+$phoneNumber = "+1" + [Math]::Floor((Get-RandomNumber -digits 10))
 $name = "Susan" + (Get-Random)
 $password = [System.Guid]::NewGuid().ToString().Substring(0,20) + "ABC!"
 
@@ -33,6 +33,13 @@ Write-Host "Email=$email"
 Write-Host "Phone=$phoneNumber"
 Write-Host "Name=$name"
 Write-Host "Password=$password"
+
+$user_attributes = @( 
+    @{Name="name";Value=$name}, 
+    @{Name="phone_number";Value=$phoneNumber} 
+) | ConvertTo-Json
+
+Write-Host "User Attributes=$user_attributes"
 Write-Host ""
 
 # sign up a user
@@ -40,6 +47,6 @@ aws cognito-idp sign-up `
     --client-id $cognitoUserPoolClientId `
     --username $email `
     --password $password `
-    --user-attributes Name="name",Value="$name" Name="phone_number",Value="$phoneNumber"
+    --user-attributes $user_attributes 
 
 Write-Host "Finished."

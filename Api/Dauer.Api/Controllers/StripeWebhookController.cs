@@ -17,7 +17,6 @@ public class StripeWebhookController : ControllerBase
     config_ = config;
   }
 
-
   [HttpPost]
   public async Task<IActionResult> Index()
   {
