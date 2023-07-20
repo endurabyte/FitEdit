@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Dauer.Api.Config;
+using Dauer.Api.Controllers;
 using Dauer.Api.Data;
 using Dauer.Api.Oauth;
 using Lamar.Microsoft.DependencyInjection;
@@ -25,7 +26,7 @@ public static class Program
     string env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
     bool isProduction = !(Debugger.IsAttached || env == Environments.Development);
 
-    var os = RuntimeInformation.OSDescription;
+    string os = RuntimeInformation.OSDescription;
     os = os switch
     {
       _ when os.Contains("Windows", StringComparison.OrdinalIgnoreCase) => "Windows",
@@ -50,11 +51,14 @@ public static class Program
     ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
     var log = factory.CreateLogger("Bootstrap");
 
+    CognitoController.ApiKey = Environment.GetEnvironmentVariable("DAUER_API_KEY") ?? "";
+    StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
+    string stripeEndpointSecret = Environment.GetEnvironmentVariable("STRIPE_ENDPOINT_SECRET") ?? "";
+
     string awsRegion = configuration["Dauer:OAuth:AwsRegion"] ?? "";
     string userPoolId = configuration["Dauer:OAuth:UserPoolId"] ?? "";
     string clientId = configuration["Dauer:OAuth:ClientId"] ?? "";
     string securityDefinitionName = configuration["Dauer:OAuth:SecurityDefinitionName"] ?? "";
-    string stripeEndpointSecret = configuration["Dauer:Stripe:EndpointSecret"] ?? "";
 
     string connectionString = configuration["ConnectionStrings:Default"] ?? "";
     bool useSqlite = configuration.GetValue<bool>("UseSqlite");
@@ -76,10 +80,6 @@ public static class Program
         .Enrich.FromLogContext());
 
     builder.Services.AddControllers();
-
-    // Stripe
-    string apiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
-    StripeConfiguration.ApiKey = apiKey;
 
     // Db
     builder.Services.AddDbContext<AppDbContext>(options =>
