@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System.Runtime.InteropServices;
+using Autofac;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -27,12 +28,35 @@ public class CompositionRoot : ICompositionRoot
   {
     builder_ = new ContainerBuilder();
 
+    string os = RuntimeInformation.OSDescription;
+    os = os switch
+    {
+      _ when os.Contains("Windows", StringComparison.OrdinalIgnoreCase) => "Windows",
+      _ when os.Contains("mac", StringComparison.OrdinalIgnoreCase) => "macOS",
+      _ => "Linux",
+    };
+
     // Load configuration
     IConfiguration configuration = new ConfigurationBuilder()
-       .SetBasePath(AppContext.BaseDirectory) // exe directory
-       .AddJsonFile("appsettings.json")
-       .AddEnvironmentVariables()
-       .Build();
+     .SetBasePath(AppContext.BaseDirectory) // exe directory
+     .AddJsonFile("appsettings.json")
+     .AddJsonFile($"appsettings.{os}.json", true)
+     .AddEnvironmentVariables()
+     .Build();
+
+    string logDir = Path.Combine(
+      Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit", "Logs");
+
+    // Substitute {LogDir} with log directory
+    foreach (int i in Enumerable.Range(0, 10))
+    {
+      string key = $"Serilog:WriteTo:{i}:Args:path";
+      string? value = configuration.GetValue<string>(key);
+      if (value != null)
+      {
+        configuration[key] = value.Replace("{LogDir}", logDir);
+      }
+    }
 
     // Setup logging
     var logger = new LoggerConfiguration()
@@ -43,6 +67,8 @@ public class CompositionRoot : ICompositionRoot
     ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
     Microsoft.Extensions.Logging.ILogger? log = factory.CreateLogger("Log");
     Dauer.Model.Log.Logger = log;
+    Dauer.Model.Log.Info($"BaseDirectory: {AppContext.BaseDirectory}");
+    Dauer.Model.Log.Info($"OSDescription: {RuntimeInformation.OSDescription}");
 
     builder_.RegisterInstance(factory).As<ILoggerFactory>();
     builder_.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).SingleInstance();

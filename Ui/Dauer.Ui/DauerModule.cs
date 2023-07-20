@@ -80,7 +80,7 @@ public class DauerModule : Autofac.Module
     builder.RegisterInstance(Storage_).As<IStorageAdapter>();
 
     string dbPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "fitedit", "fitedit.sqlite3");
+      Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit", "db", "fitedit.sqlite3");
 
     Directory.CreateDirectory(Directory.GetParent(dbPath)!.FullName);
 

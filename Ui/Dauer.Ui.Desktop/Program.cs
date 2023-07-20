@@ -1,5 +1,7 @@
-﻿using Avalonia;
+﻿using System.Runtime.InteropServices;
+using Avalonia;
 using Avalonia.ReactiveUI;
+using Dauer.Model;
 
 namespace Dauer.Ui.Desktop;
 
@@ -13,7 +15,14 @@ internal class Program
   {
     CompositionRoot.Instance = new DesktopCompositionRoot();
 
-    new AutoUpdater().WatchForUpdates();
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+    {
+      Log.Info("Auto update not supported on Linux. Please use your package manager.");
+    }
+    else
+    {
+      new AutoUpdater().WatchForUpdates();
+    }
 
     BuildAvaloniaApp()
       .StartWithClassicDesktopLifetime(args);
