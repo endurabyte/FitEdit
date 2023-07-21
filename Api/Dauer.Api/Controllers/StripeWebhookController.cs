@@ -50,7 +50,7 @@ public class StripeWebhookController : ControllerBase
 
     <p>FitEdit is free in read-only mode. Saving edits requires payment. You can sign up now or try the app first.</p>
 
-    <a href=""https://www.fitedit.io/download.html"" class=""button"">Download FitEdit</a>
+    <a href=""https://www.fitedit.io/get.html"" class=""button"">Download FitEdit</a>
 
     <a href=""https://buy.stripe.com/cN25lH2pla0p7YI4gh"" class=""button"">Sign up for the monthly plan</a>
 
