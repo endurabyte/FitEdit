@@ -146,7 +146,7 @@ public static class Program
       registry.For<OauthConfig>().Use(oauthConfig);
       registry.For<StripeConfig>().Use(new StripeConfig { EndpointSecret = stripeEndpointSecret });
       registry.For<IEmailService>().Use<SendGridEmailService>();
-      registry.For<SendGridClient>().Use<SendGridClient>().Ctor<string>().Is(sendGridApiKey);
+      registry.For<SendGridClient>().Use<SendGridClient>().Ctor<string>("apiKey").Is(sendGridApiKey);
     });
 
     var app = builder.Build();

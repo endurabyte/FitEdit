@@ -10,7 +10,8 @@
 
 param (
     [Parameter(Mandatory=$true)][string]$cognitoUserPoolClientId,
-    [Parameter(Mandatory=$true)][string]$baseEmailAddress
+    [Parameter(Mandatory=$true)][string]$baseEmailAddress,
+    [Parameter(Mandatory=$false)][bool]$isReal
 )
 
 function Get-RandomNumber {
@@ -23,7 +24,11 @@ function Get-RandomNumber {
 # create an email alias from the base email address
 $baseUser = $baseEmailAddress.Split("@")[0]
 $baseDomain = $baseEmailAddress.Split("@")[1]
-$email = "$baseUser+" + [System.Guid]::NewGuid().ToString().Substring(0,6) + "@$baseDomain"
+$alias = [System.Guid]::NewGuid().ToString().Substring(0,6).ToString()
+$email = "$baseUser+" + $alias + "@$baseDomain"
+if ($isReal -eq $true) {
+    $email = $baseEmailAddress
+}
 $phoneNumber = "+1" + [Math]::Floor((Get-RandomNumber -digits 10))
 $name = "FakeUser" + (Get-Random)
 $password = [System.Guid]::NewGuid().ToString().Substring(0,20) + "ABC!"
