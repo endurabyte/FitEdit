@@ -127,7 +127,7 @@ public static class Program
 
     var cognito = new AwsCognitoOauthClient(oauthConfig);
     var awsOpts = builder.Configuration.GetAWSOptions();
-    awsOpts.Region = RegionEndpoint.GetBySystemName("us-east-1");
+    awsOpts.Region = RegionEndpoint.GetBySystemName(awsRegion);
     builder.Services.AddDefaultAWSOptions(awsOpts);
     builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();
 
