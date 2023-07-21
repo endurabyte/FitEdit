@@ -10,5 +10,9 @@ public class AppDbContext : DbContext
   {
   }
 
-  public async Task InitAsync() => await Database.EnsureCreatedAsync().ConfigureAwait(false);
+  public async Task InitAsync()
+  {
+    await Database.EnsureCreatedAsync().ConfigureAwait(false);
+    //await Database.MigrateAsync().ConfigureAwait(false);
+  }
 }

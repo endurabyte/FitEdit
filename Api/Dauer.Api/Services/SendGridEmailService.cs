@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Dauer.Api.Model;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using static SendGrid.BaseClient;
@@ -19,7 +20,7 @@ public class SendGridEmailService : IEmailService
     customerListId_ = customerListId;
   }
 
-  public async Task<bool> AddContactAsync(string email)
+  public async Task<bool> AddContactAsync(User user)
   {
     var obj = new
     {
@@ -28,7 +29,8 @@ public class SendGridEmailService : IEmailService
       {
         new
         {
-          email,
+          email = user.Email,
+          first_name = user.Name,
         }
       }
     };
@@ -43,12 +45,12 @@ public class SendGridEmailService : IEmailService
       
     if (ok)
     {
-      log_.LogInformation($"Added contact {email}");
+      log_.LogInformation("Added contact {email}", user.Email);
     }
     else
     {
       string respBody = await response.Body.ReadAsStringAsync();
-      log_.LogError($"Could not add contact {email}: {response.StatusCode} {respBody}");
+      log_.LogError("Could not add contact {email}: {code} {body}", user.Email, response.StatusCode, respBody);
     }
 
     return ok;
@@ -66,12 +68,12 @@ public class SendGridEmailService : IEmailService
       
     if (ok)
     {
-      log_.LogInformation($"Sent email to {to}: {subject} {body}");
+      log_.LogInformation("Sent email to {to}: {subject} {body}", to, subject, body);
     }
     else
     {
       string respBody = await response.Body.ReadAsStringAsync();
-      log_.LogError($"Could not send email to {to}: {response.StatusCode} {respBody}");
+      log_.LogError("Could not send email to {to}: {code} {body}", to, response.StatusCode, respBody);
     }
 
     return ok;

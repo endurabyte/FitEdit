@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Amazon.CognitoIdentityProvider;
 using Dauer.Api.Config;
 using Dauer.Api.Controllers;
 using Dauer.Api.Data;
@@ -123,7 +124,8 @@ public static class Program
       SecurityDefinitionName = securityDefinitionName,
     };
 
-    var cognito = new AwsCognitoClient(oauthConfig);
+    var cognito = new AwsCognitoOauthClient(oauthConfig);
+    builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();
 
     builder.Services
       .AddAuthentication()
@@ -142,19 +144,25 @@ public static class Program
     builder.Host.UseLamar((context, registry) =>
     {
       registry.For<IUserRepo>().Use<UserRepo>();
+      registry.For<IUserService>().Use<UserService>();
+      registry.For<IStripeService>().Use<StripeService>();
+      registry.For<ICognitoService>().Use<CognitoService>()
+        .Ctor<string>("clientId").Is(clientId)
+        .Ctor<string>("poolId").Is(userPoolId);
       registry.For<IOauthClient>().Use(cognito);
       registry.For<IConfigureOptions<SwaggerGenOptions>>().Use<OauthSwaggerGenOptions>();
       registry.For<OauthConfig>().Use(oauthConfig);
       registry.For<StripeConfig>().Use(new StripeConfig { EndpointSecret = stripeEndpointSecret });
       registry.For<IEmailService>().Use<SendGridEmailService>().Ctor<string>("customerListId").Is(sendGridCustomerListId);
       registry.For<SendGridClient>().Use<SendGridClient>().Ctor<string>("apiKey").Is(sendGridApiKey);
+      registry.For<CustomerService>().Use<CustomerService>();
     });
 
     var app = builder.Build();
 
     var db = app.Services.GetService<AppDbContext>();
     log = app.Services.GetService<ILogger<CompositionRoot>>();
-    log.LogInformation($"Database connection string: {connectionString}");
+    log!.LogInformation("Database connection string: {connectionString}", connectionString);
 
     if (db != null)
     {

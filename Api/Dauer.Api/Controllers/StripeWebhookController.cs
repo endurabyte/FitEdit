@@ -11,13 +11,13 @@ public class StripeWebhookController : ControllerBase
 {
   private readonly ILogger<StripeWebhookController> log_;
   private readonly StripeConfig config_;
-  private readonly IEmailService email_;
+  private readonly IUserService users_;
 
-  public StripeWebhookController(ILogger<StripeWebhookController> log, StripeConfig config, IEmailService email)
+  public StripeWebhookController(ILogger<StripeWebhookController> log, StripeConfig config, IUserService users)
   {
     log_ = log;
     config_ = config;
-    email_ = email;
+    users_ = users;
   }
 
   [HttpPost]
@@ -30,50 +30,49 @@ public class StripeWebhookController : ControllerBase
           Request.Headers["Stripe-Signature"], config_?.EndpointSecret ?? "");
 
       // Handle the event
-      log_.LogInformation($"Got event {stripeEvent.Type}");
+      log_.LogInformation("Got event {event}", stripeEvent.Type);
 
-      if (stripeEvent.Type == Events.CustomerCreated)
+      switch (stripeEvent.Type)
       {
-        // get the customer email
-        var customer = stripeEvent.Data.Object as Customer;
-        if (customer == null)
+        case Events.CustomerCreated:
         {
-          log_.LogError("Could not get customer from event");
-          return BadRequest();
+          // get the customer email
+          if (stripeEvent.Data.Object is not Customer customer)
+          {
+            log_.LogError("Could not get customer from event");
+            return BadRequest();
+          }
+
+          await users_.AddOrUpdate(new Model.User
+          {
+            Name = customer.Name,
+            Email = customer.Email,
+            StripeId = customer.Id,
+          });
+          break;
         }
 
-        await email_.AddContactAsync(customer.Email);
-      }
-      else if (stripeEvent.Type == Events.CustomerDeleted)
-      {
-      }
-      else if (stripeEvent.Type == Events.PersonCreated)
-      {
-      }
-      else if (stripeEvent.Type == Events.PersonDeleted)
-      {
-      }
-      else if (stripeEvent.Type == Events.PersonUpdated)
-      {
-      }
-      else if (stripeEvent.Type == Events.SubscriptionScheduleAborted)
-      {
-      }
-      else if (stripeEvent.Type == Events.SubscriptionScheduleCanceled)
-      {
-      }
-      else if (stripeEvent.Type == Events.SubscriptionScheduleCreated)
-      {
-      }
-      else if (stripeEvent.Type == Events.SubscriptionScheduleExpiring)
-      {
-      }
-      else if (stripeEvent.Type == Events.SubscriptionScheduleUpdated)
-      {
-      }
-      else
-      {
-        log_.LogError("Unhandled event type: {0}", stripeEvent.Type);
+        case Events.CustomerDeleted:
+          break;
+        case Events.PersonCreated:
+          break;
+        case Events.PersonDeleted:
+          break;
+        case Events.PersonUpdated:
+          break;
+        case Events.SubscriptionScheduleAborted:
+          break;
+        case Events.SubscriptionScheduleCanceled:
+          break;
+        case Events.SubscriptionScheduleCreated:
+          break;
+        case Events.SubscriptionScheduleExpiring:
+          break;
+        case Events.SubscriptionScheduleUpdated:
+          break;
+        default:
+          log_.LogError("Unhandled event type: {event}", stripeEvent.Type);
+          break;
       }
 
       return Ok();

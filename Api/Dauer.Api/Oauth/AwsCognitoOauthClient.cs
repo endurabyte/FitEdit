@@ -7,12 +7,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Dauer.Api.Oauth;
 
-public class AwsCognitoClient : IOauthClient
+public class AwsCognitoOauthClient : IOauthClient
 {
   private readonly HttpClient client_ = new(new LoggingHttpHandler(new HttpClientHandler()));
   private readonly OauthConfig config_;
 
-  public AwsCognitoClient(OauthConfig config)
+  public AwsCognitoOauthClient(OauthConfig config)
   {
     config_ = config;
   }

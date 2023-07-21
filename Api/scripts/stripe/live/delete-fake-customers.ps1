@@ -12,7 +12,7 @@ if (-not $apiKey) {
     Exit 1;
 }
 
-$customerIDs = (stripe customers list --live --api-key $apiKey | ConvertFrom-Json).data.id
+$customerIDs = (stripe customers list --limit 1000 --live --api-key $apiKey | ConvertFrom-Json).data.id
 
 # Loop over each customer ID
 foreach ($id in $customerIDs) {
