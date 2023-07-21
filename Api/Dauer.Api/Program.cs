@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Amazon;
 using Amazon.CognitoIdentityProvider;
+using Amazon.Runtime;
 using Dauer.Api.Config;
 using Dauer.Api.Controllers;
 using Dauer.Api.Data;
@@ -60,6 +61,8 @@ public static class Program
     string stripeEndpointSecret = Environment.GetEnvironmentVariable("STRIPE_ENDPOINT_SECRET") ?? "";
     string sendGridApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY") ?? "";
     string sendGridCustomerListId = Environment.GetEnvironmentVariable("SENDGRID_CUSTOMER_LIST") ?? "";
+    string aws_access_key_id = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID") ?? "";
+    string aws_secret_access_key = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") ?? "";
 
     string awsRegion = configuration["Dauer:OAuth:AwsRegion"] ?? "";
     string userPoolId = configuration["Dauer:OAuth:UserPoolId"] ?? "";
@@ -127,6 +130,7 @@ public static class Program
 
     var cognito = new AwsCognitoOauthClient(oauthConfig);
     var awsOpts = builder.Configuration.GetAWSOptions();
+    awsOpts.Credentials = new BasicAWSCredentials(aws_access_key_id, aws_secret_access_key);
     awsOpts.Region = RegionEndpoint.GetBySystemName(awsRegion);
     builder.Services.AddDefaultAWSOptions(awsOpts);
     builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();
