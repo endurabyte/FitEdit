@@ -1,36 +1,78 @@
 ﻿using System.Net;
+using System.Text.Json;
 using SendGrid;
 using SendGrid.Helpers.Mail;
+using static SendGrid.BaseClient;
 
 namespace Dauer.Api.Services;
 
 public class SendGridEmailService : IEmailService
 {
-  private readonly string apiKey_;
+  private readonly SendGridClient client_;
   private readonly ILogger<SendGridEmailService> log_;
+  private static string customerListId_ = "283e5fbc-3af8-4e65-87eb-cd10d4f0d22c";
 
-  public SendGridEmailService(string apiKey, ILogger<SendGridEmailService> log)
+  public SendGridEmailService(SendGridClient client, ILogger<SendGridEmailService> log)
   {
-    apiKey_ = apiKey;
+    client_ = client;
     log_ = log;
   }
 
-  public async Task SendEmailAsync(string to, string subject, string body)
+  public async Task<bool> AddContactAsync(string email)
   {
-    var client = new SendGridClient(apiKey_);
+    var obj = new
+    {
+      list_ids = new[] { customerListId_ },
+      contacts = new object[]
+      {
+        new
+        {
+          email,
+        }
+      }
+    };
+
+    var response = await client_.RequestAsync(
+        method: Method.PUT,
+        urlPath: "marketing/contacts",
+        requestBody: JsonSerializer.Serialize(obj)
+    );
+
+    bool ok = response.StatusCode == HttpStatusCode.Accepted;
+      
+    if (ok)
+    {
+      log_.LogInformation($"Added contact {email}");
+    }
+    else
+    {
+      string respBody = await response.Body.ReadAsStringAsync();
+      log_.LogError($"Could not add contact {email}: {response.StatusCode} {respBody}");
+    }
+
+    return ok;
+  }
+
+  public async Task<bool> SendEmailAsync(string to, string subject, string body)
+  {
 
     var fromAddr = new EmailAddress("support@fitedit.io", "FitEdit");
     var toAddr = new EmailAddress(to);
     var msg = MailHelper.CreateSingleEmail(fromAddr, toAddr, subject, body, body);
-    var response = await client.SendEmailAsync(msg);
+    var response = await client_.SendEmailAsync(msg);
 
-    if (response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.OK)
+    bool ok = response.StatusCode == HttpStatusCode.Accepted;
+      
+    if (ok)
     {
       log_.LogInformation($"Sent email to {to}: {subject} {body}");
-      return;
+    }
+    else
+    {
+      string respBody = await response.Body.ReadAsStringAsync();
+      log_.LogError($"Could not send email to {to}: {response.StatusCode} {respBody}");
     }
 
-    string respBody = await response.Body.ReadAsStringAsync();
-    log_.LogError($"Could not send email to {to}: {response.StatusCode} {respBody}");
+    return ok;
   }
 }

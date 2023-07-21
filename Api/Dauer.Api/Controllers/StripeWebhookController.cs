@@ -13,52 +13,6 @@ public class StripeWebhookController : ControllerBase
   private readonly StripeConfig config_;
   private readonly IEmailService email_;
 
-  private const string html = @"
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body {
-            background-color: #363636;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-        }
-        .button {
-            display: inline-block;
-            border-radius: 12px;
-            background-color: #7981fe;
-            border: none;
-            color: #ffffff;
-            text-align: center;
-            font-size: 14px;
-            padding: 15px;
-            width: 200px;
-            transition: all 0.5s;
-            cursor: pointer;
-            text-decoration: none;
-            margin: 5px;
-        }
-        .button:hover {
-            background-color: #5f63c8;
-        }
-    </style>
-</head>
-<body>
-    <h1>Welcome to FitEdit!</h1>
-
-    <p>You'll be whipping your fitness data into shape in no time.</p>
-
-    <p>FitEdit is free in read-only mode. Saving edits requires payment. You can sign up now or try the app first.</p>
-
-    <a href=""https://www.fitedit.io/get.html"" class=""button"">Download FitEdit</a>
-
-    <a href=""https://buy.stripe.com/cN25lH2pla0p7YI4gh"" class=""button"">Sign up for the monthly plan</a>
-
-    <a href=""https://buy.stripe.com/4gw5lH0hd4G5en6eUU"" class=""button"">Sign up for the annual plan</a>
-</body>
-</html>
-";
-
   public StripeWebhookController(ILogger<StripeWebhookController> log, StripeConfig config, IEmailService email)
   {
     log_ = log;
@@ -88,7 +42,7 @@ public class StripeWebhookController : ControllerBase
           return BadRequest();
         }
 
-        await email_.SendEmailAsync(customer.Email, "Welcome to FitEdit", html);
+        await email_.AddContactAsync(customer.Email);
       }
       else if (stripeEvent.Type == Events.CustomerDeleted)
       {

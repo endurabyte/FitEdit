@@ -8,6 +8,7 @@ using Dauer.Api.Services;
 using Lamar.Microsoft.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SendGrid;
 using Serilog;
 using Stripe;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -144,7 +145,8 @@ public static class Program
       registry.For<IConfigureOptions<SwaggerGenOptions>>().Use<OauthSwaggerGenOptions>();
       registry.For<OauthConfig>().Use(oauthConfig);
       registry.For<StripeConfig>().Use(new StripeConfig { EndpointSecret = stripeEndpointSecret });
-      registry.For<IEmailService>().Use<SendGridEmailService>().Ctor<string>("apiKey").Is(sendGridApiKey);
+      registry.For<IEmailService>().Use<SendGridEmailService>();
+      registry.For<SendGridClient>().Use<SendGridClient>().Ctor<string>().Is(sendGridApiKey);
     });
 
     var app = builder.Build();
