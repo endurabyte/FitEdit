@@ -22,6 +22,6 @@
     "function-subnets"      : "",
     "function-security-groups" : "",
     "tracing-mode"             : "PassThrough",
-    "environment-variables"    : "\"API_KEY\"=\"supersecret\";\"API_URL\"=\"https://stage-api.fitedit.io/cognito/event\"",
+    "environment-variables"    : "\"STAGE_TIMEOUT\"=\"00:00:05\";\"API_KEY\"=\"supersecret\";\"API_URL\"=\"https://api.fitedit.io/cognito/event\";\"STAGE_API_KEY\"=\"064ba5c9-6039-4bb6-aa14-92c5f241e2e2\";\"STAGE_API_URL\"=\"https://stage-api.fitedit.io/cognito/event\";\"API_TIMEOUT\"=\"00:00:20\"",
     "image-tag"                : ""
 }

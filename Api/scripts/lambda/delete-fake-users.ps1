@@ -7,30 +7,21 @@ function Usage {
     Write-Host "  .\delete-fake-users.ps1 <COGNITO_USER_POOL_ID>"
 }
 
-# make sure user pool ID is given as parameter
-if ($args.Length -eq 0) {
-    Write-Host "Please provide a user pool ID"
-    Usage
-    Exit 1
-}
-
-# safety check that we're sure we don't delete all users
-# in a cognito pool we didn't mean to specify
-Write-Host "WARNING: This will delete ALL fake users in Cognito User Pool: $($args[0])"
-Write-Host "ARE YOU SURE?"
-$response = Read-Host "Type YES to continue"
-
-# check user response
-if ($response.ToLower() -ne "yes") {
-    Write-Host "Operation cancelled..."
+$userPoolId = $env:FITEDIT_USER_POOL_ID
+if (-not $userPoolId) {
+    Write-Host "Please set the FITEDIT_USER_POOL_ID environment variable, e.g. us-east-1_abCD1FGhi"
     Exit 1
 }
 
 # Define name pattern for deletion
 $namePattern = "FakeUser*"
 
+# safety check
+Write-Host "WARNING: This will delete ALL users whose name starts matches $namePattern"
+$response = Read-Host "Type any key to continue, CTRL+C to cancel"
+
 # fetch list of all users
-$cognitoUsers = aws cognito-idp list-users --user-pool-id $args[0] | ConvertFrom-Json | ForEach-Object { $_.Users }
+$cognitoUsers = aws cognito-idp list-users --user-pool-id $userPoolId | ConvertFrom-Json | ForEach-Object { $_.Users }
 
 # filter users by name pattern
 $matchingUsers = $cognitoUsers | Where-Object { 
@@ -48,7 +39,7 @@ foreach ($user in $matchingUsers) {
     Write-Host "Email: $email"
 
     # Delete the user
-    aws cognito-idp admin-delete-user --user-pool-id $args[0] --username $user.Username
+    aws cognito-idp admin-delete-user --user-pool-id $userPoolId --username $user.Username
 
     Write-Host "User $($user.Username) has been deleted."
 }

@@ -9,7 +9,6 @@
 #>
 
 param (
-    [Parameter(Mandatory=$true)][string]$cognitoUserPoolClientId,
     [Parameter(Mandatory=$true)][string]$baseEmailAddress,
     [Parameter(Mandatory=$false)][bool]$isReal
 )
@@ -19,6 +18,12 @@ function Get-RandomNumber {
         [Parameter(Mandatory=$true)][int]$digits
     )
     return (Get-Random -Minimum ([math]::Pow(10, $digits - 1)) -Maximum ([math]::Pow(10, $digits) - 1))
+}
+
+$cognitoUserPoolClientId = $env:FITEDIT_COGNITO_USER_POOL_CLIENT_ID
+if (-not $cognitoUserPoolClientId) {
+    Write-Host "Please set the FITEDIT_COGNITO_USER_POOL_CLIENT_ID environment variable"
+    Exit 1
 }
 
 # create an email alias from the base email address

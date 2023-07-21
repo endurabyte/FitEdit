@@ -5,13 +5,19 @@
 $NamePrefix = "FakeUser"
 
 # Get list of all customer IDs
-$customerIDs = (stripe customers list --live | ConvertFrom-Json).data.id
 $apiKey = $args[0]
+
+if (-not $apiKey) {
+    Write-Error "Plese provide a live secret key"
+    Exit 1;
+}
+
+$customerIDs = (stripe customers list --live --api-key $apiKey | ConvertFrom-Json).data.id
 
 # Loop over each customer ID
 foreach ($id in $customerIDs) {
     # Retrieve individual customer data
-    $customer = stripe customers retrieve --live $id | ConvertFrom-Json
+    $customer = stripe customers retrieve --live $id --api-key $apiKey | ConvertFrom-Json
 
     # Check if the name exists and starts with the given prefix
     if (($null -ne $customer.name) -and $customer.name.StartsWith($NamePrefix)) {
