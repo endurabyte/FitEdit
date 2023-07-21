@@ -4,6 +4,7 @@ using Dauer.Api.Config;
 using Dauer.Api.Controllers;
 using Dauer.Api.Data;
 using Dauer.Api.Oauth;
+using Dauer.Api.Services;
 using Lamar.Microsoft.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -54,6 +55,7 @@ public static class Program
     CognitoController.ApiKey = Environment.GetEnvironmentVariable("DAUER_API_KEY") ?? "";
     StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? "";
     string stripeEndpointSecret = Environment.GetEnvironmentVariable("STRIPE_ENDPOINT_SECRET") ?? "";
+    string sendGridApiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY") ?? "";
 
     string awsRegion = configuration["Dauer:OAuth:AwsRegion"] ?? "";
     string userPoolId = configuration["Dauer:OAuth:UserPoolId"] ?? "";
@@ -142,6 +144,7 @@ public static class Program
       registry.For<IConfigureOptions<SwaggerGenOptions>>().Use<OauthSwaggerGenOptions>();
       registry.For<OauthConfig>().Use(oauthConfig);
       registry.For<StripeConfig>().Use(new StripeConfig { EndpointSecret = stripeEndpointSecret });
+      registry.For<IEmailService>().Use<SendGridEmailService>().Ctor<string>("apiKey").Is(sendGridApiKey);
     });
 
     var app = builder.Build();
