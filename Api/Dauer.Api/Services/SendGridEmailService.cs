@@ -34,7 +34,7 @@ public class SendGridEmailService : IEmailService
 
     var response = await client_.RequestAsync(
         method: Method.PUT,
-        urlPath: "v3/marketing/contacts",
+        urlPath: "marketing/contacts",
         requestBody: JsonSerializer.Serialize(obj)
     );
 
