@@ -1,4 +1,5 @@
-﻿using Amazon.Lambda.CognitoEvents;
+﻿using System.Text;
+using Amazon.Lambda.CognitoEvents;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 
@@ -29,10 +30,20 @@ public class CognitoController : ControllerBase
       return;
     }
 
+    bool haveName = e.Request.UserAttributes.TryGetValue("name", out string? name);
+    bool haveEmail = e.Request.UserAttributes.TryGetValue("email", out string? email);
+
+    if (!haveEmail)
+    {
+      Response.StatusCode = 400;
+      Response.Body = new MemoryStream(Encoding.UTF8.GetBytes("Missing email"));
+      return;
+    }
+
     var opts = new CustomerCreateOptions
     {
-      Name = e.Request.UserAttributes["name"],
-      Email = e.Request.UserAttributes["email"],
+      Name = haveName ? name : null,
+      Email = email,
     };
 
     var service = new CustomerService();
