@@ -10,12 +10,13 @@ public class SendGridEmailService : IEmailService
 {
   private readonly SendGridClient client_;
   private readonly ILogger<SendGridEmailService> log_;
-  private static string customerListId_ = "283e5fbc-3af8-4e65-87eb-cd10d4f0d22c";
+  private readonly string customerListId_;
 
-  public SendGridEmailService(SendGridClient client, ILogger<SendGridEmailService> log)
+  public SendGridEmailService(SendGridClient client, ILogger<SendGridEmailService> log, string customerListId)
   {
     client_ = client;
     log_ = log;
+    customerListId_ = customerListId;
   }
 
   public async Task<bool> AddContactAsync(string email)
