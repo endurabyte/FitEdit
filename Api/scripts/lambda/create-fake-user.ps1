@@ -25,7 +25,7 @@ $baseUser = $baseEmailAddress.Split("@")[0]
 $baseDomain = $baseEmailAddress.Split("@")[1]
 $email = "$baseUser+" + [System.Guid]::NewGuid().ToString().Substring(0,6) + "@$baseDomain"
 $phoneNumber = "+1" + [Math]::Floor((Get-RandomNumber -digits 10))
-$name = "Susan" + (Get-Random)
+$name = "FakeUser" + (Get-Random)
 $password = [System.Guid]::NewGuid().ToString().Substring(0,20) + "ABC!"
 
 Write-Host "Creating a user with the following details:"
