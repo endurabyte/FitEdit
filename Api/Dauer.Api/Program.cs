@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Amazon;
 using Amazon.CognitoIdentityProvider;
 using Dauer.Api.Config;
 using Dauer.Api.Controllers;
@@ -125,6 +126,9 @@ public static class Program
     };
 
     var cognito = new AwsCognitoOauthClient(oauthConfig);
+    var awsOpts = builder.Configuration.GetAWSOptions();
+    awsOpts.Region = RegionEndpoint.GetBySystemName("us-east-1");
+    builder.Services.AddDefaultAWSOptions(awsOpts);
     builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();
 
     builder.Services

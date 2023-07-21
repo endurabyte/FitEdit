@@ -2,7 +2,6 @@
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 using Dauer.Api.Model;
-using SQLitePCL;
 
 namespace Dauer.Api.Services;
 

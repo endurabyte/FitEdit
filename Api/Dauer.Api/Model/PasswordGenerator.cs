@@ -11,11 +11,6 @@ public class PasswordGenerator
 
   private static readonly string[] strings_ = new string[] { symbols, lowers, capitals, nums };
 
-  static PasswordGenerator()
-  {
-    var test = Generate(16); 
-  }
-
   public static string Generate(int length)
   {
     byte[] uintBuffer = new byte[4];
@@ -29,7 +24,7 @@ public class PasswordGenerator
       for (int i = 0; i < length; i++)
       {
         uint num = BitConverter.ToUInt32(uintBuffer, 0);
-        int idx = (int)num % strings_.Length;
+        int idx = (int)(num % (uint)strings_.Length);
         string chars = strings_[idx];
 
         rng.GetBytes(uintBuffer);
