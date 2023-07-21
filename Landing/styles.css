@@ -80,9 +80,12 @@ footer {
   margin-right: auto;
 }
 
+.cta-button img {
+}
+
 .cta-button {
 	display: block;
-	width: 25%;
+	width: 50%;
 	background-color: #7981fe;
 	color: #fff;
 	padding: 1rem 2rem;
