@@ -15,21 +15,9 @@ primary_region = "atl"
 
 [[services]]
   protocol = "tcp"
-  internal_port = 5432
-  auto_start_machines = false
-
-  [[services.ports]]
-    port = 5432
-    handlers = ["pg_tls"]
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 1000
-    soft_limit = 1000
-
-[[services]]
-  protocol = "tcp"
   internal_port = 5433
-  auto_start_machines = false
+  auto_start_machines = true
+  auto_stop_machines = true
 
   [[services.ports]]
     port = 5433
