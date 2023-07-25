@@ -13,6 +13,8 @@ $notaryProfile = "FitEdit macOS"
 
 pushd $PSScriptRoot
 
+xcrun notarytool store-credentials "FitEdit macOS" --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id FITEDIT_APPLE_TEAM_ID
+
 dotnet tool install -g csq --prerelease
 
 # Build for Intel

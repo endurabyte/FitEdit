@@ -1,5 +1,12 @@
 # How to sign code on Windows
 
+## Use a public certificate
+
+1. Create an LLC
+2. Pay the certificate mafia
+3. Get a certificate on a USB key or cloud-based HSM
+4. Make it work with your CI
+
 ## Create a self-signed certificate
 Source: https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-self-signed-certificate
 ```powershell
@@ -38,10 +45,10 @@ SignTool sign /n "$certname" /fd SHA256 /td SHA256 /tr http://timestamp.digicert
 csq pack --xplat=win ... --signParams="/n fitedit-selfSigned /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com"
 ```
 
-```powershell
 # How to sign code on macOS
 
 ## Generate CSRs (Certificate Signing Requests)
+```powershell
 You need two: one to sign the `.app`, one to sign the `.pkg`.
 
 ```bash
@@ -102,7 +109,7 @@ security find-identity -p codesigning -v
 ```
 
 ## Generate an app-specific password
-It's a manual process. You do it on Apple.'s website.
+It's a manual process. You do it on Apple's website.
 - Go to https://appleid.apple.com/account/manage
 - Click the link `App-Specific Passwords`
 - Follow the instructions

@@ -13,11 +13,11 @@ $certSubject = "fitedit-SelfSigned"
 
 pushd $PSScriptRoot
 
-echo "Creating $certTmpPath from CODE_SIGN_CERTIFICATE environment variable..."
-& ./Decode-FromBase64.ps1 $env:CODE_SIGN_CERTIFICATE $certTmpPath
+echo "Creating $certTmpPath from FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE environment variable..."
+& ./Decode-FromBase64.ps1 $env:FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE $certTmpPath
 
 echo "Importing $certTmpPath into certificate store..."
-$pass = ConvertTo-SecureString -String $env:CODE_SIGN_CERTIFICATE_PASSWORD -Force -AsPlainText
+$pass = ConvertTo-SecureString -String $env:FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE_PASSWORD -Force -AsPlainText
 Import-PfxCertificate -FilePath $certTmpPath -CertStoreLocation Cert:\CurrentUser\My -Password $pass
 
 echo "Publishing..."
