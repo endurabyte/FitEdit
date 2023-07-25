@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\Common.props" />
-
   <ItemGroup>
     <PackageReference Include="Lamar" Version="12.0.0" />
     <PackageReference Include="Selenium.WebDriver" Version="4.4.0" />

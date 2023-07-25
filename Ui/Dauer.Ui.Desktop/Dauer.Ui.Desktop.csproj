@@ -1,7 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\Common.props" />
-  
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <AssemblyName>FitEdit</AssemblyName>
