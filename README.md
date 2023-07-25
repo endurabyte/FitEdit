@@ -1,8 +1,10 @@
-# Dauer
+# FitEdit
+
+[![Windows Build](https://github.com/endurabyte/FitEdit/actions/workflows/create-windows-installer.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/create-windows-installer.yml)
 
 Garmin FIT and TCX file manipulation with .NET.
 
-## What can Dauer do?
+## What can it do?
 
 Currently:
 
@@ -24,26 +26,26 @@ Roadmap:
 
 ## Concepts
 
-FIT, GPX, and TCX (which borrows from GPX) use different words, but they map to common concepts. Dauer exploits these common abstractions.
+FIT, GPX, and TCX (which borrows from GPX) use different words, but they map to common concepts. FitEdit exploits these common abstractions.
 
 ### Concept Map
 
-|Dauer Concept |FIT          |TCX                    |GPX        |Description                                                            |
-|---           |---          |---                    |---        |---                                                                    |
-|Sequence      |Session, Lap |Activity, Lap, Track   |Track      |Temporally sequential, discrete stream of data with a start and end. Sequences can contain sequences, e.g. TCX Activity contains Laps which contain Track, and FIT Sessions contains Laps. |
-|Sample        |Record       |Trackpoint             |Trackpoint |Group of data associated with a moment in time, e.g. speed             |
+|FitEdit Concept |FIT          |TCX                    |GPX        |Description                                                            |
+|---             |---          |---                    |---        |---                                                                    |
+|Sequence        |Session, Lap |Activity, Lap, Track   |Track      |Temporally sequential, discrete stream of data with a start and end. Sequences can contain sequences, e.g. TCX Activity contains Laps which contain Track, and FIT Sessions contains Laps. |
+|Sample          |Record       |Trackpoint             |Trackpoint |Group of data associated with a moment in time, e.g. speed             |
 
 ## File Formats
 
-The FIT file format is binary: compact, fault-tolerant, and suited for low-power wearables, but not human-readable as it is not plaintext; viewing the data requires a specialized parser. TCX and GPX are XML, which is arguably readable but heavyweight, complete with XML schemas and namespaces. Dauer seeks both portability and readability by using JSON as its data interchange format.
+The FIT file format is binary: compact, fault-tolerant, and suited for low-power wearables, but not human-readable as it is not plaintext; viewing the data requires a specialized parser. TCX and GPX are XML, which is arguably readable but heavyweight, complete with XML schemas and namespaces. FitEdit seeks both portability and readability by using JSON as its data interchange format.
 
-|Dauer  |FIT    |TCX  |GPX
-|---    |---    |---  |---  
-|JSON   |Binary |XML  |XML
+|FitEdit  |FIT    |TCX  |GPX
+|---      |---    |---  |---  
+|JSON     |Binary |XML  |XML
 
 ## File Contents
 
-A Dauer JSON object is a hierarchy of sequences. At the bottom of the hierarchy are samples. Samples contain actual data such as speed, distance, or position. The depth of the hierarchy depends on the data source.
+A FitEdit JSON object is a hierarchy of sequences. At the bottom of the hierarchy are samples. Samples contain actual data such as speed, distance, or position. The depth of the hierarchy depends on the data source.
 
 FIT files have the following structure:
 
@@ -53,7 +55,7 @@ FIT files have the following structure:
 |Lap         |Sequence  |Records are mapped to a lap by start timestamp and duration.
 |Record      |Sample    |Bottom of the hierarchy, where temporal data lives.
 
-Corresponding Dauer JSON:
+Corresponding FitEdit JSON:
 
 ```
 {
@@ -86,7 +88,7 @@ TCX files have the following structure:
 |Trackpoint  |Sample    |Bottom of the hierarchy, where temporal data lives.
 
 
-Corresponding Dauer JSON:
+Corresponding FitEdit JSON:
 
 ```
 {
@@ -109,9 +111,3 @@ Corresponding Dauer JSON:
     ]
 }
 ```
-
-## Why Dauer?
-
-*Dauer* is a German word with several meanings. In one sense it refers to duration, and in another it refers to endurance. It seems a good name for a project focused on duration-orientated data for endurance sports. 
-
-The author of this software is not German, but has an enthusiasm for the language and places that use it.
