@@ -1,2 +1,2 @@
 & .\submodule-init.ps1
-dotnet build --configuration Release --version-suffix ""
+dotnet build --configuration Release --version-suffix "release"
