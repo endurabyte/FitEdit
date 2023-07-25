@@ -15,7 +15,7 @@ $fileExtensions = @("*.deb", "*.rpm", "*.tar.gz")
 pushd $PSScriptRoot
 
 dotnet tool install -g csq --prerelease
-
+dotnet restore
 dotnet msbuild $projectFile /t:CreateDeb /t:CreateRpm /t:CreateTarball /p:Version=$version /p:TargetFramework=$targetFramework /p:RuntimeIdentifier=$runtimeIdentifier /p:Configuration=$configuration /p:SelfContained=true /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishDir=$publishDir /p:ApplicationVersion=$version /p:DebugSymbols=false /p:DebugType=None
 
 New-Item -ItemType Directory -Path $releaseDir -Force
