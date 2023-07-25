@@ -3,7 +3,7 @@ on:
   push:
     paths:
       - '**'
-      - '.github/workflows/**'
+      - '.github/workflows/create-linux-packages.yml'
   pull_request:
 jobs:
   Linux:
