@@ -1,0 +1,26 @@
+name: Create Linux Packages
+on: 
+  push:
+    paths:
+      - '**'
+      - '.github/workflows/create-linux-packages.yml'
+  pull_request:
+jobs:
+  Build:
+    name: Linux Packages
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # ./ is the repo root
+        working-directory: ./
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+      - run: pwsh ./make.ps1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          FITEDIT_RELEASES_S3_BUCKET: ${{ secrets.FITEDIT_RELEASES_S3_BUCKET }}

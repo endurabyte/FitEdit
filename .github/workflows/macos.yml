@@ -3,12 +3,12 @@ on:
   push:
     paths:
       - '**'
-      - '.github/workflows/create-windows-installer.yml'
+      - '.github/workflows/create-macos-installer.yml'
   pull_request:
 jobs:
-  LinWin:
-    name: Create Windows Installer
-    runs-on: windows-latest
+  Build:
+    name: macOS Installer
+    runs-on: macos-latest
     defaults:
       run:
         # ./ is the repo root
