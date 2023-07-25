@@ -1,7 +1,8 @@
 # FitEdit
 
-[![Windows Build](https://github.com/endurabyte/FitEdit/actions/workflows/create-windows-installer.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/create-windows-installer.yml)
-[![Linux Build](https://github.com/endurabyte/FitEdit/actions/workflows/create-linux-packages.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/create-linux-packages.yml)
+[![Windows](https://github.com/endurabyte/FitEdit/actions/workflows/windows.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/windows.yml)
+[![macOS](https://github.com/endurabyte/FitEdit/actions/workflows/macos.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/macos.yml)
+[![Linux](https://github.com/endurabyte/FitEdit/actions/workflows/linux.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/linux.yml)
 
 Garmin FIT and TCX file manipulation with .NET.
 
