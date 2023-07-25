@@ -5,4 +5,4 @@ obj
 .env
 .DS_Store
 *.user
-FluffySpoonAspNetLetsEncrypt*
+*.pfx

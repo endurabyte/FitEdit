@@ -8,15 +8,24 @@ $configuration = "Release"
 $rid = "win-x64"
 $authors = "EnduraByte LLC"
 $packId = "FitEdit"
-$cert = "fitedit-selfSigned"
+$certTmpPath = "cert.tmp.pfx"
+$certSubject = "fitedit-SelfSigned"
 
 pushd $PSScriptRoot
 
-dotnet tool install -g csq --prerelease
+echo "Creating $certTmpPath from CODE_SIGN_CERTIFICATE environment variable..."
+& ./Decode-FromBase64.ps1 $env:CODE_SIGN_CERTIFICATE $certTmpPath
 
+echo "Importing $certTmpPath into certificate store..."
+$pass = ConvertTo-SecureString -String $env:CODE_SIGN_CERTIFICATE_PASSWORD -Force -AsPlainText
+Import-PfxCertificate -FilePath $certTmpPath -CertStoreLocation Cert:\CurrentUser\My -Password $pass
+
+echo "Publishing..."
 dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
-csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/n $cert /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com"
+echo "Packing..."
+dotnet tool install -g csq --prerelease
+csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/n $certSubject /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com"
 
 if ($sync -ne $true) {
     popd
@@ -24,6 +33,7 @@ if ($sync -ne $true) {
 }
 
 # Sync with s3
+echo "Deploying..."
 pushd
 cd releases
 & .\sync.ps1
