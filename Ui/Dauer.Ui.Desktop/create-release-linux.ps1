@@ -1,6 +1,6 @@
 param (
     [string]$version = "1.0.0",
-    [bool]$sync = $false
+    [string]$sync = $false
 )
 
 $projectFile = "Dauer.Ui.Desktop.csproj"
@@ -25,7 +25,8 @@ $fileExtensions | ForEach-Object {
   }
 }
 
-if ($sync -ne $true) {
+$doSync = [System.Boolean]::Parse($sync)
+if ($doSync -ne $true) {
     popd
     return
 }

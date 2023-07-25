@@ -1,6 +1,6 @@
 param (
     [string]$version = "1.0.0",
-    [bool]$sync = $false
+    [string]$sync = $false
 )
 
 $framework = "net7.0"
@@ -27,7 +27,8 @@ echo "Packing..."
 dotnet tool install -g csq --prerelease
 csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/n $certSubject /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com" --noDelta
 
-if ($sync -ne $true) {
+$doSync = [System.Boolean]::Parse($sync)
+if ($doSync -ne $true) {
     popd
     return
 }

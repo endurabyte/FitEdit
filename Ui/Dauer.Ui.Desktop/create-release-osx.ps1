@@ -1,6 +1,6 @@
 param (
     [string]$version = "1.0.0",
-    [bool]$sync = $false
+    [string]$sync = $false
 )
 
 $framework = "net7.0"
@@ -29,7 +29,8 @@ dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime 
 
 csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
 
-if ($sync -ne $true) {
+$doSync = [System.Boolean]::Parse($sync)
+if ($doSync -ne $true) {
     popd
     return
 }
