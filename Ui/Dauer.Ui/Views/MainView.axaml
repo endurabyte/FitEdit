@@ -28,7 +28,7 @@
       <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
-    <Grid RowDefinitions="*, Auto, 3*, Auto">
+    <Grid RowDefinitions="*, Auto, *, Auto">
       <TabControl Grid.Row="0" TabStripPlacement="Left" SelectedIndex="{Binding SelectedTabIndex}">
         <TabItem Header="File" FontSize="12">
           <views:FileView DataContext="{Binding File}"/>
