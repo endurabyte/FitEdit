@@ -9,6 +9,16 @@
     <WasmMainJSPath>AppBundle\main.js</WasmMainJSPath>
     <OutputType>Exe</OutputType>
 
+    <!-- Enable AOT compilation when publishing -->
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <WasmBuildNative>true</WasmBuildNative>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EmccCompileOptimizationFlag>-O2</EmccCompileOptimizationFlag>
+    <EmccLinkOptimizationFlag>-O2</EmccLinkOptimizationFlag>
+    <EmccFlags>-sVERBOSE</EmccFlags>
+
     <!-- For JS interop https://learn.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-7.0-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
@@ -25,7 +35,11 @@
     <DebugSymbols>true</DebugSymbols>
     <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
-  
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="Roots.xml" />
+  </ItemGroup>
+
   <ItemGroup>
     <WasmExtraFilesToDeploy Include="AppBundle\**" />
     <WasmExtraFilesToDeploy Include="..\Dauer.Ui\db\**" />
