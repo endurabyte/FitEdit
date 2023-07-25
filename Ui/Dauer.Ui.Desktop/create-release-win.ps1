@@ -13,12 +13,13 @@ $certSubject = "fitedit-SelfSigned"
 
 pushd $PSScriptRoot
 
-echo "Creating $certTmpPath from FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE environment variable..."
+echo "Creating $certTmpPath..."
 & ./Decode-FromBase64.ps1 $env:FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE $certTmpPath
 
 echo "Importing $certTmpPath into certificate store..."
 $pass = ConvertTo-SecureString -String $env:FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE_PASSWORD -Force -AsPlainText
 Import-PfxCertificate -FilePath $certTmpPath -CertStoreLocation Cert:\CurrentUser\My -Password $pass
+Remove-Item -Path $certTmpPath
 
 echo "Publishing..."
 dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false

@@ -7,13 +7,39 @@ $framework = "net7.0"
 $configuration = "Release"
 $authors = "EnduraByte LLC"
 $packId = "FitEdit"
-$signAppId = "Developer ID Application: Carl Slater (D89E59Y3DZ)"
-$signInstallId = "Developer ID Installer: Carl Slater (D89E59Y3DZ)"
+$signAppId = "Developer ID Application: Carl Slater ($env:FITEDIT_APPLE_TEAM_ID)"
+$signInstallId = "Developer ID Installer: Carl Slater ($env:FITEDIT_APPLE_TEAM_ID)"
 $notaryProfile = "FitEdit macOS"
+$appCertPath = "app.p12"
+$installCertPath = "installer.p12"
 
 pushd $PSScriptRoot
 
-xcrun notarytool store-credentials "FitEdit macOS" --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id FITEDIT_APPLE_TEAM_ID
+# Convert certs from base64 env vars to p12 files and import into kechain
+# The base64 env vars are set in the GitHub actions secrets but they are too long to fit
+# on Windows where the limit is 4096 chars. So we split them into two env vars and concatenate.
+$appCert_base64 = $env:FITEDIT_MACOS_APP_CERT_P12_1 + $env:FITEDIT_MACOS_APP_CERT_P12_2
+$installCert_base64 = $env:FITEDIT_MACOS_INSTALL_CERT_P12_1 + $env:FITEDIT_MACOS_INSTALL_CERT_P12_2
+
+$appCertPassword = $env:FITEDIT_MACOS_APP_CERT_P12_PW
+$installCertPassword = $env:FITEDIT_MACOS_INSTALL_CERT_P12_PW
+
+echo "Creating $appCertPath..."
+& ./Decode-FromBase64.ps1 $appCert_base64 $appCertPath
+
+echo "Creating $installCertPath..."
+& ./Decode-FromBase64.ps1 $installCert_base64 $installCertPath
+
+echo "Importing $appCertPath into login keychain..."
+Invoke-Expression -Command "security import $appCertPath -k ~/Library/Keychains/login.keychain-db -P $appCertPassword -T /usr/bin/codesign"
+
+echo "Importing $installCertPath into login keychain..."
+Invoke-Expression -Command "security import $installCertPath -k ~/Library/Keychains/login.keychain-db -P $installCertPassword -T /usr/bin/codesign"
+
+Remove-Item -Path $appCertPath
+Remove-Item -Path $installCertPath
+
+xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID
 
 dotnet tool install -g csq --prerelease
 
