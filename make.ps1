@@ -1,2 +1,2 @@
 & .\submodule-init.ps1
-dotnet build --configuration Release --version-suffix "release"
+dotnet build FitEdit.Deployment.sln --configuration Release --version-suffix "release"
