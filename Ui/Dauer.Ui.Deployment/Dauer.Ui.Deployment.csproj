@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'" Command="pwsh ../Dauer.Ui.Desktop/create-release-win.ps1 $(Version)" />
-    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'false'" Command="pwsh ../Dauer.Ui.Desktop/create-release-linux.ps1 $(Version)" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows')) == 'false'" Command="pwsh ../Dauer.Ui.Desktop/create-release-win.ps1 $(Version)" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) == 'false'" Command="pwsh ../Dauer.Ui.Desktop/create-release-linux.ps1 $(Version)" />
     <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) == 'true'"  Command="pwsh ../Dauer.Ui.Desktop/create-release-osx.ps1 $(Version)" />
   </Target>
   
