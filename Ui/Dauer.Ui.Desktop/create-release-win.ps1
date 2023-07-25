@@ -25,7 +25,7 @@ dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime $rid --
 
 echo "Packing..."
 dotnet tool install -g csq --prerelease
-csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/n $certSubject /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com"
+csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/n $certSubject /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com" --noDelta
 
 if ($sync -ne $true) {
     popd
