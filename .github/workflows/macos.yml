@@ -1,4 +1,4 @@
-name: Create Windows Installer
+name: macOS
 on: 
   push:
     paths:
