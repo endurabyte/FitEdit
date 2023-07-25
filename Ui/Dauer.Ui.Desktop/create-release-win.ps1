@@ -1,11 +1,31 @@
+param (
+    [string]$version = "1.0.0",
+    [bool]$sync = $false
+)
+
+$framework = "net7.0"
+$configuration = "Release"
+$rid = "win-x64"
+$authors = "EnduraByte LLC"
+$packId = "FitEdit"
+$cert = "fitedit-selfSigned"
+
+pushd $PSScriptRoot
+
 dotnet tool install -g csq --prerelease
 
-dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime win-x64 --framework net7.0 --output "./bin/Release/net7.0/publish/win-x64/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
-csq pack --xplat=win --packId "FitEdit" --packAuthors "Doug Slater" --packVersion "1.0.3" --packDirectory "./bin/Release/net7.0/publish/win-x64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/win-x64" --signParams="/n fitedit-selfSigned /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com"
+csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/n $cert /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com"
+
+if ($sync -ne $true) {
+    popd
+    return
+}
 
 # Sync with s3
 pushd
 cd releases
 & .\sync.ps1
+popd
 popd

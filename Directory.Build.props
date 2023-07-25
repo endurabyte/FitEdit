@@ -3,5 +3,9 @@
     <AvaloniaVersion>11.0.0</AvaloniaVersion>
     <OxyPlotVersion>2.1.2-av11.0.0</OxyPlotVersion>
     <MapsuiVersion>4.0.0</MapsuiVersion>
+    <VersionPrefix>1.0.4</VersionPrefix>
+    <VersionSuffix>alpha</VersionSuffix>
+    <Product>FitEdit</Product>
+    <Copyright>EnduraByte LLC 2023</Copyright>
   </PropertyGroup>
 </Project>
