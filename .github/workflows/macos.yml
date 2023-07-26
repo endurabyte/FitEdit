@@ -7,7 +7,7 @@ on:
 jobs:
   Build:
     name: macOS Installer
-    runs-on: macos-11
+    runs-on: macos-13
     defaults:
       run:
         # ./ is the repo root
