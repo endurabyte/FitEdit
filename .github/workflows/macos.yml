@@ -17,8 +17,8 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
-            '6.0.x'
-            '7.0.x'
+            6.0.x
+            7.0.x
       - run: pwsh ./make.ps1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
