@@ -3,10 +3,6 @@ on:
   push:
     paths:
       - '**'
-      - '.github/workflows/windows.yml'
-    paths-ignore:
-      - '.github/workflows/linux.yml'
-      - '.github/workflows/macos.yml'
   pull_request:
 jobs:
   Build:
