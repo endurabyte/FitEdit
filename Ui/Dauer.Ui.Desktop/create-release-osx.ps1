@@ -1,5 +1,5 @@
 param (
-    [string]$version = "1.0.0",
+    [Parameter(mandatory)][string]$version,
     [string]$sync = $false
 )
 
@@ -12,6 +12,12 @@ $signInstallId = "Developer ID Installer: Carl Slater ($env:FITEDIT_APPLE_TEAM_I
 $notaryProfile = "FitEdit macOS"
 $appCertPath = "app.p12"
 $installCertPath = "installer.p12"
+
+$rid_x64 = "osx-x64"
+$rid_arm64 = "osx-arm64"
+
+$tmpKeychainPassword = "fitedit2023"
+$tmpKeychainName = "fiteditKeychain"
 
 pushd $PSScriptRoot
 
@@ -30,32 +36,56 @@ echo "Creating $appCertPath..."
 echo "Creating $installCertPath..."
 & ./Decode-FromBase64.ps1 $installCert_base64 $installCertPath
 
-echo "Importing $appCertPath into login keychain..."
-Invoke-Expression -Command "security import $appCertPath -k ~/Library/Keychains/login.keychain-db -P $appCertPassword -T /usr/bin/codesign"
+echo "Creating temporary keychain..."
+security create-keychain -p $tmpKeychainPassword $tmpKeychainName
+echo "Appending temporary keychain to login keychain..."
+security list-keychains -d user -s $tmpKeychainName ~/Library/Keychains/login.keychain-db
+echo "Removing relock timeout..."
+security set-keychain-settings $tempKeychainName
+echo "Unlocking temporary keychain..."
+security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName
 
-echo "Importing $installCertPath into login keychain..."
-Invoke-Expression -Command "security import $installCertPath -k ~/Library/Keychains/login.keychain-db -P $installCertPassword -T /usr/bin/codesign"
-
+echo "Importing $appCertPath into keychain..."
+security import $appCertPath -k $tmpKeychainName -P $appCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign
 Remove-Item -Path $appCertPath
+
+echo "Importing $installCertPath into keychain..."
+security import $installCertPath -k $tmpKeychainName -P $installCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign
 Remove-Item -Path $installCertPath
 
+echo "Enabling code-signing from a non-interactive shell..."
+security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName
+
+echo "Storing notary profile..."
 xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID
 
+echo "Installing Clowd.Squirrel..."
 dotnet tool install -g csq --prerelease
 
 # Build for Intel
-$rid = "osx-x64"
 
-dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid --framework $framework --output "./bin/$configuration/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+echo "Building $rid_x64..."
+dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid_x64 --framework $framework --output "./bin/$configuration/$framework/publish/$rid_x64/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
-csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
+echo "Packing $rid_x64..."
+csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid_x64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid_x64" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
 
 # Build for ARM / Apple Silicon
-$rid = "osx-arm64"
 
-dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid --framework $framework --output "./bin/$configuration/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+echo "Building $rid_arm64..."
+dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid_arm64 --framework $framework --output "./bin/$configuration/$framework/publish/$rid_arm64/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
-csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
+echo "Packing $rid_arm64..."
+csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid_arm64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid_arm64" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
+
+# Clean up
+echo "Removing temporary keychain..."
+security delete-keychain $tempKeychainName
+
+echo "Restoring default keychain..."
+security list-keychains -d user -s login.keychain
+
+# Upload artifacts
 
 $doSync = [System.Boolean]::Parse($sync)
 if ($doSync -ne $true) {
