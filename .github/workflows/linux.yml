@@ -3,7 +3,10 @@ on:
   push:
     paths:
       - '**'
-      - '.github/workflows/create-linux-packages.yml'
+      - '.github/workflows/linux.yml'
+    paths-ignore:
+      - '.github/workflows/macos.yml'
+      - '.github/workflows/windows.yml'
   pull_request:
 jobs:
   Build:
