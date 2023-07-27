@@ -1,7 +1,7 @@
 name: macOS
 on: 
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths:
       - '**'
 jobs:
