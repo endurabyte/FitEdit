@@ -1,6 +1,6 @@
 param (
-    [string]$version = "1.0.0",
-    [string]$sync = $false
+  [Parameter(mandatory)][string]$version,
+  [string]$sync = $false
 )
 
 $projectFile = "Dauer.Ui.Desktop.csproj"

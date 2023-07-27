@@ -1,9 +1,9 @@
 name: macOS
 on: 
   push:
+    branches: [ master ]
     paths:
       - '**'
-  pull_request:
 jobs:
   Build:
     name: macOS Installer

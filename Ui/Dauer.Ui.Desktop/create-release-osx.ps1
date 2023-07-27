@@ -1,6 +1,6 @@
 param (
-    [Parameter(mandatory)][string]$version,
-    [string]$sync = $false
+  [Parameter(mandatory)][string]$version,
+  [string]$sync = $false
 )
 
 $framework = "net7.0"

@@ -1,9 +1,9 @@
 name: Windows
 on: 
   push:
+    branches: [ master ]
     paths:
       - '**'
-  pull_request:
 jobs:
   Build:
     name: Windows Installer

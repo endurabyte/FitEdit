@@ -1,9 +1,9 @@
 name: Linux
 on: 
   push:
+    branches: [ master ]
     paths:
       - '**'
-  pull_request:
 jobs:
   Build:
     name: Linux Packages
