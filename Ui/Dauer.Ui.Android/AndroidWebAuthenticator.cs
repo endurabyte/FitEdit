@@ -5,7 +5,7 @@ namespace Dauer.Ui.Android;
 
 public class AndroidWebAuthenticator : Infra.WebAuthenticatorBase
 {
-  private const string authenticationUrl_ = "https://auth2.fitedit.io/login?response_type=code&client_id=667gbn7s1enf2jjnmnai6gc8o5&redirect_uri=fitedit://app.fitedit.io";
+  private const string authenticationUrl_ = "https://auth3.fitedit.io/login?response_type=code&client_id=667gbn7s1enf2jjnmnai6gc8o5&redirect_uri=fitedit://app.fitedit.io";
 
   public override async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {

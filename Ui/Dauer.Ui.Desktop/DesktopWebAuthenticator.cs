@@ -14,10 +14,15 @@ namespace Dauer.Ui.Desktop;
 public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
   private readonly string redirectUri_ = $"https://www.fitedit.io/login-redirect.html";
-  private readonly string authority_ = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cXDV0MLtq";
+  private string LogoutUri_ => $"https://auth3.fitedit.io/logout" +
+                  $"?client_id={appClientId_}" +
+                  $"&logout_uri=https://www.fitedit.io/";
+  private string Authority_ => $"https://cognito-idp.us-east-1.amazonaws.com/{userPoolId_}";
   private readonly string api_ = "https://api.fitedit.io/";
+  //private readonly string api_ = "https://stage-api.fitedit.io/";
   //private readonly string api_ = "http://localhost/";
-  private readonly string clientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
+  private readonly string userPoolId_ = "us-east-1_c6hFaUlt0";
+  private readonly string appClientId_ = "30vleui8j8qe52hfd6k55mvdmr";
   private readonly IDatabaseAdapter db_;
   private readonly ILoggerFactory factory_;
   private readonly Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };
@@ -62,8 +67,8 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 
     var options = new OidcClientOptions
     {
-      Authority = authority_,
-      ClientId = clientId_,
+      Authority = Authority_,
+      ClientId = appClientId_,
       RedirectUri = redirectUri_,
       Scope = "email openid",
       FilterClaims = false,
@@ -86,26 +91,24 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 
     try
     {
-      string uri = $"https://auth2.fitedit.io/logout" +
-                $"?client_id={clientId_}" +
-                $"&logout_uri=https://www.fitedit.io/";
-
       // Cognito OpenID connect discovery does not support logout: https://stackoverflow.com/a/56221548/16246783
       // Cognito is not even OpenID certified: https://openid.net/certification/
       //var req = new LogoutRequest { IdTokenHint = auth_.IdentityToken, }
       //LogoutResult result = await oidcClient_.LogoutAsync(req, ct);
 
       var client = new HttpClient();
-      HttpResponseMessage resp = await client.GetAsync(uri, ct);
+      HttpResponseMessage resp = await client.GetAsync(LogoutUri_, ct);
       bool ok = resp.IsSuccessStatusCode;
 
+      // No need to open the browser
       //BrowserResult? result = await oidcClient_.Options.Browser
       //  .InvokeAsync(new BrowserOptions(uri, "https://www.fitedit.io/") { Timeout = TimeSpan.Zero, });
       //bool ok = !result.IsError;
 
       if (!ok) 
-      { 
-        //Log.Error($"Logout error: {result.Error}: {result.ErrorDescription}");
+      {
+        string content = await resp.Content.ReadAsStringAsync(ct);
+        Log.Error($"Logout error: {content}");
         return false; 
       }
 
