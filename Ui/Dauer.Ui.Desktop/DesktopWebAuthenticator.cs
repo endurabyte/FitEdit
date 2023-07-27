@@ -14,7 +14,7 @@ namespace Dauer.Ui.Desktop;
 public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
   private readonly string redirectUri_ = $"https://www.fitedit.io/login-redirect.html";
-  private readonly string authority_ = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_nqQT8APwr";
+  private readonly string authority_ = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_cXDV0MLtq";
   private readonly string api_ = "https://api.fitedit.io/";
   //private readonly string api_ = "http://localhost/";
   private readonly string clientId_ = "5n3lvp2jfo1c2kss375jvkhvod";
@@ -86,7 +86,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 
     try
     {
-      string uri = $"https://auth.fitedit.io/logout" +
+      string uri = $"https://auth2.fitedit.io/logout" +
                 $"?client_id={clientId_}" +
                 $"&logout_uri=https://www.fitedit.io/";
 
