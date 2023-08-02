@@ -44,6 +44,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 		.github\workflows\linux.yml = .github\workflows\linux.yml
 		.github\workflows\macos.yml = .github\workflows\macos.yml
+		make.ps1 = make.ps1
 		nuget.config = nuget.config
 		README.md = README.md
 		.github\workflows\windows.yml = .github\workflows\windows.yml

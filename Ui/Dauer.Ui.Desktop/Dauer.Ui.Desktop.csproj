@@ -31,11 +31,13 @@
     <PackageReference Include="Clowd.Squirrel" Version="3.0.210-g5f9f594" />
     <PackageReference Include="IdentityModel.OidcClient" Version="5.2.2-alpha.0.3" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
+    <PackageReference Include="Packaging.Targets" Version="0.1.220" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="Packaging.Targets" Version="0.1.220" />
+    <PackageReference Include="supabase-csharp" Version="0.12.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.32.1" />
     
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
@@ -48,19 +50,19 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <DebDotNetDependencies Include="dotnet-runtime-7.0"/>
+    <DebDotNetDependencies Include="dotnet-runtime-7.0" />
   </ItemGroup>
 
   <!-- Dependencies for self-contained net7.0 on linux-x64 -->
   <!-- Output of `apt-cache depends dotnet-runtime-7.0 on Ubuntu 22.04.1 -->
   <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
-    <DebDotNetDependencies Include="libicu70"/>
-    <DebDotNetDependencies Include="libc6"/>
-    <DebDotNetDependencies Include="libgcc-s1"/>
-    <DebDotNetDependencies Include="liblttng-ust1"/>
-    <DebDotNetDependencies Include="libssl3"/>
-    <DebDotNetDependencies Include="libstdc++6"/>
-    <DebDotNetDependencies Include="zlib1g"/>
+    <DebDotNetDependencies Include="libicu70" />
+    <DebDotNetDependencies Include="libc6" />
+    <DebDotNetDependencies Include="libgcc-s1" />
+    <DebDotNetDependencies Include="liblttng-ust1" />
+    <DebDotNetDependencies Include="libssl3" />
+    <DebDotNetDependencies Include="libstdc++6" />
+    <DebDotNetDependencies Include="zlib1g" />
   </ItemGroup>
 
   <ItemGroup>

@@ -13,9 +13,9 @@ $certKey = $env:FITEDIT_WINDOWS_CODE_SIGN_KEY
 
 pushd $PSScriptRoot
 
-echo "Creating $certTmpPath..."
 & ./Decode-FromBase64.ps1 $env:FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE $certTmpPath
 $certTmpPath = "$PSScriptRoot/$certTmpPath"
+echo "Created $certTmpPath..."
 
 echo "Publishing..."
 dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
