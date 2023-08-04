@@ -46,15 +46,41 @@ public class DisplayedMessageGroup : ReactiveObject
 
 public class RecordViewModel : ViewModelBase, IRecordViewModel
 {
+  /// <summary>
+  /// All groups, even those which are not shown
+  /// </summary>
+  private ObservableCollection<DisplayedMessageGroup> AllGroups_ { get; set; } = new();
+
+  /// <summary>
+  /// Shown groups, i.e. only those which are shown in a tab
+  /// </summary>
   public ObservableCollection<DisplayedMessageGroup> Groups { get; set; } = new();
 
+  /// <summary>
+  /// Name of the currently selected tab
+  /// </summary>
+  private string TabName_ => TabIndexIsValid_
+    ? UnformatTabName(Groups[TabIndex]?.Name) ?? DefaultTabName_ 
+    : DefaultTabName_;
+
+  private const string DefaultTabName_ = "Record";
+
+  /// <summary>
+  /// Index of the currently selected tab
+  /// </summary>
+  [Reactive] public int TabIndex { get; set; }
+  private bool TabIndexIsValid_ => TabIndex >= 0 && TabIndex < Groups.Count;
+
+  /// <summary>
+  /// The index of the currently shown GPS coordinate shown in the chart, map, and records tab.
+  /// </summary>
   [Reactive] public int SelectedIndex { get; set; }
+
   [Reactive] public int SelectionCount { get; set; }
   [Reactive] public bool HideUnusedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedMessages { get; set; } = true;
   [Reactive] public bool PrettifyFields { get; set; } = true;
-
 
   private readonly IFileService fileService_;
   private IDisposable? selectedIndexSub_;
@@ -81,22 +107,70 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     this.ObservableForProperty(x => x.HideUnnamedFields).Subscribe(_ => UpdateColumnVisibility());
     this.ObservableForProperty(x => x.HideUnnamedMessages).Subscribe(_ =>
     {
-      foreach (var group in Groups)
+      PreserveCurrentTab(() =>
       {
-        group.IsVisible = !HideUnnamedMessages || group.IsNamed;
-      }
+        Groups.Clear();
+
+        foreach (var group in AllGroups_)
+        {
+          group.IsVisible = !HideUnnamedMessages || group.IsNamed;
+          if (group.IsVisible)
+          {
+            Groups.Add(group);
+          }
+        }
+      });
     });
+
     this.ObservableForProperty(x => x.PrettifyFields).Subscribe(_ =>
     {
-      converter_.Prettify = PrettifyFields;
-      if (fileService_.MainFile?.FitFile == null) { return; }
-      Show(fileService_.MainFile.FitFile);
+      PreserveCurrentTab(() =>
+      {
+        converter_.Prettify = PrettifyFields;
+        if (fileService_.MainFile?.FitFile == null) { return; }
+        Show(fileService_.MainFile.FitFile);
+      });
     });
   }
 
+  /// <summary>
+  /// Preserve the current tab selection if possible
+  /// </summary>
+  private void PreserveCurrentTab(Action a)
+  {
+    string? tabName = TabName_;
+    a();
+    SelectTab(tabName);
+  }
+
+  /// <summary>
+  /// Selec the tab with the given name, or the first tab if no tab with the given name exists.
+  /// </summary>
+  private void SelectTab(string? tabName)
+  {
+    DisplayedMessageGroup? match = Groups.FirstOrDefault(g => UnformatTabName(g.Name) == tabName);
+    TabIndex = match != null ? Groups.IndexOf(match) : 0;
+  }
+
+  /// <summary>
+  /// Remove the count of items in a group, e.g. "Record (123)" -> "Record"
+  /// </summary>
+  private static string? UnformatTabName(string? s) => s?.Split('(')[0].Trim();
+
+  /// <summary>
+  /// Get the tab name for a given message definition and count of messages.
+  /// Replace "unknown" with "Message # {num}".
+  /// For example, "Record" -> "Record (123)".
+  /// For example, "unknown" -> "Message # 233 (123)"
+  /// </summary>
+  private static string? FormatTabName(Mesg defMesg, int count) =>
+       $"{(defMesg.Name == "unknown" 
+         ? $"Message # {defMesg.Num}" : defMesg.Name)} "
+     + $"({count})";
+
   private void UpdateColumnVisibility()
   {
-    foreach (var group in Groups)
+    foreach (var group in AllGroups_)
     {
       foreach (var header in group.Headers)
       {
@@ -128,7 +202,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   {
     if (file == null) { return; }
     if (file.FitFile == null) { return; }
-    Show(file.FitFile);
+
+    PreserveCurrentTab(() => Show(file.FitFile));
 
     selectedIndexSub_?.Dispose();
     selectedCountSub_?.Dispose();
@@ -168,7 +243,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void Show(FitFile ff)
   {
     // Remeber which groups were expanded
-    var expandedGroups = Groups
+    var expandedGroups = AllGroups_
       .Where(g => g.IsExpanded)
       .ToDictionary(g => g.Name ?? "", g => g.IsExpanded);
 
@@ -177,7 +252,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       records_.DataGrid.SelectionChanged -= HandleRecordSelectionChanged;
     }
 
-    foreach (var group in Groups)
+    foreach (var group in AllGroups_)
     {
       if (group.DataGrid != null)
       {
@@ -185,6 +260,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       }
     }
 
+    AllGroups_.Clear();
     Groups.Clear();
 
     foreach (var kvp in ff.MessagesByDefinition)
@@ -195,11 +271,16 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       {
         group.DataGrid.CellEditEnding += HandleCellEditEnding;
       }
-      Groups.Add(group);
+
+      AllGroups_.Add(group);
+      if (group.IsVisible)
+      {
+        Groups.Add(group);
+      }
     }
 
     // When the slider moves, higlight it in the records DataGrid
-    var records = Groups.FirstOrDefault(g => g.Num == MesgNum.Record);
+    var records = AllGroups_.FirstOrDefault(g => g.Num == MesgNum.Record);
     if (records == null) { return; }
     if (records.DataGrid == null) { return; }
 
@@ -290,8 +371,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var group = new DisplayedMessageGroup
     {
       Num = defMesg.Num,
-      Name = $"{(defMesg.Name == "unknown" ? $"Message # {defMesg.Num}" : defMesg.Name)} "
-           + $"({messages.Count})",
+      Name = FormatTabName(defMesg, messages.Count),
       DataGrid = dg,
       IsNamed = defMessage.IsNamed,
       IsVisible = defMessage.IsNamed || !HideUnnamedMessages,

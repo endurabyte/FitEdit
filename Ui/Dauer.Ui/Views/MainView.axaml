@@ -52,7 +52,7 @@
       </Grid>
 
       <!-- Logged in indicator -->
-      <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" >
+      <!--<StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" >
         <TextBlock Text="{Binding Authenticator.Username}" VerticalAlignment="Center" Margin="10,0,10,0">
           <TextBlock.ContextMenu>
             <ContextMenu>
@@ -66,7 +66,7 @@
                  ToolTip.Tip="{Binding Authenticator.LoggedIn, Converter={StaticResource BooleanToLoginStatusConverter}}"
                  Width="20" Height="20">
         </Ellipse>
-      </StackPanel>
+      </StackPanel>-->
       
     </Grid>
 

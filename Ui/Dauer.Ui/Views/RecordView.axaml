@@ -12,29 +12,58 @@
     <vm:DesignRecordViewModel />
   </Design.DataContext>
 
-  <ScrollViewer>
-    <StackPanel Orientation="Vertical">
+  <Grid RowDefinitions="Auto, *">
 
-      <Expander Header="Filters">
-        <StackPanel Orientation="Vertical">
-          <CheckBox Content="Hide unused fields" IsChecked="{Binding HideUnusedFields}"/>
-          <CheckBox Content="Hide unnamed fields (Field #)" IsChecked="{Binding HideUnnamedFields}"/>
-          <CheckBox Content="Hide unnamed messages (Message #)" IsChecked="{Binding HideUnnamedMessages}"/>
-          <CheckBox Content="Prettify fields (timestamp, position)" IsChecked="{Binding PrettifyFields}"/>
-        </StackPanel>
-      </Expander>
+    <Expander Grid.Row="0" Header="Filters">
+      <StackPanel Orientation="Horizontal">
+        <CheckBox Content="Hide unused columns" IsChecked="{Binding HideUnusedFields}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Hide columns that have no data. For example, lat/lon for treadmill runs.
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
 
-      <ItemsControl ItemsSource="{Binding Groups}">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <Expander IsExpanded="{Binding IsExpanded}" IsVisible="{Binding IsVisible}" Header="{Binding Name}" HorizontalAlignment="Stretch" MaxHeight="800" Padding="0,0,0,0">
-              <ContentControl Content="{Binding DataGrid}"/>
-            </Expander>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+        <CheckBox Content="Hide unnamed columns" IsChecked="{Binding HideUnnamedFields}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Hide columns named like "Field #"
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+        <CheckBox Content="Hide unnamed tabs" IsChecked="{Binding HideUnnamedMessages}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Hide tabs like "Message #"
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+        <CheckBox Content="Pretty data" IsChecked="{Binding PrettifyFields}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Convert raw data to a more cosmetic format. Examples: <LineBreak/>
+              - Convert numbers like ActivityType "1" to "Running" <LineBreak/>
+              - Convert timestamps like 945518320 to "12/17/2019 11:58:40". The format depends on your region.<LineBreak/>
+              - Convert lat/lon like 427200580 to 35.80753896385431
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+      </StackPanel>
+    </Expander>
 
-    </StackPanel>
-  </ScrollViewer>
-  
+    <TabControl Grid.Row="1" ItemsSource="{Binding Groups}" SelectedIndex="{Binding TabIndex}">
+      <TabControl.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding Name}" FontSize="12"/>
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+      <TabControl.ContentTemplate>
+        <DataTemplate DataType="vm:DisplayedMessageGroup">
+          <ContentControl Content="{Binding DataGrid}"/>
+        </DataTemplate>
+      </TabControl.ContentTemplate>
+    </TabControl>
+
+  </Grid>
+
 </UserControl>
