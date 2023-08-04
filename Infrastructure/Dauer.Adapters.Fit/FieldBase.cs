@@ -29,6 +29,7 @@ namespace Dynastream.Fit
         public abstract double Scale { get; }
         public abstract double Offset { get; }
         public abstract string Units { get; }
+        public int Count => values.Count;
         #endregion
 
         #region Constructors

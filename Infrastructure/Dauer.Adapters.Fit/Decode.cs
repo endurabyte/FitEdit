@@ -12,26 +12,11 @@
 
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+using Dauer.Model;
+using Dauer.Model.Extensions;
 
 namespace Dynastream.Fit
 {
-  /// <summary>
-  /// Event Args Class associated with the DeveloperFieldDescrtiption Event
-  /// </summary>
-  public class DeveloperFieldDescriptionEventArgs : EventArgs
-  {
-    public DeveloperFieldDescription Description { get; private set; }
-
-    public DeveloperFieldDescriptionEventArgs(DeveloperFieldDescription description)
-    {
-      Description = description;
-    }
-  }
 
   /// <summary>
   /// This class will decode a .fit file reading the file header and any definition or data messages.
@@ -41,38 +26,17 @@ namespace Dynastream.Fit
     private const long CRCSIZE = 2;
     private const uint INVALID_DATA_SIZE = 0;
 
-    #region Fields
-    private MesgDefinition[] localMesgDefs = new MesgDefinition[Fit.MaxLocalMesgs];
-    private Header fileHeader;
-    private uint timestamp = 0;
-    private int lastTimeOffset = 0;
-    private bool invalidDataSize = false;
-    private Accumulator accumulator = new Accumulator();
+    private readonly MesgDefinition[] localMesgDefs_ = new MesgDefinition[Fit.MaxLocalMesgs];
+    private Header fileHeader_;
+    private uint timestamp_ = 0;
+    private int lastTimeOffset_ = 0;
+    private int lastLatitude_ = 0;
+    private int lastLongitude_ = 0;
+    private readonly Accumulator accumulator_ = new();
+    private readonly DeveloperDataLookup lookup_ = new();
 
-    private readonly DeveloperDataLookup m_lookup = new DeveloperDataLookup();
-    #endregion
+    public bool InvalidDataSize { get; set; } = false;
 
-    #region Properties
-    public bool InvalidDataSize
-    {
-      get
-      {
-        return invalidDataSize;
-      }
-      set
-      {
-        invalidDataSize = value;
-      }
-    }
-    #endregion
-
-    #region Constructors
-    public Decode()
-    {
-    }
-    #endregion
-
-    #region Methods
     public event MesgEventHandler MesgEvent;
     public event MesgDefinitionEventHandler MesgDefinitionEvent;
     public event EventHandler<DeveloperFieldDescriptionEventArgs> DeveloperFieldDescriptionEvent;
@@ -83,14 +47,14 @@ namespace Dynastream.Fit
     /// Returns true if file is FIT.
     /// </summary>
     /// <param name="fitStream"> Seekable (file)stream to parse</param>
-    public bool IsFIT(Stream fitStream)
+    public static bool IsFIT(Stream fitStream)
     {
       long position = fitStream.Position;
       bool status = false;
       try
       {
         // Does the header contain the flag string ".FIT"?
-        Header header = new Header(fitStream);
+        var header = new Header(fitStream);
         fitStream.Position = position;
         status = header.IsValid();
       }
@@ -113,32 +77,31 @@ namespace Dynastream.Fit
     {
       bool isValid = true;
       long position = fitStream.Position;
-      long fileSize = 0;
 
       try
       {
         while ((fitStream.Position < fitStream.Length) && isValid)
         {
           // Is there a valid header?
-          Header header = new Header(fitStream);
+          var header = new Header(fitStream);
           isValid = header.IsValid();
 
           // Get the file size from the header
           // When the data size is 0 set flags, don't calculate CRC
           if (header.DataSize > INVALID_DATA_SIZE)
           {
-            fileSize = header.Size + header.DataSize + CRCSIZE;
+            long fileSize = header.Size + header.DataSize + CRCSIZE;
 
             // Is the file CRC ok?
             // Need to rewind the header size because the header is part of the CRC calculation.
             byte[] data = new byte[fileSize];
-            fitStream.Position = fitStream.Position - header.Size;
+            fitStream.Position -= header.Size;
             fitStream.Read(data, 0, data.Length);
-            isValid &= (CRC.Calc16(data, data.Length) == 0x0000);
+            isValid &= CRC.Calc16(data, data.Length) == 0x0000;
           }
           else
           {
-            invalidDataSize = true;
+            InvalidDataSize = true;
             isValid = false;
           }
         }
@@ -188,13 +151,14 @@ namespace Dynastream.Fit
     {
       if (messageCount < 0) messageCount = int.MaxValue;
 
-      bool readOK = true;
       long fileSize = 0;
       long filePosition = fitStream.Position;
       bool readBefore = filePosition != 0;
 
       try
       {
+        bool readOK = true;
+
         // Attempt to read header
         if (mode == DecodeMode.Normal || mode == DecodeMode.Partial)
         {
@@ -207,8 +171,8 @@ namespace Dynastream.Fit
 
           try
           {
-            fileHeader = new Header(fitStream);
-            readOK &= fileHeader.IsValid();
+            fileHeader_ = new Header(fitStream);
+            readOK &= fileHeader_.IsValid();
           }
           finally
           {
@@ -220,9 +184,9 @@ namespace Dynastream.Fit
 
           // Get the file size from the header
           // When the data size is invalid set the file size to the fitstream length
-          if (!invalidDataSize)
+          if (!InvalidDataSize)
           {
-            fileSize = fileHeader.Size + fileHeader.DataSize + CRCSIZE;
+            fileSize = fileHeader_.Size + fileHeader_.DataSize + CRCSIZE;
           }
           else
           {
@@ -233,10 +197,10 @@ namespace Dynastream.Fit
           {
             throw new FitException("FIT decode error: File is not FIT format. Check file header data type. Error at stream position: " + fitStream.Position);
           }
-          if ((fileHeader.ProtocolVersion & Fit.ProtocolVersionMajorMask) > (Fit.ProtocolMajorVersion << Fit.ProtocolVersionMajorShift))
+          if ((fileHeader_.ProtocolVersion & Fit.ProtocolVersionMajorMask) > (Fit.ProtocolMajorVersion << Fit.ProtocolVersionMajorShift))
           {
             // The decoder does not support decode accross protocol major revisions
-            throw new FitException(String.Format("FIT decode error: Protocol Version {0}.X not supported by SDK Protocol Ver{1}.{2} ", (fileHeader.ProtocolVersion & Fit.ProtocolVersionMajorMask) >> Fit.ProtocolVersionMajorShift, Fit.ProtocolMajorVersion, Fit.ProtocolMinorVersion));
+            throw new FitException($"FIT decode error: Protocol Version {(fileHeader_.ProtocolVersion & Fit.ProtocolVersionMajorMask) >> Fit.ProtocolVersionMajorShift}.X not supported by SDK Protocol Ver{Fit.ProtocolMajorVersion}.{Fit.ProtocolMinorVersion} ");
           }
         }
         else if (mode == DecodeMode.InvalidHeader)
@@ -282,7 +246,7 @@ namespace Dynastream.Fit
         }
 
         // Is the file CRC ok?
-        if ((mode == DecodeMode.Normal) && !invalidDataSize)
+        if ((mode == DecodeMode.Normal) && !InvalidDataSize)
         {
           byte[] data = new byte[fileSize];
           fitStream.Position = filePosition;
@@ -290,156 +254,251 @@ namespace Dynastream.Fit
           readOK &= (CRC.Calc16(data, data.Length) == 0x0000);
           fitStream.Position = filePosition + fileSize;
         }
+
+        return readOK;
       }
       catch (EndOfStreamException e)
       {
-        readOK = false;
-        Debug.WriteLine("{0} caught and ignored. ", e.GetType().Name);
-        throw new FitException("Decode:Read - Unexpected End of File at stream position" + fitStream.Position, e);
+        Log.Error(e.Message);
+        return false; // Done reading
       }
-      catch (FitException)
+      catch (FitException e)
       {
-        // When attempting to decode files with invalid data size this indicates the EOF.
-        if (!invalidDataSize)
-        {
-          throw;
-        }
+        Log.Error(e.Message);
+        return true; // Attempt to keep reading
       }
-      return readOK;
     }
 
     public void DecodeNextMessage(Stream fitStream)
     {
-      BinaryReader br = new BinaryReader(fitStream);
+      var br = new BinaryReader(fitStream);
+      long sourceIndex = fitStream.Position;
+
       byte nextByte = br.ReadByte();
+      bool isCompressedHeader = (nextByte & Fit.CompressedHeaderMask) == Fit.CompressedHeaderMask;
+      bool isMesgDefinition = (nextByte & Fit.MesgDefinitionMask) == Fit.MesgDefinitionMask;
+      bool isDataMessage = (nextByte & Fit.MesgDefinitionMask) == Fit.MesgHeaderMask;
+      bool isDevData = (nextByte & Fit.DevDataMask) == Fit.DevDataMask;
 
       // Is it a compressed timestamp mesg?
-      if ((nextByte & Fit.CompressedHeaderMask) == Fit.CompressedHeaderMask)
+      if (isCompressedHeader)
       {
-        MemoryStream mesgBuffer = new MemoryStream();
+        var mesgBuffer = new MemoryStream();
 
         int timeOffset = nextByte & Fit.CompressedTimeMask;
-        timestamp += (uint)((timeOffset - lastTimeOffset) & Fit.CompressedTimeMask);
-        lastTimeOffset = timeOffset;
+        timestamp_ += (uint)((timeOffset - lastTimeOffset_) & Fit.CompressedTimeMask);
+        lastTimeOffset_ = timeOffset;
         Field timestampField = new Field(Profile.GetMesg(MesgNum.Record).GetField("Timestamp"));
-        timestampField.SetValue(timestamp);
+        timestampField.SetValue(timestamp_);
 
         byte localMesgNum = (byte)((nextByte & Fit.CompressedLocalMesgNumMask) >> 5);
         mesgBuffer.WriteByte(localMesgNum);
-        if (localMesgDefs[localMesgNum] == null)
+        if (localMesgDefs_[localMesgNum] == null)
         {
-          throw new FitException("Decode:DecodeNextMessage - FIT decode error: Missing message definition for local message number " + localMesgNum + " at stream position " + fitStream.Position);
+          throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
         }
-        int fieldsSize = localMesgDefs[localMesgNum].GetMesgSize() - 1;
+        int fieldsSize = localMesgDefs_[localMesgNum].GetMesgSize() - 1;
         try
         {
           byte[] read = br.ReadBytes(fieldsSize);
           if (read.Length < fieldsSize)
           {
-            throw new Exception("Field size mismatch, expected: " + fieldsSize + "received: " + read.Length);
+            throw new FitException($"Field size mismatch, expected: {fieldsSize}, received: {read.Length}");
           }
           mesgBuffer.Write(read, 0, fieldsSize);
         }
         catch (Exception e)
         {
-          throw new FitException("Decode:DecodeNextMessage - Compressed Data Message unexpected end of file.  Wanted " + fieldsSize + " bytes at stream position " + fitStream.Position, e);
+          throw new FitException($"Compressed Data Message unexpected end of file. Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
         }
 
-        Mesg newMesg = new Mesg(mesgBuffer, localMesgDefs[localMesgNum]);
-        newMesg.InsertField(0, timestampField);
-        RaiseMesgEvent(newMesg);
-      }
-      // Is it a mesg def?
-      else if ((nextByte & Fit.MesgDefinitionMask) == Fit.MesgDefinitionMask)
-      {
-        MemoryStream mesgDefBuffer = new MemoryStream();
-
-        // Figure out number of fields (length) of our defn and build buffer
-        mesgDefBuffer.WriteByte(nextByte);
-        mesgDefBuffer.Write(br.ReadBytes(4), 0, 4);
-        byte numFields = br.ReadByte();
-        mesgDefBuffer.WriteByte(numFields);
-        int numBytes = numFields * 3; //3 Bytes per field
-        try
+        var mesg = new Mesg(mesgBuffer, localMesgDefs_[localMesgNum])
         {
-          byte[] read = br.ReadBytes(numBytes);
+          SourceIndex = sourceIndex
+        };
+        mesg.InsertField(0, timestampField);
+        RaiseMesgEvent(mesg);
+
+        return;
+      }
+
+      // Is it a mesg def?
+      if (isMesgDefinition)
+      {
+        var mesgDefBuffer = new MemoryStream();
+        const int bytesPerField = 3;
+        int numBytes = 0;
+
+        // Read record content
+        // Fixed content
+        byte reserved = br.ReadByte();
+        byte architecture = br.ReadByte();
+        // Suspicious: architecture is not 0 or 1
+        //if (architecture != 0 && architecture != 1)
+        //{
+        //  throw new FitException("FIT decode error: unsupported architecture " + architecture);
+        //}
+        byte[] globalMesgNum = br.ReadBytes(2);
+        byte numFields = br.ReadByte();
+
+        // Variable content
+        numBytes = numFields * bytesPerField;
+        byte[] read = br.ReadBytes(numBytes);
+
+        if (read.Length < numBytes)
+        {
+          throw new FitException($"Message Definition size mismatch, expected: {numBytes}, received: {read.Length}");
+        }
+
+        mesgDefBuffer.WriteByte(nextByte);
+        mesgDefBuffer.WriteByte(reserved);
+        mesgDefBuffer.WriteByte(architecture);
+        mesgDefBuffer.Write(globalMesgNum, 0, 2);
+        mesgDefBuffer.WriteByte(numFields);
+        mesgDefBuffer.Write(read, 0, numBytes);
+
+        if (isDevData)
+        {
+          // Definition Contains Dev Data
+          byte numDevFields = br.ReadByte();
+          mesgDefBuffer.WriteByte(numDevFields);
+
+          numBytes = numDevFields * 3;
+          read = br.ReadBytes(numBytes);
           if (read.Length < numBytes)
           {
-            throw new Exception("Message Definition size mismatch, expected: " + numBytes + "received: " + read.Length);
+            throw new FitException($"Message Definition size mismatch, expected: {numBytes}, received: {read.Length}");
           }
+
+          // Read Dev Data
           mesgDefBuffer.Write(read, 0, numBytes);
-
-          if ((nextByte & Fit.DevDataMask) == Fit.DevDataMask)
-          {
-            // Definition Contains Dev Data
-            byte numDevFields = br.ReadByte();
-            mesgDefBuffer.WriteByte(numDevFields);
-
-            numBytes = numDevFields * 3;
-            read = br.ReadBytes(numBytes);
-            if (read.Length < numBytes)
-            {
-              throw new Exception("Message Definition size mismatch, expected: " + numBytes + "received: " + read.Length);
-            }
-
-            // Read Dev Data
-            mesgDefBuffer.Write(read, 0, numBytes);
-          }
         }
-        catch (Exception e)
+
+        var def = new MesgDefinition(mesgDefBuffer, lookup_)
         {
-          throw new FitException("Decode:DecodeNextMessage - Defn Message unexpected end of file.  Wanted " + numBytes + " bytes at stream position " + fitStream.Position, e);
+          SourceIndex = sourceIndex,
+        };
+
+        //if (localMesgDefs[def.LocalMesgNum] != null 
+        //  && localMesgDefs[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
+        //{
+        //  Log.Debug($"Discarding suspicious redefinition of local mesg def with different global mesg num");
+        //  return;
+        //}
+
+        if (!def.GetFields().Any(field => Fit.BaseTypeMap.ContainsKey(field.Type)))
+        {
+          Log.Debug($"Discarding suspicious definition containing unknown types");
+          return;
         }
 
-        MesgDefinition newMesgDef = new MesgDefinition(mesgDefBuffer, m_lookup);
-        localMesgDefs[newMesgDef.LocalMesgNum] = newMesgDef;
-        if (MesgDefinitionEvent != null)
+        if (def.GlobalMesgNum > 500)
         {
-          MesgDefinitionEvent(this, new MesgDefinitionEventArgs(newMesgDef));
+          Log.Debug("Discarding suspicious definition containing big unknown mesg_num");
+          return;
         }
+
+        localMesgDefs_[def.LocalMesgNum] = def;
+        MesgDefinitionEvent?.Invoke(this, new MesgDefinitionEventArgs(def));
+        return;
       }
-      // Is it a data mesg?
-      else if ((nextByte & Fit.MesgDefinitionMask) == Fit.MesgHeaderMask)
-      {
-        MemoryStream mesgBuffer = new MemoryStream();
 
+      // Is it a data mesg?
+      if (isDataMessage)
+      {
+        var mesgBuffer = new MemoryStream();
         byte localMesgNum = (byte)(nextByte & Fit.LocalMesgNumMask);
         mesgBuffer.WriteByte(localMesgNum);
-        if (localMesgDefs[localMesgNum] == null)
+        if (localMesgDefs_[localMesgNum] == null)
         {
-          throw new FitException("Decode:DecodeNextMessage - FIT decode error: Missing message definition for local message number " + localMesgNum + " at stream position " + fitStream.Position);
+          throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
         }
-        int fieldsSize = localMesgDefs[localMesgNum].GetMesgSize() - 1;
+        int fieldsSize = localMesgDefs_[localMesgNum].GetMesgSize() - 1;
+
+        if (fieldsSize > 1024)
+        {
+          Log.Debug($"Discarding suspicious large data message with field size {fieldsSize}");
+          return;
+        }
+
         try
         {
           byte[] read = br.ReadBytes(fieldsSize);
           if (read.Length < fieldsSize)
           {
-            throw new Exception("Field size mismatch, expected: " + fieldsSize + "received: " + read.Length);
+            throw new FitException("Field size mismatch, expected: " + fieldsSize + "received: " + read.Length);
           }
           mesgBuffer.Write(read, 0, fieldsSize);
         }
         catch (Exception e)
         {
-          throw new FitException("Decode:DecodeNextMessage - Data Message unexpected end of file.  Wanted " + fieldsSize + " bytes at stream position " + fitStream.Position, e);
+          throw new FitException($"Data Message unexpected end of file.  Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
         }
 
-        Mesg newMesg = new Mesg(mesgBuffer, localMesgDefs[localMesgNum]);
+        var mesg = new Mesg(mesgBuffer, localMesgDefs_[localMesgNum])
+        {
+          SourceIndex = sourceIndex,
+        };
 
         // If the new message contains a timestamp field, record the value to use as
         // a reference for compressed timestamp headers
-        Field timestampField = newMesg.GetField("Timestamp");
-        if (timestampField != null)
+        Field timestampField = mesg.GetField("Timestamp");
+        Field latitudeField = mesg.GetField("PositionLat");
+        Field longitudeField = mesg.GetField("PositionLong");
+
+        bool haveTimestamp = timestampField != null && timestampField.Count > 0;
+        bool haveLatitude = latitudeField != null && latitudeField.Count > 0;
+        bool haveLongitude = longitudeField != null && longitudeField.Count > 0;
+
+        if (haveLatitude)
         {
-          object tsValue = timestampField.GetValue();
-          if (tsValue != null)
+          // Detect big jump in latitude
+          var lat = (int)latitudeField.GetValue();
+          var diff = Math.Abs(lat - lastLatitude_);
+          bool suspicious = lastLongitude_ > 0 && diff > GeospatialExtensions.DegreeToSemicircles;
+
+          if (suspicious)
           {
-            timestamp = (uint)tsValue;
-            lastTimeOffset = (int)timestamp & Fit.CompressedTimeMask;
+            Log.Error($"Discarding suspicious message with large latitude change of {diff.ToDegrees()}deg");
+            return;
           }
+
+          lastLatitude_ = lat;
         }
 
-        foreach (var kvp in newMesg.Fields)
+        if (haveLongitude)
+        {
+          // Detect big jump in longitude
+          var lon = (int)longitudeField.GetValue();
+          var diff = Math.Abs(lon - lastLongitude_);
+          bool suspicious = lastLongitude_ > 0 && diff > GeospatialExtensions.DegreeToSemicircles;
+
+          if (suspicious)
+          {
+            Log.Debug($"Discarding suspicious message with large longitude change of {diff.ToDegrees()}");
+            return;
+          }
+
+          lastLongitude_ = lon;
+        }
+
+        if (haveTimestamp && haveLongitude && haveLongitude)
+        {
+          var ts = (uint)timestampField.GetValue();
+          var diff = Math.Abs((int)ts - (int)timestamp_);
+          bool timeTraveled = timestamp_ > 0 && diff > TimeSpan.FromDays(1).TotalSeconds;
+
+          if (timeTraveled)
+          {
+            Log.Debug($"Discarding suspicious message with timestamp change of {diff}s");
+            return;
+          }
+
+          timestamp_ = ts;
+          lastTimeOffset_ = (int)timestamp_ & Fit.CompressedTimeMask;
+        }
+
+        foreach (var kvp in mesg.Fields)
         {
           Field field = kvp.Value;
 
@@ -450,7 +509,7 @@ namespace Dynastream.Fit
             {
               long value = Convert.ToInt64(field.GetRawValue(i));
 
-              foreach (var kvp2 in newMesg.Fields)
+              foreach (var kvp2 in mesg.Fields)
               {
                 Field fieldIn = kvp2.Value;
                 foreach (var kvp3 in fieldIn.Components)
@@ -462,39 +521,35 @@ namespace Dynastream.Fit
                   }
                 }
               }
-              accumulator.Set(newMesg.Num, field.Num, value);
+              accumulator_.Set(mesg.Num, field.Num, value);
             }
           }
         }
 
         // Now that the entire message is decoded we can evaluate subfields and expand any components
-        newMesg.ExpandComponents(accumulator);
+        mesg.ExpandComponents(accumulator_);
 
-        RaiseMesgEvent(newMesg);
+        RaiseMesgEvent(mesg);
+        return;
       }
-      else
-      {
-        throw new FitException("Decode:Read - FIT decode error: Unexpected Record Header Byte 0x" + nextByte.ToString("X") + " at stream position: " + fitStream.Position);
-      }
+
+      throw new FitException("Decode:Read - FIT decode error: Unexpected Record Header Byte 0x" + nextByte.ToString("X") + " at stream position: " + fitStream.Position);
     }
 
     /// <summary>
     ///
     /// </summary>
-    /// <param name="newMesg"></param>
+    /// <param name="mesg"></param>
     /// <exception cref="System.InvalidOperationException"></exception>
-    private void RaiseMesgEvent(Mesg newMesg)
+    private void RaiseMesgEvent(Mesg mesg)
     {
-      if ((newMesg.Num == MesgNum.DeveloperDataId) ||
-          (newMesg.Num == MesgNum.FieldDescription))
+      if ((mesg.Num == MesgNum.DeveloperDataId) ||
+          (mesg.Num == MesgNum.FieldDescription))
       {
-        HandleMetaData(newMesg);
+        HandleMetaData(mesg);
       }
 
-      if (MesgEvent != null)
-      {
-        MesgEvent(this, new MesgEventArgs(newMesg));
-      }
+      MesgEvent?.Invoke(this, new MesgEventArgs(mesg));
     }
 
     private void HandleMetaData(Mesg newMesg)
@@ -502,12 +557,12 @@ namespace Dynastream.Fit
       if (newMesg.Num == MesgNum.DeveloperDataId)
       {
         var mesg = new DeveloperDataIdMesg(newMesg);
-        m_lookup.Add(mesg);
+        lookup_.Add(mesg);
       }
       else if (newMesg.Num == MesgNum.FieldDescription)
       {
         var mesg = new FieldDescriptionMesg(newMesg);
-        DeveloperFieldDescription desc = m_lookup.Add(mesg);
+        DeveloperFieldDescription desc = lookup_.Add(mesg);
         if (desc != null)
         {
           OnDeveloperFieldDescriptionEvent(
@@ -515,17 +570,8 @@ namespace Dynastream.Fit
         }
       }
     }
-    #endregion
 
-    protected virtual void OnDeveloperFieldDescriptionEvent(DeveloperFieldDescriptionEventArgs e)
-    {
-      EventHandler<DeveloperFieldDescriptionEventArgs> handler =
-          DeveloperFieldDescriptionEvent;
-
-      if (handler != null)
-      {
-        handler(this, e);
-      }
-    }
+    protected virtual void OnDeveloperFieldDescriptionEvent(DeveloperFieldDescriptionEventArgs e) 
+      => DeveloperFieldDescriptionEvent?.Invoke(this, e);
   } // class
 } // namespace

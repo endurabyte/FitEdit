@@ -44,6 +44,9 @@ namespace Dauer.Data.Fit
       {
         _ when x is MesgEventArgs mea => (EventArgs)new MesgEventArgs(mea.mesg),
         _ when x is MesgDefinitionEventArgs mea => new MesgDefinitionEventArgs(mea.mesgDef),
+        _ when x is DeveloperFieldDescriptionEventArgs dfdea => new DeveloperFieldDescriptionEventArgs(dfdea.Description),
+        _ when x is MesgBroadcastEventArgs mbea => new MesgBroadcastEventArgs(mbea.mesgs.ToList()),
+        _ when x is IncomingMesgEventArgs imea => new IncomingMesgEventArgs(imea.mesg),
         _ => null,
       }).Where(x => x is not null).ToList();
 

@@ -20,6 +20,12 @@ public class AutoUpdater
 
   public void WatchForUpdates(CancellationToken ct = default)
   {
+    if (System.Diagnostics.Debugger.IsAttached)
+    {
+      Log.Info("Skipping auto update check because debugger is attached.");
+      return;
+    }
+
     _ = Task.Run(async () =>
     {
       await Task.Delay(TimeSpan.FromMinutes(1), ct);

@@ -19,6 +19,7 @@ using System.Text;
 using System.IO;
 using System.Linq;
 using Dynastream.Utility;
+using Dauer.Adapters.Fit;
 
 namespace Dynastream.Fit
 {
@@ -26,7 +27,7 @@ namespace Dynastream.Fit
   /// Architecture defaults to Little Endian (unless decoded from an binary defn as Big Endian)
   /// This could be exposed in the future to programatically create BE streams.
   /// </summary>
-  public class MesgDefinition
+  public class MesgDefinition : FitMessage
   {
     #region Fields
     private byte architecture;
@@ -89,7 +90,7 @@ namespace Dynastream.Fit
     #endregion
 
     #region Constructors
-    internal MesgDefinition()
+    internal MesgDefinition() : base((MesgDefinition)null)
     {
       LocalMesgNum = 0;
       GlobalMesgNum = (ushort)MesgNum.Invalid;
@@ -97,10 +98,10 @@ namespace Dynastream.Fit
     }
 
     internal MesgDefinition(
-        Stream fitSource,
-        DeveloperDataLookup lookup)
+        Stream source,
+        DeveloperDataLookup lookup) : base(source)
     {
-      Read(fitSource, lookup);
+      Read(source, lookup);
     }
 
     public MesgDefinition(Stream fitSource)
@@ -108,7 +109,7 @@ namespace Dynastream.Fit
     {
     }
 
-    public MesgDefinition(Mesg mesg)
+    public MesgDefinition(Mesg mesg) : base(mesg)
     {
       LocalMesgNum = mesg.LocalNum;
       GlobalMesgNum = mesg.Num;
@@ -132,7 +133,7 @@ namespace Dynastream.Fit
       }
     }
 
-    public MesgDefinition(MesgDefinition mesgDef)
+    public MesgDefinition(MesgDefinition mesgDef) : base(mesgDef)
     {
       LocalMesgNum = mesgDef.LocalMesgNum;
       GlobalMesgNum = mesgDef.GlobalMesgNum;

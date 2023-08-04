@@ -178,6 +178,22 @@ namespace Dauer.Data.Fit
     /// </summary>
     public static string PrintAll(this FitFile f) => JsonSerializer.Serialize(f, new JsonSerializerOptions { WriteIndented = true });
 
+    public static string PrintBytes(this FitFile f)
+    {
+      var sb = new StringBuilder();
+      f.PrintBytes(s => sb.AppendLine(s));
+      return sb.ToString();
+    }
+
+    public static void PrintBytes(this FitFile f, Action<string> print)
+    {
+      foreach (var e in f.Events)
+      {
+        string data = e.PrintBytes();
+        print(data);
+      }
+    }
+
     /// <summary>
     /// Recalculate the workout as if each lap was run at the corresponding constant speed.
     /// Return the same modified FitFile.

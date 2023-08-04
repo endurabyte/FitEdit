@@ -1,3 +1,4 @@
+using Dauer.Adapters.Fit;
 using Dauer.Model;
 using Dynastream.Fit;
 
@@ -72,7 +73,7 @@ namespace Dauer.Data.Fit
       catch (FitException e)
       {
         Log.Error($"{e}");
-        return false;
+        return true; // Keep reading despite exception
       }
     }
 
@@ -84,6 +85,8 @@ namespace Dauer.Data.Fit
       decoder.MesgEvent += (o, s) =>
       {
         Log.Debug($"Found {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}). Fields = {string.Join(", ", s.mesg.Fields.Values.Select(field => $"({field.Num} \'{field.Name}\')"))}");
+        Log.Debug(s.PrintBytes());
+
         var mesg = MessageFactory.Create(s.mesg);
 
         if (!tmp.MessagesByDefinition.ContainsKey(mesg.Num))
@@ -101,6 +104,7 @@ namespace Dauer.Data.Fit
       decoder.MesgDefinitionEvent += (o, s) =>
       {
         Log.Debug($"Found {nameof(MesgDefinition)}. (GlobalMesgNum, LocalMesgNum) = ({s.mesgDef.GlobalMesgNum}, {s.mesgDef.LocalMesgNum}). Fields = {string.Join(", ", s.mesgDef.GetFields().Select(field => field.Num))}");
+        Log.Debug(s.PrintBytes());
         tmp.MessageDefinitions[s.mesgDef.GlobalMesgNum] = s.mesgDef;
         tmp.Events.Add(s);
       };
@@ -108,13 +112,14 @@ namespace Dauer.Data.Fit
       decoder.DeveloperFieldDescriptionEvent += (o, s) =>
       {
         Log.Debug($"Found {nameof(DeveloperFieldDescription)}. (ApplicationId, ApplicationVersion, FieldDefinitionNumber) = ({s.Description.ApplicationId}, {s.Description.ApplicationVersion}, {s.Description.FieldDefinitionNumber}");
+        Log.Debug(s.PrintBytes());
         tmp.Events.Add(s);
       };
 
-      bool ok = decoder.IsFIT(stream);
+      bool ok = Decode.IsFIT(stream);
       ok &= decoder.CheckIntegrity(stream);
 
-      if (!decoder.IsFIT(stream))
+      if (!Decode.IsFIT(stream))
       {
         Log.Error($"Is not a FIT file: {source}");
         fit = null;
@@ -122,7 +127,7 @@ namespace Dauer.Data.Fit
       }
 
       fit = tmp;
-      return true;
+      return true; // Ignore integrity check
     }
   }
 }

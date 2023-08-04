@@ -100,7 +100,7 @@ public partial class Message : HasProperties
       {
         if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
         {
-          result = d.ToSemicirlces();
+          result = d.ToSemicircles();
           return true;
         }
       }
@@ -109,7 +109,7 @@ public partial class Message : HasProperties
       {
         if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
         {
-          result = d.ToSemicirlces();
+          result = d.ToSemicircles();
           return true;
         }
       }

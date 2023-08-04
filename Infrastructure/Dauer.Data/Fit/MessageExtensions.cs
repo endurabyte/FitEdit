@@ -1,4 +1,5 @@
-﻿using Dauer.Model.Workouts;
+﻿using Dauer.Adapters.Fit;
+using Dauer.Model.Workouts;
 using Dynastream.Fit;
 using Units;
 
@@ -6,6 +7,22 @@ namespace Dauer.Data.Fit
 {
   public static class MessageExtensions
   {
+    public static string PrintBytes(this EventArgs e) => e switch
+    {
+      MesgEventArgs me => me.mesg.PrintBytes(),
+      MesgDefinitionEventArgs mde => mde.mesgDef.PrintBytes(),
+      DeveloperFieldDescriptionEventArgs => "",
+      MesgBroadcastEventArgs => "",
+      _ => throw new ArgumentException($"Unknown event type {e.GetType()}"),
+    };
+
+    public static string PrintBytes(this FitMessage msg) => msg switch
+    {
+      Mesg me => $"Message data: Source index {me.SourceIndex}-{me.SourceIndex + me.SourceSize - 1} Bytes: {string.Join(" ", me.SourceData.Select(b => $"{b:X2}"))}",
+      MesgDefinition mde => $"Definition data: Source index {mde.SourceIndex}-{mde.SourceIndex + mde.SourceSize - 1} Bytes: {string.Join(" ", mde.SourceData.Select(b => $"{b:X2}"))}",
+      _ => throw new ArgumentException($"Unknown message {msg.GetType()}"),
+    };
+
     public static LapMesg Apply(this LapMesg lap, Speed speed)
     {
       var metersPerSecond = (float)speed.Convert(Unit.MetersPerSecond).Value;

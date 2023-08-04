@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Dauer.Adapters.Fit;
 using Dynastream.Utility;
 
 namespace Dynastream.Fit
@@ -23,7 +24,7 @@ namespace Dynastream.Fit
   /// <summary>
   ///
   /// </summary>
-  public class Mesg
+  public class Mesg : FitMessage
   {
     #region Fields
     protected byte localNum = 0;
@@ -59,7 +60,7 @@ namespace Dynastream.Fit
     #endregion
 
     #region Constructors
-    public Mesg(Mesg mesg)
+    public Mesg(Mesg mesg) : base(mesg)
     {
       if (mesg == null)
       {
@@ -93,7 +94,7 @@ namespace Dynastream.Fit
       }
     }
 
-    public Mesg(string name, ushort num)
+    public Mesg(string name, ushort num) : base((Mesg)null)
     {
       Name = name;
       Num = num;
@@ -107,6 +108,7 @@ namespace Dynastream.Fit
     public Mesg(Stream fitStream, MesgDefinition defnMesg)
         : this(defnMesg.GlobalMesgNum)
     {
+      ReadSource(fitStream);
       Read(fitStream, defnMesg);
     }
     #endregion
@@ -146,8 +148,11 @@ namespace Dynastream.Fit
 
         if (field.Type != fieldDef.Type)
         {
-          int fieldSize = Fit.BaseType[field.Type & Fit.BaseTypeNumMask].size;
-          int defSize = Fit.BaseType[fieldDef.Type & Fit.BaseTypeNumMask].size;
+          byte fieldType = (byte)(field.Type & Fit.BaseTypeNumMask);
+          byte fieldDefType = (byte)(fieldDef.Type & Fit.BaseTypeNumMask);
+
+          int fieldSize = Fit.BaseTypeMap.ContainsKey(fieldType) ? Fit.BaseTypeMap[fieldType].size : 0;
+          int defSize = Fit.BaseTypeMap.ContainsKey(fieldDefType) ? Fit.BaseTypeMap[fieldDefType].size : 0;
 
           if (defSize < fieldSize)
           {
@@ -191,6 +196,7 @@ namespace Dynastream.Fit
         byte size,
         EndianBinaryReader mesgReader)
     {
+      if (size == 0) { return; }
       byte baseType = (byte)(field.Type & Fit.BaseTypeNumMask);
       // strings may be an array and are of variable length
       if (baseType == Fit.String)
@@ -226,7 +232,11 @@ namespace Dynastream.Fit
       }
       else
       {
-        int numElements = size / Fit.BaseType[baseType].size;
+        byte sizePerElement = Fit.BaseTypeMap.ContainsKey(baseType) 
+          ? Fit.BaseType[baseType].size 
+          : size; // assume 1 blob of unknown type
+
+        int numElements = size / sizePerElement;
         for (int i = 0; i < numElements; i++)
         {
           object value;
@@ -400,6 +410,12 @@ namespace Dynastream.Fit
     private static void WriteField(FieldBase field, byte size, BinaryWriter bw)
     {
       byte baseType = (byte)(field.Type & Fit.BaseTypeNumMask);
+      bool typeKnown = Fit.BaseTypeIndexMap.ContainsKey(baseType);
+      if (!typeKnown)
+      {
+        bw.Write(new byte[size]);
+        return;
+      }
 
       // The field could be blank, correctly formed or partially filled
       while (field.GetSize() < size)

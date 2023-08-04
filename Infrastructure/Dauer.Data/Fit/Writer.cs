@@ -32,7 +32,14 @@ namespace Dauer.Data.Fit
           _ => () => { },
         };
 
-        write();
+        try
+        {
+          write();
+        }
+        catch (Exception e)
+        {
+          Log.Error(e.Message);
+        }
       }
 
       Log.Info($"Wrote {fitFile.Messages.Count} messages and {fitFile.MessageDefinitions.Count} definitions");

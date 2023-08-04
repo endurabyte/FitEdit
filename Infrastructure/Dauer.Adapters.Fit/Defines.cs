@@ -17,104 +17,104 @@ using System.Collections.Generic;
 
 namespace Dynastream.Fit
 {
-    public enum ProtocolVersion
+  public enum ProtocolVersion
+  {
+    V10,
+    V20
+  }
+
+  public static class ProtocolVersionExtensions
+  {
+    private class DetailedProtocolVersion
     {
-        V10,
-        V20
+      public byte MajorVersion { get; private set; }
+      public byte MinorVersion { get; private set; }
+
+      public byte Version
+      {
+        get
+        {
+          return (byte)((MajorVersion << Fit.ProtocolVersionMajorShift) |
+              MinorVersion);
+        }
+      }
+
+      public DetailedProtocolVersion(byte major, byte minor)
+      {
+        MajorVersion = major;
+        MinorVersion = minor;
+      }
     }
 
-    public static class ProtocolVersionExtensions
+    public static byte GetMajorVersion(this ProtocolVersion protocolVersion)
     {
-        private class DetailedProtocolVersion
+      return s_versionMap[protocolVersion].MajorVersion;
+    }
+
+    public static byte GetMinorVersion(this ProtocolVersion protocolVersion)
+    {
+      return s_versionMap[protocolVersion].MinorVersion;
+    }
+
+    public static byte GetVersionByte(this ProtocolVersion protocolVersion)
+
+    {
+      return s_versionMap[protocolVersion].Version;
+    }
+
+    private static readonly Dictionary<ProtocolVersion, DetailedProtocolVersion> s_versionMap =
+        new Dictionary<ProtocolVersion, DetailedProtocolVersion>
         {
-            public byte MajorVersion { get; private set; }
-            public byte MinorVersion { get; private set; }
-
-            public byte Version
-            {
-                get
-                {
-                    return (byte) ((MajorVersion << Fit.ProtocolVersionMajorShift) |
-                        MinorVersion);
-                }
-            }
-
-            public DetailedProtocolVersion(byte major, byte minor)
-            {
-                MajorVersion = major;
-                MinorVersion = minor;
-            }
-        }
-
-        public static byte GetMajorVersion(this ProtocolVersion protocolVersion)
-        {
-            return s_versionMap[protocolVersion].MajorVersion;
-        }
-
-        public static byte GetMinorVersion(this ProtocolVersion protocolVersion)
-        {
-            return s_versionMap[protocolVersion].MinorVersion;
-        }
-
-        public static byte GetVersionByte(this ProtocolVersion protocolVersion)
-
-        {
-            return s_versionMap[protocolVersion].Version;
-        }
-
-        private static readonly Dictionary<ProtocolVersion, DetailedProtocolVersion> s_versionMap =
-            new Dictionary<ProtocolVersion, DetailedProtocolVersion>
-            {
                 {ProtocolVersion.V10, new DetailedProtocolVersion(1, 0)},
                 {ProtocolVersion.V20, new DetailedProtocolVersion(2, 0)}
-            };
-    }
+        };
+  }
 
 
-    public class Fit
+  public class Fit
+  {
+    public const byte ProtocolVersionMajorShift = 4;
+    public const byte ProtocolVersionMajorMask = (0x0F << ProtocolVersionMajorShift);
+
+    public static readonly byte ProtocolVersion = Dynastream.Fit.ProtocolVersion.V20.GetVersionByte();
+    public static readonly byte ProtocolMajorVersion = Dynastream.Fit.ProtocolVersion.V20.GetMajorVersion();
+    public static readonly byte ProtocolMinorVersion = Dynastream.Fit.ProtocolVersion.V20.GetMinorVersion();
+
+    public const ushort ProfileVersion = ((ProfileMajorVersion * ProfileVersionScale) + ProfileMinorVersion);
+    public const ushort ProfileVersionScale = 1000;
+    public const ushort ProfileMajorVersion = 21;
+    public const ushort ProfileMinorVersion = 115;
+
+    public const byte HeaderTypeMask = 0xF0;
+    public const byte CompressedHeaderMask = 0x80;
+    public const byte CompressedTimeMask = 0x1F;
+    public const byte CompressedLocalMesgNumMask = 0x60;
+
+    public const byte MesgDefinitionMask = 0x40;
+    public const byte DevDataMask = 0x20;
+    public const byte MesgHeaderMask = 0x00;
+    public const byte LocalMesgNumMask = 0x0F;
+    public const byte MaxLocalMesgs = LocalMesgNumMask + 1;
+
+    public const byte MesgDefinitionReserved = 0x00;
+    public const byte LittleEndian = 0x00;
+    public const byte BigEndian = 0x01;
+
+    public const ushort MaxMesgSize = 65535;
+    public const byte MaxFieldSize = 255;
+
+    public const byte HeaderWithCRCSize = 14;
+    public const byte HeaderWithoutCRCSize = (HeaderWithCRCSize - 2);
+
+    public const byte FieldNumInvalid = 255;
+    public const byte FieldNumTimeStamp = 253;
+
+    public const ushort SubfieldIndexMainField = SubfieldIndexActiveSubfield + 1;
+    public const ushort SubfieldIndexActiveSubfield = 0xFFFE;
+    public const string SubfieldNameMainField = "";
+
+    public static FitType[] BaseType = new FitType[]
     {
-        public const byte ProtocolVersionMajorShift = 4;
-        public const byte ProtocolVersionMajorMask = (0x0F << ProtocolVersionMajorShift);
-
-        public static readonly byte ProtocolVersion = Dynastream.Fit.ProtocolVersion.V20.GetVersionByte();
-        public static readonly byte ProtocolMajorVersion = Dynastream.Fit.ProtocolVersion.V20.GetMajorVersion();
-        public static readonly byte ProtocolMinorVersion = Dynastream.Fit.ProtocolVersion.V20.GetMinorVersion();
-
-        public const ushort ProfileVersion = ((ProfileMajorVersion * ProfileVersionScale) + ProfileMinorVersion);
-        public const ushort ProfileVersionScale = 1000;
-        public const ushort ProfileMajorVersion = 21;
-        public const ushort ProfileMinorVersion = 115;
-
-        public const byte HeaderTypeMask = 0xF0;
-        public const byte CompressedHeaderMask = 0x80;
-        public const byte CompressedTimeMask = 0x1F;
-        public const byte CompressedLocalMesgNumMask = 0x60;
-
-        public const byte MesgDefinitionMask = 0x40;
-        public const byte DevDataMask = 0x20;
-        public const byte MesgHeaderMask = 0x00;
-        public const byte LocalMesgNumMask = 0x0F;
-        public const byte MaxLocalMesgs = LocalMesgNumMask + 1;
-
-        public const byte MesgDefinitionReserved = 0x00;
-        public const byte LittleEndian = 0x00;
-        public const byte BigEndian = 0x01;
-
-        public const ushort MaxMesgSize = 65535;
-        public const byte MaxFieldSize = 255;
-
-        public const byte HeaderWithCRCSize = 14;
-        public const byte HeaderWithoutCRCSize = (HeaderWithCRCSize - 2);
-
-        public const byte FieldNumInvalid = 255;
-        public const byte FieldNumTimeStamp = 253;
-
-        public const ushort SubfieldIndexMainField = SubfieldIndexActiveSubfield + 1;
-        public const ushort SubfieldIndexActiveSubfield = 0xFFFE;
-        public const string SubfieldNameMainField = "";
-
-        public static FitType[] BaseType = new FitType[]
-        {
             new FitType(false, 0x00, "enum", (byte)0xFF, 1, false, false),
             new FitType(false, 0x01, "sint8", (sbyte)0x7F, 1, true, true),
             new FitType(false, 0x02, "uint8", (byte)0xFF, 1, false, true),
@@ -132,51 +132,68 @@ namespace Dynastream.Fit
             new FitType(true, 0x8E, "sint64", (long)0x7FFFFFFFFFFFFFFFL, 8, true, true),
             new FitType(true, 0x8F, "uint64", (ulong)0xFFFFFFFFFFFFFFFFL, 8, false, true),
             new FitType(true, 0x90, "uint64z", (ulong)0x0000000000000000L, 8, false, true),
-        };
+    };
 
+    /// <summary>
+    /// Maps base type field to FitType
+    /// </summary>
+    public static Dictionary<byte, FitType> BaseTypeMap { get; set; }
 
-        public struct FitType
-        {
-            public bool endianAbility;
-            public byte baseTypeField;
-            public string typeName;
-            public object invalidValue;
-            public byte size;
-            public bool isSigned;
-            public bool isInteger;
+    /// <summary>
+    /// Maps index into the BaseTypes array to FitType
+    /// </summary>
+    public static Dictionary<byte, FitType> BaseTypeIndexMap { get; set; }
 
-            public FitType(bool endianAbility, byte baseTypeField, string typeName, object invalidValue, byte size, bool isSigned, bool isInt)
-            {
-                this.endianAbility = endianAbility;
-                this.baseTypeField = baseTypeField;
-                this.typeName = typeName;
-                this.invalidValue = invalidValue;
-                this.size = size;
-                this.isSigned = isSigned;
-                this.isInteger = isInt;
-            }
-        }
-
-        // Index into the BaseTypes array
-        public const byte Enum = 0x00;
-        public const byte SInt8 = 0x01;
-        public const byte UInt8 = 0x02;
-        public const byte SInt16 = 0x03;
-        public const byte UInt16 = 0x04;
-        public const byte SInt32 = 0x05;
-        public const byte UInt32 = 0x06;
-        public const byte String = 0x07;
-        public const byte Float32 = 0x08;
-        public const byte Float64 = 0x09;
-        public const byte UInt8z = 0x0A;
-        public const byte UInt16z = 0x0B;
-        public const byte UInt32z = 0x0C;
-        public const byte Byte = 0x0D;
-        public const byte SInt64 = 0x0E;
-        public const byte UInt64 = 0x0F;
-        public const byte UInt64z = 0x10;
-
-        // And this with the type defn to get the index
-        public const byte BaseTypeNumMask = 0x1F;
+    static Fit()
+    {
+      BaseTypeMap = BaseType.ToDictionary(bt => bt.baseTypeField, bt => bt);
+      BaseTypeIndexMap = BaseType
+        .Select((bt, i) => new { bt, i })
+        .ToDictionary(pair => (byte)pair.i, pair => pair.bt);
     }
+
+    public struct FitType
+    {
+      public bool endianAbility;
+      public byte baseTypeField;
+      public string typeName;
+      public object invalidValue;
+      public byte size;
+      public bool isSigned;
+      public bool isInteger;
+
+      public FitType(bool endianAbility, byte baseTypeField, string typeName, object invalidValue, byte size, bool isSigned, bool isInt)
+      {
+        this.endianAbility = endianAbility;
+        this.baseTypeField = baseTypeField;
+        this.typeName = typeName;
+        this.invalidValue = invalidValue;
+        this.size = size;
+        this.isSigned = isSigned;
+        this.isInteger = isInt;
+      }
+    }
+
+    // Index into the BaseTypes array
+    public const byte Enum = 0x00;
+    public const byte SInt8 = 0x01;
+    public const byte UInt8 = 0x02;
+    public const byte SInt16 = 0x03;
+    public const byte UInt16 = 0x04;
+    public const byte SInt32 = 0x05;
+    public const byte UInt32 = 0x06;
+    public const byte String = 0x07;
+    public const byte Float32 = 0x08;
+    public const byte Float64 = 0x09;
+    public const byte UInt8z = 0x0A;
+    public const byte UInt16z = 0x0B;
+    public const byte UInt32z = 0x0C;
+    public const byte Byte = 0x0D;
+    public const byte SInt64 = 0x0E;
+    public const byte UInt64 = 0x0F;
+    public const byte UInt64z = 0x10;
+
+    // And this with the type defn to get the index
+    public const byte BaseTypeNumMask = 0x1F;
+  }
 }
