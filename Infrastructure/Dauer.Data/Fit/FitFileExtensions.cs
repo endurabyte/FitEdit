@@ -3,6 +3,7 @@ using System.Text.Json;
 using Dauer.Model.Extensions;
 using Dauer.Model.Workouts;
 using Dynastream.Fit;
+using Microsoft.VisualBasic;
 using Units;
 
 namespace Dauer.Data.Fit;
@@ -276,79 +277,122 @@ public static class FitFileExtensions
   /// <summary>
   /// Build a new it file from the given file, copying over only valid or repairable messages.
   /// </summary>
-  public static FitFile? Repair(this FitFile? file)
+  public static FitFile? Repair(this FitFile? source)
   {
-    if (file == null) { return null; }
+    if (source == null) { return null; }
 
-    var fit = new FitFile();
+    var dest = new FitFile();
 
-    List<Mesg> mesgs = file
+    List<Mesg> mesgs = new();
+
+    List<RecordMesg> records = source
       .Get<RecordMesg>()
-      .Sorted(MessageExtensions.Sort)
-      .Cast<Mesg>()
-      .ToList();
+      .Where(r => r.GetEnhancedSpeed() < 1000) // filter out speed spikes
+      .ToList()
+      .Sorted(MessageExtensions.Sort);
 
-    var start = (mesgs.First() as RecordMesg)!.GetTimestamp();
-    var end = (mesgs.Last() as RecordMesg)!.GetTimestamp();
+    var start = records.First().GetTimestamp();
+    var end = records.Last().GetTimestamp();
 
+    // sum the distance between all records
+    float? totalDistance = records.Last().GetDistance();
+
+    var session = new SessionMesg();
+    session.SetStartTime(start);
+    session.SetTimestamp(end);
+    session.SetEvent(Event.Lap);
+    session.SetEventType(EventType.Stop);
+    session.SetStartPositionLat(records.First().GetPositionLat());
+    session.SetStartPositionLong(records.First().GetPositionLong());
+    session.SetEndPositionLat(records.Last().GetPositionLat());
+    session.SetEndPositionLong(records.Last().GetPositionLong());
+    session.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
+    session.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+    session.SetTotalDistance(totalDistance ?? 0);
+    session.SetTrigger(SessionTrigger.ActivityEnd);
+
+
+    var lap = new LapMesg();
+    lap.SetStartTime(start);
+    lap.SetTimestamp(end);
+    lap.SetEvent(Event.Lap);
+    lap.SetEventType(EventType.Stop);
+    lap.SetStartPositionLat(records.First().GetPositionLat());
+    lap.SetStartPositionLong(records.First().GetPositionLong());
+    lap.SetEndPositionLat(records.Last().GetPositionLat());
+    lap.SetEndPositionLong(records.Last().GetPositionLong());
+    lap.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
+    lap.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+    lap.SetTotalDistance(totalDistance ?? 0);
+    lap.SetLapTrigger(LapTrigger.SessionEnd);
+
+    var fileId = source.Get<FileIdMesg>().FirstOrDefault();
+    var fileCreator = source.Get<FileCreatorMesg>().FirstOrDefault();
+    var startEvent = source.Get<EventMesg>().FirstOrDefault();
+    var deviceInfo = source.Get<DeviceInfoMesg>();
+    var deviceSettings = source.Get<DeviceSettingsMesg>().FirstOrDefault();
+    var userProfile = source.Get<UserProfileMesg>().FirstOrDefault();
+    var sport = source.Get<SportMesg>().FirstOrDefault();
+    var activity = source.Get<ActivityMesg>().FirstOrDefault();
+
+    var stopEvent = new EventMesg();
+    stopEvent.SetTimestamp(end);
+    stopEvent.SetEvent(Event.Timer);
+    stopEvent.SetEventType(EventType.StopDisableAll);
+
+    if (activity == null)
     {
-      var session = new SessionMesg();
-      session.SetStartTime(start);
-      session.SetTimestamp(end);
-
-      mesgs.Add(session);
-    }
-
-    {
-      var lap = new LapMesg();
-      lap.SetStartTime(start);
-      lap.SetTimestamp(end);
-
-      mesgs.Add(lap);
-    }
-
-    {
-      SportMesg? sportMesg = file.Get<SportMesg>().FirstOrDefault();
-      Sport? sport = sportMesg?.GetSport();
-
-      if (sport != null)
-      {
-        var newSportMesg = new SportMesg();
-        newSportMesg.SetSport(sport);
-        mesgs.Add(newSportMesg);
-      }
-    }
-
-    {
-      var activity = new ActivityMesg();
+      activity = new ActivityMesg();
       activity.SetTimestamp(start);
-      activity.SetTotalTimerTime((end.GetTimeStamp() - start.GetTimeStamp()));
+      activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
       activity.SetNumSessions(1);
       activity.SetType(Activity.Manual);
       activity.SetEvent(Event.Activity);
       activity.SetEventType(EventType.Stop);
-      mesgs.Add(activity);
     }
+
+    if (fileId != null) { mesgs.Add(fileId); }
+    if (fileCreator != null) { mesgs.Add(fileCreator); }
+    if (startEvent != null) { mesgs.Add(startEvent); }
+    if (deviceInfo != null) { mesgs.AddRange(deviceInfo); }
+    if (deviceSettings != null) { mesgs.Add(deviceSettings); }
+    if (userProfile != null) { mesgs.Add(userProfile); }
+    if (sport != null) 
+    { 
+      session.SetSport(sport.GetSport());
+      session.SetSubSport(sport.GetSubSport());
+
+      lap.SetSport(sport.GetSport());
+      lap.SetSubSport(sport.GetSubSport());
+
+      mesgs.Add(sport); 
+    }
+
+    mesgs.Add(session);
+    mesgs.AddRange(records);
+    mesgs.Add(stopEvent);
+    mesgs.Add(lap);
+    mesgs.Add(activity);
 
     foreach (Mesg mesg in mesgs)
     {
       var def = new MesgDefinition(mesg);
-      fit.Events.Add(new MesgDefinitionEventArgs(def));
-      fit.Events.Add(new MesgEventArgs(mesg));
+      dest.Events.Add(new MesgDefinitionEventArgs(def));
+      dest.Events.Add(new MesgEventArgs(mesg));
 
-      fit.MessageDefinitions[mesg.Num] = def;
+      dest.MessageDefinitions[mesg.Num] = def;
 
-      if (!fit.MessagesByDefinition.ContainsKey(mesg.Num))
+      if (!dest.MessagesByDefinition.ContainsKey(mesg.Num))
       {
-        fit.MessagesByDefinition[mesg.Num] = new List<Mesg>();
+        dest.MessagesByDefinition[mesg.Num] = new List<Mesg>();
       }
 
-      fit.MessagesByDefinition[mesg.Num].Add(mesg);
+      dest.MessagesByDefinition[mesg.Num].Add(mesg);
     }
 
-    fit.Events.AddRange(fit.Records.Select(r => new MesgEventArgs(r)));
-    fit.ForwardfillEvents();
+    dest.Events.AddRange(dest.Records.Select(r => new MesgEventArgs(r)));
+    dest.ForwardfillEvents();
 
-    return fit;
+    return dest;
   }
 }
