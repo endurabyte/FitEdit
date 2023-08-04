@@ -9,7 +9,7 @@ $authors = "EnduraByte LLC"
 $packId = "FitEdit"
 $signAppId = "Developer ID Application: Carl Slater ($env:FITEDIT_APPLE_TEAM_ID)"
 $signInstallId = "Developer ID Installer: Carl Slater ($env:FITEDIT_APPLE_TEAM_ID)"
-$notaryProfile = "'FitEdit macOS'"
+$notaryProfile = "FitEdit"
 $appCertPath = "app.p12"
 $installCertPath = "installer.p12"
 
@@ -37,24 +37,24 @@ echo "Creating $installCertPath..."
 & ./Decode-FromBase64.ps1 $installCert_base64 $installCertPath
 
 echo "Creating temporary keychain..."
-security create-keychain -p $tmpKeychainPassword $tmpKeychainName
+iex -Command "security create-keychain -p $tmpKeychainPassword $tmpKeychainName"
 echo "Appending temporary keychain to login keychain..."
-security list-keychains -d user -s $tmpKeychainName ~/Library/Keychains/login.keychain-db
+iex -Command "security list-keychains -d user -s $tmpKeychainName ~/Library/Keychains/login.keychain-db"
 echo "Removing relock timeout..."
-security set-keychain-settings $tempKeychainName
+iex -Command "security set-keychain-settings $tempKeychainName"
 echo "Unlocking temporary keychain..."
-security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName
+iex -Command "security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName"
 
 echo "Importing $appCertPath into keychain..."
-security import $appCertPath -k $tmpKeychainName -P $appCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign
+iex -Command "security import $appCertPath -k $tmpKeychainName -P $appCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign"
 Remove-Item -Path $appCertPath
 
 echo "Importing $installCertPath into keychain..."
-security import $installCertPath -k $tmpKeychainName -P $installCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign
+iex -Command "security import $installCertPath -k $tmpKeychainName -P $installCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign"
 Remove-Item -Path $installCertPath
 
 echo "Enabling code-signing from a non-interactive shell..."
-security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName
+iex -Command "security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName"
 
 echo "Storing notary profile..."
 iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID"
@@ -80,10 +80,10 @@ csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $vers
 
 # Clean up
 echo "Removing temporary keychain..."
-security delete-keychain $tempKeychainName
+iex -Command "security delete-keychain $tempKeychainName"
 
 echo "Restoring default keychain..."
-security list-keychains -d user -s login.keychain
+iex -Command "security list-keychains -d user -s login.keychain"
 
 # Upload artifacts
 
