@@ -9,7 +9,7 @@ $authors = "EnduraByte LLC"
 $packId = "FitEdit"
 $signAppId = "Developer ID Application: Carl Slater ($env:FITEDIT_APPLE_TEAM_ID)"
 $signInstallId = "Developer ID Installer: Carl Slater ($env:FITEDIT_APPLE_TEAM_ID)"
-$notaryProfile = "FitEdit macOS"
+$notaryProfile = "'FitEdit macOS'"
 $appCertPath = "app.p12"
 $installCertPath = "installer.p12"
 
@@ -57,7 +57,7 @@ echo "Enabling code-signing from a non-interactive shell..."
 security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName
 
 echo "Storing notary profile..."
-xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID
+iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID"
 
 echo "Installing Clowd.Squirrel..."
 dotnet tool install -g csq --prerelease
