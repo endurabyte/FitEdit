@@ -310,4 +310,30 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     sf.IsVisible = true;
     sf.Progress = 100;
   }
+
+  public void HandleRepairClicked()
+  {
+    int index = SelectedIndex;
+    if (index < 0 || index >= FileService.Files.Count)
+    {
+      Log.Info("No file selected; cannot repair file");
+      return;
+    }
+
+    _ = Task.Run(() => RepairAsync(FileService.Files[index]));
+  }
+
+  public async Task<SelectedFile?> RepairAsync(SelectedFile? file)
+  {
+    if (file == null) { return null; }
+    if (file.FitFile == null) { return null; }
+
+    FitFile? fit = file.FitFile.Repair();
+
+    return await Persist(new BlobFile
+    {
+      Bytes = fit.GetBytes(),
+      Name = $"Repaired {file.Blob?.Name}"
+    });
+  }
 }

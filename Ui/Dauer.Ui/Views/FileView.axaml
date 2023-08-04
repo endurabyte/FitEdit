@@ -36,10 +36,32 @@
   <Grid RowDefinitions="Auto, Auto">
     
     <StackPanel Grid.Row="0" Orientation="Horizontal" >
-      <Button Command="{Binding HandleImportClicked}" Content="Import"/>
-      <Button Command="{Binding HandleExportClicked}" Content="Export"/>
-      <Button Command="{Binding HandleRemoveClicked}" Content="Remove"/>
-      <Button Command="{Binding HandleMergeClicked}" Content="Merge"/>
+      <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
+      <Button Command="{Binding HandleExportClicked}" Content="Export" ToolTip.Tip="Export a file to disk"/>
+      <Button Command="{Binding HandleRemoveClicked}" Content="Remove">
+        <ToolTip.Tip>
+          <TextBlock TextWrapping="Wrap">
+            Remove the selected file from the file list. <LineBreak/>
+            Does not delete any file on disk.
+          </TextBlock>
+        </ToolTip.Tip>
+      </Button>
+      <Button Command="{Binding HandleRepairClicked}" Content="Repair">
+        <ToolTip.Tip>
+          <TextBlock TextWrapping="Wrap">
+            Attempt to repair the file <LineBreak/>
+            This creates a new file containing only the data that can be read from the original file.
+          </TextBlock>
+        </ToolTip.Tip>
+      </Button>
+      <Button Command="{Binding HandleMergeClicked}" Content="Merge">
+        <ToolTip.Tip>
+          <TextBlock TextWrapping="Wrap">
+            Merge the selected files.<LineBreak/>
+            This creates a new file containing the data from all selected files.
+          </TextBlock>
+        </ToolTip.Tip>
+      </Button>
     </StackPanel>
 
     <ScrollViewer Grid.Row="1">
