@@ -42,11 +42,11 @@ namespace Dauer.Data.Fit
     {
       Events = other.Events.Select(x => x switch
       {
-        _ when x is MesgEventArgs mea => (EventArgs)new MesgEventArgs(mea.mesg),
-        _ when x is MesgDefinitionEventArgs mea => new MesgDefinitionEventArgs(mea.mesgDef),
+        _ when x is MesgEventArgs mea => (EventArgs)new MesgEventArgs { mesg = mea.mesg },
+        _ when x is MesgDefinitionEventArgs mea => new MesgDefinitionEventArgs { mesgDef = mea.mesgDef },
         _ when x is DeveloperFieldDescriptionEventArgs dfdea => new DeveloperFieldDescriptionEventArgs(dfdea.Description),
         _ when x is MesgBroadcastEventArgs mbea => new MesgBroadcastEventArgs(mbea.mesgs.ToList()),
-        _ when x is IncomingMesgEventArgs imea => new IncomingMesgEventArgs(imea.mesg),
+        _ when x is IncomingMesgEventArgs imea => new IncomingMesgEventArgs { mesg = imea.mesg },
         _ => null,
       }).Where(x => x is not null).ToList();
 

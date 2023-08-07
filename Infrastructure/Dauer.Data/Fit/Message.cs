@@ -60,7 +60,9 @@ public partial class Message : HasProperties
   {
     result = null;
 
-    var field = Mesg.GetField(name);
+    Field? field = Mesg.GetField(name);
+
+    if (field == null) { return false; }
 
     // Handle enums
     if (value is string s 
@@ -128,6 +130,18 @@ public partial class Message : HasProperties
         result = fieldInfo.GetRawConstantValue();
         return true;
       }
+    }
+
+    // Handle strings
+    // Strings are encoded as ASCII byte arrays
+    if (value is string s3 && field.Type == Dynastream.Fit.Fit.String)
+    {
+      byte[] bytes = Encoding.ASCII.GetBytes(s3);
+
+      // Add null terminator
+      bytes = bytes.Append((byte)0).ToArray();
+      result = bytes;
+      return true;
     }
 
     // Manual interventions (just an example)

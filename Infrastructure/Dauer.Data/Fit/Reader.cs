@@ -98,7 +98,7 @@ namespace Dauer.Data.Fit
           tmp.MessagesByDefinition[mesg.Num].Add(mesg);
         }
 
-        tmp.Events.Add(new MesgEventArgs(mesg));
+        tmp.Events.Add(new MesgEventArgs { mesg = mesg });
       };
 
       decoder.MesgDefinitionEvent += (o, s) =>

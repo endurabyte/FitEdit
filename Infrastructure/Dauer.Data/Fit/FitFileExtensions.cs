@@ -3,7 +3,6 @@ using System.Text.Json;
 using Dauer.Model.Extensions;
 using Dauer.Model.Workouts;
 using Dynastream.Fit;
-using Microsoft.VisualBasic;
 using Units;
 
 namespace Dauer.Data.Fit;
