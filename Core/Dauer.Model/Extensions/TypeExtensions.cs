@@ -32,6 +32,18 @@ public static class TypeExtensions
     return identifierCache_[type].TryGetValue(value, out identifier);
   }
 
+  /// <summary>
+  /// Return all public static integer-like literals (int, short, byte, and their unsigned analogues) of the given type,
+  /// or if the given type is an enum, return all enum entries.
+  /// </summary>
+  /// <param name="type"></param>
+  /// <returns></returns>
+  public static List<string> GetIdentifiers(this Type type)
+  {
+    type.TryAddToCache();
+    return identifierCache_[type].Values.ToList();
+  }
+
   private static void TryAddToCache(this Type type)
   {
     if (identifierCache_.ContainsKey(type))
@@ -55,7 +67,7 @@ public static class TypeExtensions
   }
 
   /// <summary>
-  /// Find all of the public static integer-like literals (int, short, byte, and their unsigned analogues).
+  /// Find all of the public static integer-like literals (int, short, byte, and their unsigned analogues) of the given type.
   /// Return a dictionary where the keys are the field integer value
   /// and the values are the field names.
   /// </summary>

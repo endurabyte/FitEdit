@@ -134,8 +134,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public async void HandleRemoveClicked()
   {
     int index = SelectedIndex;
-    if (index < 0 || FileService.Files.Count == 0)
+    if (index < 0 || index >= FileService.Files.Count)
     {
+      SelectedIndex = 0;
       Log.Info("No file selected; cannot remove file");
       return;
     }

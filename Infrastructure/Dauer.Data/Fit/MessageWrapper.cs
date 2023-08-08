@@ -9,18 +9,19 @@ using AssemblyExtensions = Dauer.Model.Extensions.AssemblyExtensions;
 
 namespace Dauer.Data.Fit;
 
-public partial class Message : HasProperties
+public partial class MessageWrapper : HasProperties
 {
   public Mesg Mesg { get; set; }
   public bool IsNamed => Mesg.Name != "unknown";
+
   private static Assembly? fit_;
 
-  public Message(Mesg mesg)
+  public MessageWrapper(Mesg mesg)
   {
     Mesg = mesg;
   }
 
-  static Message()
+  static MessageWrapper()
   {
     if (!AssemblyExtensions.TryGetLoadedAssembly("Dauer.Adapters.Fit", out var assembly))
     {
@@ -56,31 +57,182 @@ public partial class Message : HasProperties
     return prettify ? PrettifyField(name, value) : value;
   }
 
+  /// <summary>
+  /// Return the named values if the field type is an enum or maps to public static literal fields.
+  /// Return null if the field is not an enum or contains no public static literal fields.
+  /// TODO make extension method on Field
+  /// </summary>
+  public static List<object?>? GetNamedValues(string mesgName, Field? field)
+  {
+    if (field == null) { return null; }
+
+    object? value = field.GetValue();
+    if (value == null) { return null; }
+
+    // E.g. "byte" might be the backing type of an enum.
+    Type backingType = value.GetType();
+
+    if (backingType.IsEnum)
+    {
+      return backingType.GetEnumEntries().Values.Cast<object?>().ToList();
+    }
+
+    if (fit_ == null) { return null; }
+
+    // e.g. field.Name == "Manufacturer" and i == 1 => identifier = "Garmin" 
+    string name = MapFieldNameToTypeName(mesgName, field.Name, value);
+
+    bool haveIdentifier = value.TryGetInt(out int i) && fit_.TryFindIdentifier(name, i, out string? _);
+    if (!haveIdentifier) { return null; }
+
+    if (!fit_.TryFindType(name, out Type? fieldType) || fieldType == null)
+    {
+      return null;
+    }
+
+    // If the int matched an identifier e.g. "Garmin" of Dynastream.Fit.Manufacturer (const ushort field)
+    // or "Running" of Dynastream.Fit.Sport (enum backed by byte)
+
+    bool targetIsEnum = fieldType.IsEnum;
+
+    if (targetIsEnum)
+    {
+      return fieldType.GetEnumEntries().Values.Cast<object?>().ToList();
+    }
+
+    var literals = fieldType.GetLiterals().Values.Cast<object?>().ToList();
+    return literals.Any() ? literals : null;
+  }
+
+  /// <summary>
+  /// If the given field holds an enum, convert the given value to the enum type.
+  /// Get the enum type of the field.
+  /// </summary>
+  public bool TryConvertToEnum(string fieldName, string? s, out object? result)
+  {
+    result = null;
+    if (s == null) { return false; }
+    if (fit_ == null) { return false; }
+
+    Field? field = Mesg.GetField(fieldName);
+    if (field == null) { return false; }
+
+    return fit_.TryFindType($"{field.ProfileType}", out Type? t) 
+      && t != null
+      && t.IsAssignableTo(typeof(Enum))
+      && Enum.TryParse(t, s, ignoreCase: true, out result);
+  }
+
+  /// <summary>
+  /// Return true if the field is backed by a public static literal field.
+  /// Works also for enum types.
+  /// </summary>
+  public static bool TryConvertToLiteral(string fieldName, string? s, out object? result)
+  {
+    result = null;
+    if (s == null) { return false; }
+    if (fit_ == null) { return false; }
+
+    if (!fit_.TryFindType(fieldName, out Type? t) || t == null)
+    {
+      return false;
+    }
+
+    FieldInfo? fieldInfo = t.GetField(s, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.Public);
+
+    if (fieldInfo == null || !fieldInfo.IsLiteral)
+    {
+      return false;
+    }
+
+    result = fieldInfo.GetRawConstantValue();
+    return true;
+  }
+
+  /// <summary>
+  /// If the field type is string, convert the given string to a byte array. Include a null terminator.
+  /// </summary>
+  public bool TryConvertStringToBytes(string fieldName, string? s, out object? result)
+  {
+    result = null;
+    if (s == null) { return false; }
+
+    Field? field = Mesg.GetField(fieldName);
+    if (field == null) { return false; }
+
+    if (field.Type != Dynastream.Fit.Fit.String)
+    {
+      return false;
+    }
+
+    // Strings are encoded as ASCII byte arrays
+    // Add null terminator
+    byte[] bytes = Encoding.ASCII.GetBytes(s);
+    byte[] withNull = new byte[bytes.Length + 1];
+    Array.Copy(bytes, withNull, bytes.Length);
+    withNull[bytes.Length] = 0;
+    result = bytes;
+    return true;
+  }
+
+  /// <summary>
+  /// If the field type is string, convert its backing byte array to a string. Remove the null terminator.
+  /// </summary>
+  public bool TryConvertBytesToString(string fieldName, out string? result)
+  {
+    result = null;
+
+    Field? field = Mesg.GetField(fieldName);
+    if (field == null) { return false; }
+
+    if (field.Type != Dynastream.Fit.Fit.String)
+    {
+      return false;
+    }
+
+    var bytes = (byte[])field.GetValue();
+
+    // Strings are encoded as ASCII byte arrays
+    // Remove null terminator, it shows as the "glyph not found" character U+25A1 □ WHITE SQUARE
+    int nullTerminator = Array.IndexOf(bytes, (byte)0);
+    if (nullTerminator != -1)
+    {
+      bytes = bytes[..nullTerminator];
+    }
+    result = Encoding.ASCII.GetString(bytes);
+    return true;
+  }
+
+  private static string MapFieldNameToTypeName(string mesgName, string fieldName, object? fieldValue)
+  {
+    return mesgName switch
+    {
+      nameof(MesgNum.FileId) when fieldName == nameof(FileIdMesg.FieldDefNum.Product) => nameof(GarminProduct),
+      nameof(MesgNum.DeviceInfo) when fieldName == nameof(DeviceInfoMesg.FieldDefNum.Product) => nameof(GarminProduct),
+      nameof(MesgNum.UserProfile) when fieldName.EndsWith("Setting") => nameof(Dynastream.Fit.DisplayMeasure),
+      _ => fieldName,
+    };
+  }
+
   private bool TryUnprettifyField(string name, object? value, out object? result)
   {
     result = null;
 
-    Field? field = Mesg.GetField(name);
+    name = MapFieldNameToTypeName(Mesg.Name, name, value);
 
-    if (field == null) { return false; }
-
-    // Handle enums
-    if (value is string s 
-      && fit_ != null 
-      && fit_.TryFindType($"{field.ProfileType}", out Type? t) 
-      && t == typeof(Enum)
-      && Enum.TryParse(t, s, ignoreCase: true, out result)
-    )
+    if (TryConvertToLiteral(name, value as string, out result))
     {
       return true;
     }
 
-    if (Mesg.Name == nameof(MesgNum.FileId))
+    if (TryConvertToEnum(name, value as string, out result))
     {
-      if (name == nameof(FileIdMesg.FieldDefNum.Product))
-      {
-        name = nameof(GarminProduct);
-      }
+      return true;
+    }
+
+    if (TryConvertStringToBytes(name, value as string, out result))
+    {
+      return true;
     }
 
     if (Mesg.Name == nameof(MesgNum.Record))
@@ -115,33 +267,6 @@ public partial class Message : HasProperties
           return true;
         }
       }
-    }
-
-    // Handle public static literal fields
-    if (value is string s2 
-      && fit_ != null 
-      && fit_.TryFindType(name, out Type? t2) 
-      && t2 != null)
-    {
-      FieldInfo? fieldInfo = t2.GetField(s2, BindingFlags.IgnoreCase | BindingFlags.Static | BindingFlags.Public);
-      
-      if (fieldInfo != null && fieldInfo.IsLiteral)
-      {
-        result = fieldInfo.GetRawConstantValue();
-        return true;
-      }
-    }
-
-    // Handle strings
-    // Strings are encoded as ASCII byte arrays
-    if (value is string s3 && field.Type == Dynastream.Fit.Fit.String)
-    {
-      byte[] bytes = Encoding.ASCII.GetBytes(s3);
-
-      // Add null terminator
-      bytes = bytes.Append((byte)0).ToArray();
-      result = bytes;
-      return true;
     }
 
     // Manual interventions (just an example)
@@ -309,17 +434,9 @@ public partial class Message : HasProperties
       }
     }
 
-    // Handle strings
-    // Strings are encoded as ASCII byte arrays
-    Field? field = Mesg.GetField(name);
-    if (field != null && field.Type == Dynastream.Fit.Fit.String)
+    if (TryConvertBytesToString(name, out string? s))
     {
-      var bytes = (byte[])field.GetValue();
-
-      // Remove null terminator, it shows as the "glyph not found" character U+25A1 □ WHITE SQUARE
-      int nullTerminator = Array.IndexOf(bytes, (byte)0);
-      bytes = bytes[..nullTerminator];
-      return Encoding.ASCII.GetString(bytes);
+      return s;
     }
 
     // Convert int-like values to int

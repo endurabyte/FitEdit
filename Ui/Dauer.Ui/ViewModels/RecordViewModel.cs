@@ -2,8 +2,11 @@
 using System.Globalization;
 using Avalonia.Collections;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Avalonia.Layout;
 using Dauer.Data.Fit;
+using Dauer.Model.Extensions;
 using Dauer.Ui.Converters;
 using Dynastream.Fit;
 using ReactiveUI;
@@ -24,37 +27,17 @@ public class DesignRecordViewModel : RecordViewModel
   }
 }
 
-public class DisplayedHeader : ReactiveObject
-{
-  public string? Name { get; set; }
-  public bool IsNamed => !Name?.StartsWith("Field ") ?? false;
-  public bool IsUsed { get; set; }
-  public DataGridColumn? Column { get; set; }
-}
-
-public class DisplayedMessageGroup : ReactiveObject
-{
-  public int Num { get; set; }
-  public string? Name { get; set; }
-  public bool IsNamed { get; set; }
-  public List<DisplayedHeader> Headers { get; set; } = new();
-
-  [Reactive] public bool IsVisible { get; set; }
-  [Reactive] public bool IsExpanded { get; set; }
-  [Reactive] public DataGrid? DataGrid { get; set; }
-}
-
 public class RecordViewModel : ViewModelBase, IRecordViewModel
 {
   /// <summary>
   /// All groups, even those which are not shown
   /// </summary>
-  private ObservableCollection<DisplayedMessageGroup> AllGroups_ { get; set; } = new();
+  private ObservableCollection<DataGridWrapper> AllGroups_ { get; set; } = new();
 
   /// <summary>
   /// Shown groups, i.e. only those which are shown in a tab
   /// </summary>
-  public ObservableCollection<DisplayedMessageGroup> Groups { get; set; } = new();
+  public ObservableCollection<DataGridWrapper> Groups { get; set; } = new();
 
   /// <summary>
   /// Name of the currently selected tab
@@ -85,7 +68,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private readonly IFileService fileService_;
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
-  private DisplayedMessageGroup? records_;
+  private DataGridWrapper? records_;
   private readonly MesgFieldValueConverter converter_;
 
   public RecordViewModel(
@@ -148,7 +131,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// </summary>
   private void SelectTab(string? tabName)
   {
-    DisplayedMessageGroup? match = Groups.FirstOrDefault(g => UnformatTabName(g.Name) == tabName);
+    DataGridWrapper? match = Groups.FirstOrDefault(g => UnformatTabName(g.Name) == tabName);
     TabIndex = match != null ? Groups.IndexOf(match) : 0;
   }
 
@@ -190,7 +173,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
   }
 
-  private bool GetIsVisible(DisplayedHeader header) => (header.IsUsed || !HideUnusedFields) && (header.IsNamed || !HideUnnamedFields);
+  private bool GetIsVisible(ColumnWrapper header) => (header.IsUsed || !HideUnusedFields) && (header.IsNamed || !HideUnnamedFields);
 
   private void HandleRecordSelectionChanged(object? sender, SelectionChangedEventArgs e)
   {
@@ -265,7 +248,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     foreach (var kvp in ff.MessagesByDefinition)
     {
-      DisplayedMessageGroup group = CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
+      DataGridWrapper group = CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
       group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
       if (group.DataGrid != null)
       {
@@ -288,12 +271,59 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     records_ = records;
   }
 
-  private DisplayedMessageGroup CreateGroup(MesgDefinition def, List<Mesg> messages)
+  private HashSet<object?>? GetNamedValues(IEnumerable<MessageWrapper> wrappers, string messageName, string fieldName)
+  {
+    Dictionary<string, Field> mergedFields = new();
+
+    // Get at least one value for each field so we can reflect on it
+    foreach (var kvp in wrappers.SelectMany(msg => msg.Mesg.FieldsByName))
+    {
+      if (kvp.Value == null || mergedFields.TryGetValue(kvp.Key, out Field? _))
+      {
+        continue;
+      }
+
+      object? value = kvp.Value.GetValue();
+
+      if (value == null)
+      {
+        continue;
+      }
+
+      mergedFields.Add(kvp.Key, kvp.Value);
+    }
+
+    if(!mergedFields.TryGetValue(fieldName, out Field? field))
+    {
+      return null;
+    }
+
+
+    // Include named values and unnamed values. E.g. DeviceInfo.DeviceIndex = {Creator = 0, 1, 2, 3, 4, 5, 7, Invalid = 255 }
+    var namedValues = new HashSet<object?>();
+
+    // Add defined values.
+    var definedValues = MessageWrapper.GetNamedValues(messageName, field);
+
+    // Don't add actual values if there are no defined values.
+    if (definedValues == null) { return null; }
+
+    namedValues.AddRange(definedValues);
+
+    // Add actual values
+    var actualValues = wrappers.Select(wrapper => wrapper.GetValue(fieldName, PrettifyFields)).ToList();
+      
+    namedValues.AddRange(actualValues);
+
+    return namedValues;
+  }
+
+  private DataGridWrapper CreateGroup(MesgDefinition def, List<Mesg> mesgs)
   {
     Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
 
-    var defMessage = new Message(defMesg);
-    var msgs = messages.Select(msg => new Message(msg));
+    var defMessage = new MessageWrapper(defMesg);
+    var wrappers = mesgs.Select(mesg => new MessageWrapper(mesg));
 
     // Categories of fields:
     // Known/unknown fields:
@@ -305,38 +335,39 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     //   used fields appear on the definition or on a amessage
     //   unused fields fields are on the definition but not on any message
 
-    var defNames = new HashSet<string>(defMesg.FieldsByName.Keys);
-    var fieldNames = new HashSet<string>(messages
+    var definedFieldNames = new HashSet<string>(defMesg.FieldsByName.Keys);
+    var actualFieldNames = new HashSet<string>(mesgs
       .SelectMany(m => m.FieldsByName.Keys
       // Replace "unknown" with "Field <Num>"
       .Select(key => key == "unknown" ? $"Field {m.Num}" : key)));
 
     // On both the definition and at least one message
-    var onBoth = new HashSet<string>(defNames);
+    var onBoth = new HashSet<string>(definedFieldNames);
 
     // On either the definition or a message
-    var onEither = new HashSet<string>(defNames);
+    var onEither = new HashSet<string>(definedFieldNames);
 
     // On only the definition
-    var defOnly = new HashSet<string>(defNames);
+    var defOnly = new HashSet<string>(definedFieldNames);
 
     // On only a message
-    var msgOnly = new HashSet<string>(fieldNames);
+    var msgOnly = new HashSet<string>(actualFieldNames);
 
-    onBoth.IntersectWith(fieldNames);
-    onEither.UnionWith(fieldNames);
-    defOnly.ExceptWith(fieldNames);
-    msgOnly.ExceptWith(defNames);
+    onBoth.IntersectWith(actualFieldNames);
+    onEither.UnionWith(actualFieldNames);
+    defOnly.ExceptWith(actualFieldNames);
+    msgOnly.ExceptWith(definedFieldNames);
 
-    List<DisplayedHeader> headers = onEither.Select(name => new DisplayedHeader
+    List<ColumnWrapper> columns = onEither.Select(fieldName => new ColumnWrapper
     {
-      Name = name,
-      IsUsed = !defOnly.Contains(name),
+      Name = fieldName,
+      NamedValues = GetNamedValues(wrappers, defMesg.Name, fieldName),
+      IsUsed = !defOnly.Contains(fieldName),
     }).ToList();
 
     var dg = new DataGrid
     {
-      ItemsSource = msgs,
+      ItemsSource = wrappers,
       CanUserSortColumns = true,
       CanUserResizeColumns = true,
       CanUserReorderColumns = true,
@@ -345,38 +376,75 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     // Create columns
     var converter = new MesgFieldValueConverter(prettify: PrettifyFields);
-    foreach (var header in headers)
-    {
-      var col = new DataGridTextColumn
-      {
-        Header = header.Name,
-        Binding = new Binding
-        {
-          Converter = converter,
-          ConverterParameter = header.Name,
-          Mode = BindingMode.TwoWay,
-        },
-        IsReadOnly = false,
-        IsVisible = GetIsVisible(header),
-      };
 
-      header.Column = col;
+    foreach (var column in columns)
+    {
+      // Use a ComboBox if it makes sense
+      if (PrettifyFields && (column.NamedValues?.Any() ?? false))
+      {
+        column.Column = new DataGridTemplateColumn
+        {
+          Header = column.Name,
+
+          CellTemplate = new FuncDataTemplate(model => true, (model, scope) =>
+          {
+            if (model is not MessageWrapper wrapper) { return null; }
+
+            object? initialValue = converter.Convert(model, typeof(string), column.Name, CultureInfo.CurrentCulture);
+
+            var cb = new ComboBox
+            {
+              Name = column.Name,
+              HorizontalAlignment = HorizontalAlignment.Stretch,
+              HorizontalContentAlignment = HorizontalAlignment.Stretch,
+              ItemsSource = column.NamedValues
+                .Select(_ => $"{_}") // Convert to string since the converted value is a string
+                .OrderBy(s => s),
+              SelectedValue = initialValue,
+            };
+
+            cb.SelectionChanged += (sender, e) =>
+            {
+              if (cb.SelectedValue == null) { return; }
+              var newValue = cb.SelectedValue.ToString();
+              converter.ConvertBack(wrapper, typeof(string), (column.Name, newValue), CultureInfo.CurrentCulture);
+            };
+
+            return cb;
+          }),
+        };
+      }
+      else
+      {
+        column.Column = new DataGridTextColumn
+        {
+          Header = column.Name,
+          Binding = new Binding
+          {
+            Converter = converter,
+            ConverterParameter = column.Name,
+            Mode = BindingMode.TwoWay,
+          },
+          IsReadOnly = false,
+          IsVisible = GetIsVisible(column),
+        };
+      }
     }
 
-    foreach (var header in headers)
+    foreach (var header in columns)
     {
       dg.Columns.Add(header.Column);
     }
 
-    var group = new DisplayedMessageGroup
+    var group = new DataGridWrapper
     {
       Num = defMesg.Num,
-      Name = FormatTabName(defMesg, messages.Count),
+      Name = FormatTabName(defMesg, mesgs.Count),
       DataGrid = dg,
       IsNamed = defMessage.IsNamed,
       IsVisible = defMessage.IsNamed || !HideUnnamedMessages,
     };
-    group.Headers.AddRange(headers);
+    group.Headers.AddRange(columns);
 
     return group;
   }
@@ -392,7 +460,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var converter = binding?.Converter as MesgFieldValueConverter;
 
     var header = column?.Header as string;
-    var message = row.DataContext as Message;
+    var message = row.DataContext as MessageWrapper;
 
     var editingElement = e.EditingElement as TextBox;
     var newContent = editingElement?.Text;
@@ -401,6 +469,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (header == null) { return; }
     if (converter == null) { return; }
 
-    converter.ConvertBack(message, typeof(Message), (header, newContent), CultureInfo.CurrentCulture);
+    converter.ConvertBack(message, typeof(MessageWrapper), (header, newContent), CultureInfo.CurrentCulture);
   }
 }

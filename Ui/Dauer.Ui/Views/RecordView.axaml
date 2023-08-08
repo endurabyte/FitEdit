@@ -58,7 +58,7 @@
         </DataTemplate>
       </TabControl.ItemTemplate>
       <TabControl.ContentTemplate>
-        <DataTemplate DataType="vm:DisplayedMessageGroup">
+        <DataTemplate DataType="vm:DataGridWrapper">
           <ContentControl Content="{Binding DataGrid}"/>
         </DataTemplate>
       </TabControl.ContentTemplate>
