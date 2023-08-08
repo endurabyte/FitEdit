@@ -87,7 +87,12 @@ $job2 = Start-Job -ScriptBlock {
 
 # Wait for both jobs to finish
 $job1 | Wait-Job
+$output1 = $job1 | Receive-Job
+$output1 | Write-Output
+
 $job2 | Wait-Job
+$output2 = $job2 | Receive-Job
+$output2 | Write-Output
 
 # Clean up
 echo "Removing temporary keychain..."
