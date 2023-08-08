@@ -203,22 +203,61 @@ public partial class MessageWrapper : HasProperties
     return true;
   }
 
-  private static string MapFieldNameToTypeName(string mesgName, string fieldName, object? fieldValue)
+  private string PrependSourceType(string fieldName)
   {
-    return mesgName switch
-    {
-      nameof(MesgNum.FileId) when fieldName == nameof(FileIdMesg.FieldDefNum.Product) => nameof(GarminProduct),
-      nameof(MesgNum.DeviceInfo) when fieldName == nameof(DeviceInfoMesg.FieldDefNum.Product) => nameof(GarminProduct),
-      nameof(MesgNum.UserProfile) when fieldName.EndsWith("Setting") => nameof(Dynastream.Fit.DisplayMeasure),
-      _ => fieldName,
-    };
+    var sourceType = Mesg.GetFieldValue(nameof(SourceType));
+    string? stName = Enum.GetName(typeof(SourceType), sourceType);
+    return stName == null ? fieldName : $"{stName}{fieldName}";
+  }
+
+  private string MapFieldNameToTypeName(string fieldName, object? fieldValue)
+  {
+    string? mapped = MapFieldNameToTypeName(Mesg.Name, fieldName, fieldValue);
+    return string.Equals(mapped, fieldName) 
+
+      // If no mapping occured, try again with data specific to this message
+      ? Mesg.Name switch
+        {
+          // Map DeviceType to e.g. LocalDeviceType, AntplusDeviceType, BleDeviceType
+          nameof (MesgNum.DeviceInfo) when fieldName == nameof(DeviceInfoMesg.FieldDefNum.DeviceType) => PrependSourceType(fieldName),
+          _ => fieldName,
+        } 
+      
+      : mapped;
+  }
+
+  private static string MapFieldNameToTypeName(string mesgName, string fieldName, object? fieldValue) => mesgName switch
+  {
+    // Map Type => Activity
+    nameof(MesgNum.Activity) when fieldName == nameof(ActivityMesg.FieldDefNum.Type) => nameof(Activity),
+    nameof(MesgNum.FileId) when fieldName == nameof(FileIdMesg.FieldDefNum.Product) => nameof(GarminProduct),
+    nameof(MesgNum.FileId) when fieldName == nameof(FileIdMesg.FieldDefNum.Type) => nameof(Dynastream.Fit.File),
+    nameof(MesgNum.Event) when fieldName == nameof(EventMesg.FieldDefNum.Event) => nameof(Event),
+    nameof(MesgNum.DeviceInfo) when fieldName == nameof(DeviceInfoMesg.FieldDefNum.Product) => nameof(GarminProduct),
+    nameof(MesgNum.DeviceSettings) when fieldName == nameof(DeviceSettingsMesg.FieldDefNum.MountingSide) => nameof(Side),
+
+    nameof(MesgNum.UserProfile) when fieldName.EndsWith("Setting") => nameof(DisplayMeasure),
+    nameof(MesgNum.ZonesTarget) when fieldName == nameof(ZonesTargetMesg.FieldDefNum.HrCalcType) => nameof(HrZoneCalc),
+    nameof(MesgNum.ZonesTarget) when fieldName == nameof(ZonesTargetMesg.FieldDefNum.PwrCalcType) => nameof(PwrZoneCalc),
+    nameof(MesgNum.FieldDescription) when fieldName == nameof(FieldDescriptionMesg.FieldDefNum.FitBaseTypeId) => nameof(FitBaseType),
+    nameof(MesgNum.FieldDescription) when fieldName == nameof(FieldDescriptionMesg.FieldDefNum.NativeMesgNum) => nameof(MesgNum),
+    nameof(MesgNum.Lap) when fieldName == nameof(LapMesg.FieldDefNum.Event) => nameof(Event),
+    _ => fieldName,
+  };
+
+  private static bool TryMapDateTimeToTimestamp(string? dtString, out uint timestamp)
+  {
+    timestamp = 0;
+    if (dtString is null) { return false; }
+    if (System.DateTime.TryParse(dtString, out System.DateTime dt)) { return false; }
+
+    timestamp = new Dynastream.Fit.DateTime(dt).GetTimeStamp();
+    return true;
   }
 
   private bool TryUnprettifyField(string name, object? value, out object? result)
   {
-    result = null;
-
-    name = MapFieldNameToTypeName(Mesg.Name, name, value);
+    name = MapFieldNameToTypeName(name, value);
 
     if (TryConvertToLiteral(name, value as string, out result))
     {
@@ -235,50 +274,22 @@ public partial class MessageWrapper : HasProperties
       return true;
     }
 
-    if (Mesg.Name == nameof(MesgNum.Record))
+    if (name.Contains(nameof(RecordMesg.FieldDefNum.Timestamp)))
     {
-      if (name == nameof(RecordMesg.FieldDefNum.Timestamp))
+      if (TryMapDateTimeToTimestamp(value as string, out uint timestamp))
       {
-        if (value != null)
-        {
-          if (value is string dtString)
-          {
-            uint timestamp = new Dynastream.Fit.DateTime(System.DateTime.Parse(dtString)).GetTimeStamp();
-            result = timestamp;
-            return true;
-          }
-        }
-      }
-
-      if (name == nameof(RecordMesg.FieldDefNum.PositionLat))
-      {
-        if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
-        {
-          result = d.ToSemicircles();
-          return true;
-        }
-      }
-
-      if (name == nameof(RecordMesg.FieldDefNum.PositionLong))
-      {
-        if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
-        {
-          result = d.ToSemicircles();
-          return true;
-        }
+        result = timestamp;
+        return true;
       }
     }
 
-    // Manual interventions (just an example)
-    if (Mesg.Name == nameof(MesgNum.UserProfile))
+    if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLat)) 
+     || name.Contains(nameof(RecordMesg.FieldDefNum.PositionLong)))
     {
-      if (name == nameof(Gender) && value is string gender)
+      if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
       {
-        if (Enum.TryParse(gender, ignoreCase: true, out Gender g))
-        {
-          result = g;
-          return true;
-        }
+        result = d.ToSemicircles();
+        return true;
       }
     }
 
@@ -289,148 +300,36 @@ public partial class MessageWrapper : HasProperties
   {
     if (value == null) { return value; }
 
+    name = MapFieldNameToTypeName(name, value);
+
+    if (name.Contains(nameof(RecordMesg.FieldDefNum.Timestamp)))
+    {
+      return Mesg.TimestampToDateTime((uint)value).GetDateTime();
+    }
+
+    if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLat)))
+    {
+      return $"{((int)value).ToDegrees()}°N";
+    }
+
+    if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLong)))
+    {
+      return $"{((int)value).ToDegrees()}°W";
+    }
+
     if (Mesg.Name == nameof(MesgNum.FileId))
     {
-      if (name == nameof(FileIdMesg.FieldDefNum.Type))
+      if (name == nameof(FileIdMesg.FieldDefNum.TimeCreated))
       {
-        name = nameof(Dynastream.Fit.File);
-      }
-
-      if (name == nameof(FileIdMesg.FieldDefNum.Product))
-      {
-        name = nameof(GarminProduct);
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.Event))
-    {
-      if (name == nameof(EventMesg.FieldDefNum.Event))
-      {
-        name = nameof(Dynastream.Fit.Event);
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.DeviceInfo))
-    {
-      if (name == nameof(DeviceInfoMesg.FieldDefNum.Product))
-      {
-        name = nameof(GarminProduct);
-      }
-
-      if (name == nameof(DeviceInfoMesg.FieldDefNum.DeviceType))
-      {
-        // Map DeviceType to e.g. LocalDeviceType, AntplusDeviceType, BleDeviceType
-        var sourceType = Mesg.GetFieldValue(nameof(Dynastream.Fit.SourceType));
-        string? stName = Enum.GetName(typeof(Dynastream.Fit.SourceType), sourceType);
-        if (stName != null)
-        {
-          name = $"{stName}{name}";
-        }
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.DeviceSettings))
-    {
-      if (name == nameof(DeviceSettingsMesg.FieldDefNum.MountingSide))
-      {
-        name = nameof(Dynastream.Fit.Side);
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.UserProfile))
-    {
-      // Map DisplayMeasure
-      // e.g. ElevSetting, WeightSetting, SpeedSetting, DistSetting,
-      //      PositionSetting, TemperatureSEtting, HeightSetting, DepthSetting
-      if (name.EndsWith("Setting"))
-      {
-        string? typeName = Enum.GetName(typeof(Dynastream.Fit.DisplayMeasure), value) ?? name;
-        return typeName ?? value;
-        // Message doesn't have a value for this field.
-        // Can happen when "Hide unused fields" is unchecked
-        // Example: Attempt to get "PowerSetting" field from a run activity
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.ZonesTarget))
-    {
-      if (name == nameof(ZonesTargetMesg.FieldDefNum.PwrCalcType))
-      {
-        name = nameof(PwrZoneCalc);
-      }
-      if (name == nameof(ZonesTargetMesg.FieldDefNum.HrCalcType))
-      {
-        name = nameof(HrZoneCalc);
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.DeveloperDataId))
-    {
-      if (name == nameof(DeveloperDataIdMesg.FieldDefNum.ApplicationId))
-      {
-
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.Sport))
-    {
-      if (name == nameof(SportMesg.FieldDefNum.Name))
-      {
-
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.FieldDescription))
-    {
-      if (name == nameof(FieldDescriptionMesg.FieldDefNum.FitBaseTypeId))
-      {
-        // Map FitBaseTypeId => FitBaseType
-        name = nameof(FitBaseType);
-      }
-
-      if (name == nameof(FieldDescriptionMesg.FieldDefNum.NativeMesgNum))
-      {
-        name = nameof(MesgNum);
+        return Mesg.TimestampToDateTime((uint)value).GetDateTime();
       }
     }
 
     if (Mesg.Name == nameof(MesgNum.Lap))
     {
-      if (name == nameof(LapMesg.FieldDefNum.Event))
-      {
-        // Map Event => Event
-        // No need; they have the same name.
-        //name = nameof(Dynastream.Fit.Event); 
-      }
-
-      if (name == nameof(LapMesg.FieldDefNum.AvgPowerPosition))
-      {
-
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.Record))
-    {
-      if (name == nameof(RecordMesg.FieldDefNum.Timestamp))
+      if (name == nameof(LapMesg.FieldDefNum.StartTime))
       {
         return Mesg.TimestampToDateTime((uint)value).GetDateTime();
-      }
-      if (name == nameof(RecordMesg.FieldDefNum.PositionLat))
-      {
-        return $"{((int)value).ToDegrees()}°N";
-      }
-      if (name == nameof(RecordMesg.FieldDefNum.PositionLong))
-      {
-        return $"{((int)value).ToDegrees()}°W";
-      }
-    }
-
-    if (Mesg.Name == nameof(MesgNum.Activity))
-    {
-      if (name == nameof(ActivityMesg.FieldDefNum.Type))
-      {
-        // Map Type => Activity
-        name = nameof(Dynastream.Fit.Activity);
       }
     }
 
