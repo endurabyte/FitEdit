@@ -38,15 +38,11 @@ echo "Creating $installCertPath..."
 
 echo "Creating temporary keychain..."
 iex -Command "security create-keychain -p $tmpKeychainPassword $tmpKeychainName"
-echo "Appending temporary keychain to system keychain..."
-iex -Command "security list-keychains -d user -s $tmpKeychainName ${OLD_KEYCHAIN_NAMES[@]}"
+echo "Appending temporary keychain to login keychain..."
+iex -Command "security list-keychains -d user -s $tmpKeychainName ~/Library/Keychains/login.keychain-db"
 echo "Unlocking temporary keychain..."
 iex -Command "security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName"
-echo "Enabling code-signing from a non-interactive shell..."
-iex -Command "security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName"
 echo "Removing relock timeout..."
-# This will set the auto-lock timeout to unlimited and remove auto-lock on sleep.
-# https://stackoverflow.com/a/52115968/16246783
 iex -Command "security set-keychain-settings $tempKeychainName"
 
 echo "Importing $appCertPath into keychain..."
@@ -57,8 +53,11 @@ echo "Importing $installCertPath into keychain..."
 iex -Command "security import $installCertPath -k $tmpKeychainName -P $installCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign"
 Remove-Item -Path $installCertPath
 
+echo "Enabling code-signing from a non-interactive shell..."
+iex -Command "security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName"
+
 echo "Storing notary profile..."
-iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID --keychain /Library/Keychains/System.keychain"
+iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID"
 
 echo "Installing Clowd.Squirrel..."
 dotnet tool install -g csq --prerelease
