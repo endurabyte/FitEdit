@@ -57,7 +57,7 @@ echo "Enabling code-signing from a non-interactive shell..."
 iex -Command "security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName"
 
 echo "Storing notary profile..."
-iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID --keychain ~/Library/Keychains/$tmpKeychainName-db"
+iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID"
 
 echo "Installing Clowd.Squirrel..."
 dotnet tool install -g csq --prerelease
