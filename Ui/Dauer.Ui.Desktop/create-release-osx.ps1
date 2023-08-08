@@ -67,16 +67,27 @@ dotnet tool install -g csq --prerelease
 echo "Building $rid_x64..."
 dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid_x64 --framework $framework --output "./bin/$configuration/$framework/publish/$rid_x64/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
-echo "Packing $rid_x64..."
-csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid_x64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid_x64" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
-
 # Build for ARM / Apple Silicon
 
 echo "Building $rid_arm64..."
 dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid_arm64 --framework $framework --output "./bin/$configuration/$framework/publish/$rid_arm64/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
+# Code sign both builds in parallel
+echo "Packing $rid_x64..."
+$job1 = Start-Job -ScriptBlock {
+    param($packId, $authors, $version, $configuration, $framework, $rid_x64, $signAppId, $signInstallId, $notaryProfile)
+    csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid_x64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid_x64" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
+} -ArgumentList $packId, $authors, $version, $configuration, $framework, $rid_x64, $signAppId, $signInstallId, $notaryProfile
+
 echo "Packing $rid_arm64..."
-csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid_arm64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid_arm64" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
+$job2 = Start-Job -ScriptBlock {
+    param($packId, $authors, $version, $configuration, $framework, $rid_arm64, $signAppId, $signInstallId, $notaryProfile)
+    csq pack --xplat=osx --packId $packId --packAuthors $authors --packVersion $version --packDir "./bin/$configuration/$framework/publish/$rid_arm64" --icon "../Dauer.Ui/Assets/logo.ico" --mainExe "FitEdit" --releaseDir="./releases/$rid_arm64" --signAppIdentity=$signAppId --signInstallIdentity=$signInstallId --notaryProfile=$notaryProfile --noDelta
+} -ArgumentList $packId, $authors, $version, $configuration, $framework, $rid_arm64, $signAppId, $signInstallId, $notaryProfile
+
+# Wait for both jobs to finish
+$job1 | Wait-Job
+$job2 | Wait-Job
 
 # Clean up
 echo "Removing temporary keychain..."
