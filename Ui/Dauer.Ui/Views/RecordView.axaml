@@ -12,9 +12,13 @@
     <vm:DesignRecordViewModel />
   </Design.DataContext>
 
-  <Grid RowDefinitions="Auto, *">
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/> 
+  </UserControl.Styles>
+  
+  <Grid RowDefinitions="Auto, *, 5" ColumnDefinitions="3*, Auto">
 
-    <Expander Grid.Row="0" Header="Filters">
+    <Expander Grid.Row="0" Grid.Column="0" Header="Filters">
       <StackPanel Orientation="Horizontal">
         <CheckBox Content="Hide unused columns" IsChecked="{Binding HideUnusedFields}" Margin="0,0,20,0">
           <ToolTip.Tip>
@@ -48,10 +52,18 @@
             </TextBlock>
           </ToolTip.Tip>
         </CheckBox>
+        <CheckBox Content="Hex view" IsChecked="{Binding ShowHexData}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Show hex data for the selected row <LineBreak/>
+              See https://developer.garmin.com/fit/protocol/ for the FIT protocol specification
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
       </StackPanel>
     </Expander>
 
-    <TabControl Grid.Row="1" ItemsSource="{Binding Groups}" SelectedIndex="{Binding TabIndex}">
+    <TabControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ShownData}" SelectedIndex="{Binding TabIndex}">
       <TabControl.ItemTemplate>
         <DataTemplate>
           <TextBlock Text="{Binding Name}" FontSize="12"/>
@@ -63,6 +75,20 @@
         </DataTemplate>
       </TabControl.ContentTemplate>
     </TabControl>
+
+    <Grid x:Name="RawDataGrid" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" RowDefinitions="Auto, *" ColumnDefinitions="5, *" 
+          MaxWidth="240"
+          IsVisible="{Binding ShowHexData}">
+      <Separator Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"/>
+      <Label Grid.Row="0" Grid.Column="1" Content="Hex View" Margin="0 0 20 0" Foreground="{StaticResource SystemAccentColor}"/>
+      <ScrollViewer Grid.Row="1" Grid.Column="1">
+        <SelectableTextBlock Text="{Binding HexData}"
+                             Margin="0 0 20 0"
+                             TextWrapping="Wrap"
+                             SelectionStart="{Binding HexDataSelectionStart}"
+                             SelectionEnd="{Binding HexDataSelectionEnd}"/>
+      </ScrollViewer>
+    </Grid>
 
   </Grid>
 

@@ -18,6 +18,7 @@ public interface IRecordViewModel
 {
   int SelectedIndex { get; set; }
   int SelectionCount { get; set; }
+  bool ShowHexData { get; set; }
 }
 
 public class DesignRecordViewModel : RecordViewModel
@@ -30,20 +31,20 @@ public class DesignRecordViewModel : RecordViewModel
 public class RecordViewModel : ViewModelBase, IRecordViewModel
 {
   /// <summary>
-  /// All groups, even those which are not shown
+  /// All data grids, even those which are not shown in a tab
   /// </summary>
-  private ObservableCollection<DataGridWrapper> AllGroups_ { get; set; } = new();
+  private ObservableCollection<DataGridWrapper> AllData_ { get; set; } = new();
 
   /// <summary>
-  /// Shown groups, i.e. only those which are shown in a tab
+  /// Shown data grids, i.e. only those which are shown in a tab
   /// </summary>
-  public ObservableCollection<DataGridWrapper> Groups { get; set; } = new();
+  public ObservableCollection<DataGridWrapper> ShownData { get; set; } = new();
 
   /// <summary>
   /// Name of the currently selected tab
   /// </summary>
   private string TabName_ => TabIndexIsValid_
-    ? UnformatTabName(Groups[TabIndex]?.Name) ?? DefaultTabName_ 
+    ? UnformatTabName(ShownData[TabIndex]?.Name) ?? DefaultTabName_ 
     : DefaultTabName_;
 
   private const string DefaultTabName_ = "Record";
@@ -52,7 +53,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// Index of the currently selected tab
   /// </summary>
   [Reactive] public int TabIndex { get; set; }
-  private bool TabIndexIsValid_ => TabIndex >= 0 && TabIndex < Groups.Count;
+  private bool TabIndexIsValid_ => TabIndex >= 0 && TabIndex < ShownData.Count;
 
   /// <summary>
   /// The index of the currently shown GPS coordinate shown in the chart, map, and records tab.
@@ -64,6 +65,11 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   [Reactive] public bool HideUnnamedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedMessages { get; set; } = true;
   [Reactive] public bool PrettifyFields { get; set; } = true;
+  [Reactive] public bool ShowHexData { get; set; } = false;
+
+  [Reactive] public string HexData { get; set; } = "(No Data)";
+  [Reactive] public long HexDataSelectionStart { get; set; }
+  [Reactive] public long HexDataSelectionEnd { get; set; }
 
   private readonly IFileService fileService_;
   private IDisposable? selectedIndexSub_;
@@ -92,14 +98,14 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     {
       PreserveCurrentTab(() =>
       {
-        Groups.Clear();
+        ShownData.Clear();
 
-        foreach (var group in AllGroups_)
+        foreach (var group in AllData_)
         {
           group.IsVisible = !HideUnnamedMessages || group.IsNamed;
           if (group.IsVisible)
           {
-            Groups.Add(group);
+            ShownData.Add(group);
           }
         }
       });
@@ -114,6 +120,17 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
         Show(fileService_.MainFile.FitFile);
       });
     });
+
+    this.ObservableForProperty(x => x.TabIndex).Subscribe(_ => HandleTabIndexChanged());
+  }
+
+  private void HandleTabIndexChanged()
+  {
+    if (!TabIndexIsValid_) { return; }
+    var data = ShownData[TabIndex];
+    if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
+
+    SelectRawData(wrapper);
   }
 
   /// <summary>
@@ -131,8 +148,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// </summary>
   private void SelectTab(string? tabName)
   {
-    DataGridWrapper? match = Groups.FirstOrDefault(g => UnformatTabName(g.Name) == tabName);
-    TabIndex = match != null ? Groups.IndexOf(match) : 0;
+    DataGridWrapper? match = ShownData.FirstOrDefault(g => UnformatTabName(g.Name) == tabName);
+    TabIndex = match != null ? ShownData.IndexOf(match) : 0;
   }
 
   /// <summary>
@@ -153,7 +170,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void UpdateColumnVisibility()
   {
-    foreach (var group in AllGroups_)
+    foreach (var group in AllData_)
     {
       foreach (var header in group.Headers)
       {
@@ -175,16 +192,41 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private bool GetIsVisible(ColumnWrapper header) => (header.IsUsed || !HideUnusedFields) && (header.IsNamed || !HideUnnamedFields);
 
+  private void HandleDataGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
+  {
+    if (sender is not DataGrid dg) { return; }
+    if (dg.SelectedItem is not MessageWrapper wrapper) { return; }
+
+    SelectRawData(wrapper);
+  }
+
+  private void SelectRawData(MessageWrapper? wrapper)
+  {
+    if (wrapper is null) { return; }
+    const int width = 3; // 3: 2 hex chars + space separator;
+    SelectRawData(
+      width * wrapper.Mesg.SourceIndex, 
+      width * (wrapper.Mesg.SourceIndex + wrapper.Mesg.SourceSize) - 1); // -1: omit trailing space
+  }
+
+  private void SelectRawData(long start, long end)
+  {
+    HexDataSelectionStart = start;
+    HexDataSelectionEnd = end;
+  }
+
   private void HandleRecordSelectionChanged(object? sender, SelectionChangedEventArgs e)
   {
     if (sender is not DataGrid dg) { return; }
-    dg.ScrollIntoView(dg.SelectedItem, dg.CurrentColumn);
   }
 
   private void HandleMainFileChanged(SelectedFile? file)
   {
     if (file == null) { return; }
     if (file.FitFile == null) { return; }
+
+    HexData = string.Join(" ", file.Blob!.Bytes.Select(b => $"{b:X2}"));
+    SelectRawData(0, 0);
 
     PreserveCurrentTab(() => Show(file.FitFile));
 
@@ -226,7 +268,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void Show(FitFile ff)
   {
     // Remeber which groups were expanded
-    var expandedGroups = AllGroups_
+    var expandedGroups = AllData_
       .Where(g => g.IsExpanded)
       .ToDictionary(g => g.Name ?? "", g => g.IsExpanded);
 
@@ -235,7 +277,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       records_.DataGrid.SelectionChanged -= HandleRecordSelectionChanged;
     }
 
-    foreach (var group in AllGroups_)
+    foreach (var group in AllData_)
     {
       if (group.DataGrid != null)
       {
@@ -243,8 +285,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       }
     }
 
-    AllGroups_.Clear();
-    Groups.Clear();
+    AllData_.Clear();
+    ShownData.Clear();
 
     foreach (var kvp in ff.MessagesByDefinition)
     {
@@ -253,22 +295,30 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       if (group.DataGrid != null)
       {
         group.DataGrid.CellEditEnding += HandleCellEditEnding;
+        group.DataGrid.SelectionChanged += HandleDataGridSelectionChanged;
+        group.DataGrid.CurrentCellChanged += HandleCurrentCellChanged;
       }
 
-      AllGroups_.Add(group);
+      AllData_.Add(group);
       if (group.IsVisible)
       {
-        Groups.Add(group);
+        ShownData.Add(group);
       }
     }
 
     // When the slider moves, higlight it in the records DataGrid
-    var records = AllGroups_.FirstOrDefault(g => g.Num == MesgNum.Record);
+    var records = AllData_.FirstOrDefault(g => g.Num == MesgNum.Record);
     if (records == null) { return; }
     if (records.DataGrid == null) { return; }
 
     records.DataGrid.SelectionChanged += HandleRecordSelectionChanged;
     records_ = records;
+  }
+
+  private void HandleCurrentCellChanged(object? sender, EventArgs e)
+  {
+    if (sender is not DataGrid dg) { return; }
+    //MessageWrapper wrapper = dg.GetCurrentItem;
   }
 
   private HashSet<object?>? GetNamedValues(IEnumerable<MessageWrapper> wrappers, string messageName, string fieldName)

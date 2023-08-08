@@ -36,7 +36,7 @@
         <TabItem Header="Laps" FontSize="12">
           <views:LapView DataContext="{Binding Laps}"/>
         </TabItem>
-        <TabItem Header="Records" FontSize="12">
+        <TabItem Header="Data" FontSize="12">
           <views:RecordView DataContext="{Binding Records}"/>
         </TabItem>
         <!--<TabItem Header="Log">
