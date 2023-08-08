@@ -43,6 +43,8 @@ iex -Command "security list-keychains -d user -s $tmpKeychainName /Library/Keych
 echo "Unlocking temporary keychain..."
 iex -Command "security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName"
 echo "Removing relock timeout..."
+# This will set the auto-lock timeout to unlimited and remove auto-lock on sleep.
+# https://stackoverflow.com/a/52115968/16246783
 iex -Command "security set-keychain-settings $tempKeychainName"
 
 echo "Importing $appCertPath into keychain..."
@@ -57,7 +59,7 @@ echo "Enabling code-signing from a non-interactive shell..."
 iex -Command "security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName"
 
 echo "Storing notary profile..."
-iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID"
+iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID --keychain /Library/Keychains/System.keychain"
 
 echo "Installing Clowd.Squirrel..."
 dotnet tool install -g csq --prerelease
