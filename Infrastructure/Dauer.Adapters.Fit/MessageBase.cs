@@ -1,8 +1,9 @@
-﻿using Dauer.Model.Extensions;
+﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 
 namespace Dauer.Adapters.Fit;
 
-public class FitMessage
+public class MessageBase : HasProperties
 {
   /// <summary>
   /// The byte index in the source file where this message definition was read from.
@@ -12,31 +13,34 @@ public class FitMessage
   /// <summary>
   /// The byte size in the source file of this message definition.
   /// </summary>
-  public long SourceSize { get; set; }
+  public long SourceLength { get; set; }
 
   /// <summary>
   /// Source data of this message definition.
   /// </summary>
   public byte[] SourceData { get; set; }
 
-  public FitMessage(FitMessage other)
+  public MessageBase(MessageBase other)
   {
     SourceData = other?.SourceData?.ToArray() ?? Array.Empty<byte>();
-    SourceSize = other?.SourceSize ?? 0;
+    SourceLength = other?.SourceLength ?? 0;
     SourceIndex = other?.SourceIndex ?? 0;
   }
 
-  public FitMessage(Stream source)
+  public MessageBase(Stream source)
   {
-    ReadSource(source);
+    CacheData(source);
   }
 
-  protected void ReadSource(Stream source)
+  /// <summary>
+  /// Update <see cref="SourceData"/>, <see cref="SourceIndex"/>, and <see cref="SourceLength"/> from <paramref name="source"/>.
+  /// </summary>
+  public void CacheData(Stream source)
   {
     var position = source.Position;
     source.Position = 0;
     SourceData = source?.ReadAllBytes() ?? Array.Empty<byte>();
-    SourceSize = SourceData.Length;
+    SourceLength = SourceData.Length;
     source.Position = position;
   }
 }

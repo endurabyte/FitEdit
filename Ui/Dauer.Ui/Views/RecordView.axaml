@@ -76,15 +76,15 @@
       </TabControl.ContentTemplate>
     </TabControl>
 
-    <Grid x:Name="RawDataGrid" Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" RowDefinitions="Auto, *" ColumnDefinitions="5, *" 
-          MaxWidth="240"
+    <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" RowDefinitions="Auto, *" ColumnDefinitions="5, *" 
           IsVisible="{Binding ShowHexData}">
       <Separator Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"/>
       <Label Grid.Row="0" Grid.Column="1" Content="Hex View" Margin="0 0 20 0" Foreground="{StaticResource SystemAccentColor}"/>
-      <ScrollViewer Grid.Row="1" Grid.Column="1">
+      <ScrollViewer Name="HexScrollViewer" Grid.Row="1" Grid.Column="1">
         <SelectableTextBlock Text="{Binding HexData}"
-                             Margin="0 0 20 0"
+                             Width="200"
                              TextWrapping="Wrap"
+                             FontFamily="{StaticResource FiraCode}"
                              SelectionStart="{Binding HexDataSelectionStart}"
                              SelectionEnd="{Binding HexDataSelectionEnd}"/>
       </ScrollViewer>

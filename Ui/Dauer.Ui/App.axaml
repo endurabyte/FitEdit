@@ -14,7 +14,8 @@
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <StyleInclude Source="./Styles.axaml"/>
-      </ResourceDictionary.MergedDictionaries> 
+      </ResourceDictionary.MergedDictionaries>
+      <FontFamily x:Key="FiraCode">avares://Dauer.Ui/Assets/Fonts/FiraCode-Regular.ttf#</FontFamily>
     </ResourceDictionary>
   </Application.Resources>
   

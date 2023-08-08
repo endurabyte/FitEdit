@@ -249,7 +249,7 @@ public partial class MessageWrapper : HasProperties
   {
     timestamp = 0;
     if (dtString is null) { return false; }
-    if (System.DateTime.TryParse(dtString, out System.DateTime dt)) { return false; }
+    if (!System.DateTime.TryParse(dtString, out System.DateTime dt)) { return false; }
 
     timestamp = new Dynastream.Fit.DateTime(dt).GetTimeStamp();
     return true;
@@ -280,6 +280,30 @@ public partial class MessageWrapper : HasProperties
       {
         result = timestamp;
         return true;
+      }
+    }
+
+    if (Mesg.Name == nameof(MesgNum.FileId))
+    {
+      if (name == nameof(FileIdMesg.FieldDefNum.TimeCreated))
+      {
+        if (TryMapDateTimeToTimestamp(value as string, out uint timestamp))
+        {
+          result = timestamp;
+          return true;
+        }
+      }
+    }
+
+    if (Mesg.Name == nameof(MesgNum.Lap))
+    {
+      if (name == nameof(LapMesg.FieldDefNum.StartTime))
+      {
+        if (TryMapDateTimeToTimestamp(value as string, out uint timestamp))
+        {
+          result = timestamp;
+          return true;
+        }
       }
     }
 

@@ -16,10 +16,10 @@ namespace Dauer.Data.Fit
       _ => throw new ArgumentException($"Unknown event type {e.GetType()}"),
     };
 
-    public static string PrintBytes(this FitMessage msg) => msg switch
+    public static string PrintBytes(this MessageBase msg) => msg switch
     {
-      Mesg me => $"Message data: Source index {me.SourceIndex}-{me.SourceIndex + me.SourceSize - 1} Bytes: {string.Join(" ", me.SourceData.Select(b => $"{b:X2}"))}",
-      MesgDefinition mde => $"Definition data: Source index {mde.SourceIndex}-{mde.SourceIndex + mde.SourceSize - 1} Bytes: {string.Join(" ", mde.SourceData.Select(b => $"{b:X2}"))}",
+      Mesg me => $"Message data: Source index {me.SourceIndex}-{me.SourceIndex + me.SourceLength - 1} Bytes: {string.Join(" ", me.SourceData.Select(b => $"{b:X2}"))}",
+      MesgDefinition mde => $"Definition data: Source index {mde.SourceIndex}-{mde.SourceIndex + mde.SourceLength - 1} Bytes: {string.Join(" ", mde.SourceData.Select(b => $"{b:X2}"))}",
       _ => throw new ArgumentException($"Unknown message {msg.GetType()}"),
     };
 

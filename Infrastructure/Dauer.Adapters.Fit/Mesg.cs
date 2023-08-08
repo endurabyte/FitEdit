@@ -24,7 +24,7 @@ namespace Dynastream.Fit
   /// <summary>
   ///
   /// </summary>
-  public class Mesg : FitMessage
+  public class Mesg : MessageBase
   {
     #region Fields
     protected byte localNum = 0;
@@ -108,7 +108,7 @@ namespace Dynastream.Fit
     public Mesg(Stream fitStream, MesgDefinition defnMesg)
         : this(defnMesg.GlobalMesgNum)
     {
-      ReadSource(fitStream);
+      CacheData(fitStream);
       Read(fitStream, defnMesg);
     }
     #endregion

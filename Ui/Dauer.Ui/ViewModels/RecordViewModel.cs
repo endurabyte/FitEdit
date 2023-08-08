@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Text;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
@@ -8,6 +9,7 @@ using Avalonia.Layout;
 using Dauer.Data.Fit;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Converters;
+using DynamicData.Binding;
 using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -18,7 +20,11 @@ public interface IRecordViewModel
 {
   int SelectedIndex { get; set; }
   int SelectionCount { get; set; }
+
   bool ShowHexData { get; set; }
+  long HexDataSelectionStart { get; set; }
+  long HexDataSelectionEnd { get; set; }
+  string HexData { get; }
 }
 
 public class DesignRecordViewModel : RecordViewModel
@@ -74,7 +80,9 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private readonly IFileService fileService_;
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
+  private readonly HashSet<IDisposable> messageSubs_ = new();
   private DataGridWrapper? records_;
+  private MessageWrapper? selectedMessage_;
   private readonly MesgFieldValueConverter converter_;
 
   public RecordViewModel(
@@ -122,6 +130,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     });
 
     this.ObservableForProperty(x => x.TabIndex).Subscribe(_ => HandleTabIndexChanged());
+    this.ObservableForProperty(x => x.ShowHexData).Subscribe(_ => InitHexData());
   }
 
   private void HandleTabIndexChanged()
@@ -130,7 +139,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var data = ShownData[TabIndex];
     if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
 
-    SelectRawData(wrapper);
+    SelectHexData(wrapper);
   }
 
   /// <summary>
@@ -197,27 +206,32 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (sender is not DataGrid dg) { return; }
     if (dg.SelectedItem is not MessageWrapper wrapper) { return; }
 
-    SelectRawData(wrapper);
+    SelectHexData(wrapper);
+    dg.ScrollIntoView(dg.SelectedItem, dg.CurrentColumn);
+    selectedMessage_ = dg.SelectedItem as MessageWrapper;
   }
 
-  private void SelectRawData(MessageWrapper? wrapper)
+  private void SelectHexData(MessageWrapper? wrapper)
   {
     if (wrapper is null) { return; }
-    const int width = 3; // 3: 2 hex chars + space separator;
-    SelectRawData(
+    const int width = 3; // 2 hex digits + space;
+    SelectHexData(
       width * wrapper.Mesg.SourceIndex, 
-      width * (wrapper.Mesg.SourceIndex + wrapper.Mesg.SourceSize) - 1); // -1: omit trailing space
+      width * (wrapper.Mesg.SourceIndex + wrapper.Mesg.SourceLength) - 1); // -1: omit trailing space
   }
 
-  private void SelectRawData(long start, long end)
+  private void SelectHexData(long start, long end)
   {
     HexDataSelectionStart = start;
     HexDataSelectionEnd = end;
   }
 
-  private void HandleRecordSelectionChanged(object? sender, SelectionChangedEventArgs e)
+  private void InitHexData()
   {
-    if (sender is not DataGrid dg) { return; }
+    if (!ShowHexData) { return; }
+    if (fileService_.MainFile?.Blob?.Bytes == null) { return; }
+    HexData = string.Join(" ", fileService_.MainFile.Blob.Bytes.Select(b => $"{b:X2}"));
+    SelectHexData(0, 0);
   }
 
   private void HandleMainFileChanged(SelectedFile? file)
@@ -225,13 +239,16 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (file == null) { return; }
     if (file.FitFile == null) { return; }
 
-    HexData = string.Join(" ", file.Blob!.Bytes.Select(b => $"{b:X2}"));
-    SelectRawData(0, 0);
-
-    PreserveCurrentTab(() => Show(file.FitFile));
-
     selectedIndexSub_?.Dispose();
     selectedCountSub_?.Dispose();
+    foreach (var sub in messageSubs_)
+    {
+      sub.Dispose();
+    }
+    messageSubs_.Clear();
+
+    InitHexData();
+    PreserveCurrentTab(() => Show(file.FitFile));
 
     selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
@@ -272,11 +289,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       .Where(g => g.IsExpanded)
       .ToDictionary(g => g.Name ?? "", g => g.IsExpanded);
 
-    if (records_?.DataGrid != null)
-    {
-      records_.DataGrid.SelectionChanged -= HandleRecordSelectionChanged;
-    }
-
     foreach (var group in AllData_)
     {
       if (group.DataGrid != null)
@@ -311,7 +323,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (records == null) { return; }
     if (records.DataGrid == null) { return; }
 
-    records.DataGrid.SelectionChanged += HandleRecordSelectionChanged;
     records_ = records;
   }
 
@@ -368,12 +379,66 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     return namedValues;
   }
 
+  private void HandleMessagePropertyChanged(MessageWrapper wrapper)
+  {
+    if (!ShowHexData) { return; }
+
+    // Get the new bytes for the message
+    var ms = new MemoryStream();
+    wrapper.Mesg.Write(ms);
+    wrapper.Mesg.CacheData(ms);
+    HexData = UpdateHexData(HexData, wrapper);
+  }
+
+  /// <summary>
+  /// Replace the relevant segment of the given data with new bytes
+  /// </summary>
+  private static string UpdateHexData(string hexData, MessageWrapper wrapper)
+  { 
+    Mesg mesg = wrapper.Mesg;
+    var newBytes = mesg.SourceData;
+
+    const int width = 3; // 2 hex digits + space
+    int start = (int)(mesg.SourceIndex * width);
+    int end = (int)((mesg.SourceIndex + mesg.SourceLength) * width);
+
+    if (start >= hexData.Length || end >= hexData.Length) 
+    { 
+      Dauer.Model.Log.Error($"Hex data index out of range: {start} {end} {hexData.Length}");
+      return "There was a problem showing the data. Try again or contact support@fitedit.io.";
+    }
+
+    ReadOnlySpan<char> span = hexData.AsSpan();
+    var sb = new StringBuilder(hexData.Length);
+    var mid = string.Join(" ", newBytes.Select(b => $"{b:X2}"));
+    sb.Append(span[..start]);
+    sb.Append(mid);
+    sb.Append(' ');
+    sb.Append(span[end..]);
+    var newHexData = sb.ToString();
+
+    if (hexData.Length != sb.Length)
+    {
+      Dauer.Model.Log.Warn($"Hex data length changed from {sb.Length} to {hexData.Length}");
+    }
+
+    return newHexData;
+  }
+
   private DataGridWrapper CreateGroup(MesgDefinition def, List<Mesg> mesgs)
   {
     Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
 
     var defMessage = new MessageWrapper(defMesg);
-    var wrappers = mesgs.Select(mesg => new MessageWrapper(mesg));
+    var wrappers = mesgs.Select(mesg => new MessageWrapper(mesg)).ToList();
+
+    foreach (var wrapper in wrappers)
+    {
+      IDisposable sub = wrapper
+        .WhenPropertyChanged(x => x.Mesg, notifyOnInitialValue: false)
+        .Subscribe(_ => HandleMessagePropertyChanged(wrapper));
+      messageSubs_.Add(sub);
+    }
 
     // Categories of fields:
     // Known/unknown fields:
@@ -382,7 +447,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     //     They only have a message num e.g. 15, 253.
     //     Garmin labels them "unknown" which we replace with "Field <Num>"
     // Used/unused fields:
-    //   used fields appear on the definition or on a amessage
+    //   used fields appear on the definition or on a message
     //   unused fields fields are on the definition but not on any message
 
     var definedFieldNames = new HashSet<string>(defMesg.FieldsByName.Keys);

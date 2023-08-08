@@ -27,7 +27,7 @@ namespace Dynastream.Fit
   /// Architecture defaults to Little Endian (unless decoded from an binary defn as Big Endian)
   /// This could be exposed in the future to programatically create BE streams.
   /// </summary>
-  public class MesgDefinition : FitMessage
+  public class MesgDefinition : MessageBase
   {
     #region Fields
     private byte architecture;
