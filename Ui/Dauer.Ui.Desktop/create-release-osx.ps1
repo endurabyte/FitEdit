@@ -17,7 +17,7 @@ $rid_x64 = "osx-x64"
 $rid_arm64 = "osx-arm64"
 
 $tmpKeychainPassword = "fitedit2023"
-$tmpKeychainName = "fiteditKeychain"
+$tmpKeychainName = "fitedit.keychain"
 
 pushd $PSScriptRoot
 
@@ -38,8 +38,8 @@ echo "Creating $installCertPath..."
 
 echo "Creating temporary keychain..."
 iex -Command "security create-keychain -p $tmpKeychainPassword $tmpKeychainName"
-echo "Appending temporary keychain to login keychain..."
-iex -Command "security list-keychains -d user -s $tmpKeychainName ~/Library/Keychains/login.keychain-db"
+echo "Appending temporary keychain to system keychain..."
+iex -Command "security list-keychains -d user -s $tmpKeychainName /Library/Keychains/System.keychain"
 echo "Unlocking temporary keychain..."
 iex -Command "security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName"
 echo "Removing relock timeout..."
@@ -57,7 +57,7 @@ echo "Enabling code-signing from a non-interactive shell..."
 iex -Command "security set-key-partition-list -S apple-tool:,apple:, -s -k $tmpKeychainPassword  -t private $tmpKeychainName"
 
 echo "Storing notary profile..."
-iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID --keychain $tmpKeychainName"
+iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID --keychain /Library/Keychains/$tmpKeychainName"
 
 echo "Installing Clowd.Squirrel..."
 dotnet tool install -g csq --prerelease
