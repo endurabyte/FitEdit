@@ -1,7 +1,6 @@
 ﻿using Dauer.Model.Data;
 using Dauer.Ui.Desktop.Oidc;
 using Dauer.Ui.Infra;
-using IdentityModel.Client;
 using IdentityModel.OidcClient;
 using IdentityModel.OidcClient.Results;
 using Microsoft.Extensions.Logging;
@@ -18,27 +17,25 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
                   $"?client_id={appClientId_}" +
                   $"&logout_uri=https://www.fitedit.io/";
   private string Authority_ => $"https://cognito-idp.us-east-1.amazonaws.com/{userPoolId_}";
-  private readonly string api_ = "https://api.fitedit.io/";
-  //private readonly string api_ = "https://stage-api.fitedit.io/";
-  //private readonly string api_ = "http://localhost/";
   private readonly string userPoolId_ = "us-east-1_c6hFaUlt0";
   private readonly string appClientId_ = "30vleui8j8qe52hfd6k55mvdmr";
   private readonly IDatabaseAdapter db_;
   private readonly ILoggerFactory factory_;
+  private readonly IFitEditClient fitEdit_;
   private readonly Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };
   private static readonly string defaultUsername_ = "(Please log in)";
   private CancellationTokenSource refreshCts_ = new();
 
   private OidcClient? oidcClient_;
-  private HttpClient? httpClient_;
 
   [Reactive] public string Username { get; set; } = defaultUsername_;
   [Reactive] public bool LoggedIn { get; set; }
 
-  public DesktopWebAuthenticator(IDatabaseAdapter db, ILoggerFactory factory)
+  public DesktopWebAuthenticator(IDatabaseAdapter db, ILoggerFactory factory, IFitEditClient fitEdit)
   {
     db_ = db;
     factory_ = factory;
+    fitEdit_ = fitEdit;
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ => await LoadCachedAuthorization());
 
     _ = Task.Run(InitAsync);
@@ -82,7 +79,6 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
     options.LoggerFactory = factory_;
 
     oidcClient_ = new OidcClient(options);
-    httpClient_ = new HttpClient { BaseAddress = new Uri(api_) };
   }
 
   public async Task<bool> LogoutAsync(CancellationToken ct = default)
@@ -273,24 +269,16 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
   private async Task<bool> GetIsAuthenticated(string? accessToken, CancellationToken ct = default)
   {
     if (accessToken == null) { return false; }
-    if (httpClient_ == null) { return false; }
 
-    httpClient_.SetBearerToken(accessToken);
-    var response = await httpClient_.GetAsync("auth", cancellationToken: ct);
+    bool isAuthenticated = await fitEdit_.IsAuthenticatedAsync(accessToken, ct);
 
-    if (response.IsSuccessStatusCode)
+    if (isAuthenticated)
     {
       Dauer.Model.Log.Info("Successfully authenticated");
       return true;
     }
 
-    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-    {
-      Dauer.Model.Log.Error($"Not authenticated: 401 Unauthorized");
-      return false;
-    }
-
-    Dauer.Model.Log.Error($"Not authenticated: {response.ReasonPhrase}");
+    Dauer.Model.Log.Error($"Not authenticated");
     return false;
   }
 }

@@ -8,11 +8,7 @@ using Dauer.Ui.Infra;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Supabase;
-using Supabase.Gotrue;
 using Supabase.Gotrue.Exceptions;
-using static Supabase.Functions.Client;
-using static Supabase.Gotrue.Constants;
 
 namespace Dauer.Ui.Desktop;
 
@@ -26,10 +22,11 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
   private static readonly string defaultUsername_ = "(Please log in)";
   private CancellationTokenSource listenCts_ = new();
-  private readonly Supabase.Client client_;
   private readonly ILogger<SupabaseWebAuthenticator> log_;
 
   private readonly IDatabaseAdapter db_;
+  private readonly IFitEditClient fitEdit_;
+  private readonly ISupabaseAdapter supa_;
   private Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };
 
   [Reactive] public string Username { get; set; } = defaultUsername_;
@@ -37,48 +34,20 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 
   public string Email { get; set; } = "doug@slater.dev";
 
-  public SupabaseWebAuthenticator(ILogger<SupabaseWebAuthenticator> log, IDatabaseAdapter db, string url, string key)
+  public SupabaseWebAuthenticator(
+    ILogger<SupabaseWebAuthenticator> log,
+    IDatabaseAdapter db,
+    IFitEditClient fitEdit,
+    ISupabaseAdapter supa
+  )
   {
     log_ = log;
     db_ = db;
+    fitEdit_ = fitEdit;
+    supa_ = supa;
 
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ => await LoadCachedAuthorization());
-
-    client_ = new Supabase.Client(url, key, new SupabaseOptions
-    {
-
-    });
-
-    client_.Auth.AddDebugListener((message, exception) =>
-    {
-      log_.LogInformation("Auth debug: {@message} {@debug}", message, exception);
-    });
-
-    client_.Auth.AddStateChangedListener(async (sender, changed) =>
-    {
-      log_.LogInformation("Auth state changed to {@changed}", changed);
-
-      switch (changed)
-      {
-        case AuthState.SignedIn:
-          break;
-        case AuthState.SignedOut:
-          break;
-        case AuthState.UserUpdated:
-          break;
-        case AuthState.PasswordRecovery:
-          break;
-        case AuthState.TokenRefreshed:
-          break;
-      }
-
-      await GetIsAuthenticated(auth_.AccessToken);
-    });
-
-    _ = Task.Run(async () =>
-    {
-      await client_.InitializeAsync();
-    });
+    supa_.ObservableForProperty(x => x.IsAuthenticated).Subscribe(async _ => await GetIsAuthenticatedAsync(auth_.AccessToken));
   }
 
   private async Task LoadCachedAuthorization()
@@ -97,7 +66,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 
     if (result.AccessToken != null)
     {
-      client_.Auth.SetAuth(auth_.AccessToken!);
+      supa_.SetAccessToken(auth_.AccessToken);
     }
 
     await AuthenticateAsync();
@@ -109,13 +78,13 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
     log_.LogInformation("Authenticating Supabase user for email=\'{@email}\'", Email);
 
     // First try to contact the API with existing token
-    if (await GetIsAuthenticated(auth_.AccessToken, ct)) { return true; }
+    if (await GetIsAuthenticatedAsync(auth_.AccessToken, ct)) { return true; }
 
     try
     {
       //return await AuthenticateClientSideAsync(Email, "supersecret", ct);
       return await AuthenticateClientSideAsync(Email, ct)
-       && await GetIsAuthenticated(auth_.AccessToken, ct);
+       && await GetIsAuthenticatedAsync(auth_.AccessToken, ct);
     }
     catch (GotrueException e)
     {
@@ -127,15 +96,6 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
       log_.LogError("Exception authenticating: {@e}", e);
       return false;
     }
-  }
-
-  public async Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default)
-  {
-    await client_.Auth.ResetPasswordForEmail(email);
-    Session? session = await client_.Auth.SignInWithPassword(email, password);
-
-    bool ok = session?.AccessToken != null;
-    return ok;
   }
 
   public async Task<bool> AuthenticateClientSideAsync(string email, CancellationToken ct = default)
@@ -152,11 +112,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 
     bool usePkce = false;
 
-    PasswordlessSignInState? signInState = await client_.Auth.SignInWithOtp(new SignInWithPasswordlessEmailOptions(email)
-    {
-      EmailRedirectTo = $"http://localhost:{port}/auth/callback",
-      FlowType = usePkce ? OAuthFlowType.PKCE : OAuthFlowType.Implicit,
-    });
+    string? pkceVerifier = await supa_.SignInWithMagicLink(email, usePkce, $"http://localhost:{port}/auth/callback");
 
     var content = await new LoginRedirectContent().LoadContentAsync(ct);
     using var listener = new LoopbackHttpListener(content.SuccessHtml, content.ErrorHtml, port);
@@ -169,16 +125,15 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
       auth = JsonSerializer.Deserialize<Dauer.Model.Authorization>(json); 
     }
 
-    else if (usePkce & signInState != null && signInState?.PKCEVerifier != null)
+    else if (usePkce && pkceVerifier != null)
     {
       string? result = await listener.WaitForCallbackAsync(ct);
       var uri = new Uri($"http://localhost:{port}/{result}");
 
       // Get the auth code from the query string
       string? code = uri.Query.Split('?', '&').First(x => x.StartsWith("code="))[5..];
-      Session? session = await client_.Auth.ExchangeCodeForSession(signInState.PKCEVerifier, code);
 
-      auth.AccessToken = session?.AccessToken;
+      auth.AccessToken = await supa_.ExchangeCodeForSession(pkceVerifier, code);
     }
 
     if (auth == null)
@@ -195,7 +150,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
       return false;
     }
 
-    client_.Auth.SetAuth(auth.AccessToken);
+    supa_.SetAccessToken(auth.AccessToken);
 
     var token = new JwtSecurityTokenHandler().ReadJwtToken(auth.AccessToken);
     var identity = new ClaimsPrincipal(new ClaimsIdentity(token.Claims));
@@ -216,48 +171,38 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
     return true;
   }
 
-  private async Task<bool> GetIsAuthenticated(string? accessToken, CancellationToken ct = default)
+  private async Task<bool> GetIsAuthenticatedAsync(string? accessToken, CancellationToken ct = default)
   {
-    if (accessToken == null) { return false; }
-
-    Guid id = Guid.NewGuid();
-    bool isAuthenticated = false;
     try
     {
-      string json = await client_.Functions.Invoke("is-authorized", options: new InvokeFunctionOptions
-      {
-        Body = new Dictionary<string, object>
-        {
-          { "id", id },
-        },
-      });
+      bool isAuthenticated =
+            await supa_.IsAuthenticatedAsync(accessToken, ct)
+         && await fitEdit_.IsAuthenticatedAsync(auth_.AccessToken, ct);
 
-      var response = JsonSerializer.Deserialize<IsAuthorizedResponse>(json);
-
-      if (response?.Message == $"Hello {id}!")
+      if (isAuthenticated)
       {
         Dauer.Model.Log.Info("Successfully authenticated");
-        isAuthenticated = true;
-      }
 
-      Dauer.Model.Log.Error($"Not authenticated: 401 Unauthorized");
+        LoggedIn = isAuthenticated;
+        Username = isAuthenticated
+          ? auth_.Username ?? defaultUsername_
+          : defaultUsername_;
+
+        return true;
+      }
     }
     catch (Exception e)
     {
-      Dauer.Model.Log.Error($"Not authenticated: Exception during GetIsAuthenticated: {e}");
+      Dauer.Model.Log.Error($"Not authenticated: Exception: {e}");
     }
 
-    LoggedIn = isAuthenticated;
-    Username = isAuthenticated 
-      ? auth_.Username ?? defaultUsername_ 
-      : defaultUsername_;
-
-    return isAuthenticated;
+    Dauer.Model.Log.Error($"Not authenticated");
+    return false;
   }
 
   public async Task<bool> LogoutAsync(CancellationToken ct = default)
   {
-    client_.Auth.SetAuth("");
+    supa_.SetAccessToken("");
     LoggedIn = false;
     Username = defaultUsername_;
 

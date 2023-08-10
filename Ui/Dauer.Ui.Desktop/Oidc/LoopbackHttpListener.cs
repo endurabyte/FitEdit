@@ -74,8 +74,7 @@ public class LoopbackHttpListener : IDisposable
     host_ = new WebHostBuilder()
         .UseKestrel()
         .UseUrls(urls)
-        .Configure(ConfigureForSupabase)
-        //.Configure(ConfigureForCognito)
+        .Configure(DesktopCompositionRoot.UseSupabase ? ConfigureForSupabase : ConfigureForCognito)
         .Build();
     host_.Start();
   }

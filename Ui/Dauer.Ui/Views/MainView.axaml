@@ -56,8 +56,10 @@
         <TextBlock Text="{Binding Authenticator.Username}" VerticalAlignment="Center" Margin="10,0,10,0">
           <TextBlock.ContextMenu>
             <ContextMenu>
-              <Button Command="{Binding HandleLoginClicked}" Content="Login" IsEnabled="{Binding !Authenticator.LoggedIn}"/>
-              <Button Command="{Binding HandleLogoutClicked}" Content="Logout" IsEnabled="{Binding Authenticator.LoggedIn}"/>
+              <Grid>
+                <Button Command="{Binding HandleLoginClicked}" Content="Login" IsVisible="{Binding !Authenticator.LoggedIn}"/>
+                <Button Command="{Binding HandleLogoutClicked}" Content="Logout" IsVisible="{Binding Authenticator.LoggedIn}"/>
+              </Grid>
             </ContextMenu>
           </TextBlock.ContextMenu>
         </TextBlock>

@@ -75,6 +75,19 @@ public class DauerModule : Autofac.Module
       return iface ?? t;
     });
 
+    string projectId = "rvhexrgaujaawhgsbzoa";
+    string anonApiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2aGV4cmdhdWphYXdoZ3Niem9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTA4ODIyNzEsImV4cCI6MjAwNjQ1ODI3MX0.motLGzxEKBK81K8C6Ll8-8szi6WgNPBT2ADkCn6jYTk";
+
+    string api = "https://api.fitedit.io/";
+    //string api = "https://stage-api.fitedit.io/";
+    //string api = "http://localhost/";
+
+    builder.RegisterType<SupabaseAdapter>().As<ISupabaseAdapter>()
+      .WithParameter("url", $"https://{projectId}.supabase.co")
+      .WithParameter("key", anonApiKey);
+    builder.RegisterType<FitEditClient>().As<IFitEditClient>()
+      .WithParameter("api", api)
+      .SingleInstance();
     builder.RegisterType<NullWebAuthenticator>().As<IWebAuthenticator>();
     builder.RegisterInstance(Window_).As<IWindowAdapter>();
     builder.RegisterInstance(Storage_).As<IStorageAdapter>();
