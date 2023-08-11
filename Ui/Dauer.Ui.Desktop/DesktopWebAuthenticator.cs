@@ -28,8 +28,8 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 
   private OidcClient? oidcClient_;
 
-  [Reactive] public string Username { get; set; } = defaultUsername_;
-  [Reactive] public bool LoggedIn { get; set; }
+  [Reactive] public string? Username { get; set; } = defaultUsername_;
+  [Reactive] public bool IsAuthenticated { get; set; }
 
   public DesktopWebAuthenticator(IDatabaseAdapter db, ILoggerFactory factory, IFitEditClient fitEdit)
   {
@@ -83,7 +83,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
 
   public async Task<bool> LogoutAsync(CancellationToken ct = default)
   {
-    if (oidcClient_ == null) { LoggedIn = false; return false; }
+    if (oidcClient_ == null) { IsAuthenticated = false; return false; }
 
     try
     {
@@ -109,7 +109,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
       }
 
       Log.Information("Logged out");
-      LoggedIn = false;
+      IsAuthenticated = false;
       Username = defaultUsername_;
       auth_.IdentityToken = null;
       auth_.AccessToken = null;
@@ -133,18 +133,18 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
     try
     {
       // First try to contact the API with existing token
-      if (await GetIsAuthenticated(auth_.AccessToken, ct)) { LoggedIn = true; return true; }
+      if (await GetIsAuthenticated(auth_.AccessToken, ct)) { IsAuthenticated = true; return true; }
 
       // Not authorized to use the API. Try to refresh the token
-      if (await RefreshTokenAsync(auth_.RefreshToken, ct)) { LoggedIn = true; return true; }
+      if (await RefreshTokenAsync(auth_.RefreshToken, ct)) { IsAuthenticated = true; return true; }
 
       // Refresh token didn't work. We need to reuthenticate
-      if (oidcClient_ == null) { LoggedIn = false; return false; }
+      if (oidcClient_ == null) { IsAuthenticated = false; return false; }
       LoginResult result = await oidcClient_.LoginAsync(cancellationToken: ct);
 
-      if (!await TryParse(result)) { LoggedIn = false; return false; }
+      if (!await TryParse(result)) { IsAuthenticated = false; return false; }
 
-      LoggedIn = true;
+      IsAuthenticated = true;
       return true;
     }
     catch (Exception e)

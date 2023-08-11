@@ -76,7 +76,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Dauer.Model.Log.Info($"{nameof(HandleLoginClicked)}");
     Dauer.Model.Log.Info($"Starting {Authenticator.GetType()}.{nameof(IWebAuthenticator.AuthenticateAsync)}");
 
-    Authenticator.AuthenticateAsync();
+    _ = Task.Run(() => Authenticator.AuthenticateAsync());
   }
 
   public void HandleLogoutClicked()
@@ -84,6 +84,6 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Dauer.Model.Log.Info($"{nameof(HandleLogoutClicked)}");
     Dauer.Model.Log.Info($"Starting {Authenticator.GetType()}.{nameof(IWebAuthenticator.LogoutAsync)}");
 
-    Authenticator.LogoutAsync();
+    _ = Task.Run(() => Authenticator.LogoutAsync());
   }
 }

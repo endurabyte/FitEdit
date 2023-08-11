@@ -20,7 +20,9 @@
     
     <StackPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
-      <Button Command="{Binding HandleExportClicked}" Content="Export" ToolTip.Tip="Export a file to disk"/>
+      <Button Command="{Binding HandleExportClicked}" Content="Export" 
+              IsEnabled="{Binding Authenticator.IsAuthenticated}" 
+              ToolTip.Tip="Export a file to disk"/>
       <Button Command="{Binding HandleRemoveClicked}" Content="Remove">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">

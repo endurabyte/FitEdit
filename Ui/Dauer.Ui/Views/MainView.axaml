@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
+             xmlns:controls="using:Dauer.Ui.Controls"
              xmlns:converters="using:Dauer.Ui.Converters"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
              x:Class="Dauer.Ui.Views.MainView"
@@ -22,56 +23,57 @@
       <converters:BooleanToLoginStatusConverter x:Key="BooleanToLoginStatusConverter" />
     </ResourceDictionary>
   </UserControl.Resources>
-  
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
 
-    <Grid RowDefinitions="*, Auto, *, Auto">
-      <TabControl Grid.Row="0" TabStripPlacement="Left" SelectedIndex="{Binding SelectedTabIndex}">
-        <TabItem Header="File" FontSize="12">
-          <views:FileView DataContext="{Binding File}"/>
-        </TabItem>
-        <TabItem Header="Laps" FontSize="12">
-          <views:LapView DataContext="{Binding Laps}"/>
-        </TabItem>
-        <TabItem Header="Data" FontSize="12">
-          <views:RecordView DataContext="{Binding Records}"/>
-        </TabItem>
-        <!--<TabItem Header="Log">
+  <Grid RowDefinitions="2*, Auto, *">
+
+    <TabControl Grid.Row="0" TabStripPlacement="Top" SelectedIndex="{Binding SelectedTabIndex}">
+      <TabItem Header="File" FontSize="12">
+        <views:FileView DataContext="{Binding File}"/>
+      </TabItem>
+      <TabItem Header="Laps" FontSize="12">
+        <views:LapView DataContext="{Binding Laps}"/>
+      </TabItem>
+      <TabItem Header="Data" FontSize="12">
+        <views:RecordView DataContext="{Binding Records}"/>
+      </TabItem>
+      <TabItem FontSize="12">
+        <TabItem.Header>
+          <controls:AlertTabHeader Text="Settings" IsAlertOn="{Binding !Authenticator.IsAuthenticated}"/>
+        </TabItem.Header>
+        
+        <!-- Logged in indicator -->
+        <StackPanel Orientation="Vertical">
+
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Login Status:" Width="150" VerticalAlignment="Center"/>
+            <Ellipse Fill="{Binding Authenticator.IsAuthenticated, Converter={StaticResource BooleanToColorConverter}}"
+                     Margin="10,0,10,0"
+                     Width="10" Height="10">
+            </Ellipse>
+            <TextBlock Text="{Binding Authenticator.IsAuthenticated, Converter={StaticResource BooleanToLoginStatusConverter}}" VerticalAlignment="Center"/>
+          </StackPanel>
+          
+          <StackPanel Orientation="Horizontal" Margin="0 10 0 10">
+            <TextBlock Text="Username: " Width="150" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding Authenticator.Username, Mode=TwoWay}" VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="240"/>
+            <Button Command="{Binding HandleLoginClicked}" Content="Login" IsVisible="{Binding !Authenticator.IsAuthenticated}"/>
+            <Button Command="{Binding HandleLogoutClicked}" Content="Logout" IsVisible="{Binding Authenticator.IsAuthenticated}"/>
+          </StackPanel>
+          
+        </StackPanel>
+      </TabItem>
+      <!--<TabItem Header="Log">
             <views:LogView DataContext="{Binding Log}"/>
           </TabItem>-->
-      </TabControl>
+    </TabControl>
 
-      <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
-      <Grid Grid.Row="2" x:Name="ChartGrid" ColumnDefinitions="*, Auto, *">
-        <views:PlotView Grid.Column="0" DataContext="{Binding Plot}"/>
-        <GridSplitter Grid.Column="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Columns"/>
-        <views:MapView Grid.Column="2" DataContext="{Binding Map}" />
-      </Grid>
-
-      <!-- Logged in indicator -->
-      <!--<StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" >
-        <TextBlock Text="{Binding Authenticator.Username}" VerticalAlignment="Center" Margin="10,0,10,0">
-          <TextBlock.ContextMenu>
-            <ContextMenu>
-              <Grid>
-                <Button Command="{Binding HandleLoginClicked}" Content="Login" IsVisible="{Binding !Authenticator.LoggedIn}"/>
-                <Button Command="{Binding HandleLogoutClicked}" Content="Logout" IsVisible="{Binding Authenticator.LoggedIn}"/>
-              </Grid>
-            </ContextMenu>
-          </TextBlock.ContextMenu>
-        </TextBlock>
-        <Ellipse 
-                 Fill="{Binding Authenticator.LoggedIn, Converter={StaticResource BooleanToColorConverter}}" 
-                 ToolTip.Tip="{Binding Authenticator.LoggedIn, Converter={StaticResource BooleanToLoginStatusConverter}}"
-                 Width="20" Height="20">
-        </Ellipse>
-      </StackPanel>-->
-      
+    <GridSplitter Grid.Row="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
+    <Grid Grid.Row="2" x:Name="ChartGrid" ColumnDefinitions="*, Auto, *">
+      <views:PlotView Grid.Column="0" DataContext="{Binding Plot}"/>
+      <GridSplitter Grid.Column="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Columns"/>
+      <views:MapView Grid.Column="2" DataContext="{Binding Map}" />
     </Grid>
 
-
   </Grid>
+
 </UserControl>

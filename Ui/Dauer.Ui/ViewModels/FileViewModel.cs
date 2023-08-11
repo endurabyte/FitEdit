@@ -31,9 +31,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   [Reactive] public int SelectedIndex { get; set; }
 
   public IFileService FileService { get; }
+  public IWebAuthenticator Authenticator { get; }
   private readonly IDatabaseAdapter db_;
   private readonly IStorageAdapter storage_;
-  private readonly IWebAuthenticator auth_;
   private readonly ILogViewModel log_;
 
   public FileViewModel(
@@ -45,9 +45,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   )
   {
     FileService = fileService;
+    Authenticator = auth;
     db_ = db;
     storage_ = storage;
-    auth_ = auth;
     log_ = log;
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>

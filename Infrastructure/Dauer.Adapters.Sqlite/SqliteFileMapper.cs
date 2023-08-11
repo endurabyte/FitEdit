@@ -8,6 +8,7 @@ public static class SqliteFileMapper
     AccessToken = a.AccessToken,
     RefreshToken = a.RefreshToken,
     IdentityToken = a.IdentityToken,
+    Created = a.Created,
     Expiry = a.Expiry,
     Username = a.Username,
   };
@@ -18,6 +19,7 @@ public static class SqliteFileMapper
     AccessToken = a.AccessToken,
     RefreshToken = a.RefreshToken,
     IdentityToken = a.IdentityToken,
+    Created = a.Created,
     Expiry = a.Expiry,
     Username = a.Username,
   };

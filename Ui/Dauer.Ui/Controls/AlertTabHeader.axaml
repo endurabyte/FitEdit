@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Dauer.Ui.Controls"
+             xmlns:converters="clr-namespace:Dauer.Ui.Converters"
+             x:DataType="controls:AlertTabHeader"
+             x:Class="Dauer.Ui.Controls.AlertTabHeader">
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <StackPanel Orientation="Horizontal">
+    <TextBlock Text="{Binding $parent[controls:AlertTabHeader].Text}"/>
+    <TextBlock Text="●" Foreground="{Binding $parent[controls:AlertTabHeader].AlertDotColor}" 
+               IsVisible="{Binding $parent[controls:AlertTabHeader].IsAlertOn}" Margin="5 0 0 0"/>
+  </StackPanel>
+</UserControl>

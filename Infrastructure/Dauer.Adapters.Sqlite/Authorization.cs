@@ -10,6 +10,7 @@ public class Authorization
   public string? AccessToken { get; set; }
   public string? RefreshToken { get; set; }
   public string? IdentityToken { get; set; }
+  public DateTimeOffset Created { get; set; }
   public DateTimeOffset Expiry { get; set; }
 
   public string? Username { get; set; }
