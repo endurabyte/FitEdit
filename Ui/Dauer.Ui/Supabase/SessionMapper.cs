@@ -1,6 +1,6 @@
 ﻿using Supabase.Gotrue;
 
-namespace Dauer.Ui;
+namespace Dauer.Ui.Supabase;
 
 public static class SessionMapper
 {

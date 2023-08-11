@@ -41,7 +41,6 @@
           <controls:AlertTabHeader Text="Settings" IsAlertOn="{Binding !Authenticator.IsAuthenticated}"/>
         </TabItem.Header>
         
-        <!-- Logged in indicator -->
         <StackPanel Orientation="Vertical">
 
           <StackPanel Orientation="Horizontal">
@@ -60,7 +59,18 @@
             <Button Command="{Binding HandleLogoutClicked}" Content="Logout" IsVisible="{Binding Authenticator.IsAuthenticated}"/>
           </StackPanel>
           
+          <StackPanel Orientation="Horizontal" Margin="0 10 0 10" IsVisible="{Binding Authenticator.IsAuthenticated}">
+            <TextBlock Text="Garmin Login Status:" Width="150" VerticalAlignment="Center"/>
+            <Ellipse Fill="{Binding IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
+                     Margin="10,0,10,0"
+                     Width="10" Height="10">
+            </Ellipse>
+            <TextBlock Text="{Binding IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToLoginStatusConverter}}" VerticalAlignment="Center"/>
+            <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !IsAuthenticatedWithGarmin}"/>
+            <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding IsAuthenticatedWithGarmin}"/>
+          </StackPanel>
         </StackPanel>
+
       </TabItem>
       <!--<TabItem Header="Log">
             <views:LogView DataContext="{Binding Log}"/>

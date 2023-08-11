@@ -1,17 +1,23 @@
-﻿using Dauer.Model.Data;
+﻿using Dauer.Model;
+using Dauer.Model.Data;
+using Dauer.Model.Extensions;
+using Dynastream.Fit;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Supabase;
 using Supabase.Gotrue;
 using Supabase.Gotrue.Exceptions;
+using Supabase.Realtime;
+using Supabase.Realtime.PostgresChanges;
 using static Supabase.Gotrue.Constants;
 
-namespace Dauer.Ui;
+namespace Dauer.Ui.Supabase;
 
 public interface ISupabaseAdapter
 {
   bool IsAuthenticated { get; }
+  bool IsAuthenticatedWithGarmin { get; }
   Dauer.Model.Authorization? Authorization { get; set; }
 
   Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default);
@@ -28,16 +34,31 @@ public interface ISupabaseAdapter
   Task<string?> ExchangeCodeForSession(string? verifier, string? code);
 
   Task<bool> LogoutAsync();
+  Task<bool> LogoutGarminAsync();
+}
+
+public class NullSupabaseAdapter : ISupabaseAdapter
+{
+  public bool IsAuthenticated => false;
+  public bool IsAuthenticatedWithGarmin => false;
+  public Authorization? Authorization { get; set; }
+
+  public Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default) => Task.FromResult(false);
+  public Task<string?> AuthenticateWithMagicLink(string email, bool usePkce, string redirectUri) => Task.FromResult(null as string);
+  public Task<string?> ExchangeCodeForSession(string? verifier, string? code) => Task.FromResult(null as string);
+  public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(false);
+  public Task<bool> LogoutAsync() => Task.FromResult(false);
+  public Task<bool> LogoutGarminAsync() => Task.FromResult(false);
 }
 
 public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 {
-  private readonly Supabase.Client client_;
-  private readonly Supabase.Gotrue.Client? gotrue_;
+  private readonly global::Supabase.Client client_;
   private readonly ILogger<SupabaseAdapter> log_;
   private readonly IDatabaseAdapter db_;
 
   [Reactive] public bool IsAuthenticated { get; private set; }
+  [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
   [Reactive] public Dauer.Model.Authorization? Authorization { get; set; }
 
   public SupabaseAdapter(ILogger<SupabaseAdapter> log, IDatabaseAdapter db, string url, string key)
@@ -45,13 +66,17 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     log_ = log;
     db_ = db;
     var persistence = new SessionPersistence(db);
-    client_ = new Supabase.Client(url, key, new SupabaseOptions
+    client_ = new global::Supabase.Client(url, key, new SupabaseOptions
     {
       SessionHandler = persistence,
       AutoRefreshToken = true,
+      AutoConnectRealtime = true,
     });
 
-    gotrue_ = client_.Auth as Supabase.Gotrue.Client;
+    client_.Realtime.AddDebugHandler((sender, message, exception) =>
+    {
+      log_.LogInformation("Realtime debug: {@sender} {@message} {@debug}", sender, message, exception);
+    });
 
     client_.Auth.AddDebugListener((message, exception) =>
     {
@@ -63,6 +88,8 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       log_.LogInformation("Auth state changed to {@changed}", changed);
 
       IsAuthenticated = await IsAuthenticatedAsync();
+
+      await SyncAuthorization();
     });
 
     this.ObservableForProperty(x => x.Authorization).Subscribe(_ =>
@@ -74,7 +101,21 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ =>
     {
       Authorization = await LoadCachedAuthorization();
-      var t = Task.Run(client_.InitializeAsync);
+
+      var t = Task.Run(async () =>
+      {
+        await client_.InitializeAsync();
+
+        RealtimeChannel? channel = client_.Realtime.Channel("realtime", "public", "GarminUser");
+
+        channel.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
+        {
+          var model = change.Model<Model.GarminUser>();
+          SyncAuthorization(model);
+        });
+
+        await channel.Subscribe();
+      });
     });
   }
 
@@ -98,7 +139,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   }
 
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default)
-  { 
+  {
     if (client_.Auth.CurrentSession?.AccessToken == null) { return false; }
 
     try
@@ -147,5 +188,44 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     await client_.Auth.SignOut();
     return true;
+  }
+
+  public async Task<bool> LogoutGarminAsync()
+  {
+    if (!IsAuthenticated) { return false; }
+
+    try
+    {
+      var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
+      if (garminUser?.Model is null) { return false; }
+      SyncAuthorization(garminUser.Model);
+
+      await client_.Postgrest.Table<Model.GarminUser>()
+        .Set(x => x.AccessToken!, "")
+        .Where(x => x.Id == garminUser.Model.Id)
+        .Update();
+    }
+    catch (Exception e)
+    {
+      Log.Error(e);
+      return false;
+    }
+
+    return true;
+  }
+
+  public async Task<bool> SyncAuthorization()
+  {
+    if (!IsAuthenticated) { return false; }
+    var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
+    if (garminUser?.Model is null) { return false; }
+    SyncAuthorization(garminUser.Model);
+    return true;
+  }
+
+  public void SyncAuthorization(Model.GarminUser? user) 
+  {
+    if (user is null) { return; }
+    IsAuthenticatedWithGarmin = !string.IsNullOrEmpty(user.AccessToken);
   }
 }

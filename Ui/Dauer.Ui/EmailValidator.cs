@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Dauer.Ui.Desktop;
+namespace Dauer.Ui;
 
 public static partial class EmailValidator
 {

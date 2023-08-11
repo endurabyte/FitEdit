@@ -5,8 +5,6 @@ namespace Dauer.Ui.Desktop;
 
 public class DesktopCompositionRoot : CompositionRoot
 {
-  public static bool UseSupabase { get; set; } = true;
-
   protected override async Task ConfigureAsync(ContainerBuilder builder)
   {
     if (UseSupabase)

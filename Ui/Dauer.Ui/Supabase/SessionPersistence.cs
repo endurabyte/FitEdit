@@ -5,7 +5,7 @@ using ReactiveUI.Fody.Helpers;
 using Supabase.Gotrue;
 using Supabase.Gotrue.Interfaces;
 
-namespace Dauer.Ui;
+namespace Dauer.Ui.Supabase;
 
 public class SessionPersistence : ReactiveObject, IGotrueSessionPersistence<Session>
 {

@@ -19,6 +19,7 @@ public interface ICompositionRoot
 
 public class CompositionRoot : ICompositionRoot
 {
+  public static bool UseSupabase { get; set; } = true;
   public static ICompositionRoot? Instance { get; set; }
 
   private ContainerBuilder? builder_;

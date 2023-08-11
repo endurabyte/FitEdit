@@ -1,21 +1,15 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Dauer.Ui.Desktop.Oidc;
 using Dauer.Ui.Infra;
+using Dauer.Ui.Supabase;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Supabase.Gotrue.Exceptions;
 
 namespace Dauer.Ui.Desktop;
-
-public class IsAuthorizedResponse
-{
-  [JsonPropertyName("message")]
-  public string? Message { get; set; }
-}
 
 public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
@@ -98,7 +92,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
     if (!usePkce)
     {
       string json = await listener.WaitForCallbackAsync(ct);
-      auth = JsonSerializer.Deserialize<Dauer.Model.Authorization>(json); 
+      auth = JsonSerializer.Deserialize<Dauer.Model.Authorization>(json);
     }
 
     else if (usePkce && pkceVerifier != null)

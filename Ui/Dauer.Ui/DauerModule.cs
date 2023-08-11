@@ -7,6 +7,7 @@ using Dauer.Model.Data;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
 using Dauer.Ui.Infra.Adapters.Windowing;
+using Dauer.Ui.Supabase;
 using Dauer.Ui.ViewModels;
 
 namespace Dauer.Ui;
@@ -84,7 +85,8 @@ public class DauerModule : Autofac.Module
 
     builder.RegisterType<SupabaseAdapter>().As<ISupabaseAdapter>()
       .WithParameter("url", $"https://{projectId}.supabase.co")
-      .WithParameter("key", anonApiKey);
+      .WithParameter("key", anonApiKey)
+      .SingleInstance();
     builder.RegisterType<FitEditClient>().As<IFitEditClient>()
       .WithParameter("api", api)
       .SingleInstance();
