@@ -99,7 +99,10 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     authCancelCts_ = new();
 
     _ = Task.Run(async () => await FitEdit.AuthenticateAsync(authCancelCts_.Token));
-    Message = "We sent an email with a code and a link. \nEnter the code or open the link on this device within 5 minutes."; 
+    Message = "We sent you an email. " + 
+      "\nIf you're a new user, it has a link. " +
+      "\nIf you're a returning user, it has a code and a link. " +
+      "\nEnter the code or open the link on this device within 5 minutes."; 
   }
 
   public void HandleLogoutClicked()
