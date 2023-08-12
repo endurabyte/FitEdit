@@ -31,6 +31,7 @@ public interface ISupabaseAdapter
   /// </summary>
   Task<string?> ExchangeCodeForSession(string? verifier, string? code);
 
+  Task<bool> VerifyEmailAsync(string? username, string token);
   Task<bool> LogoutAsync();
 }
 
@@ -44,6 +45,7 @@ public class NullSupabaseAdapter : ISupabaseAdapter
   public Task<string?> AuthenticateWithMagicLink(string email, bool usePkce, string redirectUri) => Task.FromResult(null as string);
   public Task<string?> ExchangeCodeForSession(string? verifier, string? code) => Task.FromResult(null as string);
   public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(false);
+  public Task<bool> VerifyEmailAsync(string? username, string token) => Task.FromResult(false);
   public Task<bool> LogoutAsync() => Task.FromResult(false);
 }
 
@@ -171,8 +173,6 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   public async Task<string?> AuthenticateWithMagicLink(string email, bool usePkce, string redirectUri)
   {
-    //await Task.CompletedTask;
-    //return null;
     PasswordlessSignInState? signInState = await client_.Auth.SignInWithOtp(new SignInWithPasswordlessEmailOptions(email)
     {
       EmailRedirectTo = redirectUri,
@@ -180,6 +180,13 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     });
 
     return signInState?.PKCEVerifier;
+  }
+
+  public async Task<bool> VerifyEmailAsync(string? username, string token)
+  {
+    if (username == null) { return false; }
+    Session? session = await client_.Auth.VerifyOTP(username, token, EmailOtpType.MagicLink);
+    return !string.IsNullOrEmpty(session?.AccessToken);
   }
 
   public async Task<string?> ExchangeCodeForSession(string? verifier, string? code)

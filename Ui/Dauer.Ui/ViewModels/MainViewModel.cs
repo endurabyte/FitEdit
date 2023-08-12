@@ -1,12 +1,6 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Json;
-using System.Reactive.Linq;
-using System.Text.Json;
-using System.Web;
+﻿using System.Reactive.Linq;
 using Dauer.Model;
-using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Windowing;
-using Dauer.Ui.Supabase;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -28,7 +22,6 @@ public class DesignMainViewModel : MainViewModel
     new DesignMapViewModel(),
     new DesignFileViewModel(),
     new DesignLogViewModel(),
-    new NullWebAuthenticator(),
     new NullFitEditService()
   )
   { 
@@ -43,13 +36,14 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IMapViewModel Map { get; }
   public IFileViewModel File { get; }
   public ILogViewModel LogVm { get; }
-  public IWebAuthenticator Authenticator { get; }
 
   [Reactive] public int SelectedTabIndex { get; set; }
-  [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
+
+  [Reactive] public string EmailOtp { get; set; } = "";
+  [Reactive] public string AuthenticateMessage { get; set; } = "";
 
   private readonly IWindowAdapter window_;
-  private readonly IFitEditService fitEdit_;
+  public IFitEditService FitEdit { get; set; }
   private readonly IFileService fileService_;
 
   public MainViewModel(
@@ -61,7 +55,6 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IMapViewModel map,
     IFileViewModel file,
     ILogViewModel log,
-    IWebAuthenticator authenticator,
     IFitEditService fitEdit
   )
   {
@@ -73,56 +66,76 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Map = map;
     File = file;
     LogVm = log;
-    Authenticator = authenticator;
-    fitEdit_ = fitEdit;
+    FitEdit = fitEdit;
+
     window_.Resized.Subscribe(tup =>
     {
       Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
     });
 
-    fitEdit_.ObservableForProperty(x => x.IsAuthenticatedWithGarmin).Subscribe(_ =>
-    {
-      IsAuthenticatedWithGarmin = fitEdit_.IsAuthenticatedWithGarmin;
-    });
+    FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
+      .Subscribe(_ =>
+      {
+        AuthenticateMessage = FitEdit.IsAuthenticatedWithGarmin
+          ? "Successfully connected to Garmin!" 
+          : "Disconnected from Garmin";
+      });
   }
 
   public void HandleLoginClicked()
   {
     Log.Info($"{nameof(HandleLoginClicked)}");
-    Log.Info($"Starting {Authenticator.GetType()}.{nameof(IWebAuthenticator.AuthenticateAsync)}");
 
-    _ = Task.Run(() => Authenticator.AuthenticateAsync());
+    if (!EmailValidator.IsValid(FitEdit.Username)) 
+    {
+      AuthenticateMessage = "Please enter a valid email address.";
+      return; 
+    }
+
+    _ = Task.Run(async () => await FitEdit.AuthenticateAsync());
+    AuthenticateMessage = "Please check your email"; 
   }
 
   public void HandleLogoutClicked()
   {
     Log.Info($"{nameof(HandleLogoutClicked)}");
-    Log.Info($"Starting {Authenticator.GetType()}.{nameof(IWebAuthenticator.LogoutAsync)}");
-
-    _ = Task.Run(() => Authenticator.LogoutAsync());
+    _ = Task.Run(async () =>
+    {
+      bool ok = await FitEdit.LogoutAsync();
+      AuthenticateMessage = ok ? "Signed out" : "There was a problem signing out";
+    });
   }
 
   public void HandleGarminAuthorizeClicked()
   {
     Log.Info($"{nameof(HandleGarminAuthorizeClicked)}");
-
-    _ = Task.Run(AuthorizeGarminAsync);
+    _ = Task.Run(async () =>
+    {
+      await FitEdit.AuthorizeGarminAsync();
+      AuthenticateMessage = FitEdit.IsAuthenticatingWithGarmin
+        ? "We've opened a link to Garmin" 
+        : "There was a problem connecting to Garmin";
+    });
   }
 
   public void HandleGarminDeauthorizeClicked()
   {
     Log.Info($"{nameof(HandleGarminDeauthorizeClicked)}");
-
-    _ = Task.Run(DeauthorizeGarminAsync);
+    _ = Task.Run(async () =>
+    {
+      bool ok = await FitEdit.DeauthorizeGarminAsync();
+      AuthenticateMessage = ok ? "Disconnected from Garmin" : "There was a problem disconnecting from Garmin";
+    });
   }
 
-  private async Task AuthorizeGarminAsync()
+  public void HandleVerifyEmailClicked()
   {
-    await fitEdit_.AuthorizeGarminAsync(Authenticator.Username);
-  }
-
-  private async Task DeauthorizeGarminAsync()
-  {
-    await fitEdit_.DeauthorizeGarminAsync(Authenticator.Username);
+    Log.Info($"{nameof(HandleVerifyEmailClicked)}");
+    _ = Task.Run(async () =>
+    {
+      bool ok = await FitEdit.VerifyEmailAsync(EmailOtp);
+      AuthenticateMessage = ok ? "Sign in complete!" : "There was a problem verifying your code";
+      // TODO stop loopback listener
+    });
   }
 }

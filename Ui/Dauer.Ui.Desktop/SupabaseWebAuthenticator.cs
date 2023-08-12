@@ -17,7 +17,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
   private CancellationTokenSource listenCts_ = new();
   private readonly ILogger<SupabaseWebAuthenticator> log_;
 
-  private readonly IFitEditService fitEdit_;
+  private readonly IFitEditClient fitEdit_;
   private readonly ISupabaseAdapter supa_;
 
   [Reactive] public string? Username { get; set; } = defaultUsername_;
@@ -25,7 +25,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 
   public SupabaseWebAuthenticator(
     ILogger<SupabaseWebAuthenticator> log,
-    IFitEditService fitEdit,
+    IFitEditClient fitEdit,
     ISupabaseAdapter supa
   )
   {
@@ -40,7 +40,6 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
   {
     if (Username == null) { return false; }
     string email = Username;
-    if (!EmailValidator.IsValid(email)) { return false; }
 
     log_.LogInformation("Authenticating Supabase user for email=\'{@email}\'", Username);
 
@@ -144,8 +143,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
   {
     try
     {
-      bool isAuthenticated =
-            await supa_.IsAuthenticatedAsync(ct)
+      bool isAuthenticated = await supa_.IsAuthenticatedAsync(ct)
          && await fitEdit_.IsAuthenticatedAsync(ct);
 
       IsAuthenticated = isAuthenticated;

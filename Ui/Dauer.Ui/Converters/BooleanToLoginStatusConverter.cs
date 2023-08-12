@@ -8,8 +8,8 @@ public class BooleanToLoginStatusConverter : IValueConverter
 {
   public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
   {
-    true => "You are logged in",
-    false => "You are not logged in",
+    true => "OK",
+    false => "Signed out",
     _ => AvaloniaProperty.UnsetValue
   };
 

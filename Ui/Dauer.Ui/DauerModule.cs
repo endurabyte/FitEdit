@@ -88,6 +88,8 @@ public class DauerModule : Autofac.Module
       .WithParameter("key", anonApiKey)
       .SingleInstance();
     builder.RegisterType<FitEditService>().As<IFitEditService>()
+      .SingleInstance();
+    builder.RegisterType<FitEditClient>().As<IFitEditClient>()
       .WithParameter("api", api)
       .SingleInstance();
     builder.RegisterType<NullWebAuthenticator>().As<IWebAuthenticator>();
