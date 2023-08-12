@@ -36,14 +36,15 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IMapViewModel Map { get; }
   public IFileViewModel File { get; }
   public ILogViewModel LogVm { get; }
+  public IFitEditService FitEdit { get; set; }
 
   [Reactive] public int SelectedTabIndex { get; set; }
 
   [Reactive] public string EmailOtp { get; set; } = "";
-  [Reactive] public string AuthenticateMessage { get; set; } = "";
+  [Reactive] public string Message { get; set; } = "Please enter an email address and click Sign In";
 
+  private CancellationTokenSource authCancelCts_ = new();
   private readonly IWindowAdapter window_;
-  public IFitEditService FitEdit { get; set; }
   private readonly IFileService fileService_;
 
   public MainViewModel(
@@ -76,7 +77,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
       .Subscribe(_ =>
       {
-        AuthenticateMessage = FitEdit.IsAuthenticatedWithGarmin
+        Message = FitEdit.IsAuthenticatedWithGarmin
           ? "Successfully connected to Garmin!" 
           : "Disconnected from Garmin";
       });
@@ -85,15 +86,20 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public void HandleLoginClicked()
   {
     Log.Info($"{nameof(HandleLoginClicked)}");
+    EmailOtp = "";
 
     if (!EmailValidator.IsValid(FitEdit.Username)) 
     {
-      AuthenticateMessage = "Please enter a valid email address.";
+      Message = "Please enter a valid email address.";
       return; 
     }
 
-    _ = Task.Run(async () => await FitEdit.AuthenticateAsync());
-    AuthenticateMessage = "Please check your email"; 
+    // Cancel any existing authentication
+    authCancelCts_.Cancel();
+    authCancelCts_ = new();
+
+    _ = Task.Run(async () => await FitEdit.AuthenticateAsync(authCancelCts_.Token));
+    Message = "We sent an email with a code and a link. \nEnter the code or open the link on this device within 5 minutes."; 
   }
 
   public void HandleLogoutClicked()
@@ -102,7 +108,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.LogoutAsync();
-      AuthenticateMessage = ok ? "Signed out" : "There was a problem signing out";
+      Message = ok ? "Signed out" : "There was a problem signing out";
     });
   }
 
@@ -112,8 +118,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     _ = Task.Run(async () =>
     {
       await FitEdit.AuthorizeGarminAsync();
-      AuthenticateMessage = FitEdit.IsAuthenticatingWithGarmin
-        ? "We've opened a link to Garmin" 
+      Message = FitEdit.IsAuthenticatingWithGarmin
+        ? "Check your web browser. We've opened a page to Garmin" 
         : "There was a problem connecting to Garmin";
     });
   }
@@ -124,7 +130,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.DeauthorizeGarminAsync();
-      AuthenticateMessage = ok ? "Disconnected from Garmin" : "There was a problem disconnecting from Garmin";
+      Message = ok ? "Disconnected from Garmin" : "There was a problem disconnecting from Garmin";
     });
   }
 
@@ -133,9 +139,15 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Log.Info($"{nameof(HandleVerifyEmailClicked)}");
     _ = Task.Run(async () =>
     {
-      bool ok = await FitEdit.VerifyEmailAsync(EmailOtp);
-      AuthenticateMessage = ok ? "Sign in complete!" : "There was a problem verifying your code";
-      // TODO stop loopback listener
+      // The user can verify either by typing in the token or by clicking the link in the email.
+      // We're here because they typed in the code, so we need to stop listening for the link to be clicked,
+      // if it hasn't already timed out after 5 minutes.
+      authCancelCts_.Cancel();
+      authCancelCts_ = new();
+
+      bool ok = await FitEdit.VerifyEmailAsync(EmailOtp.Trim());
+      EmailOtp = "";
+      Message = ok ? "Sign in complete!" : "There was a problem verifying the code";
     });
   }
 }

@@ -1,9 +1,6 @@
-﻿using System.Text.Json;
-using System.Web;
-using Dauer.Model;
+﻿using Dauer.Model;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Supabase;
-using IdentityModel.Client;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 

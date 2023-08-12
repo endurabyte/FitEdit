@@ -182,7 +182,13 @@ public class LoopbackHttpListener : IDisposable
   {
     Task.Run(async () =>
     {
-      await Task.Delay(Timeout, ct);
+      try
+      {
+        await Task.Delay(Timeout, ct);
+      }
+      catch (TaskCanceledException)
+      {
+      }
       source_.TrySetCanceled();
     }, ct);
 

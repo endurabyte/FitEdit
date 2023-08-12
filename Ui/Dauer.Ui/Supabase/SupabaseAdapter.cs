@@ -185,8 +185,19 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   public async Task<bool> VerifyEmailAsync(string? username, string token)
   {
     if (username == null) { return false; }
-    Session? session = await client_.Auth.VerifyOTP(username, token, EmailOtpType.MagicLink);
-    return !string.IsNullOrEmpty(session?.AccessToken);
+
+    try
+    {
+      Session? session = await client_.Auth.VerifyOTP(username, token, EmailOtpType.MagicLink);
+
+      Authorization = AuthorizationFactory.Create(session?.AccessToken, session?.RefreshToken);
+      return !string.IsNullOrEmpty(session?.AccessToken);
+    }
+    catch (Exception e)
+    {
+      Log.Error(e);
+      return false;
+    }
   }
 
   public async Task<string?> ExchangeCodeForSession(string? verifier, string? code)
