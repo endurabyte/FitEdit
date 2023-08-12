@@ -1,7 +1,5 @@
 ﻿using Dauer.Model;
 using Dauer.Model.Data;
-using Dauer.Model.Extensions;
-using Dynastream.Fit;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -18,7 +16,7 @@ public interface ISupabaseAdapter
 {
   bool IsAuthenticated { get; }
   bool IsAuthenticatedWithGarmin { get; }
-  Dauer.Model.Authorization? Authorization { get; set; }
+  Authorization? Authorization { get; set; }
 
   Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default);
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
@@ -34,7 +32,6 @@ public interface ISupabaseAdapter
   Task<string?> ExchangeCodeForSession(string? verifier, string? code);
 
   Task<bool> LogoutAsync();
-  Task<bool> LogoutGarminAsync();
 }
 
 public class NullSupabaseAdapter : ISupabaseAdapter
@@ -48,7 +45,6 @@ public class NullSupabaseAdapter : ISupabaseAdapter
   public Task<string?> ExchangeCodeForSession(string? verifier, string? code) => Task.FromResult(null as string);
   public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(false);
   public Task<bool> LogoutAsync() => Task.FromResult(false);
-  public Task<bool> LogoutGarminAsync() => Task.FromResult(false);
 }
 
 public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
@@ -59,7 +55,9 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   [Reactive] public bool IsAuthenticated { get; private set; }
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
-  [Reactive] public Dauer.Model.Authorization? Authorization { get; set; }
+  [Reactive] public Authorization? Authorization { get; set; }
+
+  private RealtimeChannel? garminUserChannel_;
 
   public SupabaseAdapter(ILogger<SupabaseAdapter> log, IDatabaseAdapter db, string url, string key)
   {
@@ -92,42 +90,49 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       await SyncAuthorization();
     });
 
-    this.ObservableForProperty(x => x.Authorization).Subscribe(_ =>
-    {
-      persistence.Authorization = Authorization;
-      client_.Auth.LoadSession();
-    });
-
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ =>
     {
       Authorization = await LoadCachedAuthorization();
+    });
 
-      var t = Task.Run(async () =>
-      {
-        await client_.InitializeAsync();
-
-        RealtimeChannel? channel = client_.Realtime.Channel("realtime", "public", "GarminUser");
-
-        channel.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
-        {
-          var model = change.Model<Model.GarminUser>();
-          SyncAuthorization(model);
-        });
-
-        await channel.Subscribe();
-      });
+    this.ObservableForProperty(x => x.Authorization).Subscribe(_ =>
+    {
+      persistence.Authorization = Authorization;
+      InitClient();
     });
   }
 
-  private async Task<Dauer.Model.Authorization?> LoadCachedAuthorization()
+  private void InitClient()
+  {
+    var t = Task.Run(async () =>
+    {
+      client_.Auth.LoadSession();
+      await client_.InitializeAsync();
+      SubscribeGarminUserChannel();
+    });
+  }
+
+  private void SubscribeGarminUserChannel()
+  {
+    garminUserChannel_?.Unsubscribe();
+    garminUserChannel_ = client_.Realtime.Channel("realtime", "public", "GarminUser");
+    garminUserChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
+    {
+      var model = change.Model<Model.GarminUser>();
+      SyncAuthorization(model);
+    });
+    garminUserChannel_.Subscribe();
+  }
+
+  private async Task<Authorization?> LoadCachedAuthorization()
   {
     if (db_ == null) { return null; }
     if (!db_.Ready) { return null; }
 
-    Dauer.Model.Authorization result = await db_.GetAuthorizationAsync("Dauer.Api");
+    Authorization result = await db_.GetAuthorizationAsync("Dauer.Api");
     if (result == null) { return null; }
 
-    return new Dauer.Model.Authorization
+    return new Authorization
     {
       AccessToken = result.AccessToken,
       RefreshToken = result.RefreshToken,
@@ -149,7 +154,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
     catch (GotrueException e)
     {
-      Dauer.Model.Log.Error(e);
+      Log.Error(e);
       return false;
     }
   }

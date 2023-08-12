@@ -29,7 +29,7 @@ public class DesignMainViewModel : MainViewModel
     new DesignFileViewModel(),
     new DesignLogViewModel(),
     new NullWebAuthenticator(),
-    new NullSupabaseAdapter()
+    new NullFitEditService()
   )
   { 
   }
@@ -49,7 +49,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
 
   private readonly IWindowAdapter window_;
-  private readonly ISupabaseAdapter supa_;
+  private readonly IFitEditService fitEdit_;
   private readonly IFileService fileService_;
 
   public MainViewModel(
@@ -62,7 +62,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IFileViewModel file,
     ILogViewModel log,
     IWebAuthenticator authenticator,
-    ISupabaseAdapter supa
+    IFitEditService fitEdit
   )
   {
     window_ = window;
@@ -74,16 +74,15 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     File = file;
     LogVm = log;
     Authenticator = authenticator;
-    supa_ = supa;
-
+    fitEdit_ = fitEdit;
     window_.Resized.Subscribe(tup =>
     {
       Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
     });
 
-    supa_.ObservableForProperty(x => x.IsAuthenticatedWithGarmin).Subscribe(_ =>
+    fitEdit_.ObservableForProperty(x => x.IsAuthenticatedWithGarmin).Subscribe(_ =>
     {
-      IsAuthenticatedWithGarmin = supa_.IsAuthenticatedWithGarmin;
+      IsAuthenticatedWithGarmin = fitEdit_.IsAuthenticatedWithGarmin;
     });
   }
 
@@ -119,49 +118,11 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   private async Task AuthorizeGarminAsync()
   {
-    var client = new HttpClient() { BaseAddress = new Uri("http://api.fitedit.io") };
-    var responseMsg = await client.GetAsync($"garmin/oauth/init?username={HttpUtility.UrlEncode(Authenticator.Username)}");
-
-    if (!responseMsg.IsSuccessStatusCode)
-    {
-      return;
-    }
-
-    try
-    {
-      var content = await responseMsg.Content.ReadAsStringAsync();
-      var token = JsonSerializer.Deserialize<OauthToken>(content);
-
-      if (token?.Token == null) { return; }
-
-      // Open browser to Garmin auth page
-      string url = $"https://connect.garmin.com/oauthConfirm" +
-        $"?oauth_token={token?.Token}" +
-        $"&oauth_callback={HttpUtility.UrlEncode($"http://api.fitedit.io/garmin/oauth/complete?username={HttpUtility.UrlEncode(Authenticator.Username)}")}" +
-        $"";
-
-      Browser.Open(url);
-    }
-    catch (JsonException e)
-    {
-      Log.Error($"Error authorizing Garmin: {e}"); 
-    }
-    catch (Exception e)
-    {
-      Log.Error($"Error authorizing Garmin: {e}"); 
-    }
+    await fitEdit_.AuthorizeGarminAsync(Authenticator.Username);
   }
 
   private async Task DeauthorizeGarminAsync()
   {
-    // TODO send request to API
-    //var client = new HttpClient() { BaseAddress = new Uri("http://api.fitedit.io") };
-    //var responseMsg = await client.GetAsync($"garmin/oauth/deregister?username={HttpUtility.UrlEncode(Authenticator.Username)}");
-    //if (!responseMsg.IsSuccessStatusCode)
-    //{
-    //  return;
-    //}
-
-    await supa_.LogoutGarminAsync();
+    await fitEdit_.DeauthorizeGarminAsync(Authenticator.Username);
   }
 }

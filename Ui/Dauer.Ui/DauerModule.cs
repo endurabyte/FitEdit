@@ -87,7 +87,7 @@ public class DauerModule : Autofac.Module
       .WithParameter("url", $"https://{projectId}.supabase.co")
       .WithParameter("key", anonApiKey)
       .SingleInstance();
-    builder.RegisterType<FitEditClient>().As<IFitEditClient>()
+    builder.RegisterType<FitEditService>().As<IFitEditService>()
       .WithParameter("api", api)
       .SingleInstance();
     builder.RegisterType<NullWebAuthenticator>().As<IWebAuthenticator>();

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Dauer.Ui.ViewModels;
+namespace Dauer.Ui;
 
 public class OauthToken
 {

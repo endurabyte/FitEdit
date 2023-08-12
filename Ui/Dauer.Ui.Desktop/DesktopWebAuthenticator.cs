@@ -21,7 +21,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
   private readonly string appClientId_ = "30vleui8j8qe52hfd6k55mvdmr";
   private readonly IDatabaseAdapter db_;
   private readonly ILoggerFactory factory_;
-  private readonly IFitEditClient fitEdit_;
+  private readonly IFitEditService fitEdit_;
   private readonly Dauer.Model.Authorization auth_ = new() { Id = "Dauer.Api" };
   private static readonly string defaultUsername_ = "(Please log in)";
   private CancellationTokenSource refreshCts_ = new();
@@ -31,7 +31,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
   [Reactive] public string? Username { get; set; } = defaultUsername_;
   [Reactive] public bool IsAuthenticated { get; set; }
 
-  public DesktopWebAuthenticator(IDatabaseAdapter db, ILoggerFactory factory, IFitEditClient fitEdit)
+  public DesktopWebAuthenticator(IDatabaseAdapter db, ILoggerFactory factory, IFitEditService fitEdit)
   {
     db_ = db;
     factory_ = factory;
@@ -270,7 +270,7 @@ public class DesktopWebAuthenticator : ReactiveObject, IWebAuthenticator
   {
     if (accessToken == null) { return false; }
 
-    bool isAuthenticated = await fitEdit_.IsAuthenticatedAsync(accessToken, ct);
+    bool isAuthenticated = await fitEdit_.IsAuthenticatedAsync(ct);
 
     if (isAuthenticated)
     {

@@ -9,6 +9,4 @@ public class GarminUser : BaseModel
   public string Id { get; set; } = "";
   [Column("AccessToken")]
   public string? AccessToken { get; set; }
-  public string? RequestToken { get; set; }
-  public Guid SupabaseUserId { get; set; }
 }
