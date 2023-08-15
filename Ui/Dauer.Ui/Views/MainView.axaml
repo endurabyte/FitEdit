@@ -68,7 +68,7 @@
           
           <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsAuthenticating}">
             <TextBlock Text="Enter code: " Width="150" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding EmailOtp, Mode=TwoWay}" IsVisible="{Binding FitEdit.IsAuthenticating}" VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="240"/>
+            <TextBox Text="{Binding Otp, Mode=TwoWay}" IsVisible="{Binding FitEdit.IsAuthenticating}" VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="240"/>
             <Button Command="{Binding HandleVerifyEmailClicked}" Content="Verify"/>
           </StackPanel>
           

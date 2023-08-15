@@ -17,8 +17,8 @@ public interface IFitEditService
   Task<bool> AuthenticateAsync(CancellationToken ct = default);
   Task<bool> LogoutAsync(CancellationToken ct = default);
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
+  Task<bool> VerifyOtpAsync(string token);
   Task AuthorizeGarminAsync(CancellationToken ct = default);
-  Task<bool> VerifyEmailAsync(string token);
   Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default);
 }
 
@@ -33,8 +33,8 @@ public class NullFitEditService : IFitEditService
   public Task<bool> AuthenticateAsync(CancellationToken ct = default) => Task.FromResult(false);
   public Task<bool> LogoutAsync(CancellationToken ct = default) => Task.FromResult(false);
   public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(true);
+  public Task<bool> VerifyOtpAsync(string token) => Task.FromResult(true);
   public Task AuthorizeGarminAsync(CancellationToken ct = default) => Task.CompletedTask;
-  public Task<bool> VerifyEmailAsync(string token) => Task.FromResult(true);
   public Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default) => Task.FromResult(true);
 }
 
@@ -90,7 +90,7 @@ public class FitEditService : ReactiveObject, IFitEditService
       });
   }
 
-  public Task<bool> VerifyEmailAsync(string token) => supa_.VerifyEmailAsync(Username, token);
+  public Task<bool> VerifyOtpAsync(string token) => supa_.VerifyOtpAsync(Username, token);
 
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => await client_.IsAuthenticatedAsync(ct);
 

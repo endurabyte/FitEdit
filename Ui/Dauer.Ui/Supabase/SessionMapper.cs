@@ -12,7 +12,11 @@ public static class SessionMapper
     {
       AccessToken = auth.AccessToken,
       RefreshToken = auth.RefreshToken,
-      User = new User { Email = auth.Username },
+      User = new User 
+      { 
+        Email = EmailValidator.IsValid(auth.Username) ? auth.Username : null,
+        Phone = PhoneValidator.IsValid(auth.Username) ? auth.Username : null 
+      },
       TokenType = "bearer",
       CreatedAt = auth.Created.UtcDateTime,
       ExpiresIn = (int)(auth.Expiry.UtcDateTime - auth.Created.UtcDateTime).TotalSeconds,
@@ -28,7 +32,9 @@ public static class SessionMapper
       Id = "Dauer.Api",
       AccessToken = session.AccessToken,
       RefreshToken = session.RefreshToken,
-      Username = session.User?.Email,
+      Username = !string.IsNullOrWhiteSpace(session.User?.Email) 
+        ? session.User?.Email 
+        : session.User?.Phone,
       Created = session.CreatedAt,
       Expiry = session.ExpiresAt(),
     };

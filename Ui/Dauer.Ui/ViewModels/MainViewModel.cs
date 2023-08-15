@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Linq;
 using Dauer.Model;
 using Dauer.Ui.Infra.Adapters.Windowing;
+using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -40,7 +41,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   [Reactive] public int SelectedTabIndex { get; set; }
 
-  [Reactive] public string EmailOtp { get; set; } = "";
+  [Reactive] public string Otp { get; set; } = "";
   [Reactive] public string Message { get; set; } = "Please enter an email address and click Sign In";
 
   private CancellationTokenSource authCancelCts_ = new();
@@ -81,17 +82,37 @@ public class MainViewModel : ViewModelBase, IMainViewModel
           ? "Successfully connected to Garmin!" 
           : "Disconnected from Garmin";
       });
+
+    FitEdit.ObservableForProperty(x => x.IsAuthenticated)
+      .Subscribe(_ =>
+      {
+        Message = FitEdit.IsAuthenticated
+          ? "Sign in complete!" 
+          : "Signed out";
+      });
   }
 
   public void HandleLoginClicked()
   {
     Log.Info($"{nameof(HandleLoginClicked)}");
-    EmailOtp = "";
+    Otp = "";
+    string? username = FitEdit.Username?.Trim();
 
-    if (!EmailValidator.IsValid(FitEdit.Username)) 
+    if (EmailValidator.IsValid(username))
     {
-      Message = "Please enter a valid email address.";
-      return; 
+      Message = "We sent you an email. " +
+        "\nIf you're a new user, it has a link. " +
+        "\nIf you're a returning user, it has a code and a link. " +
+        "\nEnter the code or open the link on this device within 5 minutes.";
+    } else if (PhoneValidator.IsValid(username))
+    {
+      Message = "We sent you a text message with a code. " +
+        "\nEnter the code within 5 minutes.";
+    }
+    else
+    {
+      Message = "Please enter a valid email address or phone number.";
+      return;
     }
 
     // Cancel any existing authentication
@@ -99,10 +120,6 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     authCancelCts_ = new();
 
     _ = Task.Run(async () => await FitEdit.AuthenticateAsync(authCancelCts_.Token));
-    Message = "We sent you an email. " + 
-      "\nIf you're a new user, it has a link. " +
-      "\nIf you're a returning user, it has a code and a link. " +
-      "\nEnter the code or open the link on this device within 5 minutes."; 
   }
 
   public void HandleLogoutClicked()
@@ -148,9 +165,9 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       authCancelCts_.Cancel();
       authCancelCts_ = new();
 
-      bool ok = await FitEdit.VerifyEmailAsync(EmailOtp.Trim());
-      EmailOtp = "";
-      Message = ok ? "Sign in complete!" : "There was a problem verifying the code";
+      bool ok = await FitEdit.VerifyOtpAsync(Otp.Trim());
+      Otp = "";
+      Message = ok ? "Code is valid" : "There was a problem verifying the code";
     });
   }
 }

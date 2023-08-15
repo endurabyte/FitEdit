@@ -1,5 +1,7 @@
-﻿using Dauer.Model;
+﻿using System.Text.Json;
+using Dauer.Model;
 using Dauer.Model.Data;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -9,6 +11,7 @@ using Supabase.Gotrue.Exceptions;
 using Supabase.Realtime;
 using Supabase.Realtime.PostgresChanges;
 using static Supabase.Gotrue.Constants;
+using static Supabase.Realtime.Constants;
 
 namespace Dauer.Ui.Supabase;
 
@@ -18,20 +21,27 @@ public interface ISupabaseAdapter
   bool IsAuthenticatedWithGarmin { get; }
   Authorization? Authorization { get; set; }
 
-  Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default);
+  Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default);
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
 
   /// <summary>
-  /// Return PKCE verifier. Null if usePkce is false.
+  /// Send a one-time password to an email address or phone number.
+  /// 
+  /// <para/>
+  /// If the username is a phone number, it must be in the E.164 format. A OTP will be sent and null is returned.
+  ///
+  /// <para/>
+  /// If the username is an email address, an OTP and a link to <paramref name="redirectUri"/> will be sent. 
+  /// If <paramref name="usePkce"/> is true, return PKCE verifier, else null.
   /// </summary>
-  Task<string?> AuthenticateWithMagicLink(string email, bool usePkce, string redirectUri);
+  Task<string?> SignInWithOtp(string username, bool usePkce, string redirectUri);
 
   /// <summary>
   /// Return access token
   /// </summary>
   Task<string?> ExchangeCodeForSession(string? verifier, string? code);
 
-  Task<bool> VerifyEmailAsync(string? username, string token);
+  Task<bool> VerifyOtpAsync(string? username, string token);
   Task<bool> LogoutAsync();
 }
 
@@ -41,11 +51,11 @@ public class NullSupabaseAdapter : ISupabaseAdapter
   public bool IsAuthenticatedWithGarmin => false;
   public Authorization? Authorization { get; set; }
 
-  public Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default) => Task.FromResult(false);
-  public Task<string?> AuthenticateWithMagicLink(string email, bool usePkce, string redirectUri) => Task.FromResult(null as string);
+  public Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default) => Task.FromResult(false);
+  public Task<string?> SignInWithOtp(string username, bool usePkce, string redirectUri) => Task.FromResult(null as string);
   public Task<string?> ExchangeCodeForSession(string? verifier, string? code) => Task.FromResult(null as string);
   public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(false);
-  public Task<bool> VerifyEmailAsync(string? username, string token) => Task.FromResult(false);
+  public Task<bool> VerifyOtpAsync(string? username, string token) => Task.FromResult(false);
   public Task<bool> LogoutAsync() => Task.FromResult(false);
 }
 
@@ -55,17 +65,21 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private readonly ILogger<SupabaseAdapter> log_;
   private readonly IDatabaseAdapter db_;
 
+  [Reactive] public bool IsConnected { get; private set; }
   [Reactive] public bool IsAuthenticated { get; private set; }
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
   [Reactive] public Authorization? Authorization { get; set; }
 
   private RealtimeChannel? garminUserChannel_;
+  private RealtimeChannel? garminActivityChannel_;
 
   public SupabaseAdapter(ILogger<SupabaseAdapter> log, IDatabaseAdapter db, string url, string key)
   {
     log_ = log;
     db_ = db;
+
     var persistence = new SessionPersistence(db);
+
     client_ = new global::Supabase.Client(url, key, new SupabaseOptions
     {
       SessionHandler = persistence,
@@ -75,7 +89,16 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     client_.Realtime.AddDebugHandler((sender, message, exception) =>
     {
+      IsConnected = (sender as RealtimeSocket)?.IsConnected ?? false;
       log_.LogInformation("Realtime debug: {@sender} {@message} {@debug}", sender, message, exception);
+    });
+
+    this.ObservableForProperty(x => x.IsConnected).Subscribe(_ =>
+    {
+      if (IsConnected)
+      {
+        Subscribe();
+      }
     });
 
     client_.Auth.AddDebugListener((message, exception) =>
@@ -110,20 +133,31 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     {
       client_.Auth.LoadSession();
       await client_.InitializeAsync();
-      SubscribeGarminUserChannel();
     });
   }
 
-  private void SubscribeGarminUserChannel()
+  private void Subscribe()
   {
     garminUserChannel_?.Unsubscribe();
+    garminActivityChannel_?.Unsubscribe();
+
     garminUserChannel_ = client_.Realtime.Channel("realtime", "public", "GarminUser");
+    garminActivityChannel_ = client_.Realtime.Channel("realtime", "public", "GarminActivity");
+
     garminUserChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
     {
-      var model = change.Model<Model.GarminUser>();
-      SyncAuthorization(model);
+      var user = change.Model<Model.GarminUser>();
+      SyncAuthorization(user);
     });
+
+    garminActivityChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
+    {
+      var activity = change.Model<Model.GarminActivity>();
+      log_.LogInformation($"Got activity {{@activity}}", activity);
+    });
+
     garminUserChannel_.Subscribe();
+    garminActivityChannel_.Subscribe();
   }
 
   private async Task<Authorization?> LoadCachedAuthorization()
@@ -161,7 +195,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
   }
 
-  public async Task<bool> AuthenticateClientSideAsync(string email, string password, CancellationToken ct = default)
+  public async Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default)
   {
     await Task.CompletedTask;
     //await client_.Auth.ResetPasswordForEmail(email);
@@ -171,9 +205,24 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return ok;
   }
 
-  public async Task<string?> AuthenticateWithMagicLink(string email, bool usePkce, string redirectUri)
+  public async Task<string?> SignInWithOtp(string username, bool usePkce, string redirectUri)
   {
-    PasswordlessSignInState? signInState = await client_.Auth.SignInWithOtp(new SignInWithPasswordlessEmailOptions(email)
+    if (PhoneValidator.IsValid(username))
+    {
+      await client_.Auth.SignInWithOtp(new SignInWithPasswordlessPhoneOptions(username)
+      {
+        Channel = SignInWithPasswordlessPhoneOptions.MessagingChannel.SMS
+      });
+
+      return null;
+    }
+
+    if (!EmailValidator.IsValid(username))
+    {
+      return null;
+    }
+
+    PasswordlessSignInState? signInState = await client_.Auth.SignInWithOtp(new SignInWithPasswordlessEmailOptions(username)
     {
       EmailRedirectTo = redirectUri,
       FlowType = usePkce ? OAuthFlowType.PKCE : OAuthFlowType.Implicit,
@@ -182,13 +231,18 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return signInState?.PKCEVerifier;
   }
 
-  public async Task<bool> VerifyEmailAsync(string? username, string token)
+  public async Task<bool> VerifyOtpAsync(string? username, string token)
   {
     if (username == null) { return false; }
 
     try
     {
-      Session? session = await client_.Auth.VerifyOTP(username, token, EmailOtpType.MagicLink);
+      Session? session = username switch
+      {
+        _ when PhoneValidator.IsValid(username) => await client_.Auth.VerifyOTP(username, token, MobileOtpType.SMS),
+        _ when EmailValidator.IsValid(username) => await client_.Auth.VerifyOTP(username, token, EmailOtpType.MagicLink),
+        _ => null,
+      };
 
       Authorization = AuthorizationFactory.Create(session?.AccessToken, session?.RefreshToken);
       return !string.IsNullOrEmpty(session?.AccessToken);

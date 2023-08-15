@@ -7,6 +7,6 @@ public class GarminUser : BaseModel
 {
   [PrimaryKey]
   public string Id { get; set; } = "";
-  [Column("AccessToken")]
+  [Column(nameof(AccessToken))]
   public string? AccessToken { get; set; }
 }

@@ -1,6 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Dauer.Ui.Desktop.Oidc;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Supabase;
@@ -38,7 +36,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
   public async Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {
     if (Username == null) { return false; }
-    string email = Username;
+    string username = Username;
 
     log_.LogInformation("Authenticating Supabase user for email=\'{@email}\'", Username);
 
@@ -48,7 +46,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
     try
     {
       //return await AuthenticateClientSideAsync(Email, "supersecret", ct);
-      return await AuthenticateClientSideAsync(email, ct)
+      return await AuthenticateClientSideAsync(username, ct)
        && await GetIsAuthenticatedAsync(ct);
     }
     catch (GotrueException e)
@@ -63,7 +61,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
     }
   }
 
-  public async Task<bool> AuthenticateClientSideAsync(string email, CancellationToken ct = default)
+  public async Task<bool> AuthenticateClientSideAsync(string username, CancellationToken ct = default)
   {
     int port = Tcp.GetRandomUnusedPort();
 
@@ -72,7 +70,7 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
     // which prevents us from getting the access token since fragments don't leave the browser.
     bool usePkce = false;
 
-    string? pkceVerifier = await supa_.AuthenticateWithMagicLink(email, usePkce, $"http://localhost:{port}/auth/callback");
+    string? pkceVerifier = await supa_.SignInWithOtp(username, usePkce, $"http://localhost:{port}/auth/callback");
 
     var content = await new LoginRedirectContent().LoadContentAsync(ct);
     using var listener = new LoopbackHttpListener(content.SuccessHtml, content.ErrorHtml, port);
