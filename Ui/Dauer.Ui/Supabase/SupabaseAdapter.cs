@@ -1,7 +1,8 @@
-﻿using System.Text.Json;
+﻿using System.Text;
 using Dauer.Model;
 using Dauer.Model.Data;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Dauer.Model.Extensions;
+using Dauer.Ui.ViewModels;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -11,7 +12,6 @@ using Supabase.Gotrue.Exceptions;
 using Supabase.Realtime;
 using Supabase.Realtime.PostgresChanges;
 using static Supabase.Gotrue.Constants;
-using static Supabase.Realtime.Constants;
 
 namespace Dauer.Ui.Supabase;
 
@@ -63,6 +63,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 {
   private readonly global::Supabase.Client client_;
   private readonly ILogger<SupabaseAdapter> log_;
+  private readonly IFileService file_;
   private readonly IDatabaseAdapter db_;
 
   [Reactive] public bool IsConnected { get; private set; }
@@ -73,9 +74,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private RealtimeChannel? garminUserChannel_;
   private RealtimeChannel? garminActivityChannel_;
 
-  public SupabaseAdapter(ILogger<SupabaseAdapter> log, IDatabaseAdapter db, string url, string key)
+  public SupabaseAdapter(ILogger<SupabaseAdapter> log, IFileService file, IDatabaseAdapter db, string url, string key)
   {
     log_ = log;
+    file_ = file;
     db_ = db;
 
     var persistence = new SessionPersistence(db);
@@ -90,7 +92,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     client_.Realtime.AddDebugHandler((sender, message, exception) =>
     {
       IsConnected = (sender as RealtimeSocket)?.IsConnected ?? false;
-      log_.LogInformation("Realtime debug: {@sender} {@message} {@debug}", sender, message, exception);
+      log_.LogDebug("Realtime debug: {@sender} {@message} {@debug}", sender, message, exception);
     });
 
     this.ObservableForProperty(x => x.IsConnected).Subscribe(_ =>
@@ -103,7 +105,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     client_.Auth.AddDebugListener((message, exception) =>
     {
-      log_.LogInformation("Auth debug: {@message} {@debug}", message, exception);
+      log_.LogDebug("Auth debug: {@message} {@debug}", message, exception);
     });
 
     client_.Auth.AddStateChangedListener(async (sender, changed) =>
@@ -153,7 +155,41 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     garminActivityChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
     {
       var activity = change.Model<Model.GarminActivity>();
-      log_.LogInformation($"Got activity {{@activity}}", activity);
+      log_.LogInformation($"Got uploaded Garmin activity {{@activity}}", activity);
+
+      var t = Task.Run(async () =>
+      {
+        if (activity?.BucketUrl == null) { return; }
+
+        // Remove leading bucket name
+        // "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
+        string path = activity.BucketUrl.Substring(activity.BucketUrl.IndexOf("/") + 1);
+
+        byte[] bytes = await client_.Storage
+          .From("activity-files")
+          .Download(path, (sender, progress) =>
+          {
+            log_.LogInformation("File download progress: {@url} {@percent}", activity.BucketUrl, progress);
+          });
+
+        if (bytes.Length < 200)
+        {
+          // Response is a JSON object containing an error string
+          string json = Encoding.ASCII.GetString(bytes);
+          log_.LogError("Could not download GarminActivity: {@json}", json);
+          return;
+        }
+
+        var blobFile = new BlobFile(activity.Name, bytes);
+        var uiFile = new UiFile { Blob = blobFile, };
+
+        bool ok = await db_.InsertAsync(blobFile).AnyContext();
+
+        if (ok) { log_.LogInformation("Persisted file {@blobFile}", blobFile); }
+        else { log_.LogInformation("Could not persist file {@blobFile}", uiFile); }
+
+        file_.Files.Add(uiFile);
+      });
     });
 
     garminUserChannel_.Subscribe();
@@ -294,10 +330,19 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   public async Task<bool> SyncAuthorization()
   {
     if (!IsAuthenticated) { return false; }
-    var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
-    if (garminUser?.Model is null) { return false; }
-    SyncAuthorization(garminUser.Model);
-    return true;
+
+    try
+    {
+      var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
+      if (garminUser?.Model is null) { return false; }
+      SyncAuthorization(garminUser.Model);
+      return true;
+    }
+    catch (Exception e)
+    {
+      log_.LogError("Exception getting GarminUser: {@e}", e);
+      return false;
+    }
   }
 
   public void SyncAuthorization(Model.GarminUser? user) 
