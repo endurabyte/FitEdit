@@ -1,9 +1,10 @@
 ﻿#nullable enable
+using ReactiveUI;
 using SQLite;
 
 namespace Dauer.Adapters.Sqlite;
 
-public class DauerActivity
+public class DauerActivity : ReactiveObject
 {
   /// <summary>
   /// NOT Garmin activity ID; our own independent ID
@@ -14,7 +15,7 @@ public class DauerActivity
   /// <summary>
   /// Foreign key to SqliteFile
   /// </summary>
-  public long FileId { get; set; } = -1;
+  public string? FileId { get; set; }
 
   public string Source { get; set; } = "Unknown";
 

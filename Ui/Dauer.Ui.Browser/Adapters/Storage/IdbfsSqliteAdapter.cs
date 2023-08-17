@@ -14,7 +14,7 @@ public class IdbfsSqliteAdapter : SqliteAdapter
   {
   }
 
-  public override async Task<bool> InsertAsync(BlobFile t)
+  public override async Task<bool> InsertAsync(Dauer.Model.FileReference t)
   {
     Log.Info($"{nameof(IdbfsSqliteAdapter)}.{nameof(InsertAsync)}({t})");
 

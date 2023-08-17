@@ -5,7 +5,7 @@ namespace Dauer.Ui.Browser.Adapters.Storage;
 
 public static class WebFileMapper
 {
-  public static BlobFile? Map(this JSObject? obj)
+  public static FileReference? Map(this JSObject? obj)
   {
     if (!OperatingSystem.IsBrowser())
     {
@@ -15,6 +15,6 @@ public static class WebFileMapper
     string fileName = obj?.GetPropertyAsString("name") ?? string.Empty;
     byte[] bytes = obj?.GetPropertyAsByteArray("bytes") ?? Array.Empty<byte>();
 
-    return new BlobFile(fileName, bytes);
+    return new FileReference(fileName, bytes);
   }
 }

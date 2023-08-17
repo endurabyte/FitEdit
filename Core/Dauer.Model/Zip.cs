@@ -4,26 +4,26 @@ namespace Dauer.Model;
 
 public static class Zip
 {
-  public static List<BlobFile> Unzip(BlobFile file)
+  public static List<FileReference> Unzip(FileReference file)
   {
     using var ms = new MemoryStream(file.Bytes);
     using var archive = new ZipArchive(ms, ZipArchiveMode.Read);
     return archive.GetFiles();
   }
 
-  private static List<BlobFile> GetFiles(this ZipArchive archive)
+  private static List<FileReference> GetFiles(this ZipArchive archive)
   {
-    var files = new List<BlobFile>();
+    var files = new List<FileReference>();
 
     try
     {
       foreach (ZipArchiveEntry entry in archive.Entries)
       {
-        files.Add(new BlobFile
-        {
-          Name = entry.Name,
-          Bytes = entry.ExtractFile(),
-        });
+        files.Add(new FileReference
+        (
+          entry.Name,
+          entry.ExtractFile()
+        ));
       }
     }
     catch (Exception e)

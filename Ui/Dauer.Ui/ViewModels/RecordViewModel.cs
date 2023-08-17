@@ -7,6 +7,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Dauer.Data.Fit;
+using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Converters;
 using DynamicData.Binding;
@@ -29,7 +30,7 @@ public interface IRecordViewModel
 
 public class DesignRecordViewModel : RecordViewModel
 {
-  public DesignRecordViewModel() : base(new FileService())
+  public DesignRecordViewModel() : base(new FileService(new NullDatabaseAdapter()))
   {
   }
 }
@@ -229,8 +230,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void InitHexData()
   {
     if (!ShowHexData) { return; }
-    if (fileService_.MainFile?.Blob?.Bytes == null) { return; }
-    HexData = string.Join(" ", fileService_.MainFile.Blob.Bytes.Select(b => $"{b:X2}"));
+    if (fileService_.MainFile?.Activity?.File == null) { return; }
+    HexData = string.Join(" ", fileService_.MainFile.Activity.File.Bytes.Select(b => $"{b:X2}"));
     SelectHexData(0, 0);
   }
 

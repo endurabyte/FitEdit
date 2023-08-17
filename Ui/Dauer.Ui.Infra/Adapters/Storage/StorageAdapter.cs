@@ -7,7 +7,7 @@ public abstract class StorageAdapter : IStorageAdapter
 {
   protected abstract IStorageProvider? Provider_ { get; }
 
-  public async Task<BlobFile?> OpenFileAsync()
+  public async Task<FileReference?> OpenFileAsync()
   {
     if (Provider_ == null) return null;
     IReadOnlyList<IStorageFile> files = await Provider_.OpenFilePickerAsync(new FilePickerOpenOptions { AllowMultiple = false });
@@ -18,10 +18,10 @@ public abstract class StorageAdapter : IStorageAdapter
     using var ms = new MemoryStream();
     await stream.CopyToAsync(ms);
     byte[] data = ms.ToArray();
-    return new BlobFile(files[0].Name, data);
+    return new FileReference(files[0].Name, data);
   }
 
-  public async Task SaveAsync(BlobFile file)
+  public async Task SaveAsync(FileReference file)
   {
     if (Provider_ == null) return;
     using IStorageFile? sf = await Provider_.SaveFilePickerAsync(new FilePickerSaveOptions { });

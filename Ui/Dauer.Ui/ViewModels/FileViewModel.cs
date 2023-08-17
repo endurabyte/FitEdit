@@ -6,9 +6,7 @@ using Dauer.Model.Extensions;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
-using DynamicData;
 using DynamicData.Binding;
-using NUnit.Framework.Constraints;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -21,8 +19,7 @@ public interface IFileViewModel
 public class DesignFileViewModel : FileViewModel
 {
   public DesignFileViewModel() : base(
-    new FileService(),
-    new NullDatabaseAdapter(),
+    new FileService(new NullDatabaseAdapter()),
     new NullStorageAdapter(),
     new NullWebAuthenticator(),
     new DesignLogViewModel()) { }
@@ -34,13 +31,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public IFileService FileService { get; }
   public IWebAuthenticator Authenticator { get; }
-  private readonly IDatabaseAdapter db_;
   private readonly IStorageAdapter storage_;
   private readonly ILogViewModel log_;
 
   public FileViewModel(
     IFileService fileService,
-    IDatabaseAdapter db,
     IStorageAdapter storage,
     IWebAuthenticator auth,
     ILogViewModel log
@@ -48,7 +43,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     FileService = fileService;
     Authenticator = auth;
-    db_ = db;
     storage_ = storage;
     log_ = log;
 
@@ -59,37 +53,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       fileService.MainFile = fileService.Files[i];
     });
 
-    FileService.Files.ObserveCollectionChanges().Subscribe(args =>
+    FileService.SubscribeAdds(file => file.SubscribeToIsLoaded(LoadOrUnload));
+
+    foreach (var file in fileService.Files)
     {
-      if (args?.EventArgs?.NewItems == null) { return; }
-      foreach (var e in args.EventArgs.NewItems)
-      {
-        if (e is not UiFile sf) { continue; }
-        sf.SubscribeToIsLoaded(LoadOrUnload);
-      }
-    });
-
-    db.ObservableForProperty(x => x.Ready).Subscribe(property =>
-    {
-      if (!property.Value) { return; }
-      InitFilesList();
-    });
-  }
-
-  private void InitFilesList()
-  {
-    _ = Task.Run(async () =>
-    {
-      List<BlobFile> files = await db_.GetAllAsync().AnyContext();
-
-      var sfs = files.Select(file => new UiFile
-      {
-        FitFile = null, // Don't parse the blobs, that would be too slow
-        Blob = file,
-      }).ToList();
-
-      await Dispatcher.UIThread.InvokeAsync(() => FileService.Files.AddRange(sfs));
-    });
+      file.SubscribeToIsLoaded(LoadOrUnload);
+    }
   }
 
   public async void HandleImportClicked()
@@ -97,7 +66,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     Log.Info("Select file clicked");
 
     // On macOS and iOS, the file picker must run on the main thread
-    BlobFile? file = await storage_.OpenFileAsync();
+    FileReference? file = await storage_.OpenFileAsync();
 
     if (file == null)
     {
@@ -111,23 +80,35 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    List<BlobFile> files = Zip.Unzip(file);
-    foreach (BlobFile f in files)
+    List<FileReference> files = Zip.Unzip(file);
+    foreach (FileReference f in files)
     {
       await Persist(f);
     }
   }
 
-  private async Task<UiFile> Persist(BlobFile file)
+  private async Task<UiFile?> Persist(FileReference? file)
+  {
+    if (file == null) { return null; }
+
+    return await Persist(new DauerActivity
+    {
+      Name = file.Name,
+      Id = file.Id,
+      File = file,
+    });
+  }
+
+  private async Task<UiFile> Persist(DauerActivity act)
   { 
     UiFile sf = await Task.Run(async () =>
     {
-      bool ok = await db_.InsertAsync(file).AnyContext();
+      bool ok = await FileService.CreateAsync(act);
 
-      if (ok) { Log.Info($"Persisted file {file}"); }
-      else { Log.Error($"Could not persist file {file}"); }
+      if (ok) { Log.Info($"Persisted activity {act}"); }
+      else { Log.Error($"Could not persist activity {act}"); }
 
-      return new UiFile { Blob = file };
+      return new UiFile { Activity = act };
     });
 
     FileService.Files.Add(sf);
@@ -154,7 +135,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     UiFile file = FileService.Files[index];
 
-    await db_.DeleteAsync(file.Blob);
+    await FileService.DeleteAsync(file.Activity);
     FileService.Files.Remove(file);
   }
 
@@ -179,7 +160,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private async Task LoadFile(UiFile? sf)
   {
-    if (sf == null || sf.Blob == null)
+    if (sf == null || sf.Activity == null || sf.Activity.File == null)
     {
       Log.Info("Could not load null file");
       return;
@@ -187,12 +168,15 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     if (sf.FitFile != null) 
     {
-      Log.Info($"File {sf.Blob.Name} is already loaded");
+      Log.Info($"File {sf.Activity.Name} is already loaded");
       sf.Progress = 100;
       return;
     }
 
-    BlobFile file = sf.Blob;
+    DauerActivity? act = await FileService.ReadAsync(sf.Activity.Id);
+    act.File.Bytes;
+
+    FileReference? file = sf.Activity.File;
 
     try
     {
@@ -271,20 +255,21 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task Export(UiFile? file)
   { 
     if (file == null) { return; }
-    if (file.Blob == null) { return; }
+    if (file.Activity == null) { return; }
+    if (file.Activity.File == null) { return; }
     if (file.FitFile == null) { return; }
 
-    Log.Info($"Exporting {file.Blob.Name}...");
+    Log.Info($"Exporting {file.Activity.Name}...");
 
     try
     {
       byte[] bytes = file.FitFile.GetBytes();
-      file.Blob.Bytes = bytes;
+      file.Activity.File.Bytes = bytes;
 
-      string name = Path.GetFileNameWithoutExtension(file.Blob.Name);
-      string extension = Path.GetExtension(file.Blob.Name);
+      string name = Path.GetFileNameWithoutExtension(file.Activity.File.Name);
+      string extension = Path.GetExtension(file.Activity.File.Name);
       // On macOS and iOS, the file save dialog must run on the main thread
-      await storage_.SaveAsync(new BlobFile($"{name}_edit.{extension}", bytes));
+      await storage_.SaveAsync(new FileReference($"{name}_edit.{extension}", bytes));
     }
     catch (Exception e)
     {
@@ -305,13 +290,19 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       merged.Append(file.FitFile);
     }
 
-    var blob = new BlobFile
+    var activity = new DauerActivity
     {
-      Bytes = merged.GetBytes(),
-      Name = $"Merged {string.Join("-", files.Select(f => f.Blob?.Name).Where(s => !string.IsNullOrEmpty(s)))}"
+      Id = $"{Guid.NewGuid()}",
+      Name = $"Merged {string.Join("-", files.Select(f => f.Activity?.Name).Where(s => !string.IsNullOrEmpty(s)))}"
     };
 
-    UiFile sf = await Persist(blob);
+    var fileRef = new FileReference(activity.Name, merged.GetBytes());
+    activity.File = fileRef;
+
+    UiFile? sf = await Persist(fileRef);
+
+    if (sf == null) { return; }
+    
     sf.FitFile = merged;
     sf.IsVisible = true;
     sf.Progress = 100;
@@ -336,10 +327,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     FitFile? fit = file.FitFile.Repair();
 
-    return await Persist(new BlobFile
-    {
-      Bytes = fit.GetBytes(),
-      Name = $"Repaired {file.Blob?.Name}"
-    });
+    return await Persist(new FileReference
+    (
+      $"Repaired {file.Activity?.Name}",
+      fit.GetBytes()
+    ));
   }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Reactive.Linq;
 using Dauer.Model;
+using Dauer.Model.Data;
 using Dauer.Ui.Infra.Adapters.Windowing;
-using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -15,7 +15,7 @@ public interface IMainViewModel
 public class DesignMainViewModel : MainViewModel
 {
   public DesignMainViewModel() : base(
-    new FileService(),
+    new FileService(new NullDatabaseAdapter()),
     new NullWindowAdapter(),
     new DesignPlotViewModel(),
     new DesignLapViewModel(),

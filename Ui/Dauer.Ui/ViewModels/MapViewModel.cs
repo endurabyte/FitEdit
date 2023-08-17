@@ -29,7 +29,7 @@ public interface IMapViewModel
 
 public class DesignMapViewModel : MapViewModel
 {
-  public DesignMapViewModel() : base(new FileService(), new NullDatabaseAdapter(), TileSource.Jawg)
+  public DesignMapViewModel() : base(new FileService(new NullDatabaseAdapter()), new NullDatabaseAdapter(), TileSource.Jawg)
   {
 
   }
@@ -65,7 +65,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   /// <summary>
   /// Key: File ID, Value: layer
   /// </summary>
-  private readonly Dictionary<long, ILayer> traces_ = new();
+  private readonly Dictionary<string, ILayer> traces_ = new();
 
   /// <summary>
   /// Key: Layer index, Value: layer
@@ -83,8 +83,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private int selectionLayerIndex_ = 3; 
   private int editLayerIndex_ = 4; 
   private int breadcrumbLayerIndex_ = 5; 
-  private int selectionTraceId_ = 101;
-  private int editTraceId_ = 200;
+  private string selectionTraceId_ = "selection-trace";
+  private string editTraceId_ = "edit-trace";
 
   private ILayer BreadcrumbLayer_ => new MemoryLayer
   {
@@ -134,7 +134,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     
     UiFile? sf = fileService_.MainFile;
     if (sf == null) { return; }
-    if (sf.Blob == null) { return; }
+    if (sf.Activity == null) { return; }
     if (sf.FitFile == null) { return; }
 
     ILayer? layer = Add(sf.FitFile, "GPS Editor", editLayerIndex_, FitColor.LimeCrayon, editable: true);
@@ -195,7 +195,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (traces_.TryGetValue(selectionTraceId_, out ILayer? value))
     {
       traces_.Remove(selectionTraceId_);
-      layers_.Remove(selectionTraceId_);
+      //layers_.Remove(selectionTraceId_);
       HandleLayersChanged();
     }
 
@@ -236,7 +236,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
   private void HandleFitFileChanged(UiFile sf)
   {
-    if (sf.Blob == null) { return; }
+    if (sf.Activity == null) { return; }
 
     // Handle file loaded
     if (sf.FitFile != null)
@@ -244,7 +244,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       ILayer? layer = Add(sf.FitFile, "GPS Trace", traceLayerIndex_, FitColor.LimeCrayon);
 
       if (layer == null) { return; }
-      traces_[sf.Blob.Id] = layer;
+      traces_[sf.Activity.Id] = layer;
       layers_[traceLayerIndex_] = layer;
 
       HandleLayersChanged();
@@ -263,14 +263,14 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private void Remove(UiFile? sf)
   { 
     if (sf == null) { return; }
-    if (sf.Blob == null) { return; }
+    if (sf.Activity == null) { return; }
 
-    if (!traces_.TryGetValue(sf.Blob.Id, out ILayer? trace))
+    if (!traces_.TryGetValue(sf.Activity.Id, out ILayer? trace))
     {
       return;
     }
 
-    traces_.Remove(sf.Blob.Id);
+    traces_.Remove(sf.Activity.Id);
     layers_.Remove(traceLayerIndex_);
     HandleLayersChanged();
   }

@@ -4,6 +4,6 @@ namespace Dauer.Ui.Infra.Adapters.Storage;
 
 public interface IStorageAdapter
 {
-  Task<BlobFile?> OpenFileAsync();
-  Task SaveAsync(BlobFile file);
+  Task<FileReference?> OpenFileAsync();
+  Task SaveAsync(FileReference file);
 }

@@ -64,7 +64,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 {
   private readonly global::Supabase.Client client_;
   private readonly ILogger<SupabaseAdapter> log_;
-  private readonly IFileService file_;
+  private readonly IFileService fileService_;
   private readonly IDatabaseAdapter db_;
 
   [Reactive] public bool IsConnected { get; private set; }
@@ -75,10 +75,15 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private RealtimeChannel? garminUserChannel_;
   private RealtimeChannel? garminActivityChannel_;
 
-  public SupabaseAdapter(ILogger<SupabaseAdapter> log, IFileService file, IDatabaseAdapter db, string url, string key)
+  public SupabaseAdapter(
+    ILogger<SupabaseAdapter> log,
+    IFileService fileService,
+    IDatabaseAdapter db,
+    string url,
+    string key)
   {
     log_ = log;
-    file_ = file;
+    fileService_ = fileService;
     db_ = db;
 
     var persistence = new SessionPersistence(db);
@@ -118,7 +123,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       await SyncAuthorization();
     });
 
-    db_.ObservableForProperty(x => x.Ready).Subscribe(async _ =>
+    db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async _ =>
     {
       Authorization = await LoadCachedAuthorization();
     });
@@ -153,50 +158,88 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       SyncAuthorization(user);
     });
 
-    garminActivityChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
+    garminActivityChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (channel, change) =>
     {
       var activity = change.Model<Model.GarminActivity>();
-      log_.LogInformation($"Got uploaded Garmin activity {{@activity}}", activity);
+      log_.LogInformation($"Got GarminActivity notification {{@activity}}", activity);
 
-      var t = Task.Run(async () =>
-      {
-        if (activity?.BucketUrl == null) { return; }
-
-        // Remove leading bucket name
-        // "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
-        string path = activity.BucketUrl.Substring(activity.BucketUrl.IndexOf("/") + 1);
-
-        byte[] bytes = await client_.Storage
-          .From("activity-files")
-          .Download(path, (sender, progress) =>
-          {
-            log_.LogInformation("File download progress: {@url} {@percent}", activity.BucketUrl, progress);
-          });
-
-        if (bytes.Length < 200)
-        {
-          // Response is a JSON object containing an error string
-          string json = Encoding.ASCII.GetString(bytes);
-          log_.LogError("Could not download GarminActivity: {@json}", json);
-          return;
-        }
-
-        var file = new BlobFile(activity?.Name ?? "Untitled Activity", bytes);
-        DauerActivity? act = activity?.MapDauerActivity();
-        if (act == null) { return; }
-        act.File = file;
-        bool ok = await db_.InsertAsync(act).AnyContext();
-
-        if (ok) { log_.LogInformation("Persisted activity {@activity}", activity); }
-        else { log_.LogInformation("Could not persist activity {@activity}", activity); }
-
-        var uiFile = new UiFile { Blob = file, };
-        file_.Files.Add(uiFile);
-      });
+      _ = Task.Run(async () => await HandleActivityNotification(activity).AnyContext());
     });
 
     garminUserChannel_.Subscribe();
     garminActivityChannel_.Subscribe();
+  }
+
+  private async Task HandleActivityNotification(GarminActivity? activity)
+  {
+    if (activity == null) { return; }
+
+    DauerActivity toWrite = activity.MapDauerActivity();
+    UiFile? uiFile = fileService_.Files.FirstOrDefault(f => f?.Activity?.Id == toWrite.Id);
+
+    if (uiFile != null)
+    {
+      await UpdateExistingActivity(uiFile, toWrite).AnyContext();
+      return;
+    }
+
+    await AddNewActivity(toWrite, uiFile, activity?.BucketUrl).AnyContext();
+  }
+
+  private async Task AddNewActivity(DauerActivity toWrite, UiFile? uiFile, string? bucketUrl)
+  {
+    // Remove leading bucket name
+    // "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
+    if (bucketUrl == null) { return; }
+    string path = bucketUrl[(bucketUrl.IndexOf("/") + 1)..];
+
+    byte[] bytes = await client_.Storage
+      .From("activity-files")
+      .Download(path, (sender, progress) =>
+      {
+        log_.LogInformation("File download progress: {@url} {@percent}", toWrite.BucketUrl, progress);
+      });
+
+    if (bytes.Length < 200)
+    {
+      // Response is a JSON object containing an error string
+      string json = Encoding.ASCII.GetString(bytes);
+      log_.LogError("Could not download GarminActivity: {@json}", json);
+      return;
+    }
+
+    toWrite.File = new FileReference(toWrite.Id, bytes);
+
+    bool ok = await fileService_.CreateAsync(toWrite);
+
+    if (ok) { log_.LogInformation("Created activity {@activity}", toWrite); }
+    else { log_.LogInformation("Could not create activity {@activity}", toWrite); }
+
+
+    uiFile ??= new UiFile { Activity = toWrite, };
+
+    // Trigger update
+    fileService_.Files.Remove(uiFile);
+    fileService_.Files.Add(uiFile);
+  }
+
+  private async Task UpdateExistingActivity(UiFile? existing, DauerActivity update)
+  {
+    if (existing == null) { return; }
+    if (existing.Activity == null) { return; }
+
+    DauerActivity? known = existing.Activity;
+
+    // Merge data
+    known.Name = update.Name;
+    known.Description = update.Description;
+
+    bool ok = await fileService_.UpdateAsync(known);
+
+    if (ok) { log_.LogInformation("Updated activity {@activity}", known); }
+    else { log_.LogInformation("Could not update activity {@activity}", known); }
+
+    return;
   }
 
   private async Task<Authorization?> LoadCachedAuthorization()

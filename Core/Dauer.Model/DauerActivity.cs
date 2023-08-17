@@ -1,16 +1,18 @@
 ﻿#nullable enable
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 using Units;
 
 namespace Dauer.Model;
 
-public class DauerActivity
+public class DauerActivity : ReactiveObject
 {
   /// <summary>
   /// NOT Garmin activity ID; our own independent ID
   /// </summary>
-  public string Id { get; set; } = "";
+  [Reactive] public string Id { get; set; } = "";
 
-  public BlobFile? File { get; set; }
+  public FileReference? File { get; set; }
 
   public ActivitySource Source { get; set; }
 
@@ -19,8 +21,8 @@ public class DauerActivity
   /// </summary>
   public string SourceId { get; set; } = "";
 
-  public string? Name { get; set; }
-  public string? Description { get; set; }
+  [Reactive] public string? Name { get; set; }
+  [Reactive] public string? Description { get; set; }
   public string? Type { get; set; }
   public string? DeviceName { get; set; }
   public DateTime StartTime { get; set; }

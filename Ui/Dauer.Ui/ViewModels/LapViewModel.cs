@@ -7,6 +7,8 @@ using Dauer.Model;
 using DynamicData.Binding;
 using Dauer.Ui.Extensions;
 using Units;
+using Avalonia.Threading;
+using Dauer.Model.Data;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -17,7 +19,7 @@ public interface ILapViewModel
 
 public class DesignLapViewModel : LapViewModel
 {
-  public DesignLapViewModel() : base(new FileService())
+  public DesignLapViewModel() : base(new FileService(new NullDatabaseAdapter()))
   {
     var now = DateTime.Now;
     Laps.Add(new Lap { Start = now, End = now + TimeSpan.FromSeconds(60), Speed = new(3.12345, Unit.MetersPerSecond) });
@@ -89,6 +91,16 @@ public class LapViewModel : ViewModelBase, ILapViewModel
         RecordFirstIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.Start()),
         RecordLastIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.End()),
       };
+
+      if (rl.RecordFirstIndex < 0)
+      {
+        rl.RecordFirstIndex = 0;
+      }
+
+      if (rl.RecordLastIndex < 0)
+      {
+        rl.RecordLastIndex = fit.Records.Count - 1;
+      }
       Laps.Add(rl);
     }
     uneditedLaps_ = Laps.Select(l => new Lap(l)).ToList();
@@ -146,9 +158,9 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     subscriptions_.Add(sub);
   }
 
-  public void HandleApplyClicked() => _ = Task.Run(() => ApplyLapSpeeds(editedLaps_));
+  public void HandleApplyClicked() => _ = Task.Run(async () => await ApplyLapSpeeds(editedLaps_));
 
-  public void ApplyLapSpeeds(Dictionary<int, Dauer.Model.Workouts.Speed> speeds)
+  public async Task ApplyLapSpeeds(Dictionary<int, Dauer.Model.Workouts.Speed> speeds)
   {
     if (uneditedLaps_ == null) { return; }
 
@@ -183,9 +195,13 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Backfilling: 100%");
 
+    UiFile? file = fileService_.MainFile;
+
     // Trigger property change
-    var file = fileService_.MainFile;
-    fileService_.MainFile = null; 
-    fileService_.MainFile = file;
+    await Dispatcher.UIThread.InvokeAsync(() =>
+    {
+      fileService_.MainFile = null;
+      fileService_.MainFile = file;
+    });
   }
 }

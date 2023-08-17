@@ -8,7 +8,7 @@ namespace Dauer.Ui.ViewModels;
 public class UiFile : ReactiveObject
 {
   [Reactive] public FitFile? FitFile { get; set; }
-  [Reactive] public BlobFile? Blob { get; set; }
+  [Reactive] public DauerActivity? Activity { get; set; }
   [Reactive] public bool IsVisible { get; set; }
   [Reactive] public double Progress { get; set; }
 

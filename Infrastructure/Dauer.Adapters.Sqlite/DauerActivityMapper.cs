@@ -26,7 +26,7 @@ public static class DauerActivityMapper
   public static DauerActivity MapEntity(this Model.DauerActivity a) => new()
   {
     Id = a.Id,
-    FileId = a.File?.Id ?? -1,
+    FileId = a.File?.Id,
     Source = $"{a.Source}",
     SourceId = a.SourceId,
     Name = a.Name,

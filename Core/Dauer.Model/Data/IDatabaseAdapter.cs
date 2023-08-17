@@ -15,11 +15,12 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   Task<MapTile> GetMapTileAsync(string id);
 
   Task<bool> InsertAsync(DauerActivity t);
-  Task DeleteAsync(DauerActivity t);
+  Task<bool> UpdateAsync(DauerActivity t);
+  Task<bool> DeleteAsync(DauerActivity t);
   Task<DauerActivity> GetActivityAsync(string id);
+  Task<List<DauerActivity>> GetAllActivitiesAsync();
 
-  Task DeleteAsync(BlobFile t);
-  Task<List<BlobFile>> GetAllAsync();
-  Task<bool> InsertAsync(BlobFile t);
-  Task UpdateAsync(BlobFile t);
+  Task<bool> DeleteAsync(FileReference t);
+  Task<bool> InsertAsync(FileReference t);
+  Task UpdateAsync(FileReference t);
 }

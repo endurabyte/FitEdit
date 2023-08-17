@@ -13,12 +13,13 @@ public class NullDatabaseAdapter : HasProperties, IDatabaseAdapter
   public Task<MapTile> GetMapTileAsync(string id) => Task.FromResult(new MapTile { Id = id });
 
   public Task<bool> InsertAsync(DauerActivity t) => Task.FromResult(true);
-  public Task DeleteAsync(DauerActivity t) => Task.CompletedTask;
+  public Task<bool> UpdateAsync(DauerActivity t) => Task.FromResult(true);
+  public Task<bool> DeleteAsync(DauerActivity t) => Task.FromResult(true);
   public Task<DauerActivity> GetActivityAsync(string id) => Task.FromResult(new DauerActivity { Id = id });
+  public Task<List<DauerActivity>> GetAllActivitiesAsync() => Task.FromResult(new List<DauerActivity>());
 
-  public Task DeleteAsync(BlobFile t) => Task.CompletedTask;
-  public Task<List<BlobFile>> GetAllAsync() => Task.FromResult(new List<BlobFile>());
-  public Task<bool> InsertAsync(BlobFile t) => Task.FromResult(true);
-  public Task UpdateAsync(BlobFile t) => Task.CompletedTask;
+  public Task<bool> DeleteAsync(FileReference t) => Task.FromResult(true);
+  public Task<bool> InsertAsync(FileReference t) => Task.FromResult(true);
+  public Task UpdateAsync(FileReference t) => Task.CompletedTask;
 
 }
