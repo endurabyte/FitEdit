@@ -151,36 +151,18 @@ namespace Dynastream.Fit
     {
       if (messageCount < 0) messageCount = int.MaxValue;
 
-      long fileSize = 0;
+      long fileSize = fitStream.Length;
       long filePosition = fitStream.Position;
-      bool readBefore = filePosition != 0;
 
       try
       {
-        bool readOK = true;
+        bool fileOk = true;
 
         // Attempt to read header
-        if (mode == DecodeMode.Normal || mode == DecodeMode.Partial)
+        if (filePosition == 0 && (mode == DecodeMode.Normal || mode == DecodeMode.Partial))
         {
-
-          if (readBefore)
-          {
-            // Temporarily seek to 0 to read header
-            fitStream.Position = 0;
-          }
-
-          try
-          {
-            fileHeader_ = new Header(fitStream);
-            readOK &= fileHeader_.IsValid();
-          }
-          finally
-          {
-            if (readBefore)
-            {
-              fitStream.Position = filePosition;
-            }
-          }
+          fileHeader_ = new Header(fitStream);
+          fileOk &= fileHeader_.IsValid();
 
           // Get the file size from the header
           // When the data size is invalid set the file size to the fitstream length
@@ -188,12 +170,8 @@ namespace Dynastream.Fit
           {
             fileSize = fileHeader_.Size + fileHeader_.DataSize + CRCSIZE;
           }
-          else
-          {
-            fileSize = fitStream.Length;
-          }
 
-          if (!readOK)
+          if (!fileOk)
           {
             throw new FitException("FIT decode error: File is not FIT format. Check file header data type. Error at stream position: " + fitStream.Position);
           }
@@ -251,11 +229,11 @@ namespace Dynastream.Fit
           byte[] data = new byte[fileSize];
           fitStream.Position = filePosition;
           await fitStream.ReadAsync(data, 0, data.Length);
-          readOK &= (CRC.Calc16(data, data.Length) == 0x0000);
+          fileOk &= (CRC.Calc16(data, data.Length) == 0x0000);
           fitStream.Position = filePosition + fileSize;
         }
 
-        return readOK;
+        return fileOk;
       }
       catch (EndOfStreamException e)
       {
@@ -379,8 +357,8 @@ namespace Dynastream.Fit
           SourceIndex = sourceIndex,
         };
 
-        //if (localMesgDefs[def.LocalMesgNum] != null 
-        //  && localMesgDefs[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
+        //if (localMesgDefs_[def.LocalMesgNum] != null
+        //  && localMesgDefs_[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
         //{
         //  Log.Debug($"Discarding suspicious redefinition of local mesg def with different global mesg num");
         //  return;
