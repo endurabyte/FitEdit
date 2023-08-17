@@ -5,7 +5,7 @@ namespace Dauer.Adapters.Sqlite;
 public class SqliteFile 
 {
   [PrimaryKey, AutoIncrement]
-  public int Id { get; set; }
+  public long Id { get; set; }
 
   public string Name { get; set; }
   public byte[] Bytes { get; set; }

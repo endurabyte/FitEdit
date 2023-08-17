@@ -1,8 +1,10 @@
-﻿namespace Dauer.Model;
+﻿#nullable enable
+
+namespace Dauer.Model;
 
 public class BlobFile
 {
-  public int Id { get; set; }
+  public long Id { get; set; }
   public string Name { get; set; } = string.Empty;
   public byte[] Bytes { get; set; } = Array.Empty<byte>();
 

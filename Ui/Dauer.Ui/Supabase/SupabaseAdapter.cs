@@ -2,6 +2,7 @@
 using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
+using Dauer.Ui.Supabase.Model;
 using Dauer.Ui.ViewModels;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -180,14 +181,16 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
           return;
         }
 
-        var blobFile = new BlobFile(activity.Name, bytes);
-        var uiFile = new UiFile { Blob = blobFile, };
+        var file = new BlobFile(activity?.Name ?? "Untitled Activity", bytes);
+        DauerActivity? act = activity?.MapDauerActivity();
+        if (act == null) { return; }
+        act.File = file;
+        bool ok = await db_.InsertAsync(act).AnyContext();
 
-        bool ok = await db_.InsertAsync(blobFile).AnyContext();
+        if (ok) { log_.LogInformation("Persisted activity {@activity}", activity); }
+        else { log_.LogInformation("Could not persist activity {@activity}", activity); }
 
-        if (ok) { log_.LogInformation("Persisted file {@blobFile}", blobFile); }
-        else { log_.LogInformation("Could not persist file {@blobFile}", uiFile); }
-
+        var uiFile = new UiFile { Blob = file, };
         file_.Files.Add(uiFile);
       });
     });

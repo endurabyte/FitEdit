@@ -65,7 +65,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   /// <summary>
   /// Key: File ID, Value: layer
   /// </summary>
-  private readonly Dictionary<int, ILayer> traces_ = new();
+  private readonly Dictionary<long, ILayer> traces_ = new();
 
   /// <summary>
   /// Key: Layer index, Value: layer

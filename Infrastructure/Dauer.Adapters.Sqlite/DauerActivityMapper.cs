@@ -1,0 +1,42 @@
+﻿#nullable enable
+using Units;
+
+namespace Dauer.Adapters.Sqlite;
+
+public static class DauerActivityMapper
+{
+  public static Model.DauerActivity MapModel(this DauerActivity a) => new()
+  {
+    Id = a.Id,
+    Source = Enum.TryParse<Model.ActivitySource>(a.Source, out var parsed) 
+      ? parsed 
+      : Model.ActivitySource.Unknown,
+    SourceId = a.SourceId,
+    Name = a.Name,
+    Description = a.Description,
+    Type = a.Type,
+    DeviceName = a.DeviceName,
+    StartTime  = a.StartTime,
+    Duration = a.Duration,
+    Distance = new Quantity(a.Distance, Unit.Meter),
+    Manual = a.Manual,
+    FileType = a.FileType,
+  };
+
+  public static DauerActivity MapEntity(this Model.DauerActivity a) => new()
+  {
+    Id = a.Id,
+    FileId = a.File?.Id ?? -1,
+    Source = $"{a.Source}",
+    SourceId = a.SourceId,
+    Name = a.Name,
+    Description = a.Description,
+    Type = a.Type,
+    DeviceName = a.DeviceName,
+    StartTime = a.StartTime,
+    Duration = a.Duration,
+    Distance = a.Distance.Meters(),
+    Manual = a.Manual,
+    FileType = a.FileType,
+  };
+}
