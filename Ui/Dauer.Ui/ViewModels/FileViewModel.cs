@@ -7,6 +7,8 @@ using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
 using DynamicData;
+using DynamicData.Binding;
+using NUnit.Framework.Constraints;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -57,6 +59,16 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       fileService.MainFile = fileService.Files[i];
     });
 
+    FileService.Files.ObserveCollectionChanges().Subscribe(args =>
+    {
+      if (args?.EventArgs?.NewItems == null) { return; }
+      foreach (var e in args.EventArgs.NewItems)
+      {
+        if (e is not UiFile sf) { continue; }
+        sf.SubscribeToIsLoaded(LoadOrUnload);
+      }
+    });
+
     db.ObservableForProperty(x => x.Ready).Subscribe(property =>
     {
       if (!property.Value) { return; }
@@ -70,18 +82,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     {
       List<BlobFile> files = await db_.GetAllAsync().AnyContext();
 
-      var sfs = files.Select(file => new SelectedFile
+      var sfs = files.Select(file => new UiFile
       {
         FitFile = null, // Don't parse the blobs, that would be too slow
         Blob = file,
       }).ToList();
 
       await Dispatcher.UIThread.InvokeAsync(() => FileService.Files.AddRange(sfs));
-
-      foreach (var sf in sfs)
-      {
-        sf.SubscribeToIsLoaded(LoadOrUnload);
-      }
     });
   }
 
@@ -111,18 +118,16 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  private async Task<SelectedFile> Persist(BlobFile file)
+  private async Task<UiFile> Persist(BlobFile file)
   { 
-    SelectedFile sf = await Task.Run(async () =>
+    UiFile sf = await Task.Run(async () =>
     {
       bool ok = await db_.InsertAsync(file).AnyContext();
 
       if (ok) { Log.Info($"Persisted file {file}"); }
       else { Log.Error($"Could not persist file {file}"); }
 
-      var sf = new SelectedFile { Blob = file };
-      sf.SubscribeToIsLoaded(LoadOrUnload);
-      return sf;
+      return new UiFile { Blob = file };
     });
 
     FileService.Files.Add(sf);
@@ -147,13 +152,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private async Task Remove(int index)
   {
-    SelectedFile file = FileService.Files[index];
+    UiFile file = FileService.Files[index];
 
     await db_.DeleteAsync(file.Blob);
     FileService.Files.Remove(file);
   }
 
-  private void LoadOrUnload(SelectedFile sf)
+  private void LoadOrUnload(UiFile sf)
   {
     if (sf.IsVisible)
     {
@@ -165,14 +170,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  private void UnloadFile(SelectedFile? sf)
+  private void UnloadFile(UiFile? sf)
   {
     if (sf == null) { return; }
     FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsVisible);
     sf.Progress = 0;
   }
 
-  private async Task LoadFile(SelectedFile? sf)
+  private async Task LoadFile(UiFile? sf)
   {
     if (sf == null || sf.Blob == null)
     {
@@ -196,11 +201,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       // Handle FIT files
       string extension = Path.GetExtension(file.Name);
 
-      if (extension.ToLower() != ".fit")
-      {
-        Log.Info($"Unsupported extension {extension}");
-        return;
-      }
+      //if (extension.ToLower() != ".fit")
+      //{
+      //  Log.Info($"Unsupported extension {extension}");
+      //  return;
+      //}
 
       using var ms = new MemoryStream(file.Bytes);
       await log_.Log($"Reading FIT file {file.Name}");
@@ -263,7 +268,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await Export(FileService.Files[index]);
   }
 
-  private async Task Export(SelectedFile? file)
+  private async Task Export(UiFile? file)
   { 
     if (file == null) { return; }
     if (file.Blob == null) { return; }
@@ -289,7 +294,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public async void HandleMergeClicked()
   {
-    List<SelectedFile> files = FileService.Files.Where(f => f.IsVisible).ToList();
+    List<UiFile> files = FileService.Files.Where(f => f.IsVisible).ToList();
     if (files.Count < 2) { return; }
     if (files.Any(f => f.FitFile == null)) { return; }
 
@@ -306,7 +311,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       Name = $"Merged {string.Join("-", files.Select(f => f.Blob?.Name).Where(s => !string.IsNullOrEmpty(s)))}"
     };
 
-    SelectedFile sf = await Persist(blob);
+    UiFile sf = await Persist(blob);
     sf.FitFile = merged;
     sf.IsVisible = true;
     sf.Progress = 100;
@@ -324,7 +329,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     _ = Task.Run(() => RepairAsync(FileService.Files[index]));
   }
 
-  public async Task<SelectedFile?> RepairAsync(SelectedFile? file)
+  public async Task<UiFile?> RepairAsync(UiFile? file)
   {
     if (file == null) { return null; }
     if (file.FitFile == null) { return null; }

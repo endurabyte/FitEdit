@@ -234,7 +234,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     SelectHexData(0, 0);
   }
 
-  private void HandleMainFileChanged(SelectedFile? file)
+  private void HandleMainFileChanged(UiFile? file)
   {
     if (file == null) { return; }
     if (file.FitFile == null) { return; }

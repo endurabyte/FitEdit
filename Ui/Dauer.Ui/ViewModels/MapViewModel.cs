@@ -75,7 +75,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
 
-  private readonly Dictionary<SelectedFile, IDisposable> isVisibleSubs_ = new();
+  private readonly Dictionary<UiFile, IDisposable> isVisibleSubs_ = new();
 
   private int canvasLayerIndex_ = 0; 
   private int tileLayerIndex_ = 1; 
@@ -132,7 +132,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
       return;
     }
     
-    SelectedFile? sf = fileService_.MainFile;
+    UiFile? sf = fileService_.MainFile;
     if (sf == null) { return; }
     if (sf.Blob == null) { return; }
     if (sf.FitFile == null) { return; }
@@ -146,7 +146,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HandleLayersChanged();
   }
 
-  private void HandleMainFileChanged(IObservedChange<IFileService, SelectedFile?> property)
+  private void HandleMainFileChanged(IObservedChange<IFileService, UiFile?> property)
   {
     selectedIndexSub_?.Dispose();
     selectedCountSub_?.Dispose();
@@ -214,9 +214,9 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HandleLayersChanged();
   }
 
-  private void HandleFileAdded(SelectedFile? sf) => Add(sf);
+  private void HandleFileAdded(UiFile? sf) => Add(sf);
 
-  private void Add(SelectedFile? sf)
+  private void Add(UiFile? sf)
   { 
     if (sf == null) { return; }
     if (isVisibleSubs_.ContainsKey(sf)) { isVisibleSubs_[sf].Dispose(); }
@@ -226,7 +226,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HandleFitFileChanged(sf);
   }
 
-  private void HandleFileIsVisibleChanged(SelectedFile file)
+  private void HandleFileIsVisibleChanged(UiFile file)
   {
     if (file.IsVisible) { Add(file); }
     else { Remove(file); }
@@ -234,7 +234,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
-  private void HandleFitFileChanged(SelectedFile sf)
+  private void HandleFitFileChanged(UiFile sf)
   {
     if (sf.Blob == null) { return; }
 
@@ -258,9 +258,9 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     UpdateExtent();
   }
 
-  private void HandleFileRemoved(SelectedFile? sf) => Remove(sf);
+  private void HandleFileRemoved(UiFile? sf) => Remove(sf);
 
-  private void Remove(SelectedFile? sf)
+  private void Remove(UiFile? sf)
   { 
     if (sf == null) { return; }
     if (sf.Blob == null) { return; }

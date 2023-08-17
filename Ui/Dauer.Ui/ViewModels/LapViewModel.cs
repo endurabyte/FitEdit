@@ -50,7 +50,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property => HandleSelectedIndexChanged(property.Value));
   }
 
-  private void HandleMainFileChanged(SelectedFile? file)
+  private void HandleMainFileChanged(UiFile? file)
   {
     if (file?.FitFile == null) { return; }
     Show(file.FitFile);
@@ -61,7 +61,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     if (index < 0 || index >= Laps.Count) { return; }
     Lap lap = Laps[index];
 
-    SelectedFile? file = fileService_.MainFile;
+    UiFile? file = fileService_.MainFile;
     if (file == null) { return; }
 
     file.SelectedIndex = lap.RecordFirstIndex;

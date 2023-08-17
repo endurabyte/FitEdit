@@ -18,7 +18,7 @@ public class DesignPlotViewModel : PlotViewModel
 {
   public DesignPlotViewModel() : base (new FileService())
   {
-    var file = new SelectedFile { FitFile = new FitFileFactory().CreateFake() };
+    var file = new UiFile { FitFile = new FitFileFactory().CreateFake() };
     Add(file);
   }
 }
@@ -37,8 +37,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
 
-  private readonly Dictionary<SelectedFile, IDisposable> isVisibleSubs_ = new();
-  private readonly Dictionary<SelectedFile, List<PlotElement>> plots_ = new();
+  private readonly Dictionary<UiFile, IDisposable> isVisibleSubs_ = new();
+  private readonly Dictionary<UiFile, List<PlotElement>> plots_ = new();
 
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
   private TrackerHitResult? lastTracker_;
@@ -84,16 +84,16 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     this.ObservableForProperty(x => x.SliderValue).Subscribe(property =>
     {
-      SelectedFile? file = fileService.MainFile;
+      UiFile? file = fileService.MainFile;
       if (file == null) { return; }
 
       file.SelectedIndex = property.Value;
     });
   }
 
-  private void HandleMainFileChanged(IObservedChange<IFileService, SelectedFile?> property)
+  private void HandleMainFileChanged(IObservedChange<IFileService, UiFile?> property)
   {
-    SelectedFile? file = property.Value;
+    UiFile? file = property.Value;
     if (file == null) { return; }
 
     selectedIndexSub_?.Dispose();
@@ -141,7 +141,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Plot = plot;
   }
 
-  private void HandleFileAdded(SelectedFile file)
+  private void HandleFileAdded(UiFile file)
   {
     // If we already have this file, don't add it again
     if (isVisibleSubs_.ContainsKey(file)) { return; }
@@ -150,15 +150,15 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     HandleFileIsVisibleChanged(file);
   }
 
-  private void HandleFileRemoved(SelectedFile file) => Remove(file);
+  private void HandleFileRemoved(UiFile file) => Remove(file);
 
-  private void HandleFileIsVisibleChanged(SelectedFile file)
+  private void HandleFileIsVisibleChanged(UiFile file)
   {
     if (file.IsVisible) { Add(file); }
     else { Remove(file); }
   }
 
-  protected void Add(SelectedFile file)
+  protected void Add(UiFile file)
   {
     if (Plot == null) { return; }
     if (file.FitFile == null) { return; }
@@ -222,7 +222,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     Redraw(true);
   }
 
-  private void Remove(SelectedFile file)
+  private void Remove(UiFile file)
   { 
     if (Plot == null) { return; }
 

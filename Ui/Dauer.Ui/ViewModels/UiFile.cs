@@ -5,7 +5,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
 
-public class SelectedFile : ReactiveObject
+public class UiFile : ReactiveObject
 {
   [Reactive] public FitFile? FitFile { get; set; }
   [Reactive] public bool IsVisible { get; set; }

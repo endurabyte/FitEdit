@@ -6,8 +6,8 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IFileService
 {
-  SelectedFile? MainFile { get; set; }
-  ObservableCollection<SelectedFile> Files { get; set; }
+  UiFile? MainFile { get; set; }
+  ObservableCollection<UiFile> Files { get; set; }
 }
 
 /// <summary>
@@ -15,7 +15,7 @@ public interface IFileService
 /// </summary>
 public class FileService : ReactiveObject, IFileService
 {
-  [Reactive] public SelectedFile? MainFile { get; set; }
-  [Reactive] public ObservableCollection<SelectedFile> Files { get; set; } = new();
+  [Reactive] public UiFile? MainFile { get; set; }
+  [Reactive] public ObservableCollection<UiFile> Files { get; set; } = new();
 }
 
