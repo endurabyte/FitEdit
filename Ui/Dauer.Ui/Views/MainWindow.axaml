@@ -3,10 +3,12 @@
         xmlns:vm="using:Dauer.Ui.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="clr-namespace:Dauer.Ui"
         xmlns:views="clr-namespace:Dauer.Ui.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Dauer.Ui.Views.MainWindow"
         Icon="/Assets/logo.ico"
-        Title="FitEdit">
-        <views:MainView />
+        Title="{x:Static ui:CompositionRoot.AppTitle}">
+
+  <views:MainView />
 </Window>

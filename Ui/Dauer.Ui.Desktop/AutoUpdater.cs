@@ -1,4 +1,5 @@
-﻿using Dauer.Model;
+﻿using System.Runtime.InteropServices;
+using Dauer.Model;
 using NuGet.Versioning;
 using Squirrel;
 using Squirrel.SimpleSplat;
@@ -16,10 +17,22 @@ public class AutoUpdater
   private static void HandleAppInstalled(SemanticVersion version, IAppTools tools)
   {
     Log.Info($"App Installed to {tools.AppDirectory}");
+
+    if (OperatingSystem.IsWindows())
+    {
+      tools.CreateShortcutForThisExe(ShortcutLocation.StartMenuRoot | ShortcutLocation.Desktop);
+      tools.CreateUninstallerRegistryEntry();
+    }
   }
 
   public void WatchForUpdates(CancellationToken ct = default)
   {
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+    {
+      Log.Info("Auto update not supported on Linux. Please use your package manager.");
+      return;
+    }
+
     if (System.Diagnostics.Debugger.IsAttached)
     {
       Log.Info("Skipping auto update check because debugger is attached.");
