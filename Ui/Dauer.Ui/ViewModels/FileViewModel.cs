@@ -311,7 +311,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     sf.Progress = 100;
   }
 
-  public void HandleRepairClicked()
+  public void HandleRepairSubtractivelyClicked()
   {
     int index = SelectedIndex;
     if (index < 0 || index >= FileService.Files.Count)
@@ -320,15 +320,31 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    _ = Task.Run(() => RepairAsync(FileService.Files[index]));
+    _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Subtractive));
   }
 
-  public async Task<UiFile?> RepairAsync(UiFile? file)
+  public void HandleRepairAdditivelyClicked()
+  {
+    int index = SelectedIndex;
+    if (index < 0 || index >= FileService.Files.Count)
+    {
+      Log.Info("No file selected; cannot repair file");
+      return;
+    }
+
+    _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Additive));
+  }
+
+  public async Task<UiFile?> RepairAsync(UiFile? file, RepairStrategy strategy)
   {
     if (file == null) { return null; }
     if (file.FitFile == null) { return null; }
 
-    FitFile? fit = file.FitFile.Repair();
+    FitFile? fit = strategy switch
+    {
+      RepairStrategy.Additive => file.FitFile.RepairAdditively(),
+      _ => file.FitFile.RepairSubtractively(),
+    };
 
     return await Persist(new FileReference
     (

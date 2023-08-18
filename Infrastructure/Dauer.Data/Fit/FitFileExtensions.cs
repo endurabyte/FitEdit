@@ -274,9 +274,80 @@ public static class FitFileExtensions
 #nullable enable
 
   /// <summary>
-  /// Build a new it file from the given file, copying over only valid or repairable messages.
+  /// Build a new FIT file from the given file by removing unnecessary messages.
+  ///
+  /// <para/>
+  /// This method preserves more information than <see cref="RepairAdditively(FitFile?)(FitFile?)"/>,
+  /// such as individual sports in multisport events like triathlons, sessions, and laps.
+  /// Use that one when this one does not work.
   /// </summary>
-  public static FitFile? Repair(this FitFile? source)
+  public static FitFile? RepairSubtractively(this FitFile? source)
+  {
+    if (source == null) { return null; }
+    var dest = new FitFile();
+
+    var typeFilter = new HashSet<Type> 
+    { 
+      typeof(FileIdMesg), 
+      typeof(FileCreatorMesg), 
+      typeof(EventMesg), 
+      typeof(DeviceInfoMesg), 
+      typeof(DeviceSettingsMesg), 
+      typeof(UserProfileMesg), 
+      typeof(SportMesg), 
+      typeof(SessionMesg), 
+      typeof(RecordMesg), 
+      typeof(LapMesg), 
+      typeof(ActivityMesg), 
+    };
+    var mesgNumFilter = new HashSet<ushort>(typeFilter.Select(type => MessageFactory.MesgNums[type]));
+
+    var filteredEvents = source.Events.Where(e =>
+    {
+      if (e is MesgEventArgs mea && typeFilter.Contains(mea.mesg.GetType())) 
+      {
+        if (!dest.MessagesByDefinition.ContainsKey(mea.mesg.Num))
+        {
+          dest.MessagesByDefinition[mea.mesg.Num] = new List<Mesg>() { mea.mesg };
+        }
+        else
+        {
+          dest.MessagesByDefinition[mea.mesg.Num].Add(mea.mesg);
+        }
+        return true; 
+      }
+
+      if (e is MesgDefinitionEventArgs mdea && mesgNumFilter.Contains(mdea.mesgDef.GlobalMesgNum)) 
+      {
+        dest.MessageDefinitions[mdea.mesgDef.GlobalMesgNum] = mdea.mesgDef;
+        return true; 
+      }
+
+      return false;
+    });
+
+    dest.Events.AddRange(filteredEvents);
+    dest.ForwardfillEvents();
+
+    return dest;
+  }
+
+  /// <summary>
+  /// Build a new FIT file from the given file by condensing it into one each of: Session, Lap, Sport, and Activity,
+  /// along with the other messages required to make it uploadable to Garmin Connect.
+  /// 
+  /// <para/>
+  /// For example, multisport events like triathlons will be condensed into one sport.
+  /// The sport chosen will be the first in the given file, i.e. typically open water swim. 
+  /// This can be changed on Garmin Connect, Strava, and other online tools.
+  /// The repaired file includes all lat/lon records except those with speed spikes (speeds greater than 1000m/s)
+  /// 
+  /// <para/>
+  /// This method does not preserve as much information as <see cref="RepairSubtractively(FitFile?)"/>,
+  /// such as individual sports in multisport events, sessions, and laps.
+  /// Use this one when that one does not work.
+  /// </summary>
+  public static FitFile? RepairAdditively(this FitFile? source)
   {
     if (source == null) { return null; }
 
@@ -309,7 +380,6 @@ public static class FitFileExtensions
     session.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
     session.SetTotalDistance(totalDistance ?? 0);
     session.SetTrigger(SessionTrigger.ActivityEnd);
-
 
     var lap = new LapMesg();
     lap.SetStartTime(start);

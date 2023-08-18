@@ -31,11 +31,50 @@
           </TextBlock>
         </ToolTip.Tip>
       </Button>
-      <Button Command="{Binding HandleRepairClicked}" Content="Repair">
+      <Button Command="{Binding HandleRepairSubtractivelyClicked}" Content="Repair (Subtractive)">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">
             Attempt to repair the file <LineBreak/>
-            This creates a new file containing only the data that can be read from the original file.
+
+            <LineBreak/>
+            This strategy preserves more information than the additive method.
+            It starts with a copy of the given file and removes unnecessary messages. <LineBreak/>
+            
+            <LineBreak/>
+            The resulting file preserves sport-specific data such as power, swim strokes, vertical osclliation.
+            It preserves laps, sessions, and individual sports in multisport activities like triathlons. <LineBreak/>
+
+            <LineBreak/>
+            The repaired file should be uploadable to Garmin Connect.
+            If this strategy does not work, try the additive method.
+          </TextBlock>
+        </ToolTip.Tip>
+      </Button>
+      <Button Command="{Binding HandleRepairAdditivelyClicked}" Content="Repair (Additive)">
+        <ToolTip.Tip>
+          <TextBlock TextWrapping="Wrap">
+            Attempt to repair the file <LineBreak/>
+
+            <LineBreak/>
+            This strategy preserves less information than the subtractive method.
+            It starts with a blank file and copies over the bare minimum data. <LineBreak/>
+            
+            <LineBreak/>
+            The resulting file will be condensed into one lap, session, and sport. 
+            It will contain the generic data from the original file, such as GPS coordinates (if available),
+            heart rate (if available), timestamp, and speed/pace. 
+            Sport-specific data such as power, swim strokes, and vertical oscillation will not be preserved.<LineBreak/>
+            
+            <LineBreak/>
+            Multisport events like triathlons will be condensed into one sport.
+            The resulting sport will be the first in the given file, i.e. typically open water swim.
+            This can be changed in Data -> Sport.<LineBreak/>
+
+            <LineBreak/>
+            The repaired file includes all lat/lon records except those with speed spikes (speeds greater than 1000m/s)
+
+            <LineBreak/>
+            The repaired file should be uploadable to Garmin Connect.
           </TextBlock>
         </ToolTip.Tip>
       </Button>
