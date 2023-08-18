@@ -5,6 +5,7 @@ using Dauer.Model.Extensions;
 using Dauer.Ui.Supabase.Model;
 using Dauer.Ui.ViewModels;
 using Microsoft.Extensions.Logging;
+using Postgrest;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Supabase;
@@ -123,9 +124,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       await SyncAuthorization();
     });
 
-    db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async _ =>
+    db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
     {
       Authorization = await LoadCachedAuthorization();
+      _ = Task.Run(GetRecentActivities);
     });
 
     this.ObservableForProperty(x => x.Authorization).Subscribe(_ =>
@@ -168,6 +170,8 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     garminUserChannel_.Subscribe();
     garminActivityChannel_.Subscribe();
+
+    _ = Task.Run(GetRecentActivities);
   }
 
   private async Task HandleActivityNotification(GarminActivity? activity)
@@ -188,27 +192,29 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   private async Task AddNewActivity(DauerActivity toWrite, UiFile? uiFile, string? bucketUrl)
   {
-    // Remove leading bucket name
-    // "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
-    if (bucketUrl == null) { return; }
-    string path = bucketUrl[(bucketUrl.IndexOf("/") + 1)..];
-
-    byte[] bytes = await client_.Storage
-      .From("activity-files")
-      .Download(path, (sender, progress) =>
-      {
-        log_.LogInformation("File download progress: {@url} {@percent}", toWrite.BucketUrl, progress);
-      });
-
-    if (bytes.Length < 200)
+    if (bucketUrl != null)
     {
-      // Response is a JSON object containing an error string
-      string json = Encoding.ASCII.GetString(bytes);
-      log_.LogError("Could not download GarminActivity: {@json}", json);
-      return;
-    }
+      // Remove leading bucket name
+      // "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
+      string path = bucketUrl[(bucketUrl.IndexOf("/") + 1)..];
 
-    toWrite.File = new FileReference(toWrite.Id, bytes);
+      byte[] bytes = await client_.Storage
+        .From("activity-files")
+        .Download(path, (sender, progress) =>
+        {
+          log_.LogInformation("File download progress: {@url} {@percent}", toWrite.BucketUrl, progress);
+        });
+
+      if (bytes.Length < 200)
+      {
+        // Response is a JSON object containing an error string
+        string json = Encoding.ASCII.GetString(bytes);
+        log_.LogError("Could not download GarminActivity: {@json}", json);
+        return;
+      }
+
+      toWrite.File = new FileReference(toWrite.Id, bytes);
+    }
 
     bool ok = await fileService_.CreateAsync(toWrite);
 
@@ -395,5 +401,38 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     if (user is null) { return; }
     IsAuthenticatedWithGarmin = !string.IsNullOrEmpty(user.AccessToken);
+  }
+
+  /// <summary>
+  /// Query for activities we missed while offline
+  /// </summary>
+  private async Task GetRecentActivities()
+  {
+    if (!db_.Ready) { return; }
+
+    List<object> ids = fileService_.Files
+      .Select(f => (object)(f?.Activity?.Id ?? ""))
+      .ToList();
+
+    try
+    {
+
+      var activities = await client_.Postgrest.Table<Model.GarminActivity>()
+        // Filter out known ids
+        .Not("Id", Postgrest.Constants.Operator.In, ids)
+        .Get();
+
+      if (activities == null) { return; }
+
+      // Redundant defensive filter
+      foreach (var activity in activities.Models.Where(a => !ids.Contains(a.Id)))
+      {
+        await HandleActivityNotification(activity).AnyContext();
+      }
+    }
+    catch (Exception e)
+    {
+      log_.LogError("Exception getting recent GarminActivities: {@e}", e);
+    }
   }
 }

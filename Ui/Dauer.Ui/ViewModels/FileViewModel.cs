@@ -174,9 +174,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
 
     DauerActivity? act = await FileService.ReadAsync(sf.Activity.Id);
-    act.File.Bytes;
+    FileReference? file = act?.File;
 
-    FileReference? file = sf.Activity.File;
+    if (file == null) 
+    {
+      Log.Error($"Could not load file {sf.Activity.Name}");
+      return;
+    }
 
     try
     {
