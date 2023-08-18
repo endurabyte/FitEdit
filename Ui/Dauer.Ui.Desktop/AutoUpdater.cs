@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using Dauer.Model;
+using Dauer.Ui.ViewModels;
 using NuGet.Versioning;
 using Squirrel;
 using Squirrel.SimpleSplat;
@@ -65,7 +66,10 @@ public class AutoUpdater
         Log.Info($"Found {updateInfo.ReleasesToApply.Count} updates, applying...");
         await mgr.UpdateApp();
 
-        // TODO notify user of update
+        // Notify user of update
+        Titlebar.Instance.Message = "| Please restart to apply updates";
+
+        // TODO provide e.g. a button to restart
         //UpdateManager.RestartApp();
       }
     }

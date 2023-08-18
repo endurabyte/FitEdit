@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Autofac;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Configuration;
@@ -20,20 +19,11 @@ public interface ICompositionRoot
 
 public class CompositionRoot : ICompositionRoot
 {
-  public static string? AppTitle => $"FitEdit - Training Data Editor {Version}";
-  public static string? Version { get; }
   public static bool UseSupabase { get; set; } = true;
   public static ICompositionRoot? Instance { get; set; }
 
   private ContainerBuilder? builder_;
   private IContainer? container_;
-
-  static CompositionRoot()
-  {
-    var assembly = Assembly.GetAssembly(typeof(CompositionRoot));
-    var attr = assembly?.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
-    Version = attr?.InformationalVersion ?? "Unknown Version";
-  }
 
   public ICompositionRoot Build(IApplicationLifetime? lifetime)
   {

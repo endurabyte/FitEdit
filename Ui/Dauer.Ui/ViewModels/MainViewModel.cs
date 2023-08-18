@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using System.Reflection;
 using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Ui.Infra.Adapters.Windowing;
@@ -29,6 +30,12 @@ public class DesignMainViewModel : MainViewModel
   }
 }
 
+public class Titlebar : ReactiveObject
+{
+  public static Titlebar Instance { get; } = new();
+  [Reactive] public string? Message { get; set; }
+}
+
 public class MainViewModel : ViewModelBase, IMainViewModel
 {
   public IPlotViewModel Plot { get; }
@@ -38,6 +45,11 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IFileViewModel File { get; }
   public ILogViewModel LogVm { get; }
   public IFitEditService FitEdit { get; set; }
+
+  private string? AppTitle_ => $"FitEdit | Training Data Editor | Version {Version} {Titlebar.Instance.Message}";
+  [Reactive] public string? AppTitle { get; set; }
+
+  public string? Version { get; set; }
 
   [Reactive] public int SelectedTabIndex { get; set; }
 
@@ -70,16 +82,16 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     LogVm = log;
     FitEdit = fitEdit;
 
-    window_.Resized.Subscribe(tup =>
-    {
-      Log.Info($"Window resized to {tup.Item1} {tup.Item2}");
-    });
+    GetVersion();
+
+    Titlebar.Instance.ObservableForProperty(x => x.Message).Subscribe(_ => AppTitle = AppTitle_);
+    window_.Resized.Subscribe(tup => Log.Info($"Window resized to {tup.Item1} {tup.Item2}"));
 
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
       .Subscribe(_ =>
       {
         Message = FitEdit.IsAuthenticatedWithGarmin
-          ? "Successfully connected to Garmin!" 
+          ? "Successfully connected to Garmin!"
           : "Disconnected from Garmin";
       });
 
@@ -87,9 +99,20 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       .Subscribe(_ =>
       {
         Message = FitEdit.IsAuthenticated
-          ? "Sign in complete!" 
+          ? "Sign in complete!"
           : "Signed out";
       });
+  }
+
+  /// <summary>
+  /// Get the assembly version that is displayed in the titlebar and update the titlebar with it
+  /// </summary>
+  private void GetVersion()
+  {
+    var assembly = Assembly.GetAssembly(typeof(CompositionRoot));
+    var attr = assembly?.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
+    Version = attr?.InformationalVersion ?? "Unknown Version";
+    AppTitle = AppTitle_;
   }
 
   public void HandleLoginClicked()
