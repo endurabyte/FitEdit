@@ -155,6 +155,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
 
     Editing = false;
+
+    Add(property.Value);
   }
 
   private void HandleMapControlChanged()

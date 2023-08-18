@@ -15,6 +15,7 @@ public static class FileServiceExtensions
 
        foreach (var file in x.EventArgs.NewItems.OfType<UiFile>())
        {
+         handle(file);
          file.SubscribeToFitFile(handle);
        }
      });

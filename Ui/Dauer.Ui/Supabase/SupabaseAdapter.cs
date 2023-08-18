@@ -76,6 +76,8 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private RealtimeChannel? garminUserChannel_;
   private RealtimeChannel? garminActivityChannel_;
 
+  private readonly SemaphoreSlim updateSem_ = new(1, 1);
+
   public SupabaseAdapter(
     ILogger<SupabaseAdapter> log,
     IFileService fileService,
@@ -135,6 +137,9 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       persistence.Authorization = Authorization;
       InitClient();
     });
+
+    // When files are deleted from the app, also delete their database record and bucket file
+    fileService_.Deleted.Subscribe(async act => await DeleteActivity(act).AnyContext());
   }
 
   private void InitClient()
@@ -148,8 +153,15 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   private void Subscribe()
   {
-    garminUserChannel_?.Unsubscribe();
-    garminActivityChannel_?.Unsubscribe();
+    try
+    {
+      garminUserChannel_?.Unsubscribe();
+      garminActivityChannel_?.Unsubscribe();
+    }
+    catch (Exception e)
+    {
+      log_.LogError($"Error unsubscribing channel: {{@e}}", e);
+    }
 
     garminUserChannel_ = client_.Realtime.Channel("realtime", "public", "GarminUser");
     garminActivityChannel_ = client_.Realtime.Channel("realtime", "public", "GarminActivity");
@@ -190,13 +202,17 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     await AddNewActivity(toWrite, uiFile, activity?.BucketUrl).AnyContext();
   }
 
+  /// <summary>
+  /// Remove leading bucket name
+  /// "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
+  /// </summary>
+  private static string RemoveLeadingBucketName(string bucketUrl) => bucketUrl[(bucketUrl.IndexOf("/") + 1)..];
+
   private async Task AddNewActivity(DauerActivity toWrite, UiFile? uiFile, string? bucketUrl)
   {
     if (bucketUrl != null)
     {
-      // Remove leading bucket name
-      // "activity-files/<userId>/<activityId>" => "<userId>/<activityId>"
-      string path = bucketUrl[(bucketUrl.IndexOf("/") + 1)..];
+      string path = RemoveLeadingBucketName(bucketUrl);
 
       byte[] bytes = await client_.Storage
         .From("activity-files")
@@ -410,17 +426,26 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     if (!db_.Ready) { return; }
 
-    List<object> ids = fileService_.Files
-      .Select(f => (object)(f?.Activity?.Id ?? ""))
-      .ToList();
+    bool entered = !await updateSem_.WaitAsync(TimeSpan.Zero).AnyContext();
+
+    if (!entered)
+    {
+      return;
+    }
 
     try
     {
+      List<object> ids = (await fileService_
+        .GetAllActivityIdsAsync()
+        .AnyContext())
+        .Cast<object>()
+        .ToList();
 
       var activities = await client_.Postgrest.Table<Model.GarminActivity>()
         // Filter out known ids
         .Not("Id", Postgrest.Constants.Operator.In, ids)
-        .Get();
+        .Get()
+        .AnyContext();
 
       if (activities == null) { return; }
 
@@ -434,5 +459,27 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     {
       log_.LogError("Exception getting recent GarminActivities: {@e}", e);
     }
+    finally
+    {
+      updateSem_.Release();
+    }
+  }
+
+  private async Task DeleteActivity(DauerActivity act)
+  {
+    await client_.Postgrest.Table<Model.GarminActivity>()
+      .Filter("Id", Postgrest.Constants.Operator.Equals, act.Id)
+      .Delete()
+      .AnyContext();
+
+    if (Authorization?.Sub is null) { return; }
+
+    string supabaseUserId = Authorization.Sub;
+    string bucketUrl = $"{supabaseUserId}/{act.Id}";
+
+    await client_.Storage
+      .From("activity-files")
+      .Remove(bucketUrl)
+      .AnyContext();
   }
 }

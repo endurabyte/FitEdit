@@ -130,6 +130,10 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return models;
   }
 
+  public async Task<List<string>> GetAllActivityIdsAsync() => await db_
+    .QueryScalarsAsync<string>($"SELECT Id from {nameof(DauerActivity)}")
+    .AnyContext();
+
   public virtual async Task<bool> InsertAsync(Model.FileReference t) => 1 == await db_?.InsertAsync(t.MapEntity()).AnyContext();
   public async Task UpdateAsync(Model.FileReference t) => await db_?.UpdateAsync(t.MapEntity()).AnyContext();
   public async Task<bool> DeleteAsync(Model.FileReference t) => 1 == await db_?.DeleteAsync(t.MapEntity()).AnyContext();

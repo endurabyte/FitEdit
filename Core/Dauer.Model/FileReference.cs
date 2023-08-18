@@ -4,7 +4,7 @@ namespace Dauer.Model;
 
 public class FileReference
 {
-  public string Id { get; set; } = $"{Guid.NewGuid()}";
+  public string Id { get; set; }
   public string Name { get; set; }
   public byte[] Bytes { get; set; } = Array.Empty<byte>();
 
@@ -13,7 +13,9 @@ public class FileReference
 
   public FileReference(string name, byte[]? bytes)
   {
-    Name = name;
+    bool nameIsGuid = Guid.TryParse(name, out _);
+    Id = nameIsGuid ? name : $"{Guid.NewGuid()}";
+    Name = nameIsGuid ? "file.fit" : name;
     Bytes = bytes ?? Array.Empty<byte>();
   }
 }

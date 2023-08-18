@@ -26,6 +26,7 @@ public class AuthorizationFactory
     {
       Username = username,
       IdentityToken = "",
+      Sub = sub,
       Id = "Dauer.Api",
       Created = issuedAt,
       Expiry = expiry,

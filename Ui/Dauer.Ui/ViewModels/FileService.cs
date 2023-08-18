@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive.Subjects;
 using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
@@ -11,10 +12,15 @@ public interface IFileService
 {
   UiFile? MainFile { get; set; }
   ObservableCollection<UiFile> Files { get; set; }
+  IObservable<DauerActivity> Deleted { get; }
+
   Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default);
   Task<DauerActivity?> ReadAsync(string id);
   Task<bool> UpdateAsync(DauerActivity? act);
   Task<bool> DeleteAsync(DauerActivity? act);
+  Task<List<string>> GetAllActivityIdsAsync();
+}
+
 }
 
 /// <summary>
@@ -27,15 +33,18 @@ public class FileService : ReactiveObject, IFileService
   [Reactive] public UiFile? MainFile { get; set; }
   [Reactive] public ObservableCollection<UiFile> Files { get; set; } = new();
 
+  public IObservable<DauerActivity> Deleted => deletedSubject_;
+  private readonly ISubject<DauerActivity> deletedSubject_ = new Subject<DauerActivity>();
+
   public FileService(IDatabaseAdapter db)
   {
     db_ = db;
 
-    db.ObservableForProperty(x => x.Ready).Subscribe(property =>
+    db.PropertyChanged += (o, e) => 
     {
-      if (!property.Value) { return; }
+      if (!db.Ready) { return; }
       InitFilesList();
-    });
+    };
   }
 
   private void InitFilesList()
@@ -57,18 +66,19 @@ public class FileService : ReactiveObject, IFileService
   public async Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default)
   {
     if (act == null) { return false; }
-    if (act.File == null) { return false; }
 
     try
     {
       if (!await db_.InsertAsync(act)) { return false; }
 
+      if (act.File == null) { return true; }
       if (!CreateParentDir(act.File.Path)) { return false; }
       await File.WriteAllBytesAsync(act.File.Path, act.File.Bytes, ct).AnyContext();
       return true;
     }
-    catch (Exception)
+    catch (Exception e)
     {
+      Log.Error(e);
       return false;
     }
   }
@@ -85,8 +95,9 @@ public class FileService : ReactiveObject, IFileService
 
       return act;
     }
-    catch (Exception)
+    catch (Exception e)
     {
+      Log.Error(e);
       return null;
     }
   }
@@ -99,8 +110,9 @@ public class FileService : ReactiveObject, IFileService
     {
       return await db_.UpdateAsync(act).AnyContext();
     }
-    catch (Exception)
+    catch (Exception e)
     {
+      Log.Error(e);
       return false;
     }
   }
@@ -112,17 +124,21 @@ public class FileService : ReactiveObject, IFileService
     try
     {
       bool ok = await db_.DeleteAsync(act);
+      deletedSubject_?.OnNext(act);
 
       if (act.File == null) { return ok; }
 
       DeleteParentDir(act.File.Path);
       return true;
     }
-    catch (Exception)
+    catch (Exception e)
     {
+      Log.Error(e);
       return false;
     }
   }
+
+  public async Task<List<string>> GetAllActivityIdsAsync() => await db_.GetAllActivityIdsAsync();
 
   private static bool CreateParentDir(string? path)
   {

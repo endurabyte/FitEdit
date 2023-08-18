@@ -322,6 +322,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   private void Redraw(bool updateData = false)
   {
     if (Plot == null) { return; }
+    if (Plot.PlotView == null) { return; }
     Plot.PlotView.InvalidatePlot(updateData);
   }
 }

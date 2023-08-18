@@ -7,6 +7,7 @@ public class Authorization
   public string? AccessToken { get; set; }
   public string? RefreshToken { get; set; }
   public string? IdentityToken { get; set; }
+  public string? Sub { get; set; }
   public DateTimeOffset Created { get; set; }
   public DateTimeOffset Expiry { get; set; }
 
@@ -25,6 +26,7 @@ public class Authorization
     AccessToken = other.AccessToken;
     RefreshToken = other.RefreshToken;
     IdentityToken = other.IdentityToken;
+    Sub = other.Sub;
     Created = other.Created;
     Expiry = other.Expiry;
     Username = other.Username;

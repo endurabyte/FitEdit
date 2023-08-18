@@ -19,6 +19,7 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   Task<bool> DeleteAsync(DauerActivity t);
   Task<DauerActivity> GetActivityAsync(string id);
   Task<List<DauerActivity>> GetAllActivitiesAsync();
+  Task<List<string>> GetAllActivityIdsAsync();
 
   Task<bool> DeleteAsync(FileReference t);
   Task<bool> InsertAsync(FileReference t);
