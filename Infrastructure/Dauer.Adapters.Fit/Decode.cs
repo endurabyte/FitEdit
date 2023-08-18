@@ -12,6 +12,7 @@
 
 #endregion
 
+using Dauer.Adapters.Fit;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 
@@ -305,22 +306,23 @@ namespace Dynastream.Fit
       {
         var mesgDefBuffer = new MemoryStream();
         const int bytesPerField = 3;
-        int numBytes = 0;
 
         // Read record content
         // Fixed content
         byte reserved = br.ReadByte();
         byte architecture = br.ReadByte();
+
         // Suspicious: architecture is not 0 or 1
-        //if (architecture != 0 && architecture != 1)
-        //{
-        //  throw new FitException("FIT decode error: unsupported architecture " + architecture);
-        //}
+        if (FitConfig.Discard.DefinitionMessages.WithUnknownArchitecture && architecture != 0 && architecture != 1)
+        {
+          throw new FitException("FIT decode error: unsupported architecture " + architecture);
+        }
+
         byte[] globalMesgNum = br.ReadBytes(2);
         byte numFields = br.ReadByte();
 
         // Variable content
-        numBytes = numFields * bytesPerField;
+        int numBytes = numFields * bytesPerField;
         byte[] read = br.ReadBytes(numBytes);
 
         if (read.Length < numBytes)
@@ -341,7 +343,7 @@ namespace Dynastream.Fit
           byte numDevFields = br.ReadByte();
           mesgDefBuffer.WriteByte(numDevFields);
 
-          numBytes = numDevFields * 3;
+          numBytes = numDevFields * bytesPerField;
           read = br.ReadBytes(numBytes);
           if (read.Length < numBytes)
           {
@@ -357,20 +359,23 @@ namespace Dynastream.Fit
           SourceIndex = sourceIndex,
         };
 
-        //if (localMesgDefs_[def.LocalMesgNum] != null
-        //  && localMesgDefs_[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
-        //{
-        //  Log.Debug($"Discarding suspicious redefinition of local mesg def with different global mesg num");
-        //  return;
-        //}
+        if (FitConfig.Discard.DefinitionMessages.RedefiningGlobalMesgNum 
+          && localMesgDefs_[def.LocalMesgNum] != null
+          && localMesgDefs_[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
+        {
+          Log.Debug($"Discarding suspicious redefinition of local mesg def with different global mesg num");
+          return;
+        }
 
-        if (!def.GetFields().Any(field => Fit.BaseTypeMap.ContainsKey(field.Type)))
+        if (FitConfig.Discard.DefinitionMessages.ContainingUnknownType 
+          && !def.GetFields().Any(field => FitTypes.TypeMap.ContainsKey(field.Type)))
         {
           Log.Debug($"Discarding suspicious definition containing unknown types");
           return;
         }
 
-        if (def.GlobalMesgNum > 500)
+        if (FitConfig.Discard.DefinitionMessages.WithBigUnknownMessageNum 
+          && def.GlobalMesgNum > 500)
         {
           Log.Debug("Discarding suspicious definition containing big unknown mesg_num");
           return;
@@ -393,7 +398,8 @@ namespace Dynastream.Fit
         }
         int fieldsSize = localMesgDefs_[localMesgNum].GetMesgSize() - 1;
 
-        if (fieldsSize > 1024)
+        if (FitConfig.Discard.DataMessages.OfLargeSize 
+          && fieldsSize > 1024)
         {
           Log.Debug($"Discarding suspicious large data message with field size {fieldsSize}");
           return;
@@ -428,12 +434,13 @@ namespace Dynastream.Fit
         bool haveLatitude = latitudeField != null && latitudeField.Count > 0;
         bool haveLongitude = longitudeField != null && longitudeField.Count > 0;
 
-        if (haveLatitude)
+        if (FitConfig.Discard.DataMessages.WithLargeLatitudeChange 
+          && haveLatitude)
         {
           // Detect big jump in latitude
           var lat = (int)latitudeField.GetValue();
           var diff = Math.Abs(lat - lastLatitude_);
-          bool suspicious = lastLongitude_ > 0 && diff > GeospatialExtensions.DegreeToSemicircles;
+          bool suspicious = lastLatitude_ != 0 && diff > GeospatialExtensions.DegreeToSemicircles;
 
           if (suspicious)
           {
@@ -444,12 +451,13 @@ namespace Dynastream.Fit
           lastLatitude_ = lat;
         }
 
-        if (haveLongitude)
+        if (FitConfig.Discard.DataMessages.WithLargeLongitudeChange 
+          && haveLongitude)
         {
           // Detect big jump in longitude
           var lon = (int)longitudeField.GetValue();
           var diff = Math.Abs(lon - lastLongitude_);
-          bool suspicious = lastLongitude_ > 0 && diff > GeospatialExtensions.DegreeToSemicircles;
+          bool suspicious = lastLongitude_ != 0 && diff > GeospatialExtensions.DegreeToSemicircles;
 
           if (suspicious)
           {
@@ -460,7 +468,8 @@ namespace Dynastream.Fit
           lastLongitude_ = lon;
         }
 
-        if (haveTimestamp && haveLongitude && haveLongitude)
+        if (FitConfig.Discard.DataMessages.WithLargeTimestampChange 
+          && haveTimestamp && haveLongitude && haveLongitude)
         {
           var ts = (uint)timestampField.GetValue();
           var diff = Math.Abs((int)ts - (int)timestamp_);

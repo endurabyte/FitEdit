@@ -101,7 +101,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     client_.Realtime.AddDebugHandler((sender, message, exception) =>
     {
       IsConnected = (sender as RealtimeSocket)?.IsConnected ?? false;
-      log_.LogDebug("Realtime debug: {@sender} {@message} {@debug}", sender, message, exception);
+      //log_.LogDebug("Realtime debug: {@sender} {@message} {@debug}", sender, message, exception);
     });
 
     this.ObservableForProperty(x => x.IsConnected).Subscribe(_ =>
@@ -114,7 +114,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     client_.Auth.AddDebugListener((message, exception) =>
     {
-      log_.LogDebug("Auth debug: {@message} {@debug}", message, exception);
+      //log_.LogDebug("Auth debug: {@message} {@debug}", message, exception);
     });
 
     client_.Auth.AddStateChangedListener(async (sender, changed) =>

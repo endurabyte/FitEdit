@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Dauer.Adapters.Fit;
 using Dauer.Model;
 using Dynastream.Fit;
@@ -84,8 +85,19 @@ namespace Dauer.Data.Fit
 
       decoder.MesgEvent += (o, s) =>
       {
-        Log.Debug($"Found {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}). Fields = {string.Join(", ", s.mesg.Fields.Values.Select(field => $"({field.Num} \'{field.Name}\')"))}");
-        Log.Debug(s.PrintBytes());
+        if (Debugger.IsAttached)
+        {
+          Log.Debug($"Found {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}).");
+          Log.Debug($"  Fields:");
+          Log.Debug($"    FieldNum\t Name\t Data:");
+          Log.Debug($"    {string.Join("\n    ", s.mesg.Fields.Values
+                            .Select(field => $"{field.Num}\t " +
+                                             $"\'{field.Name}\'\t " +
+                                             $"{string.Join(" ", field.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}"))}"
+          );
+
+          Log.Debug(s.PrintBytes());
+        }
 
         var mesg = MessageFactory.Create(s.mesg);
 
@@ -103,8 +115,24 @@ namespace Dauer.Data.Fit
 
       decoder.MesgDefinitionEvent += (o, s) =>
       {
-        Log.Debug($"Found {nameof(MesgDefinition)}. (GlobalMesgNum, LocalMesgNum) = ({s.mesgDef.GlobalMesgNum}, {s.mesgDef.LocalMesgNum}). Fields = {string.Join(", ", s.mesgDef.GetFields().Select(field => field.Num))}");
-        Log.Debug(s.PrintBytes());
+        if (Debugger.IsAttached)
+        {
+          Log.Debug($"Found {nameof(MesgDefinition)}. (GlobalMesgNum, LocalMesgNum) = ({s.mesgDef.GlobalMesgNum}, {s.mesgDef.LocalMesgNum}).");
+
+          int fieldIndex = 0;
+          Log.Debug($"  Field Definitions");
+          Log.Debug($"    FieldIndex\t Num\t Size\t Type\t TypeName\t FieldName\t (Hex Values)");
+          Log.Debug($"    {string.Join("\n    ", s.mesgDef.GetFields()
+              .Select(fieldDef => $"{fieldIndex++}\t " +
+                                  $"{fieldDef.Num}\t " +
+                                  $"{fieldDef.Size}\t " +
+                                  $"{fieldDef.Type}\t " +
+                                  $"{(FitTypes.TypeMap.TryGetValue(fieldDef.Type, out var type) ? type.typeName : "Unknown Type")}\t " +
+                                  $"\'{Profile.GetField(s.mesgDef.GlobalMesgNum, fieldDef.Num)?.Name ?? "Unknown Field"}\'\t " +
+                                  $"({fieldDef.Num:X2} {fieldDef.Size:X2} {fieldDef.Type:X2})"))}");
+
+          Log.Debug(s.PrintBytes());
+        }
         tmp.MessageDefinitions[s.mesgDef.GlobalMesgNum] = s.mesgDef;
         tmp.Events.Add(s);
       };

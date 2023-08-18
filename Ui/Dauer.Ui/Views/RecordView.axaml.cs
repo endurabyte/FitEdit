@@ -30,6 +30,8 @@ public partial class RecordView : UserControl
     double perc = vm_.HexDataSelectionStart / (double)vm_.HexData.Length;
     double height = HexScrollViewer.Extent.Height;
     double newHeight = perc * height - HexScrollViewer.Viewport.Height / 2;
+
+    if (double.IsNaN(newHeight)) { return; }
     HexScrollViewer.Offset = new(HexScrollViewer.Offset.X, newHeight);
 
   }

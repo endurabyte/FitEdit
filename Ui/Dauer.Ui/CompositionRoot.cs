@@ -76,7 +76,7 @@ public class CompositionRoot : ICompositionRoot
         .CreateLogger();
 
     ILoggerFactory factory = new LoggerFactory().AddSerilog(logger);
-    Microsoft.Extensions.Logging.ILogger? log = factory.CreateLogger("Log");
+    Microsoft.Extensions.Logging.ILogger? log = factory.CreateLogger("CompositionRoot");
     Dauer.Model.Log.Logger = log;
     Dauer.Model.Log.Info($"BaseDirectory: {AppContext.BaseDirectory}");
     Dauer.Model.Log.Info($"OSDescription: {RuntimeInformation.OSDescription}");

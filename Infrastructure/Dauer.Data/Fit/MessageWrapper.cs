@@ -326,19 +326,25 @@ public partial class MessageWrapper : HasProperties
 
     name = MapFieldNameToTypeName(name, value);
 
+    if (name == nameof(HrMesg.FieldDefNum.FractionalTimestamp))
+    {
+      return value;
+    }
+
     if (name.Contains(nameof(RecordMesg.FieldDefNum.Timestamp)))
     {
-      return Mesg.TimestampToDateTime((uint)value).GetDateTime();
+      uint uint32 = Convert.ToUInt32(value);
+      return Mesg.TimestampToDateTime(uint32).GetDateTime();
     }
 
     if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLat)))
     {
-      return $"{((int)value).ToDegrees()}°N";
+      return $"{((int)value).ToDegrees()}°";
     }
 
     if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLong)))
     {
-      return $"{((int)value).ToDegrees()}°W";
+      return $"{((int)value).ToDegrees()}°";
     }
 
     if (Mesg.Name == nameof(MesgNum.FileId))

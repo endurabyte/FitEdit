@@ -173,6 +173,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     DauerActivity? act = await FileService.ReadAsync(sf.Activity.Id);
     FileReference? file = act?.File;
+    sf.Activity.File = act?.File;
 
     if (file == null) 
     {
@@ -210,7 +211,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       sf.Progress = 0;
       while (await reader.ReadOneAsync(ms, decoder, 100))
       {
-        if (ms.Position - resolution > lastPosition)
+        if (ms.Position - lastPosition < resolution)
         {
           continue;
         }

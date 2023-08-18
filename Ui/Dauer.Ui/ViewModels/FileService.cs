@@ -46,7 +46,8 @@ public class NullFileService : IFileService
       Id = $"{Guid.NewGuid()}",
       Name = $"Workout {i}",
       Description = $"Description {i}"
-    }
+    },
+    Progress = 66.7,
   });
 
   public Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);

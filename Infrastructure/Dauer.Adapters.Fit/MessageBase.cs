@@ -37,6 +37,8 @@ public class MessageBase : HasProperties
   /// </summary>
   public void CacheData(Stream source)
   {
+    if (!FitConfig.CacheSourceData) { return; }
+
     var position = source.Position;
     source.Position = 0;
     SourceData = source?.ReadAllBytes() ?? Array.Empty<byte>();

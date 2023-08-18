@@ -5,6 +5,9 @@ namespace Dauer.Data.Fit;
 
 public class MessageFactory
 {
+  /// <summary>
+  /// Map global mesg num to Mesg
+  /// </summary>
   public static Dictionary<ushort, Type> Types = TypeExtensions
     .DerivativesOf<Mesg>()
     .ToDictionary(t => ((Mesg)Activator.CreateInstance(t)).Num, t => t);

@@ -70,7 +70,6 @@ namespace Dynastream.Fit
         };
   }
 
-
   public class Fit
   {
     public const byte ProtocolVersionMajorShift = 4;
@@ -133,24 +132,6 @@ namespace Dynastream.Fit
             new FitType(true, 0x8F, "uint64", (ulong)0xFFFFFFFFFFFFFFFFL, 8, false, true),
             new FitType(true, 0x90, "uint64z", (ulong)0x0000000000000000L, 8, false, true),
     };
-
-    /// <summary>
-    /// Maps base type field to FitType
-    /// </summary>
-    public static Dictionary<byte, FitType> BaseTypeMap { get; set; }
-
-    /// <summary>
-    /// Maps index into the BaseTypes array to FitType
-    /// </summary>
-    public static Dictionary<byte, FitType> BaseTypeIndexMap { get; set; }
-
-    static Fit()
-    {
-      BaseTypeMap = BaseType.ToDictionary(bt => bt.baseTypeField, bt => bt);
-      BaseTypeIndexMap = BaseType
-        .Select((bt, i) => new { bt, i })
-        .ToDictionary(pair => (byte)pair.i, pair => pair.bt);
-    }
 
     public struct FitType
     {
