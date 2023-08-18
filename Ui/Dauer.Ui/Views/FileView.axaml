@@ -57,7 +57,7 @@
               <CheckBox IsChecked="{Binding IsVisible}"/>
               <controls:PieProgressIndicator Maximum="100" VerticalAlignment="Center" Value="{Binding Progress}" />
               <Separator/>
-              <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Name}"/>
+              <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Name}" Width="200"/>
               <Separator/>
               <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Description}"/>
             </StackPanel>

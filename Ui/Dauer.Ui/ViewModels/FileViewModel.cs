@@ -1,12 +1,10 @@
 ﻿using Avalonia.Threading;
 using Dauer.Data.Fit;
 using Dauer.Model;
-using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
-using DynamicData.Binding;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -19,7 +17,7 @@ public interface IFileViewModel
 public class DesignFileViewModel : FileViewModel
 {
   public DesignFileViewModel() : base(
-    new FileService(new NullDatabaseAdapter()),
+    new NullFileService(),
     new NullStorageAdapter(),
     new NullWebAuthenticator(),
     new DesignLogViewModel()) { }

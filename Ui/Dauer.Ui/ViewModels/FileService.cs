@@ -21,6 +21,39 @@ public interface IFileService
   Task<List<string>> GetAllActivityIdsAsync();
 }
 
+public class NullFileService : IFileService
+{
+  public UiFile? MainFile { get; set; }
+  public ObservableCollection<UiFile> Files { get; set; } = new();
+
+  public IObservable<DauerActivity> Deleted => deletedSubject_;
+  private readonly ISubject<DauerActivity> deletedSubject_ = new Subject<DauerActivity>();
+
+  public NullFileService()
+  {
+    int i = 0;
+
+    AddFake(i++);
+    AddFake(i++);
+    AddFake(i++);
+    AddFake(i++);
+  }
+
+  private void AddFake(int i) => Files.Add(new UiFile
+  {
+    Activity = new DauerActivity
+    {
+      Id = $"{Guid.NewGuid()}",
+      Name = $"Workout {i}",
+      Description = $"Description {i}"
+    }
+  });
+
+  public Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);
+  public Task<bool> DeleteAsync(DauerActivity? act)=> Task.FromResult(true);
+  public Task<List<string>> GetAllActivityIdsAsync() => Task.FromResult(new List<string>());
+  public Task<DauerActivity?> ReadAsync(string id) => Task.FromResult((DauerActivity?)new DauerActivity { Id = id });
+  public Task<bool> UpdateAsync(DauerActivity? act) => Task.FromResult(true);
 }
 
 /// <summary>
