@@ -4,12 +4,12 @@ using Avalonia.Data.Converters;
 
 namespace Dauer.Ui.Converters;
 
-public class BooleanToLoginStatusConverter : IValueConverter
+public class BooleanToStringConverter : IValueConverter
 {
   public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
   {
     true => "OK",
-    false => "Signed out",
+    false => parameter is string s ? s : "Not OK",
     _ => AvaloniaProperty.UnsetValue
   };
 

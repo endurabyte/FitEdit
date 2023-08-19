@@ -5,7 +5,6 @@ using Dauer.Model.Extensions;
 using Dauer.Ui.Supabase.Model;
 using Dauer.Ui.ViewModels;
 using Microsoft.Extensions.Logging;
-using Postgrest;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Supabase;
@@ -21,6 +20,7 @@ public interface ISupabaseAdapter
 {
   bool IsAuthenticated { get; }
   bool IsAuthenticatedWithGarmin { get; }
+  bool IsActive { get; }
   Authorization? Authorization { get; set; }
 
   Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default);
@@ -51,6 +51,7 @@ public class NullSupabaseAdapter : ISupabaseAdapter
 {
   public bool IsAuthenticated => false;
   public bool IsAuthenticatedWithGarmin => false;
+  public bool IsActive => false;
   public Authorization? Authorization { get; set; }
 
   public Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default) => Task.FromResult(false);
@@ -71,8 +72,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   [Reactive] public bool IsConnected { get; private set; }
   [Reactive] public bool IsAuthenticated { get; private set; }
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
+  [Reactive] public bool IsActive { get; private set; }
   [Reactive] public Authorization? Authorization { get; set; }
 
+  private RealtimeChannel? userChannel_;
   private RealtimeChannel? garminUserChannel_;
   private RealtimeChannel? garminActivityChannel_;
 
@@ -123,7 +126,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
       IsAuthenticated = await IsAuthenticatedAsync();
 
-      await SyncAuthorization();
+      await SyncUserInfo();
     });
 
     db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
@@ -155,6 +158,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     try
     {
+      userChannel_?.Unsubscribe();
       garminUserChannel_?.Unsubscribe();
       garminActivityChannel_?.Unsubscribe();
     }
@@ -163,13 +167,20 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       log_.LogError($"Error unsubscribing channel: {{@e}}", e);
     }
 
+    userChannel_ = client_.Realtime.Channel("realtime", "public", "User");
     garminUserChannel_ = client_.Realtime.Channel("realtime", "public", "GarminUser");
     garminActivityChannel_ = client_.Realtime.Channel("realtime", "public", "GarminActivity");
+
+    userChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
+    {
+      var user = change.Model<Model.User>();
+      Sync(user);
+    });
 
     garminUserChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
     {
       var user = change.Model<Model.GarminUser>();
-      SyncAuthorization(user);
+      Sync(user);
     });
 
     garminActivityChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (channel, change) =>
@@ -180,6 +191,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       _ = Task.Run(async () => await HandleActivityNotification(activity).AnyContext());
     });
 
+    userChannel_.Subscribe();
     garminUserChannel_.Subscribe();
     garminActivityChannel_.Subscribe();
 
@@ -289,7 +301,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     try
     {
-      User? user = await client_.Auth.GetUser(client_.Auth.CurrentSession.AccessToken);
+      global::Supabase.Gotrue.User? user = await client_.Auth.GetUser(client_.Auth.CurrentSession.AccessToken);
       return user?.Aud == "authenticated";
     }
     catch (GotrueException e)
@@ -379,7 +391,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     {
       var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
       if (garminUser?.Model is null) { return false; }
-      SyncAuthorization(garminUser.Model);
+      Sync(garminUser.Model);
 
       await client_.Postgrest.Table<Model.GarminUser>()
         .Set(x => x.AccessToken!, "")
@@ -395,28 +407,36 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return true;
   }
 
-  public async Task<bool> SyncAuthorization()
+  public async Task SyncUserInfo()
   {
-    if (!IsAuthenticated) { return false; }
+    if (!IsAuthenticated) { return; }
 
     try
     {
+      var user = await client_.Postgrest.Table<Model.User>().Get();
+      Sync(user?.Model);
+
       var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
-      if (garminUser?.Model is null) { return false; }
-      SyncAuthorization(garminUser.Model);
-      return true;
+      Sync(garminUser?.Model);
     }
     catch (Exception e)
     {
       log_.LogError("Exception getting GarminUser: {@e}", e);
-      return false;
     }
   }
 
-  public void SyncAuthorization(Model.GarminUser? user) 
+  private bool Sync(Model.User? user)
   {
-    if (user is null) { return; }
+    if (user is null) { return false; }
+    IsActive = user.IsActive == true;
+    return true;
+  }
+
+  private bool Sync(Model.GarminUser? user) 
+  {
+    if (user is null) { return false; }
     IsAuthenticatedWithGarmin = !string.IsNullOrEmpty(user.AccessToken);
+    return true;
   }
 
   /// <summary>

@@ -12,6 +12,7 @@ public interface IFitEditService
   bool IsAuthenticating { get; }
   bool IsAuthenticatingWithGarmin { get; }
   bool IsAuthenticatedWithGarmin { get; }
+  bool IsActive { get; }
   string? Username { get; set; }
 
   Task<bool> AuthenticateAsync(CancellationToken ct = default);
@@ -28,6 +29,7 @@ public class NullFitEditService : IFitEditService
   public bool IsAuthenticating => false;
   public bool IsAuthenticatedWithGarmin => false;
   public bool IsAuthenticatingWithGarmin => false;
+  public bool IsActive => false;
   public string? Username { get; set; } = "fake@fake.com";
 
   public Task<bool> AuthenticateAsync(CancellationToken ct = default) => Task.FromResult(false);
@@ -44,6 +46,7 @@ public class FitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool IsAuthenticating { get; private set; }
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
   [Reactive] public bool IsAuthenticatingWithGarmin { get; private set; }
+  [Reactive] public bool IsActive { get; private set; }
   [Reactive] public string? Username { get; set; }
 
   private readonly ISupabaseAdapter supa_;
@@ -72,6 +75,13 @@ public class FitEditService : ReactiveObject, IFitEditService
       {
         IsAuthenticated = supa_.IsAuthenticated;
         IsAuthenticating = false;
+      });
+
+    supa_
+      .ObservableForProperty(x => x.IsActive)
+      .Subscribe(_ =>
+      {
+        IsActive = supa_.IsActive;
       });
 
     supa_

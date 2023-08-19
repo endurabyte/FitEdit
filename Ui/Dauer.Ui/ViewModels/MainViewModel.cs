@@ -56,6 +56,10 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   [Reactive] public string Otp { get; set; } = "";
   [Reactive] public string Message { get; set; } = "Please enter an email address and click Sign In";
 
+  public string PaymentPortalUrl => $"https://billing.stripe.com/p/login/5kA8Ap72G1oebZK9AA?prefilled_email={FitEdit.Username}";
+  //public string PaymentPortalUrl => $"https://billing.stripe.com/p/login/test_6oE7vA7Yzfwg1eo144?prefilled_email={FitEdit.Username}";
+  public string SignUpUrl => $"https://www.fitedit.io/pricing.html";
+
   private CancellationTokenSource authCancelCts_ = new();
   private readonly IWindowAdapter window_;
   private readonly IFileService fileService_;
@@ -191,6 +195,24 @@ public class MainViewModel : ViewModelBase, IMainViewModel
       bool ok = await FitEdit.VerifyOtpAsync(Otp.Trim());
       Otp = "";
       Message = ok ? "Code is valid" : "There was a problem verifying the code";
+    });
+  }
+
+  public void HandleManagePaymentsClicked()
+  {
+    _ = Task.Run(() =>
+    {
+      Browser.Open(PaymentPortalUrl);
+      Message = "Check your web browser. We've opened a page to manage your payment.";
+    });
+  }
+
+  public void HandleSignUpClicked()
+  {
+    _ = Task.Run(() =>
+    {
+      Browser.Open(SignUpUrl);
+      Message = "Check your web browser. We've opened a page to sign up.";
     });
   }
 }

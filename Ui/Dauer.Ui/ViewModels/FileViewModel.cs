@@ -3,7 +3,6 @@ using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Extensions;
-using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -19,7 +18,7 @@ public class DesignFileViewModel : FileViewModel
   public DesignFileViewModel() : base(
     new NullFileService(),
     new NullStorageAdapter(),
-    new NullWebAuthenticator(),
+    new NullFitEditService(),
     new DesignLogViewModel()) { }
 }
 
@@ -28,19 +27,19 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   [Reactive] public int SelectedIndex { get; set; }
 
   public IFileService FileService { get; }
-  public IWebAuthenticator Authenticator { get; }
+  public IFitEditService FitEdit { get; }
   private readonly IStorageAdapter storage_;
   private readonly ILogViewModel log_;
 
   public FileViewModel(
     IFileService fileService,
     IStorageAdapter storage,
-    IWebAuthenticator auth,
+    IFitEditService fitEdit,
     ILogViewModel log
   )
   {
     FileService = fileService;
-    Authenticator = auth;
+    FitEdit = fitEdit;
     storage_ = storage;
     log_ = log;
 
