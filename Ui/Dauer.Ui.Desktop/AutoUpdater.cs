@@ -64,10 +64,12 @@ public class AutoUpdater
       if (!ct.IsCancellationRequested && updateInfo.ReleasesToApply.Any())
       {
         Log.Info($"Found {updateInfo.ReleasesToApply.Count} updates, applying...");
-        await mgr.UpdateApp();
+        ReleaseEntry? entry = await mgr.UpdateApp();
+
+        if (entry == null) { return; }
 
         // Notify user of update
-        Titlebar.Instance.Message = "| Please restart to apply updates";
+        Titlebar.Instance.Message = $"| Please relaunch to update to version {entry.Version}.";
 
         // TODO provide e.g. a button to restart
         //UpdateManager.RestartApp();
