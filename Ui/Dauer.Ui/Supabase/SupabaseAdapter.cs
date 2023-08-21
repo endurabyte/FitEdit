@@ -45,6 +45,8 @@ public interface ISupabaseAdapter
 
   Task<bool> VerifyOtpAsync(string? username, string token);
   Task<bool> LogoutAsync();
+
+  Task<bool> UpdateAsync(DauerActivity? act);
 }
 
 public class NullSupabaseAdapter : ISupabaseAdapter
@@ -60,6 +62,8 @@ public class NullSupabaseAdapter : ISupabaseAdapter
   public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(false);
   public Task<bool> VerifyOtpAsync(string? username, string token) => Task.FromResult(false);
   public Task<bool> LogoutAsync() => Task.FromResult(false);
+
+  public Task<bool> UpdateAsync(DauerActivity? act) => Task.FromResult(false);
 }
 
 public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
@@ -254,7 +258,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     // Trigger update
     fileService_.Files.Remove(uiFile);
-    fileService_.Files.Add(uiFile);
+    fileService_.Add(uiFile);
   }
 
   private async Task UpdateExistingActivity(UiFile? existing, DauerActivity update)
@@ -267,6 +271,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     // Merge data
     known.Name = update.Name;
     known.Description = update.Description;
+    known.StartTime = update.StartTime;
 
     bool ok = await fileService_.UpdateAsync(known);
 
@@ -281,18 +286,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     if (db_ == null) { return null; }
     if (!db_.Ready) { return null; }
 
-    Authorization result = await db_.GetAuthorizationAsync("Dauer.Api");
-    if (result == null) { return null; }
-
-    return new Authorization
-    {
-      AccessToken = result.AccessToken,
-      RefreshToken = result.RefreshToken,
-      IdentityToken = result.IdentityToken,
-      Created = result.Created,
-      Expiry = result.Expiry,
-      Username = result.Username
-    };
+    return await db_.GetAuthorizationAsync("Dauer.Api");
   }
 
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default)
@@ -361,6 +355,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       };
 
       Authorization = AuthorizationFactory.Create(session?.AccessToken, session?.RefreshToken);
+
       return !string.IsNullOrEmpty(session?.AccessToken);
     }
     catch (Exception e)
@@ -407,7 +402,39 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return true;
   }
 
-  public async Task SyncUserInfo()
+  public async Task<bool> UpdateAsync(DauerActivity? act)
+  {
+    if (act is null) { return false; }
+    if (act.File is null) { return false; }
+    if (!IsAuthenticated) { return false; }
+    if (Authorization?.Sub is null) { return false; }
+
+    string bucketUrl = $"{Authorization?.Sub}/{act.Id}";
+
+    try
+    {
+      act.BucketUrl = await client_.Storage
+        .From("activity-files")
+        .Upload(act.File.Bytes, bucketUrl);
+
+    var garminActivity = act.MapGarminActivity();
+    garminActivity.SupabaseUserId = Authorization?.Sub;
+
+      await client_.Postgrest.Table<Model.GarminActivity>()
+        .Upsert(garminActivity)
+        .AnyContext();
+    }
+    catch (Exception e)
+    {
+      log_.LogError(e, "Could not update activity");
+      return false;
+    }
+
+
+    return true;
+  }
+
+  private async Task SyncUserInfo()
   {
     if (!IsAuthenticated) { return; }
 
@@ -452,6 +479,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     {
       return;
     }
+
 
     try
     {
@@ -502,4 +530,5 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       .Remove(bucketUrl)
       .AnyContext();
   }
+
 }

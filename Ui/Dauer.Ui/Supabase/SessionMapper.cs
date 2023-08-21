@@ -35,6 +35,7 @@ public static class SessionMapper
       Username = !string.IsNullOrWhiteSpace(session.User?.Email) 
         ? session.User?.Email 
         : session.User?.Phone,
+      Sub = session.User?.Id,
       Created = session.CreatedAt,
       Expiry = session.ExpiresAt(),
     };

@@ -13,10 +13,26 @@ public static class GarminActivityMapper
     Description = a.Description,
     Type = a.Type,
     DeviceName = a.DeviceName,
-    StartTime = new Dynastream.Fit.DateTime((uint)a.StartTime).GetDateTime(),
+    StartTime = DateTime.UnixEpoch + TimeSpan.FromSeconds(a.StartTime),
     Duration = a.Duration,
     Distance = new Quantity(a.Distance, Unit.Meter),
     Manual = a.Manual,
     FileType = a.FileType,
+    BucketUrl = a.BucketUrl,
+  };
+
+  public static GarminActivity MapGarminActivity(this DauerActivity a) => new()
+  {
+    Id = a.Id,
+    Name = a.Name,
+    Description = a.Description,
+    Type = a.Type,
+    DeviceName = a.DeviceName,
+    StartTime = (long)(a.StartTime - DateTime.UnixEpoch).TotalSeconds,
+    Duration = a.Duration,
+    Distance = a.Distance.Meters(),
+    Manual = a.Manual,
+    FileType = a.FileType,
+    BucketUrl = a.BucketUrl,
   };
 }

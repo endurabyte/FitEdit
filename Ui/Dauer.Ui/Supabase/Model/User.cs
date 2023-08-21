@@ -13,8 +13,6 @@ public class User : BaseModel
   public string? Email { get; set; }
   [Column(nameof(Phone))]
   public string? Phone { get; set; }
-  [Column(nameof(StripeId))]
-  public string? StripeId { get; set; }
   [Column(nameof(IsActive))]
   public bool? IsActive { get; set; }
 }

@@ -12,7 +12,7 @@ public class DauerActivity : ReactiveObject
   /// </summary>
   [Reactive] public string Id { get; set; } = "";
 
-  public FileReference? File { get; set; }
+  [Reactive] public FileReference? File { get; set; }
 
   public ActivitySource Source { get; set; }
 
@@ -25,7 +25,7 @@ public class DauerActivity : ReactiveObject
   [Reactive] public string? Description { get; set; }
   public string? Type { get; set; }
   public string? DeviceName { get; set; }
-  public DateTime StartTime { get; set; }
+  [Reactive] public DateTime StartTime { get; set; }
   public long Duration { get; set; }
   public Quantity Distance { get; set; }
   public bool Manual { get; set; }

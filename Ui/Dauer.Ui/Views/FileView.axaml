@@ -101,12 +101,39 @@
           <DataTemplate>
             <Border Background="Gray" CornerRadius="4" Padding="4">
               <StackPanel Orientation="Horizontal">
-                <CheckBox IsChecked="{Binding IsVisible}"/>
-                <controls:PieProgressIndicator Maximum="100" VerticalAlignment="Center" Value="{Binding Progress}" />
+                <StackPanel Orientation="Vertical">
+                  <CheckBox IsChecked="{Binding IsVisible}" Margin="8,0,0,0" 
+                            IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap" IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        Load and show the file
+                      </TextBlock>
+                    </ToolTip.Tip>
+                  </CheckBox>
+                  <Button FontSize="10" 
+                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
+                          CommandParameter="{Binding Activity}"
+                          IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
+                          Content="?"
+                          Margin="5"
+                          ToolTip.Tip="Import a file from disk and associate it with this activity">
+
+                    
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap"
+                                 IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}">
+                        No data for the given file is available, but you can upload it.
+                      </TextBlock>
+                    </ToolTip.Tip>
+                  </Button>
+                  <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="5"/>
+                </StackPanel>
                 <Separator/>
-                <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Name}" TextWrapping="Wrap" Width="200"/>
-                <Separator/>
-                <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Description}" TextWrapping="Wrap" Width="250"/>
+                <StackPanel Orientation="Vertical">
+                  <TextBlock Text="{Binding Activity.StartTime, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
+                  <TextBlock FontWeight="Bold" Text="{Binding Activity.Name}" TextWrapping="Wrap" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Description}" TextWrapping="Wrap" MaxWidth="300"/>
+                </StackPanel>
               </StackPanel>
             </Border>
           </DataTemplate>

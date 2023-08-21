@@ -35,4 +35,7 @@ public class GarminActivity : BaseModel
 
   [Column(nameof(BucketUrl))]
   public string? BucketUrl { get; set; }
+
+  [Column(nameof(SupabaseUserId))]
+  public string? SupabaseUserId { get; set; }
 }

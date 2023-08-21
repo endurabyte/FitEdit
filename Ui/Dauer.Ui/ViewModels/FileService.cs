@@ -15,10 +15,12 @@ public interface IFileService
   IObservable<DauerActivity> Deleted { get; }
 
   Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default);
-  Task<DauerActivity?> ReadAsync(string id);
-  Task<bool> UpdateAsync(DauerActivity? act);
+  Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default);
+  Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default);
   Task<bool> DeleteAsync(DauerActivity? act);
   Task<List<string>> GetAllActivityIdsAsync();
+
+  void Add(UiFile file);
 }
 
 public class NullFileService : IFileService
@@ -36,25 +38,39 @@ public class NullFileService : IFileService
     AddFake(i++);
     AddFake(i++);
     AddFake(i++);
-    AddFake(i++);
+    var file = AddFake(i++);
+
+    file.Activity = new DauerActivity
+    {
+      Name = "Activity name",
+      Description = "This is the activity description.\nIt can get pretty long, so make sure to provide enough space for it, but it should be responsive in case it is not very long.",
+      File = new FileReference("fitfile.fit", Array.Empty<byte>())
+    };
   }
 
-  private void AddFake(int i) => Files.Add(new UiFile
+  private UiFile AddFake(int i) 
   {
-    Activity = new DauerActivity
+    var file = new UiFile
     {
-      Id = $"{Guid.NewGuid()}",
-      Name = $"Workout {i}",
-      Description = $"Description {i}"
-    },
-    Progress = 66.7,
-  });
+      Activity = new DauerActivity
+      {
+        Id = $"{Guid.NewGuid()}",
+        Name = $"Workout {i}",
+        Description = $"Description {i}"
+      },
+      Progress = 66.7,
+    };
+
+    Files.Add(file);
+    return file;
+  }
 
   public Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);
   public Task<bool> DeleteAsync(DauerActivity? act)=> Task.FromResult(true);
   public Task<List<string>> GetAllActivityIdsAsync() => Task.FromResult(new List<string>());
-  public Task<DauerActivity?> ReadAsync(string id) => Task.FromResult((DauerActivity?)new DauerActivity { Id = id });
-  public Task<bool> UpdateAsync(DauerActivity? act) => Task.FromResult(true);
+  public Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default) => Task.FromResult((DauerActivity?)new DauerActivity { Id = id });
+  public Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);
+  public void Add(UiFile file) { }
 }
 
 /// <summary>
@@ -85,13 +101,15 @@ public class FileService : ReactiveObject, IFileService
   {
     _ = Task.Run(async () =>
     {
-      List<DauerActivity> acts = await db_.GetAllActivitiesAsync().AnyContext();
+      List<DauerActivity> acts = await db_
+        .GetAllActivitiesAsync()
+        .AnyContext();
 
       var files = acts.Select(act => new UiFile
       {
         FitFile = null, // Don't parse the blobs, that would be too slow
         Activity = act,
-      }).ToList();
+      }).OrderByDescending(uif => uif.Activity?.StartTime).ToList();
 
       Files.AddRange(files);
     });
@@ -117,7 +135,7 @@ public class FileService : ReactiveObject, IFileService
     }
   }
 
-  public async Task<DauerActivity?> ReadAsync(string id)
+  public async Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default)
   {
     try
     {
@@ -125,7 +143,7 @@ public class FileService : ReactiveObject, IFileService
       if (act == null) { return null; }
 
       act.File ??= new FileReference(act.Name ?? id, null) { Id = id };
-      act.File.Bytes = await File.ReadAllBytesAsync(act.File.Path).AnyContext();
+      act.File.Bytes = await File.ReadAllBytesAsync(act.File.Path, ct).AnyContext();
 
       return act;
     }
@@ -136,13 +154,21 @@ public class FileService : ReactiveObject, IFileService
     }
   }
 
-  public async Task<bool> UpdateAsync(DauerActivity? act)
+  public async Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default)
   {
     if (act == null) { return false; }
 
     try
     {
-      return await db_.UpdateAsync(act).AnyContext();
+      if (!await db_.UpdateAsync(act).AnyContext())
+      {
+        return false;
+      }
+
+      if (act.File == null) { return true; }
+      if (!CreateParentDir(act.File.Path)) { return false; }
+      await File.WriteAllBytesAsync(act.File.Path, act.File.Bytes, ct).AnyContext();
+      return true;
     }
     catch (Exception e)
     {
@@ -173,6 +199,13 @@ public class FileService : ReactiveObject, IFileService
   }
 
   public async Task<List<string>> GetAllActivityIdsAsync() => await db_.GetAllActivityIdsAsync();
+
+  public void Add(UiFile file)
+  {
+    UiFile? previous = Files.FirstOrDefault(f => f.Activity?.StartTime >  file.Activity?.StartTime);
+    int idx = previous == null ? 0 : Files.IndexOf(previous);
+    Files.Insert(idx, file);
+  }
 
   private static bool CreateParentDir(string? path)
   {

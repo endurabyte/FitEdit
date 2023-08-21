@@ -9,7 +9,7 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <VersionPrefix>1.0.21</VersionPrefix>
+    <VersionPrefix>1.0.22</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FitEdit</Product>
     <Copyright>EnduraByte LLC 2023</Copyright>

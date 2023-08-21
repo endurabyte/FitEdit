@@ -4,6 +4,7 @@ using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra.Adapters.Storage;
+using Dauer.Ui.Supabase;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -19,6 +20,7 @@ public class DesignFileViewModel : FileViewModel
     new NullFileService(),
     new NullStorageAdapter(),
     new NullFitEditService(),
+    new NullSupabaseAdapter(),
     new DesignLogViewModel()) { }
 }
 
@@ -29,17 +31,20 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IFileService FileService { get; }
   public IFitEditService FitEdit { get; }
   private readonly IStorageAdapter storage_;
+  private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
 
   public FileViewModel(
     IFileService fileService,
     IStorageAdapter storage,
     IFitEditService fitEdit,
+    ISupabaseAdapter supa,
     ILogViewModel log
   )
   {
     FileService = fileService;
     FitEdit = fitEdit;
+    supa_ = supa;
     storage_ = storage;
     log_ = log;
 
@@ -60,7 +65,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public async void HandleImportClicked()
   {
-    Log.Info("Select file clicked");
+    Log.Info($"{nameof(HandleImportClicked)} clicked");
 
     // On macOS and iOS, the file picker must run on the main thread
     FileReference? file = await storage_.OpenFileAsync();
@@ -81,6 +86,40 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     foreach (FileReference f in files)
     {
       await Persist(f);
+    }
+  }
+
+  public async void HandleActivityImportClicked(DauerActivity? act)
+  {
+    Log.Info($"{nameof(HandleActivityImportClicked)} clicked");
+
+    if (act == null) { return; }
+    if (act.File != null) { return; }
+
+    // On macOS and iOS, the file picker must run on the main thread
+    FileReference? file = await storage_.OpenFileAsync();
+
+    if (file == null)
+    {
+      Log.Info("No file selected in the file dialog");
+      return;
+    }
+
+    if (file.Name.EndsWith(".zip"))
+    {
+      List<FileReference> files = Zip.Unzip(file);
+      act.File = files.FirstOrDefault();
+    }
+    else
+    {
+      act.File = file;
+    }
+
+    if (act.File is null) { return; }
+
+    if (!await supa_.UpdateAsync(act)) // Sets DauerActivity.BucketUrl
+    {
+      // TODO Show error
     }
   }
 
@@ -108,7 +147,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return new UiFile { Activity = act };
     });
 
-    FileService.Files.Add(sf);
+    FileService.Add(sf);
     FileService.MainFile = sf;
 
     return sf;
