@@ -11,6 +11,12 @@ public class AutoUpdater
 { 
   public AutoUpdater()
   {
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+    {
+      Log.Info("Auto update not supported on Linux. Please use your package manager.");
+      return;
+    }
+
     SquirrelAwareApp.HandleEvents(onInitialInstall: HandleAppInstalled);
     SquirrelLocator.CurrentMutable.Register(() => new SquirrelLogger(), typeof(ILogger));
   }
@@ -28,12 +34,6 @@ public class AutoUpdater
 
   public void WatchForUpdates(CancellationToken ct = default)
   {
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-    {
-      Log.Info("Auto update not supported on Linux. Please use your package manager.");
-      return;
-    }
-
     if (System.Diagnostics.Debugger.IsAttached)
     {
       Log.Info("Skipping auto update check because debugger is attached.");
