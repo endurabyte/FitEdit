@@ -122,7 +122,7 @@
                     <ToolTip.Tip>
                       <TextBlock TextWrapping="Wrap"
                                  IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}">
-                        No data for the given file is available, but you can upload it.
+                        Garmin told us about this workout, but didn't provide the file. Click to upload.
                       </TextBlock>
                     </ToolTip.Tip>
                   </Button>

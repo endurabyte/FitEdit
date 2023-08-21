@@ -6,7 +6,7 @@ using SQLitePCL;
 
 namespace Dauer.Adapters.Sqlite;
 
-public class SqliteAdapter : HasProperties, IDatabaseAdapter 
+public class SqliteAdapter : HasProperties, IDatabaseAdapter
 {
   private readonly string dbPath_;
   private readonly SQLiteOpenFlags flags_ = SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex;
@@ -35,7 +35,8 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
         typeof(FileReference),
         typeof(MapTile),
         typeof(Authorization),
-        typeof(DauerActivity)
+        typeof(DauerActivity),
+        typeof(AppSettings),
       }).AnyContext();
 
       db_ = db;
@@ -160,4 +161,10 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
       return null;
     }
   }
+
+  public async Task<bool> InsertOrUpdateAsync(Model.AppSettings a) => 1 == await db_?.InsertOrReplaceAsync(a.MapEntity()).AnyContext();
+
+  public async Task<Model.AppSettings> GetAppSettingsAsync() => (await GetAsync<AppSettings>(AppSettings.DefaultKey)
+    .AnyContext())
+    .MapModel();
 }

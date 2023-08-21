@@ -480,6 +480,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       return;
     }
 
+    AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
+    DateTime lastSync = settings.LastSynced ?? DateTime.UtcNow - TimeSpan.FromDays(7);
+    settings.LastSynced = DateTime.UtcNow;
+    await db_.InsertOrUpdateAsync(settings);
 
     try
     {
@@ -489,16 +493,31 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .Cast<object>()
         .ToList();
 
-      var activities = await client_.Postgrest.Table<Model.GarminActivity>()
-        // Filter out known ids
+      // We make two requests to the database:
+      // First, we want only new activities (i.e. whose IDs we don't already know)
+      // Then, we want updated activities. (activities we know about but were updated since the last sync)
+      // Row-level security ensures we only get the user's activities.
+
+      // Get user's new activities 
+      var newActivities = await client_.Postgrest.Table<Model.GarminActivity>()
         .Not("Id", Postgrest.Constants.Operator.In, ids)
         .Get()
         .AnyContext();
 
-      if (activities == null) { return; }
+      if (newActivities == null) { return; }
+
+      // Get user's updated activities
+      var updatedActivities = await client_.Postgrest.Table<Model.GarminActivity>()
+        .Where(a => a.LastUpdated > lastSync)
+        .Get()
+        .AnyContext();
+
+      List<GarminActivity> activities = newActivities.Models
+        .Concat(updatedActivities.Models)
+        .ToList();
 
       // Redundant defensive filter
-      foreach (var activity in activities.Models.Where(a => !ids.Contains(a.Id)))
+      foreach (var activity in activities)
       {
         await HandleActivityNotification(activity).AnyContext();
       }

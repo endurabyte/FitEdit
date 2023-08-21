@@ -31,4 +31,6 @@ public class DauerActivity : ReactiveObject
   public bool Manual { get; set; }
   public string? FileType { get; set; }
   public string? BucketUrl { get; set; }
+
+  public DateTime? LastUpdated { get; set; }
 }

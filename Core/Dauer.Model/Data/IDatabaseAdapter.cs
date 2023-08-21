@@ -15,6 +15,9 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   Task DeleteAsync(MapTile t);
   Task<MapTile> GetMapTileAsync(string id);
 
+  Task<bool> InsertOrUpdateAsync(AppSettings a);
+  Task<AppSettings> GetAppSettingsAsync();
+
   Task<bool> InsertAsync(DauerActivity t);
   Task<bool> UpdateAsync(DauerActivity t);
   Task<bool> DeleteAsync(DauerActivity t);

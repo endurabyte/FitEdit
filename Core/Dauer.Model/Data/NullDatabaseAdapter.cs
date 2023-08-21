@@ -23,4 +23,7 @@ public class NullDatabaseAdapter : HasProperties, IDatabaseAdapter
   public Task<bool> DeleteAsync(FileReference t) => Task.FromResult(true);
   public Task<bool> InsertAsync(FileReference t) => Task.FromResult(true);
   public Task UpdateAsync(FileReference t) => Task.CompletedTask;
+
+  public Task<bool> InsertOrUpdateAsync(AppSettings a) => Task.FromResult(true);
+  public Task<AppSettings> GetAppSettingsAsync() => Task.FromResult(new AppSettings());
 }

@@ -19,6 +19,7 @@ public static class GarminActivityMapper
     Manual = a.Manual,
     FileType = a.FileType,
     BucketUrl = a.BucketUrl,
+    LastUpdated = a.LastUpdated,
   };
 
   public static GarminActivity MapGarminActivity(this DauerActivity a) => new()
@@ -34,5 +35,6 @@ public static class GarminActivityMapper
     Manual = a.Manual,
     FileType = a.FileType,
     BucketUrl = a.BucketUrl,
+    LastUpdated = a.LastUpdated,
   };
 }
