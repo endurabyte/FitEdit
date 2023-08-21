@@ -17,7 +17,7 @@ public partial class PlotView : UserControl
     InitializeComponent();
 
     DataContextChanged += HandleDataContextChanged;
-    OxyPlotView.PointerWheelChanged += HandleWheel;
+    //OxyPlotView.PointerWheelChanged += HandleWheel;
     OxyPlotView.PointerPressed += HandlePointerPressed;
     OxyPlotView.PointerMoved += HandlePointerMoved;
     OxyPlotView.PointerReleased += HandlePointerReleased;
