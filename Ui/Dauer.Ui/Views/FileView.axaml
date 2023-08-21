@@ -16,7 +16,7 @@
     <StyleInclude Source="../Styles.axaml"/> 
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto, Auto">
+  <Grid RowDefinitions="Auto, *">
     
     <StackPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
@@ -90,16 +90,25 @@
 
     <ScrollViewer Grid.Row="1">
       <ListBox ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
+        
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Vertical"/>
+          </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
+        
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <StackPanel Orientation="Horizontal">
-              <CheckBox IsChecked="{Binding IsVisible}"/>
-              <controls:PieProgressIndicator Maximum="100" VerticalAlignment="Center" Value="{Binding Progress}" />
-              <Separator/>
-              <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Name}" Width="200"/>
-              <Separator/>
-              <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Description}"/>
-            </StackPanel>
+            <Border Background="Gray" CornerRadius="4" Padding="4">
+              <StackPanel Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding IsVisible}"/>
+                <controls:PieProgressIndicator Maximum="100" VerticalAlignment="Center" Value="{Binding Progress}" />
+                <Separator/>
+                <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Name}" TextWrapping="Wrap" Width="200"/>
+                <Separator/>
+                <TextBlock VerticalAlignment="Center" Text="{Binding Activity.Description}" TextWrapping="Wrap" Width="250"/>
+              </StackPanel>
+            </Border>
           </DataTemplate>
         </ListBox.ItemTemplate>
       </ListBox>
