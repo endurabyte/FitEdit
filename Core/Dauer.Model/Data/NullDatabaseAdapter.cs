@@ -5,6 +5,7 @@ public class NullDatabaseAdapter : HasProperties, IDatabaseAdapter
   public bool Ready => true;
 
   public Task<bool> InsertAsync(Authorization t) => Task.FromResult(true);
+  public Task<bool> UpdateAsync(Authorization t) => Task.FromResult(true);
   public Task DeleteAsync(Authorization t) => Task.CompletedTask;
   public Task<Authorization> GetAuthorizationAsync(string id) => Task.FromResult(new Authorization { Id = id });
 

@@ -7,6 +7,7 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   bool Ready { get; }
 
   Task<bool> InsertAsync(Authorization t);
+  Task<bool> UpdateAsync(Authorization t);
   Task DeleteAsync(Authorization t);
   Task<Authorization> GetAuthorizationAsync(string id);
 

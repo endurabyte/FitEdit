@@ -49,6 +49,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
   }
 
   public async Task<bool> InsertAsync(Model.Authorization t) => 1 == await db_?.InsertOrReplaceAsync(t.MapEntity()).AnyContext();
+  public async Task<bool> UpdateAsync(Model.Authorization t) => 1 == await db_?.UpdateAsync(t.MapEntity()).AnyContext();
   public async Task DeleteAsync(Model.Authorization t) => await db_?.DeleteAsync(t.MapEntity()).AnyContext();
   public async Task<Model.Authorization> GetAuthorizationAsync(string id) => (await GetAsync<Authorization>(id).AnyContext())?.MapModel();
 
@@ -67,7 +68,16 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return 1 == await db_?.InsertOrReplaceAsync(a.MapEntity()).AnyContext();
   }
 
-  public async Task<bool> UpdateAsync(Model.DauerActivity a) => 1 == await db_.UpdateAsync(a.MapEntity()).AnyContext();
+  public async Task<bool> UpdateAsync(Model.DauerActivity a)
+  {
+    if (a.File != null) 
+    {
+      bool ok = 1 == await db_?.InsertOrReplaceAsync(a.File.MapEntity()).AnyContext();
+      if (!ok) { return false; }  
+    }
+
+    return 1 == await db_.UpdateAsync(a.MapEntity()).AnyContext();
+  }
 
   /// <summary>
   /// TODO this is not thread-safe
