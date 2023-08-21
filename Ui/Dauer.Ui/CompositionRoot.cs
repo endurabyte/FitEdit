@@ -46,7 +46,7 @@ public class CompositionRoot : ICompositionRoot
      .Build();
 
     string logDir = Path.Combine(
-      Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit", "Logs");
+      Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "Logs");
 
     // Substitute {LogDir} with log directory
     foreach (int i in Enumerable.Range(0, 10))
