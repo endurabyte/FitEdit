@@ -58,7 +58,7 @@ public class AutoUpdater
 
     try
     {
-      using var mgr = new UpdateManager("https://fitedit-releases.s3.us-east-1.amazonaws.com/");
+      using var mgr = new UpdateManager($"https://fitedit-releases.s3.us-east-1.amazonaws.com/{GetOS()}-{GetArch()}");
       UpdateInfo updateInfo = await mgr.CheckForUpdate();
 
       if (!ct.IsCancellationRequested && updateInfo.ReleasesToApply.Any())
@@ -78,4 +78,19 @@ public class AutoUpdater
       Log.Error($"Problem checking or applying updates: {e}");
     }
   }
+
+  private static string GetOS()
+  {
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) { return "win"; }
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) { return "osx"; }
+    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) { return "linux"; }
+    return "";
+  }
+
+  private static string GetArch() => RuntimeInformation.ProcessArchitecture switch
+  {
+    Architecture.Arm64 => "arm64",
+    Architecture.X86 => "x86",
+    _ => "x64",
+  };
 }
