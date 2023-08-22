@@ -7,7 +7,7 @@ using Microsoft.Maui.ApplicationModel;
 
 namespace Dauer.Ui.Android;
 
-[Activity(Label = "FitEdit", Theme = "@style/MyTheme.NoActionBar", Icon = "@mipmap/FE", MainLauncher = true, 
+[Activity(Label = "FitEdit", Theme = "@style/MyTheme.NoActionBar", Icon = "@mipmap/ic_launcher", MainLauncher = true, 
   ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity<App>
 {
