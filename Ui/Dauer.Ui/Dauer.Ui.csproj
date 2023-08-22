@@ -63,10 +63,12 @@
       <DependentUpon>PieProgressIndicator.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
   <ItemGroup>
-    <None Update="appsettings.json">
+    <EmbeddedResource Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </EmbeddedResource>
+    <None Remove="appsettings.json" />
     <None Update="appsettings.Linux.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

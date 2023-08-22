@@ -1,7 +1,9 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using Autofac;
 using Avalonia.Controls.ApplicationLifetimes;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -37,14 +39,19 @@ public class CompositionRoot : ICompositionRoot
       _ => "Linux",
     };
 
+    var a = Assembly.GetExecutingAssembly();
+    using var stream = a.GetManifestResourceStream("Dauer.Ui.appsettings.json");
+
     // Load configuration
     IConfiguration configuration = new ConfigurationBuilder()
      .SetBasePath(AppContext.BaseDirectory) // exe directory
-     .AddJsonFile("appsettings.json")
+     .AddJsonFile("appsettings.json", true)
+     .AddJsonStream(stream!)
      .AddJsonFile($"appsettings.{os}.json", true)
      .AddEnvironmentVariables()
      .Build();
 
+    // On Android and iOS, load appsettings from this assembly instead of file
     string logDir = Path.Combine(
       Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "Logs");
 
