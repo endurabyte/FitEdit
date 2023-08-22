@@ -18,7 +18,7 @@
 
   <Grid RowDefinitions="Auto, *">
     
-    <StackPanel Grid.Row="0" Orientation="Horizontal" >
+    <WrapPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
       <Button Command="{Binding HandleExportClicked}" Content="Export" 
               IsEnabled="{Binding FitEdit.IsActive}" 
@@ -86,7 +86,7 @@
           </TextBlock>
         </ToolTip.Tip>
       </Button>
-    </StackPanel>
+    </WrapPanel>
 
     <ScrollViewer Grid.Row="1">
       <ListBox ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">

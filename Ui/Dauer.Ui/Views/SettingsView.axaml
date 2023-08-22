@@ -26,29 +26,29 @@
 
   <StackPanel Orientation="Vertical">
 
-          <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+          <WrapPanel Margin="0,10,0,10">
             <TextBlock Text="Login Status:" Width="150" VerticalAlignment="Center"/>
             <Ellipse Fill="{Binding FitEdit.IsAuthenticated, Converter={StaticResource BooleanToColorConverter}}"
                      Margin="10,0,10,0"
                      Width="10" Height="10">
             </Ellipse>
             <TextBlock Text="{Binding FitEdit.IsAuthenticated, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-          </StackPanel>
+          </WrapPanel>
           
-          <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+          <WrapPanel Margin="0,10,0,10">
             <TextBlock Text="Username: " Width="150" VerticalAlignment="Center"/>
             <TextBox Text="{Binding FitEdit.Username, Mode=TwoWay}" VerticalAlignment="Center" Margin="10,0,10,0" Width="240"/>
             <Button Command="{Binding HandleLoginClicked}" Content="Sign In" IsVisible="{Binding !FitEdit.IsAuthenticated}"/>
             <Button Command="{Binding HandleLogoutClicked}" Content="Sign Out" IsVisible="{Binding FitEdit.IsAuthenticated}"/>
-          </StackPanel>
+          </WrapPanel>
           
-          <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsAuthenticating}">
+          <WrapPanel Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsAuthenticating}">
             <TextBlock Text="Enter code: " Width="150" VerticalAlignment="Center"/>
             <TextBox Text="{Binding Otp, Mode=TwoWay}" IsVisible="{Binding FitEdit.IsAuthenticating}" VerticalAlignment="Center" Margin="10,0,10,0" MinWidth="240"/>
             <Button Command="{Binding HandleVerifyEmailClicked}" Content="Verify"/>
-          </StackPanel>
+          </WrapPanel>
           
-          <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
+          <WrapPanel Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
             <TextBlock Text="Payment status:" Width="150" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" Width="240" Margin="10,0,10,0">
               <Ellipse Fill="{Binding FitEdit.IsActive, Converter={StaticResource BooleanToColorConverter}}"
@@ -58,9 +58,9 @@
             </StackPanel>
             <Button Command="{Binding HandleManagePaymentsClicked}" Content="Manage Payments" IsVisible="{Binding FitEdit.IsActive}"/>
             <Button Command="{Binding HandleSignUpClicked}" Content="Sign Up" IsVisible="{Binding !FitEdit.IsActive}"/>
-          </StackPanel>
+          </WrapPanel>
           
-          <StackPanel Orientation="Horizontal" Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsActive}">
+          <WrapPanel Margin="0,10,0,10" IsVisible="{Binding FitEdit.IsActive}">
             <TextBlock Text="Garmin Status:" Width="150" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" Width="240" Margin="10,0,10,0">
               <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
@@ -70,7 +70,7 @@
             </StackPanel>
             <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
             <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding FitEdit.IsAuthenticatedWithGarmin}"/>
-          </StackPanel>
+          </WrapPanel>
 
           <TextBlock Text="{Binding Message}" Margin="0,10,0,10"/>
         </StackPanel>

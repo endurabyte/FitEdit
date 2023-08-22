@@ -19,7 +19,7 @@
   <Grid RowDefinitions="Auto, *, 5" ColumnDefinitions="3*, Auto">
 
     <Expander Grid.Row="0" Grid.Column="0" Header="Filters">
-      <StackPanel Orientation="Horizontal">
+      <WrapPanel Orientation="Horizontal">
         <CheckBox Content="Hide unused columns" IsChecked="{Binding HideUnusedFields}" Margin="0,0,20,0">
           <ToolTip.Tip>
             <TextBlock TextWrapping="Wrap">
@@ -60,7 +60,7 @@
             </TextBlock>
           </ToolTip.Tip>
         </CheckBox>
-      </StackPanel>
+      </WrapPanel>
     </Expander>
 
     <TabControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ShownData}" SelectedIndex="{Binding TabIndex}">

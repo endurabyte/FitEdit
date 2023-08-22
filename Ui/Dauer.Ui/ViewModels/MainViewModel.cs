@@ -10,6 +10,7 @@ namespace Dauer.Ui.ViewModels;
 public interface IMainViewModel
 {
   IMapViewModel Map { get; }
+  bool IsSmallDisplay { get; set; }
 }
 
 public class DesignMainViewModel : MainViewModel
@@ -46,6 +47,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public string? Version { get; set; }
 
   [Reactive] public int SelectedTabIndex { get; set; }
+  [Reactive] public bool IsSmallDisplay { get; set; }
 
   private readonly IWindowAdapter window_;
 
@@ -74,7 +76,13 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     GetVersion();
 
     Titlebar.Instance.ObservableForProperty(x => x.Message).Subscribe(_ => AppTitle = AppTitle_);
-    window_.Resized.Subscribe(tup => Log.Info($"Window resized to {tup.Item1} {tup.Item2}"));
+    window_.Resized.Subscribe(tup =>
+    {
+      double width = tup.Item1;
+      double height = tup.Item2;
+      IsSmallDisplay = width < height;
+      Log.Info($"Window resized to {width} {height}");
+    });
   }
 
   /// <summary>
