@@ -210,6 +210,11 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     SelectHexData(wrapper);
     dg.ScrollIntoView(dg.SelectedItem, dg.CurrentColumn);
     selectedMessage_ = dg.SelectedItem as MessageWrapper;
+
+    if (selectedMessage_?.Mesg is RecordMesg)
+    {
+      SelectedIndex = dg.SelectedIndex;
+    }
   }
 
   private void SelectHexData(MessageWrapper? wrapper)
