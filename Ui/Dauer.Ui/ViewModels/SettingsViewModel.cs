@@ -137,18 +137,18 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   public void HandleManagePaymentsClicked()
   {
-    _ = Task.Run(() =>
+    _ = Task.Run(async () =>
     {
-      Browser.Open(PaymentPortalUrl);
+      await Browser.OpenAsync(PaymentPortalUrl);
       Message = "Check your web browser. We've opened a page to manage your payment.";
     });
   }
 
   public void HandleSignUpClicked()
   {
-    _ = Task.Run(() =>
+    _ = Task.Run(async () =>
     {
-      Browser.Open(SignUpUrl);
+      await Browser.OpenAsync(SignUpUrl);
       Message = "Check your web browser. We've opened a page to sign up.";
     });
   }

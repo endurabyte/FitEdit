@@ -1,11 +1,13 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+using Avalonia.Threading;
+using Dauer.Model;
+using Microsoft.Maui.ApplicationModel;
 
 namespace Dauer.Ui;
 
 public class Browser
 {
-  public static void Open(string? url)
+  public static async Task OpenAsync(string? url)
   {
     if (url == null) { return; }
 
@@ -13,25 +15,44 @@ public class Browser
     {
       Process.Start(url);
     }
-    catch
+    catch (Exception e)
     {
       // hack because of this: https://github.com/dotnet/corefx/issues/10361
-      if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+      if (OperatingSystem.IsWindows())
       {
         url = url.Replace("&", "^&");
         Process.Start(new ProcessStartInfo("cmd", $"/c start {url}") { CreateNoWindow = true });
       }
-      else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+      else if (OperatingSystem.IsLinux())
       {
         Process.Start("xdg-open", url);
       }
-      else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+      else if (OperatingSystem.IsMacOS())
       {
         Process.Start("open", url);
       }
+      else if (OperatingSystem.IsAndroid())
+      {
+#pragma warning disable CA1416 // Validate platform compatibility
+        await Microsoft.Maui.ApplicationModel.Browser.Default.OpenAsync(url);
+#pragma warning restore CA1416 // Validate platform compatibility
+
+      }
+      else if (OperatingSystem.IsIOS())
+      {
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+#pragma warning disable CA1416 // Validate platform compatibility
+          await Microsoft.Maui.ApplicationModel.Browser.Default.OpenAsync(url, new BrowserLaunchOptions
+          {
+            Flags = BrowserLaunchFlags.PresentAsPageSheet
+          });
+#pragma warning restore CA1416 // Validate platform compatibility
+        });
+      }
       else
       {
-        throw;
+        Log.Error(e);
       }
     }
   }

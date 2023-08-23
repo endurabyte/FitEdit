@@ -60,7 +60,7 @@ public class FitEditClient : IFitEditClient
         $"&oauth_callback={HttpUtility.UrlEncode($"{api_}garmin/oauth/complete?username={username}")}" +
         $"";
 
-      Browser.Open(url);
+      await Browser.OpenAsync(url);
       return true;
     }
     catch (JsonException e)
