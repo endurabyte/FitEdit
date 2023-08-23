@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Adapters.Sqlite;
 using Dauer.Model;
 using Dauer.Model.Data;
+using Dauer.Ui.Authentication;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Infra.Adapters.Storage;
 using Dauer.Ui.Infra.Adapters.Windowing;
@@ -92,7 +93,7 @@ public class DauerModule : Autofac.Module
     builder.RegisterType<FitEditClient>().As<IFitEditClient>()
       .WithParameter("api", api)
       .SingleInstance();
-    builder.RegisterType<NullWebAuthenticator>().As<IWebAuthenticator>();
+    builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();
     builder.RegisterInstance(Window_).As<IWindowAdapter>();
     builder.RegisterInstance(Storage_).As<IStorageAdapter>();
 

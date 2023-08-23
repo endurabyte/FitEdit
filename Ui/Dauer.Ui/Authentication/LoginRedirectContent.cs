@@ -1,6 +1,6 @@
 ﻿using Dauer.Model;
 
-namespace Dauer.Ui.Desktop.Oidc;
+namespace Dauer.Ui.Desktop.Authentication;
 
 public class LoginRedirectContent
 {

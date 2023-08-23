@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using Dauer.Ui.Desktop.Oidc;
+using Dauer.Ui.Desktop.Authentication;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Supabase;
 using Microsoft.Extensions.Logging;
@@ -7,7 +7,7 @@ using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Supabase.Gotrue.Exceptions;
 
-namespace Dauer.Ui.Desktop;
+namespace Dauer.Ui.Authentication;
 
 public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
@@ -114,7 +114,6 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
       Username = defaultUsername_;
       return false;
     }
-
 
     supa_.Authorization = AuthorizationFactory.Create(auth.AccessToken, auth.RefreshToken);
     return true;

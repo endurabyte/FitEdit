@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 
-namespace Dauer.Ui.Desktop.Oidc;
+namespace Dauer.Ui.Desktop.Authentication;
 
 public static class Tcp
 {
