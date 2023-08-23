@@ -47,7 +47,10 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public string? Version { get; set; }
 
   [Reactive] public int SelectedTabIndex { get; set; }
-  [Reactive] public bool IsSmallDisplay { get; set; }
+
+  // We presume a small display because Android and iOS don't
+  // call window_.Resized at startup but Windows does
+  [Reactive] public bool IsSmallDisplay { get; set; } = true; 
 
   private readonly IWindowAdapter window_;
 

@@ -2,22 +2,18 @@ using Avalonia.Controls;
 using Avalonia.Threading;
 using Dauer.Ui.ViewModels;
 using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.Views;
 
 public partial class MainView : UserControl
 {
-  private readonly RowDefinitions large_ = new("2*, Auto, *");
-  private readonly RowDefinitions small_ = new("*");
-
-  [Reactive] public int GridSplitterRow { get; set; } = 1;
-  [Reactive] public int ChartGridRow { get; set; } = 2;
+  private readonly RowDefinitions defaultRowDefinitions_;
 
   public MainView()
   {
     InitializeComponent();
 
+    defaultRowDefinitions_ = new RowDefinitions(MainGrid.RowDefinitions.ToString());
     DataContextChanged += HandleDataContextChanged;
   }
 
@@ -39,20 +35,33 @@ public partial class MainView : UserControl
       });
     });
 
-    vm.ObservableForProperty(x => x.IsSmallDisplay).Subscribe(_ =>
-    {
-      // Prevent grid row index exception
-      Grid.SetRow(GridSplitter, vm.IsSmallDisplay ? 0 : 1);
-      Grid.SetRow(ChartGrid, vm.IsSmallDisplay ? 0 : 2);
+    vm.ObservableForProperty(x => x.IsSmallDisplay).Subscribe(_ => RespondToDisplaySize(vm));
+    RespondToDisplaySize(vm);
+  }
 
-      MainGrid.RowDefinitions = vm.IsSmallDisplay ? small_ : large_;
+  private void RespondToDisplaySize(IMainViewModel vm)
+  {
+    MainGrid.RowDefinitions.Clear();
+
+    if (vm.IsSmallDisplay)
+    {
+      MainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+      MainGrid.Children.Remove(GridSplitter);
+      MainGrid.Children.Remove(ChartGrid);
+    }
+    else
+    {
+      foreach (var def in defaultRowDefinitions_)
+      {
+        MainGrid.RowDefinitions.Add(def);
+      }
+
+      if (GridSplitter.Parent == null) { MainGrid.Children.Add(GridSplitter); }
+      if (ChartGrid.Parent == null) { MainGrid.Children.Add(ChartGrid); }
 
       // Select tab before PlotTab, since PlotTab is now hidden
-      if (!vm.IsSmallDisplay)
-      {
-        int i = MainTabControl.Items.IndexOf(PlotTab);
-        MainTabControl.SelectedIndex = Math.Min(MainTabControl.SelectedIndex, i - 1);
-      }
-    });
+      int i = MainTabControl.Items.IndexOf(PlotTab);
+      MainTabControl.SelectedIndex = Math.Min(MainTabControl.SelectedIndex, i - 1);
+    }
   }
 }
