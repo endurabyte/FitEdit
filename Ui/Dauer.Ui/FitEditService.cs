@@ -12,6 +12,8 @@ public interface IFitEditService
   bool IsAuthenticating { get; }
   bool IsAuthenticatingWithGarmin { get; }
   bool IsAuthenticatedWithGarmin { get; }
+  bool IsAuthenticatingWithStrava { get; }
+  bool IsAuthenticatedWithStrava { get; }
   bool IsActive { get; }
   string? Username { get; set; }
 
@@ -21,6 +23,8 @@ public interface IFitEditService
   Task<bool> VerifyOtpAsync(string token);
   Task AuthorizeGarminAsync(CancellationToken ct = default);
   Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default);
+
+  Task<bool> AuthorizeStravaAsync(CancellationToken ct = default);
 }
 
 public class NullFitEditService : IFitEditService
@@ -29,6 +33,8 @@ public class NullFitEditService : IFitEditService
   public bool IsAuthenticating => false;
   public bool IsAuthenticatedWithGarmin => false;
   public bool IsAuthenticatingWithGarmin => false;
+  public bool IsAuthenticatedWithStrava => false;
+  public bool IsAuthenticatingWithStrava => false;
   public bool IsActive => false;
   public string? Username { get; set; } = "fake@fake.com";
 
@@ -38,6 +44,8 @@ public class NullFitEditService : IFitEditService
   public Task<bool> VerifyOtpAsync(string token) => Task.FromResult(true);
   public Task AuthorizeGarminAsync(CancellationToken ct = default) => Task.CompletedTask;
   public Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default) => Task.FromResult(true);
+
+  public Task<bool> AuthorizeStravaAsync(CancellationToken ct = default) => Task.FromResult(true);
 }
 
 public class FitEditService : ReactiveObject, IFitEditService
@@ -46,6 +54,8 @@ public class FitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool IsAuthenticating { get; private set; }
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
   [Reactive] public bool IsAuthenticatingWithGarmin { get; private set; }
+  [Reactive] public bool IsAuthenticatedWithStrava { get; private set; }
+  [Reactive] public bool IsAuthenticatingWithStrava { get; private set; }
   [Reactive] public bool IsActive { get; private set; }
   [Reactive] public string? Username { get; set; }
 
@@ -67,6 +77,14 @@ public class FitEditService : ReactiveObject, IFitEditService
       {
         IsAuthenticatedWithGarmin = supa_.IsAuthenticatedWithGarmin;
         IsAuthenticatingWithGarmin = false;
+      });
+
+    supa_
+      .ObservableForProperty(x => x.IsAuthenticatedWithStrava)
+      .Subscribe(_ =>
+      {
+        IsAuthenticatedWithStrava = supa_.IsAuthenticatedWithStrava;
+        IsAuthenticatingWithStrava = false;
       });
 
     supa_
@@ -130,6 +148,14 @@ public class FitEditService : ReactiveObject, IFitEditService
     if (!await client_.DeauthorizeGarminAsync(Username, ct)) { return false; }
 
     IsAuthenticatingWithGarmin = true;
+    return true;
+  }
+
+  public async Task<bool> AuthorizeStravaAsync(CancellationToken ct = default)
+  {
+    if (!await client_.AuthorizeStravaAsync(Username, ct)) { return false; }
+
+    IsAuthenticatingWithStrava = true;
     return true;
   }
 }

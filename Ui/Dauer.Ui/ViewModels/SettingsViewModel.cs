@@ -153,4 +153,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
   }
 
+  public void HandleStravaAuthorizeClicked()
+  {
+    _ = Task.Run(async () =>
+    {
+      await FitEdit.AuthorizeStravaAsync();
+      Message = FitEdit.IsAuthenticatingWithStrava
+        ? "Check your web browser. We've opened a page to Strava" 
+        : "There was a problem connecting to Strava";
+    });
+  }
 }

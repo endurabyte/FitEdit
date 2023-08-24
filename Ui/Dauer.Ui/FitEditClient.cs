@@ -12,6 +12,8 @@ public interface IFitEditClient
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
   Task<bool> AuthorizeGarminAsync(string? username, CancellationToken ct);
   Task<bool> DeauthorizeGarminAsync(string? username, CancellationToken ct = default);
+
+  Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct);
 }
 
 public class FitEditClient : IFitEditClient
@@ -91,4 +93,30 @@ public class FitEditClient : IFitEditClient
     return true;
   }
 
+  public async Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct)
+  {
+    var client = new HttpClient { BaseAddress = new Uri(api_) };
+    client.SetBearerToken(AccessToken);
+
+    try
+    {
+
+      var responseMsg = await client.GetAsync($"strava/oauth/init?username={HttpUtility.UrlEncode(username)}", ct);
+
+      if (!responseMsg.IsSuccessStatusCode)
+      {
+        return false;
+      }
+
+      // Open browser to Strava auth page
+      string url = await responseMsg.Content.ReadAsStringAsync(ct);
+      await Browser.OpenAsync(url);
+      return true;
+    }
+    catch (Exception e)
+    {
+      Log.Error(e);
+      return false;
+    }
+  }
 }

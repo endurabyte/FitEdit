@@ -20,6 +20,7 @@ public interface ISupabaseAdapter
 {
   bool IsAuthenticated { get; }
   bool IsAuthenticatedWithGarmin { get; }
+  bool IsAuthenticatedWithStrava { get; }
   bool IsActive { get; }
   Authorization? Authorization { get; set; }
 
@@ -53,6 +54,7 @@ public class NullSupabaseAdapter : ISupabaseAdapter
 {
   public bool IsAuthenticated => false;
   public bool IsAuthenticatedWithGarmin => false;
+  public bool IsAuthenticatedWithStrava => false;
   public bool IsActive => false;
   public Authorization? Authorization { get; set; }
 
@@ -76,10 +78,12 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   [Reactive] public bool IsConnected { get; private set; }
   [Reactive] public bool IsAuthenticated { get; private set; }
   [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; }
+  [Reactive] public bool IsAuthenticatedWithStrava { get; private set; }
   [Reactive] public bool IsActive { get; private set; }
   [Reactive] public Authorization? Authorization { get; set; }
 
   private RealtimeChannel? userChannel_;
+  private RealtimeChannel? stravaUserChannel_;
   private RealtimeChannel? garminUserChannel_;
   private RealtimeChannel? garminActivityChannel_;
 
@@ -115,7 +119,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     {
       if (IsConnected)
       {
-        Subscribe();
+        SubscribeAllTables();
       }
     });
 
@@ -158,36 +162,12 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     });
   }
 
-  private void Subscribe()
+  private void SubscribeAllTables()
   {
-    try
-    {
-      userChannel_?.Unsubscribe();
-      garminUserChannel_?.Unsubscribe();
-      garminActivityChannel_?.Unsubscribe();
-    }
-    catch (Exception e)
-    {
-      log_.LogError($"Error unsubscribing channel: {{@e}}", e);
-    }
-
-    userChannel_ = client_.Realtime.Channel("realtime", "public", "User");
-    garminUserChannel_ = client_.Realtime.Channel("realtime", "public", "GarminUser");
-    garminActivityChannel_ = client_.Realtime.Channel("realtime", "public", "GarminActivity");
-
-    userChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
-    {
-      var user = change.Model<Model.User>();
-      Sync(user);
-    });
-
-    garminUserChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) =>
-    {
-      var user = change.Model<Model.GarminUser>();
-      Sync(user);
-    });
-
-    garminActivityChannel_.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (channel, change) =>
+    Subscribe("User", ref userChannel_, change => Sync(change.Model<Model.User>()));
+    Subscribe("StravaUser", ref stravaUserChannel_, change => Sync(change.Model<Model.StravaUser>()));
+    Subscribe("GarminUser", ref garminUserChannel_, change => Sync(change.Model<Model.GarminUser>()));
+    Subscribe("GarminActivity", ref garminActivityChannel_, change =>
     {
       var activity = change.Model<Model.GarminActivity>();
       log_.LogInformation($"Got GarminActivity notification {{@activity}}", activity);
@@ -195,11 +175,30 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       _ = Task.Run(async () => await HandleActivityNotification(activity).AnyContext());
     });
 
-    userChannel_.Subscribe();
-    garminUserChannel_.Subscribe();
-    garminActivityChannel_.Subscribe();
-
     _ = Task.Run(GetRecentActivities);
+  }
+
+  private void Subscribe(string tableName, ref RealtimeChannel? channel, Action<PostgresChangesResponse> handleChange)
+  {
+    try
+    {
+      channel?.Unsubscribe();
+    }
+    catch (Exception e)
+    {
+      log_.LogError($"Error unsubscribing channel: {{@e}}", e);
+    }
+
+    try
+    {
+      channel = client_.Realtime.Channel("realtime", "public", tableName);
+      channel.AddPostgresChangeHandler(PostgresChangesOptions.ListenType.All, (_, change) => handleChange(change));
+      channel?.Subscribe();
+    }
+    catch (Exception e)
+    {
+      log_.LogError($"Error subscribing channel: {{@e}}", e);
+    }
   }
 
   private async Task HandleActivityNotification(GarminActivity? activity)
@@ -378,30 +377,6 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return true;
   }
 
-  public async Task<bool> LogoutGarminAsync()
-  {
-    if (!IsAuthenticated) { return false; }
-
-    try
-    {
-      var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
-      if (garminUser?.Model is null) { return false; }
-      Sync(garminUser.Model);
-
-      await client_.Postgrest.Table<Model.GarminUser>()
-        .Set(x => x.AccessToken!, "")
-        .Where(x => x.Id == garminUser.Model.Id)
-        .Update();
-    }
-    catch (Exception e)
-    {
-      Log.Error(e);
-      return false;
-    }
-
-    return true;
-  }
-
   public async Task<bool> UpdateAsync(DauerActivity? act)
   {
     if (act is null) { return false; }
@@ -443,12 +418,15 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       var user = await client_.Postgrest.Table<Model.User>().Get();
       Sync(user?.Model);
 
+      var stravaUser = await client_.Postgrest.Table<Model.StravaUser>().Get();
+      Sync(stravaUser?.Model);
+
       var garminUser = await client_.Postgrest.Table<Model.GarminUser>().Get();
       Sync(garminUser?.Model);
     }
     catch (Exception e)
     {
-      log_.LogError("Exception getting GarminUser: {@e}", e);
+      log_.LogError("Exception in SyncUserInfo: {@e}", e);
     }
   }
 
@@ -456,6 +434,13 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     if (user is null) { return false; }
     IsActive = user.IsActive == true;
+    return true;
+  }
+
+  private bool Sync(Model.StravaUser? user)
+  {
+    if (user is null) { return false; }
+    IsAuthenticatedWithStrava = !string.IsNullOrEmpty(user.AccessToken);
     return true;
   }
 

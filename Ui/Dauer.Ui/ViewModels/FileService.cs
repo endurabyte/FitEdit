@@ -145,6 +145,12 @@ public class FileService : ReactiveObject, IFileService
       act.File ??= new FileReference(act.Name ?? id, null) { Id = id };
       act.File.Bytes = await File.ReadAllBytesAsync(act.File.Path, ct).AnyContext();
 
+      if (act.File.Bytes.Length == 0)
+      {
+        act.File = null;
+        Log.Error($"Fit file {act.File?.Path} was empty");
+      }
+
       return act;
     }
     catch (Exception e)
@@ -166,6 +172,7 @@ public class FileService : ReactiveObject, IFileService
       }
 
       if (act.File == null) { return true; }
+      if (act.File.Bytes.Length == 0) { return true; }
       if (!CreateParentDir(act.File.Path)) { return false; }
       await File.WriteAllBytesAsync(act.File.Path, act.File.Bytes, ct).AnyContext();
       return true;
