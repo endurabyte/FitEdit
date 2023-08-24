@@ -3,5 +3,6 @@
 public enum RepairStrategy
 {
   Subtractive,
-  Additive
+  Additive,
+  AddMissingFields,
 }

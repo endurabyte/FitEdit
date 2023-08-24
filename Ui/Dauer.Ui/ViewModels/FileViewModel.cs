@@ -373,6 +373,18 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Additive));
   }
 
+  public void HandleRepairAddMissingFieldsClicked()
+  {
+    int index = SelectedIndex;
+    if (index < 0 || index >= FileService.Files.Count)
+    {
+      Log.Info("No file selected; cannot repair file");
+      return;
+    }
+
+    _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.AddMissingFields));
+  }
+
   public async Task<UiFile?> RepairAsync(UiFile? file, RepairStrategy strategy)
   {
     if (file == null) { return null; }
@@ -381,6 +393,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FitFile? fit = strategy switch
     {
       RepairStrategy.Additive => file.FitFile.RepairAdditively(),
+      RepairStrategy.AddMissingFields => file.FitFile.RepairAddMissingFields(),
       _ => file.FitFile.RepairSubtractively(),
     };
 

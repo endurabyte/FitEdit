@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.Json;
 using Dauer.Model.Extensions;
 using Dauer.Model.Workouts;
@@ -462,6 +463,123 @@ public static class FitFileExtensions
     dest.Events.AddRange(dest.Records.Select(r => new MesgEventArgs(r)));
     dest.ForwardfillEvents();
 
+    return dest;
+  }
+
+  /// <summary>
+  /// Repair by adding missing Session and Activity messages
+  /// </summary>
+  public static FitFile? RepairAddMissingFields(this FitFile? source)
+  {
+    if (source == null) { return null; }
+
+    var dest = new FitFile(source);
+
+    List<RecordMesg> records = source
+      .Get<RecordMesg>()
+      .Where(r => r.GetEnhancedSpeed() < 1000) // filter out speed spikes
+      .ToList()
+      .Sorted(MessageExtensions.Sort);
+
+    var start = records.First().GetTimestamp();
+    var end = records.Last().GetTimestamp();
+
+    // sum the distance between all records
+    float? totalDistance = records.Last().GetDistance();
+
+    var sport = source.Get<SportMesg>().FirstOrDefault();
+    var lap = source.Get<LapMesg>().FirstOrDefault();
+    var session = source.Get<SessionMesg>().FirstOrDefault();
+    var activity = source.Get<ActivityMesg>().FirstOrDefault();
+
+    if (session is null)
+    {
+      session = new SessionMesg();
+      session.SetStartTime(start);
+      session.SetTimestamp(end);
+      session.SetEvent(Event.Lap);
+      session.SetEventType(EventType.Stop);
+      session.SetStartPositionLat(records.First().GetPositionLat());
+      session.SetStartPositionLong(records.First().GetPositionLong());
+      session.SetEndPositionLat(records.Last().GetPositionLat());
+      session.SetEndPositionLong(records.Last().GetPositionLong());
+      session.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
+      session.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+      session.SetTotalDistance(totalDistance ?? 0);
+      session.SetTrigger(SessionTrigger.ActivityEnd);
+
+      if (sport != null) 
+      { 
+        session.SetSport(sport.GetSport());
+        session.SetSubSport(sport.GetSubSport());
+      }
+
+      if (!dest.MessagesByDefinition.ContainsKey(session.Num))
+      {
+        dest.MessagesByDefinition[session.Num] = new List<Mesg>();
+      }
+      dest.MessagesByDefinition[session.Num].Add(session);
+
+      var def = new MesgDefinition(session);
+      dest.Events.Add(new MesgDefinitionEventArgs(def));
+      dest.Events.Add(new MesgEventArgs(session));
+    }
+
+    if (lap is null)
+    {
+      lap = new LapMesg();
+      lap.SetStartTime(start);
+      lap.SetTimestamp(end);
+      lap.SetEvent(Event.Lap);
+      lap.SetEventType(EventType.Stop);
+      lap.SetStartPositionLat(records.First().GetPositionLat());
+      lap.SetStartPositionLong(records.First().GetPositionLong());
+      lap.SetEndPositionLat(records.Last().GetPositionLat());
+      lap.SetEndPositionLong(records.Last().GetPositionLong());
+      lap.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
+      lap.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+      lap.SetTotalDistance(totalDistance ?? 0);
+      lap.SetLapTrigger(LapTrigger.SessionEnd);
+
+      if (sport != null)
+      {
+        lap.SetSport(sport.GetSport());
+        lap.SetSubSport(sport.GetSubSport());
+      }
+
+      if (!dest.MessagesByDefinition.ContainsKey(lap.Num))
+      {
+        dest.MessagesByDefinition[lap.Num] = new List<Mesg>();
+      }
+      dest.MessagesByDefinition[lap.Num].Add(lap);
+
+      var def = new MesgDefinition(lap);
+      dest.Events.Add(new MesgDefinitionEventArgs(def));
+      dest.Events.Add(new MesgEventArgs(activity));
+    }
+
+    if (activity is null)
+    {
+      activity = new ActivityMesg();
+      activity.SetTimestamp(start);
+      activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+      activity.SetNumSessions(1);
+      activity.SetType(Activity.Manual);
+      activity.SetEvent(Event.Activity);
+      activity.SetEventType(EventType.Stop);
+
+      if (!dest.MessagesByDefinition.ContainsKey(activity.Num))
+      {
+        dest.MessagesByDefinition[activity.Num] = new List<Mesg>();
+      }
+      dest.MessagesByDefinition[activity.Num].Add(activity);
+
+      var def = new MesgDefinition(activity);
+      dest.Events.Add(new MesgDefinitionEventArgs(def));
+      dest.Events.Add(new MesgEventArgs(activity));
+    }
+
+    dest.ForwardfillEvents();
     return dest;
   }
 }
