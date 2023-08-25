@@ -46,6 +46,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
           : "Disconnected from Garmin";
       });
 
+    FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithStrava)
+      .Subscribe(_ =>
+      {
+        Message = FitEdit.IsAuthenticatedWithStrava
+          ? "Successfully connected to Strava!"
+          : "Disconnected from Strava";
+      });
+
     FitEdit.ObservableForProperty(x => x.IsAuthenticated)
       .Subscribe(_ =>
       {
@@ -161,6 +169,15 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       Message = FitEdit.IsAuthenticatingWithStrava
         ? "Check your web browser. We've opened a page to Strava" 
         : "There was a problem connecting to Strava";
+    });
+  }
+  
+  public void HandleStravaDeauthorizeClicked()
+  {
+    _ = Task.Run(async () =>
+    {
+      bool ok = await FitEdit.DeauthorizeStravaAsync();
+      Message = ok ? "Disconnected from Strava" : "There was a problem disconnecting from Strava";
     });
   }
 }

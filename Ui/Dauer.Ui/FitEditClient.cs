@@ -10,10 +10,11 @@ public interface IFitEditClient
   string AccessToken { get; set; }
 
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
-  Task<bool> AuthorizeGarminAsync(string? username, CancellationToken ct);
+  Task<bool> AuthorizeGarminAsync(string? username, CancellationToken ct = default);
   Task<bool> DeauthorizeGarminAsync(string? username, CancellationToken ct = default);
 
-  Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct);
+  Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct = default);
+  Task<bool> DeauthorizeStravaAsync(string? username, CancellationToken ct = default);
 }
 
 public class FitEditClient : IFitEditClient
@@ -38,7 +39,7 @@ public class FitEditClient : IFitEditClient
     return response.IsSuccessStatusCode;
   }
 
-  public async Task<bool> AuthorizeGarminAsync(string? username, CancellationToken ct)
+  public async Task<bool> AuthorizeGarminAsync(string? username, CancellationToken ct = default)
   {
     var client = new HttpClient() { BaseAddress = new Uri(api_) };
     client.SetBearerToken(AccessToken);
@@ -93,7 +94,7 @@ public class FitEditClient : IFitEditClient
     return true;
   }
 
-  public async Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct)
+  public async Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct = default)
   {
     var client = new HttpClient { BaseAddress = new Uri(api_) };
     client.SetBearerToken(AccessToken);
@@ -119,4 +120,29 @@ public class FitEditClient : IFitEditClient
       return false;
     }
   }
+
+  public async Task<bool> DeauthorizeStravaAsync(string? username, CancellationToken ct = default)
+  {
+    var client = new HttpClient { BaseAddress = new Uri(api_) };
+    client.SetBearerToken(AccessToken);
+
+    try
+    {
+
+      var responseMsg = await client.DeleteAsync($"strava/oauth/token?username={HttpUtility.UrlEncode(username)}", ct);
+
+      if (!responseMsg.IsSuccessStatusCode)
+      {
+        return false;
+      }
+
+      return true;
+    }
+    catch (Exception e)
+    {
+      Log.Error(e);
+      return false;
+    }
+  }
+
 }
