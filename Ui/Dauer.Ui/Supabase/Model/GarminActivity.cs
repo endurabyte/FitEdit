@@ -39,6 +39,9 @@ public class GarminActivity : BaseModel
   [Column(nameof(SupabaseUserId))]
   public string? SupabaseUserId { get; set; }
 
+  [Column(nameof(GarminId))]
+  public long GarminId { get; set; }
+
   [Column(nameof(LastUpdated))]
   public DateTime? LastUpdated { get; set; }
 }

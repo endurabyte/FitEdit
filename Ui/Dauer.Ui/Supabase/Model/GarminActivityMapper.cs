@@ -9,6 +9,7 @@ public static class GarminActivityMapper
   {
     Id = a.Id,
     Source = ActivitySource.GarminConnect,
+    SourceId = $"{a.GarminId}",
     Name = a.Name,
     Description = a.Description,
     Type = a.Type,
@@ -35,6 +36,7 @@ public static class GarminActivityMapper
     Manual = a.Manual,
     FileType = a.FileType,
     BucketUrl = a.BucketUrl,
+    GarminId = int.TryParse(a.SourceId, out int garminId) ? garminId : 0,
     LastUpdated = a.LastUpdated,
   };
 }

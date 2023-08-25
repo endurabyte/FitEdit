@@ -271,6 +271,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     known.Name = update.Name;
     known.Description = update.Description;
     known.StartTime = update.StartTime;
+    known.SourceId = update.SourceId;
 
     bool ok = await fileService_.UpdateAsync(known);
 

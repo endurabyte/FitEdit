@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System.Web;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Units;
@@ -31,6 +32,18 @@ public class DauerActivity : ReactiveObject
   public bool Manual { get; set; }
   public string? FileType { get; set; }
   public string? BucketUrl { get; set; }
+
+  public string? OnlineUrl => Source switch
+  {
+    ActivitySource.GarminConnect when !string.IsNullOrEmpty(SourceId) => $"https://connect.garmin.com/activity/{SourceId}",
+    // When we don't have the Garmin ID, search Garmin Connect by activity name
+    ActivitySource.GarminConnect => $"https://connect.garmin.com/modern/activities?startDate={StartTime:yyyy-MM-dd}&endDate={StartTime + TimeSpan.FromDays(1):yyyy-MM-dd}&search={HttpUtility.UrlEncode(Name)}",
+
+    ActivitySource.Strava when !string.IsNullOrEmpty(SourceId) => $"https://www.strava.com/activities/{SourceId}",
+    // When we don't have the Strava ID, search Strava by activity name
+    ActivitySource.Strava => $"https://www.strava.com/athlete/training?keywords={Name}",
+    _ => ""
+  };
 
   public DateTime? LastUpdated { get; set; }
 }

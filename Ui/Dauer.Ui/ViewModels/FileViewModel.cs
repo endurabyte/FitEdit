@@ -403,4 +403,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       fit.GetBytes()
     ));
   }
+
+  public async Task HandleGarminUploadClicked() => await Browser.OpenAsync("https://connect.garmin.com/modern/import-data");
+  public async Task HandleStravaUploadClicked() => await Browser.OpenAsync("https://www.strava.com/upload/select");
+
+  public async Task HandleViewOnlineClicked(DauerActivity? act)
+  {
+    if (act == null) { return; }
+    await Browser.OpenAsync(act.OnlineUrl);
+  }
 }

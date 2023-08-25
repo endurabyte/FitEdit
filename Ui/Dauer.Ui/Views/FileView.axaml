@@ -23,6 +23,8 @@
       <Button Command="{Binding HandleExportClicked}" Content="Export" 
               IsEnabled="{Binding FitEdit.IsActive}" 
               ToolTip.Tip="Export a file to disk"/>
+      <Button Command="{Binding HandleGarminUploadClicked}" Content="Garmin Upload Page" ToolTip.Tip="Open the Garmin Connect file upload page"/>
+      <Button Command="{Binding HandleStravaUploadClicked}" Content="Strava Upload Page" ToolTip.Tip="Open the Strava file upload page"/>
       <Button Command="{Binding HandleRemoveClicked}" Content="Remove">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">
@@ -150,6 +152,11 @@
                 <TextBlock Text="{Binding Activity.StartTime, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
                 <TextBlock FontWeight="Bold" Text="{Binding Activity.Name}" TextWrapping="Wrap" />
                 <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Description}" TextWrapping="Wrap" MaxWidth="300"/>
+                <Button 
+                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
+                  CommandParameter="{Binding Activity}"
+                  Classes="hyperlink"
+                  Content="View Online"/>
               </StackPanel>
             </Border>
           </DataTemplate>

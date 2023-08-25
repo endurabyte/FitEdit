@@ -70,7 +70,7 @@
 
       <StaticResource x:Key="ButtonBorderBrush" ResourceKey="FitLicoriceBlackBrush" />
 
-      <Color x:Key="SystemAccentColor">#7981FE</Color>
+      <Color x:Key="SystemAccentColor">#FF7981FE</Color>
       <Color x:Key="SystemAccentColorDark1">#FF717AFE</Color>
       <Color x:Key="SystemAccentColorDark2">#FF5D67FE</Color>
       <Color x:Key="SystemAccentColorDark3">#FF4854FE</Color>
@@ -100,7 +100,23 @@
       </ControlTemplate>
     </Setter>
   </Style>
-  
+
+  <Style Selector="Button.hyperlink">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <TextBlock Text="{TemplateBinding Content}" Foreground="{StaticResource SystemAccentColorLight1}" TextDecorations="Underline">
+          <TextBlock.Styles>
+            <Style Selector="TextBlock:pointerover">
+              <Setter Property="Foreground" Value="{StaticResource SystemAccentColorLight3}"/>
+            </Style>
+          </TextBlock.Styles>
+        </TextBlock>
+      </ControlTemplate>
+    </Setter>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
   <Style Selector="oxy|PlotView">
     <Setter Property="Background" Value="Transparent" />
   </Style>
