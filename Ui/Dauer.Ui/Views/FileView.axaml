@@ -109,60 +109,58 @@
       </Button>
     </WrapPanel>
 
-    <ScrollViewer Grid.Row="1">
-      <ListBox ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
-        
-        <ListBox.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Orientation="Vertical"/>
-          </ItemsPanelTemplate>
-        </ListBox.ItemsPanel>
-        
-        <ListBox.ItemTemplate>
-          <DataTemplate>
-            <Border Background="Gray" CornerRadius="4" Padding="4">
-              <StackPanel Orientation="Vertical">
-                <StackPanel Orientation="Horizontal">
-                  <CheckBox IsChecked="{Binding IsVisible}" Margin="8,0,0,0"
-                            IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <ToolTip.Tip>
-                      <TextBlock TextWrapping="Wrap" IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        Load and show the file
-                      </TextBlock>
-                    </ToolTip.Tip>
-                  </CheckBox>
-                  <Button FontSize="10"
-                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
-                          CommandParameter="{Binding Activity}"
-                          IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
-                          Content="?"
-                          Margin="5"
-                          ToolTip.Tip="Import a file from disk and associate it with this activity">
+    <ListBox Grid.Row="1" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
 
-                    <ToolTip.Tip>
-                      <TextBlock TextWrapping="Wrap"
-                                 IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}">
-                        Garmin told us about this workout, but didn't provide the file. Click to upload.
-                      </TextBlock>
-                    </ToolTip.Tip>
-                  </Button>
-                  <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="5"/>
-                </StackPanel>
-                
-                <TextBlock Text="{Binding Activity.StartTime, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
-                <TextBlock FontWeight="Bold" Text="{Binding Activity.Name}" TextWrapping="Wrap" />
-                <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Description}" TextWrapping="Wrap" MaxWidth="300"/>
-                <Button 
-                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
-                  CommandParameter="{Binding Activity}"
-                  Classes="hyperlink"
-                  Content="View Online"/>
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Vertical"/>
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Border Background="Gray" CornerRadius="4" Padding="4">
+            <StackPanel Orientation="Vertical">
+              <StackPanel Orientation="Horizontal">
+                <CheckBox IsChecked="{Binding IsVisible}" Margin="8,0,0,0"
+                          IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <ToolTip.Tip>
+                    <TextBlock TextWrapping="Wrap" IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
+                      Load and show the file
+                    </TextBlock>
+                  </ToolTip.Tip>
+                </CheckBox>
+                <Button FontSize="10"
+                        Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
+                        CommandParameter="{Binding Activity}"
+                        IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
+                        Content="?"
+                        Margin="5"
+                        ToolTip.Tip="Import a file from disk and associate it with this activity">
+
+                  <ToolTip.Tip>
+                    <TextBlock TextWrapping="Wrap"
+                               IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}">
+                      Garmin told us about this workout, but didn't provide the file. Click to upload.
+                    </TextBlock>
+                  </ToolTip.Tip>
+                </Button>
+                <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="5"/>
               </StackPanel>
-            </Border>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-    </ScrollViewer>
+
+              <TextBlock Text="{Binding Activity.StartTime, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
+              <TextBlock FontWeight="Bold" Text="{Binding Activity.Name}" TextWrapping="Wrap" />
+              <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Description}" TextWrapping="Wrap" MaxWidth="300"/>
+              <Button
+                Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
+                CommandParameter="{Binding Activity}"
+                Classes="hyperlink"
+                Content="View Online"/>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
   </Grid>
 
 </UserControl>
