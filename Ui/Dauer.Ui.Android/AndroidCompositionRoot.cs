@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.Android;
 

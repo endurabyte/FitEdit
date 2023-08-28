@@ -18,8 +18,11 @@ public partial class App : Application
   {
     if (CompositionRoot.Instance == null) { return; }
 
+    CompositionRoot.Instance.RegisterModule(new DauerModule(ApplicationLifetime));
+    CompositionRoot.Instance.RegisterModule(new UiModule());
+
     object? dataContext = CompositionRoot.Instance
-      .Build(ApplicationLifetime)
+      .Build()
       .Get<IMainViewModel>();
 
     if (ApplicationLifetime.IsDesktop(out var desktop))

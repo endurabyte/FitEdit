@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
+using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
@@ -30,7 +31,7 @@ public interface IRecordViewModel
 
 public class DesignRecordViewModel : RecordViewModel
 {
-  public DesignRecordViewModel() : base(new FileService(new NullDatabaseAdapter()))
+  public DesignRecordViewModel() : base(new NullFileService())
   {
   }
 }

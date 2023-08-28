@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Threading;
+using Dauer.Ui.Model;
 
 namespace Dauer.Ui.Infra.Adapters.Windowing;
 

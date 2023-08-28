@@ -1,5 +1,6 @@
 ﻿using Avalonia.Platform.Storage;
 using Dauer.Model;
+using Dauer.Model.Storage;
 
 namespace Dauer.Ui.Infra.Adapters.Storage;
 

@@ -1,4 +1,5 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Storage;
 using Dauer.Ui.Infra.Adapters.Storage;
 
 namespace Dauer.Ui.Browser.Adapters.Storage;

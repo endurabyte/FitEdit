@@ -5,7 +5,8 @@ using OxyPlot.Annotations;
 using OxyPlot.Series;
 using OxyPlot.Axes;
 using ReactiveUI.Fody.Helpers;
-using Dauer.Model.Data;
+using Dauer.Data;
+using Dauer.Ui.Extensions;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -17,7 +18,7 @@ public interface IPlotViewModel
 
 public class DesignPlotViewModel : PlotViewModel
 {
-  public DesignPlotViewModel() : base (new FileService(new NullDatabaseAdapter()))
+  public DesignPlotViewModel() : base (new NullFileService())
   {
     var file = new UiFile { FitFile = new FitFileFactory().CreateFake() };
     Add(file);

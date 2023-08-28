@@ -3,6 +3,7 @@ using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
+using Dauer.Ui.Infra;
 using Microsoft.Maui.ApplicationModel;
 
 namespace Dauer.Ui.Android;

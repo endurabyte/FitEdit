@@ -1,10 +1,13 @@
 ﻿using Avalonia.Threading;
+using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Extensions;
+using Dauer.Model.Storage;
+using Dauer.Model.Web;
+using Dauer.Services;
 using Dauer.Ui.Extensions;
-using Dauer.Ui.Infra.Adapters.Storage;
-using Dauer.Ui.Supabase;
+using Dauer.Ui.Model.Supabase;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -21,6 +24,7 @@ public class DesignFileViewModel : FileViewModel
     new NullStorageAdapter(),
     new NullFitEditService(),
     new NullSupabaseAdapter(),
+    new NullBrowser(),
     new DesignLogViewModel()) { }
 }
 
@@ -33,12 +37,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private readonly IStorageAdapter storage_;
   private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
+  private readonly IBrowser browser_;
 
   public FileViewModel(
     IFileService fileService,
     IStorageAdapter storage,
     IFitEditService fitEdit,
     ISupabaseAdapter supa,
+    IBrowser browser,
     ILogViewModel log
   )
   {
@@ -47,7 +53,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     supa_ = supa;
     storage_ = storage;
     log_ = log;
-
+    browser_ = browser;
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       int i = property.Value;
@@ -404,12 +410,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     ));
   }
 
-  public async Task HandleGarminUploadClicked() => await Browser.OpenAsync("https://connect.garmin.com/modern/import-data");
-  public async Task HandleStravaUploadClicked() => await Browser.OpenAsync("https://www.strava.com/upload/select");
+  public async Task HandleGarminUploadClicked() => await browser_.OpenAsync("https://connect.garmin.com/modern/import-data");
+  public async Task HandleStravaUploadClicked() => await browser_.OpenAsync("https://www.strava.com/upload/select");
 
   public async Task HandleViewOnlineClicked(DauerActivity? act)
   {
     if (act == null) { return; }
-    await Browser.OpenAsync(act.OnlineUrl);
+    await browser_.OpenAsync(act.OnlineUrl);
   }
 }

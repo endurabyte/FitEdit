@@ -5,6 +5,8 @@ using System.Reactive.Linq;
 using Dauer.Model.Data;
 using Dauer.Model;
 using Mapsui.UI.Avalonia;
+using Dauer.Data;
+using Dauer.Ui.Extensions;
 
 #if USE_MAPSUI
 using Mapsui;
@@ -29,7 +31,7 @@ public interface IMapViewModel
 
 public class DesignMapViewModel : MapViewModel
 {
-  public DesignMapViewModel() : base(new FileService(new NullDatabaseAdapter()), new NullDatabaseAdapter(), TileSource.Jawg)
+  public DesignMapViewModel() : base(new NullFileService(), new NullDatabaseAdapter(), TileSource.Jawg)
   {
 
   }

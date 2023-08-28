@@ -2,6 +2,10 @@
 using Dauer.Model;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Dauer.Model.GarminConnect;
+using Dauer.Services;
+using Dauer.Model.Validators;
+using Dauer.Model.Web;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -13,7 +17,11 @@ public interface ISettingsViewModel
 public class DesignSettingsViewModel : SettingsViewModel
 {
   public DesignSettingsViewModel() : base(
-    new NullFitEditService()
+    new NullFitEditService(),
+    new NullGarminConnectClient(),
+    new NullEmailValidator(),
+    new NullPhoneValidator(),
+    new NullBrowser()
   )
   {
   }
@@ -31,12 +39,24 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   public string SignUpUrl => $"https://www.fitedit.io/pricing.html";
 
   private CancellationTokenSource authCancelCts_ = new();
+  private readonly IGarminConnectClient garmin_;
+  private readonly IEmailValidator emailValidator_;
+  private readonly IPhoneValidator phoneValidator_;
+  private readonly IBrowser browser_;
 
   public SettingsViewModel(
-    IFitEditService fitEdit
+    IFitEditService fitEdit,
+    IGarminConnectClient garmin,
+    IEmailValidator emailValidator,
+    IPhoneValidator phoneValidator,
+    IBrowser browser
   )
   {
     FitEdit = fitEdit;
+    garmin_ = garmin;
+    emailValidator_ = emailValidator;
+    phoneValidator_ = phoneValidator;
+    browser_ = browser;
 
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
       .Subscribe(_ =>
@@ -70,13 +90,13 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     Otp = "";
     string? username = FitEdit.Username?.Trim();
 
-    if (EmailValidator.IsValid(username))
+    if (emailValidator_.IsValid(username))
     {
       Message = "We sent you an email. " +
         "\nIf you're a new user, it has a link. " +
         "\nIf you're a returning user, it has a code and a link. " +
         "\nEnter the code or open the link on this device within 5 minutes.";
-    } else if (PhoneValidator.IsValid(username))
+    } else if (phoneValidator_.IsValid(username))
     {
       Message = "We sent you a text message with a code. " +
         "\nEnter the code within 5 minutes.";
@@ -147,7 +167,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   {
     _ = Task.Run(async () =>
     {
-      await Browser.OpenAsync(PaymentPortalUrl);
+      await browser_.OpenAsync(PaymentPortalUrl);
       Message = "Check your web browser. We've opened a page to manage your payment.";
     });
   }
@@ -156,7 +176,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   {
     _ = Task.Run(async () =>
     {
-      await Browser.OpenAsync(SignUpUrl);
+      await browser_.OpenAsync(SignUpUrl);
       Message = "Check your web browser. We've opened a page to sign up.";
     });
   }
@@ -179,5 +199,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       bool ok = await FitEdit.DeauthorizeStravaAsync();
       Message = ok ? "Disconnected from Strava" : "There was a problem disconnecting from Strava";
     });
+  }
+
+  public async Task HandleGarminLoginClicked()
+  {
+    garmin_.Config.Username = "test@test.com";
+    garmin_.Config.Password = "supersecret";
+
+    (var cookies, var handler) = await garmin_.Authenticate();
+    var activities = await garmin_.LoadActivities(1, 1, DateTime.UtcNow - TimeSpan.FromDays(7));
   }
 }

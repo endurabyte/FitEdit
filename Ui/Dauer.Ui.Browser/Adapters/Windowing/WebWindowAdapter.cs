@@ -1,6 +1,6 @@
 ﻿using Avalonia.Controls;
 using Dauer.Model;
-using Dauer.Ui.Infra.Adapters.Windowing;
+using Dauer.Ui.Model;
 
 namespace Dauer.Ui.Browser.Adapters.Windowing;
 

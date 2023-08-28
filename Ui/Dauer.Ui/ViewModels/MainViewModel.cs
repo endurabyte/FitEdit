@@ -1,7 +1,8 @@
 ﻿using System.Reactive.Linq;
 using System.Reflection;
 using Dauer.Model;
-using Dauer.Ui.Infra.Adapters.Windowing;
+using Dauer.Services;
+using Dauer.Ui.Model;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -61,7 +62,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IRecordViewModel records,
     IMapViewModel map,
     IFileViewModel file,
-    ILogViewModel log,
+    ILogViewModel logVm,
     ISettingsViewModel settings,
     IFitEditService fitEdit
   )
@@ -72,7 +73,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Records = records;
     Map = map;
     File = file;
-    LogVm = log;
+    LogVm = logVm;
     Settings = settings;
     FitEdit = fitEdit;
 
@@ -93,7 +94,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   /// </summary>
   private void GetVersion()
   {
-    var assembly = Assembly.GetAssembly(typeof(CompositionRoot));
+    var assembly = Assembly.GetAssembly(typeof(App));
     var attr = assembly?.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
     Version = attr?.InformationalVersion ?? "Unknown Version";
     AppTitle = AppTitle_;

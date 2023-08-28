@@ -72,6 +72,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Units", "units\Units\Units.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Units.Tests", "units\Units.Tests\Units.Tests.csproj", "{FFBA1B00-F007-466C-81EB-36E291BD72C8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.GarminConnect", "Infrastructure\Dauer.Adapters.GarminConnect\Dauer.Adapters.GarminConnect.csproj", "{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -164,6 +166,10 @@ Global
 		{FFBA1B00-F007-466C-81EB-36E291BD72C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFBA1B00-F007-466C-81EB-36E291BD72C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFBA1B00-F007-466C-81EB-36E291BD72C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -191,6 +197,7 @@ Global
 		{749583B4-4139-416A-A2F3-67421216476F} = {F4873C72-D0B4-462F-A822-837B1E4E6B81}
 		{DC1814CC-1211-4E50-82A3-2F248CDA1C56} = {97C9CF2E-86B0-465F-9F7A-39A0B36133B8}
 		{FFBA1B00-F007-466C-81EB-36E291BD72C8} = {97C9CF2E-86B0-465F-9F7A-39A0B36133B8}
+		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}

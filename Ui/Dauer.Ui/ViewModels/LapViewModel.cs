@@ -9,6 +9,7 @@ using Dauer.Ui.Extensions;
 using Units;
 using Avalonia.Threading;
 using Dauer.Model.Data;
+using Dauer.Data;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -19,7 +20,7 @@ public interface ILapViewModel
 
 public class DesignLapViewModel : LapViewModel
 {
-  public DesignLapViewModel() : base(new FileService(new NullDatabaseAdapter()))
+  public DesignLapViewModel() : base(new NullFileService())
   {
     var now = DateTime.Now;
     Laps.Add(new Lap { Start = now, End = now + TimeSpan.FromSeconds(60), Speed = new(3.12345, Unit.MetersPerSecond) });
