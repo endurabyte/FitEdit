@@ -280,9 +280,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
   private void HandleSelectedIndexChanged(int index)
   {
+    if (Map?.Map is null) { return; }
     SelectionCount = 0;
     ShowCoordinate(fileService_.MainFile?.FitFile, index);
-    Map!.Map.RefreshGraphics();
+    Map.Map.RefreshGraphics();
   }
 
   private void ShowCoordinate(FitFile? f, int index)

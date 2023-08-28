@@ -249,6 +249,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     fileService_.MainFile.SelectedIndex = index;
     SliderValue = index;
 
+    if (Plot?.PlotView is null) { return; }
     if (lastTracker_ != null && lastTracker_.Index == index) { return; }
 
     LineSeries? series = HrSeries_;
@@ -266,7 +267,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
       Text = $"Record {index}"
     };
 
-    Plot?.PlotView?.ShowTracker(hit);
+    Plot.PlotView.ShowTracker(hit);
   }
 
   private void HandleSelectionCountChanged(int count) => SelectIndices(SelectedIndex, SelectedIndex + count);
