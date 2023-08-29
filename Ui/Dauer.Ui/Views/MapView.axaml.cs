@@ -4,7 +4,6 @@ using Dauer.Ui.ViewModels;
 using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Layers;
-using Mapsui.Nts;
 using Mapsui.Providers;
 using NetTopologySuite.Geometries;
 

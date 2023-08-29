@@ -99,6 +99,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     }
   };
 
+  private readonly Queue<UiFile> queue_ = new();
   private readonly IFileService fileService_;
   private readonly IDatabaseAdapter db_;
   private readonly TileSource tileSource_;
@@ -176,6 +177,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HandleLayersChanged();
 
     Map.Map.Navigator.Limiter = new ViewportLimiterKeepWithinExtent();
+
+    while (queue_.Count > 0)
+    {
+      Show(queue_.Dequeue());
+    }
+
+    UpdateExtent();
   }
 
   // Sort layers, update map
@@ -237,7 +245,18 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
-  private void HandleFitFileChanged(UiFile sf)
+  private void HandleFitFileChanged(UiFile uif)
+  {
+    if (Map?.Map == null)
+    {
+      queue_.Enqueue(uif);
+      return;
+    }
+
+    Show(uif);
+  }
+
+  private void Show(UiFile sf)
   {
     if (sf.Activity == null) { return; }
 

@@ -11,7 +11,7 @@ namespace Dauer.Ui.ViewModels;
 public interface IMainViewModel
 {
   IMapViewModel Map { get; }
-  bool IsSmallDisplay { get; set; }
+  bool IsPortrait { get; set; }
 }
 
 public class DesignMainViewModel : MainViewModel
@@ -49,9 +49,9 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   [Reactive] public int SelectedTabIndex { get; set; }
 
-  // We presume a small display because Android and iOS don't
+  // We presume a portrait display because Android and iOS don't
   // call window_.Resized at startup but Windows does
-  [Reactive] public bool IsSmallDisplay { get; set; } = true; 
+  [Reactive] public bool IsPortrait { get; set; } = true; 
 
   private readonly IWindowAdapter window_;
 
@@ -84,7 +84,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       double width = tup.Item1;
       double height = tup.Item2;
-      IsSmallDisplay = width < height;
+      IsPortrait = width < height;
       Log.Info($"Window resized to {width} {height}");
     });
   }

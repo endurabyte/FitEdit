@@ -51,15 +51,11 @@
 
         <views:SettingsView DataContext="{Binding Settings}"/>
       </TabItem>
-      <!--<TabItem Header="Log">
-            <views:LogView DataContext="{Binding Log}"/>
-          </TabItem>-->
-
-      <TabItem x:Name="PlotTab" FontSize="12" Header="Chart" IsVisible="{Binding IsSmallDisplay}">
+      <TabItem x:Name="PlotTab" FontSize="12" Header="Chart" IsVisible="{Binding IsPortrait}">
         <views:PlotView DataContext="{Binding Plot}"/>
       </TabItem>
 
-      <TabItem FontSize="12" Header="Map" IsVisible="{Binding IsSmallDisplay}">
+      <TabItem x:Name="MapTab" FontSize="12" Header="Map" IsVisible="{Binding IsPortrait}">
         <views:MapView DataContext="{Binding Map}"/>
       </TabItem>
     </TabControl>

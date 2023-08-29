@@ -9,12 +9,30 @@ public partial class MainView : UserControl
 {
   private readonly RowDefinitions defaultRowDefinitions_;
 
+  /// <summary>
+  /// Index of the selected tab in portrait display mode, 
+  /// for example on mobile devices in portrait mode or desktops/laptops when the window height > width
+  /// </summary>
+  private int portraitTabIndex = -1;
+
+  /// <summary>
+  /// Index of the selected tab in landscape display mode, 
+  /// for example on mobile devices in landscape mode or desktops/laptops when the window height < width
+  /// </summary>
+  private int landscapeTabIndex = -1;
+
   public MainView()
   {
     InitializeComponent();
 
     defaultRowDefinitions_ = new RowDefinitions(MainGrid.RowDefinitions.ToString());
     DataContextChanged += HandleDataContextChanged;
+    MainTabControl.ObservableForProperty(x => x.SelectedIndex).Subscribe(_ =>
+    {
+      if (DataContext is not IMainViewModel vm) { return; }
+      if (vm.IsPortrait) { portraitTabIndex = MainTabControl.SelectedIndex; }
+      else { landscapeTabIndex = MainTabControl.SelectedIndex; }
+    });
   }
 
   private void HandleDataContextChanged(object? sender, EventArgs e)
@@ -27,7 +45,7 @@ public partial class MainView : UserControl
     // Show the map if it has coordinates, else hide it.
     vm.Map.ObservableForProperty(x => x.HasCoordinates).Subscribe(async x =>
     {
-      if (vm.IsSmallDisplay) { return; }
+      if (vm.IsPortrait) { return; }
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
         var value = x.Value ? GridLength.Star : new GridLength(0);
@@ -35,7 +53,7 @@ public partial class MainView : UserControl
       });
     });
 
-    vm.ObservableForProperty(x => x.IsSmallDisplay).Subscribe(_ => RespondToDisplaySize(vm));
+    vm.ObservableForProperty(x => x.IsPortrait).Subscribe(_ => RespondToDisplaySize(vm));
     RespondToDisplaySize(vm);
   }
 
@@ -43,25 +61,29 @@ public partial class MainView : UserControl
   {
     MainGrid.RowDefinitions.Clear();
 
-    if (vm.IsSmallDisplay)
+    bool portraitViewWasOnPlotOrMap = 
+         portraitTabIndex == MainTabControl.Items.IndexOf(PlotTab) 
+      || portraitTabIndex == MainTabControl.Items.IndexOf(MapTab);
+
+    // Jump back to plot or map tab if going back to portrait
+    MainTabControl.SelectedIndex = vm.IsPortrait && portraitViewWasOnPlotOrMap
+      ? portraitTabIndex
+      : landscapeTabIndex;
+
+    if (vm.IsPortrait)
     {
       MainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
       MainGrid.Children.Remove(GridSplitter);
       MainGrid.Children.Remove(ChartGrid);
+      return;
     }
-    else
+
+    foreach (var def in defaultRowDefinitions_)
     {
-      foreach (var def in defaultRowDefinitions_)
-      {
-        MainGrid.RowDefinitions.Add(def);
-      }
-
-      if (GridSplitter.Parent == null) { MainGrid.Children.Add(GridSplitter); }
-      if (ChartGrid.Parent == null) { MainGrid.Children.Add(ChartGrid); }
-
-      // Select tab before PlotTab, since PlotTab is now hidden
-      int i = MainTabControl.Items.IndexOf(PlotTab);
-      MainTabControl.SelectedIndex = Math.Min(MainTabControl.SelectedIndex, i - 1);
+      MainGrid.RowDefinitions.Add(def);
     }
+
+    if (GridSplitter.Parent == null) { MainGrid.Children.Add(GridSplitter); }
+    if (ChartGrid.Parent == null) { MainGrid.Children.Add(ChartGrid); }
   }
 }
