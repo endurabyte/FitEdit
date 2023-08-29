@@ -7,8 +7,11 @@
         <TextBlock Text="TextBlock"/>
         <Button Content="Button"/>
         <Button Content="Button (Disabled)" IsEnabled="False"/>
+        <Button Classes="hyperlink" Content="https://www.avaloniaui.net/"/>
         <TextBox Text="TextBox"/>
         <Label Content="Label"/>
+        <Separator Classes="vertical" Height="50"/>
+        <Separator Width="50"/>
       </StackPanel>
     </Border>
   </Design.PreviewWith>
@@ -85,7 +88,7 @@
   </Styles.Resources>
 
   <!--Vertical Separator style-->
-  <Style Selector="Separator">
+  <Style Selector="Separator.vertical">
     <Setter Property="Height" Value="NaN"/>
     <Setter Property="Margin" Value="8,0"/>
     <Setter Property="MinHeight" Value="0"/>

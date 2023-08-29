@@ -1,6 +1,7 @@
 ﻿using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
+using Dauer.Services;
 using SQLite;
 using SQLitePCL;
 
@@ -9,6 +10,7 @@ namespace Dauer.Adapters.Sqlite;
 public class SqliteAdapter : HasProperties, IDatabaseAdapter
 {
   private readonly string dbPath_;
+  private readonly ICryptoService crypto_;
   private readonly SQLiteOpenFlags flags_ = SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache | SQLiteOpenFlags.FullMutex;
 
   private SQLiteAsyncConnection db_;
@@ -16,9 +18,10 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
   private bool ready_;
   public bool Ready { get => ready_; set => Set(ref ready_, value); }
 
-  public SqliteAdapter(string dbPath)
+  public SqliteAdapter(string dbPath, ICryptoService crypto)
   {
     dbPath_ = dbPath;
+    crypto_ = crypto;
     _ = Task.Run(async () => await OpenDatabase().AnyContext());
   }
 
@@ -162,9 +165,25 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     }
   }
 
-  public async Task<bool> InsertOrUpdateAsync(Model.AppSettings a) => 1 == await db_?.InsertOrReplaceAsync(a.MapEntity()).AnyContext();
+  public async Task<bool> InsertOrUpdateAsync(Model.AppSettings a)
+  { 
+    AppSettings e = a.MapEntity();
+    e.GarminPassword = crypto_.Encrypt(e.GarminUsername, e.GarminPassword);
+    e.GarminCookies = crypto_.Encrypt(e.GarminUsername, e.GarminCookies);
+    e.StravaPassword = crypto_.Encrypt(e.StravaUsername, e.StravaPassword);
 
-  public async Task<Model.AppSettings> GetAppSettingsAsync() => (await GetAsync<AppSettings>(AppSettings.DefaultKey)
-    .AnyContext())
-    .MapModel();
+    return 1 == await db_?.InsertOrReplaceAsync(e).AnyContext();
+  }
+
+  public async Task<Model.AppSettings> GetAppSettingsAsync()
+  {
+    AppSettings e = await GetAsync<AppSettings>(AppSettings.DefaultKey).AnyContext();
+
+    if (e is null) { return null; }
+
+    e.GarminPassword = crypto_.Decrypt(e.GarminUsername, e.GarminPassword);
+    e.GarminCookies = crypto_.Decrypt(e.GarminUsername, e.GarminCookies);
+    e.StravaPassword = crypto_.Decrypt(e.StravaUsername, e.StravaPassword);
+    return e.MapModel();
+  }
 }

@@ -5,4 +5,8 @@
     <ProjectReference Include="..\Dauer.Model\Dauer.Model.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
+  </ItemGroup>
 </Project>

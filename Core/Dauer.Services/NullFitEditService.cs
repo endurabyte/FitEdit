@@ -1,24 +1,70 @@
 ﻿#nullable enable
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+
 namespace Dauer.Services;
 
-public class NullFitEditService : IFitEditService
+public class NullFitEditService : ReactiveObject, IFitEditService
 {
-  public bool IsAuthenticated => false;
-  public bool IsAuthenticating => false;
-  public bool IsAuthenticatedWithGarmin => false;
-  public bool IsAuthenticatingWithGarmin => false;
-  public bool IsAuthenticatedWithStrava => false;
-  public bool IsAuthenticatingWithStrava => false;
-  public bool IsActive => false;
-  public string? Username { get; set; } = "fake@fake.com";
+  [Reactive] public bool IsAuthenticated { get; private set; } = true;
+  [Reactive] public bool IsAuthenticating { get; private set; } = true;
+  [Reactive] public bool IsAuthenticatedWithGarmin { get; private set; } = true;
+  [Reactive] public bool IsAuthenticatingWithGarmin { get; private set; } = false;
+  [Reactive] public bool IsAuthenticatedWithStrava { get; private set; } = true;
+  [Reactive] public bool IsAuthenticatingWithStrava { get; private set; } = false;
+  [Reactive] public bool IsActive { get; set; } = true;
+  [Reactive] public string? Username { get; set; } = "fake@fake.com";
 
-  public Task<bool> AuthenticateAsync(CancellationToken ct = default) => Task.FromResult(false);
-  public Task<bool> LogoutAsync(CancellationToken ct = default) => Task.FromResult(false);
-  public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(true);
-  public Task<bool> VerifyOtpAsync(string token) => Task.FromResult(true);
-  public Task AuthorizeGarminAsync(CancellationToken ct = default) => Task.CompletedTask;
-  public Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default) => Task.FromResult(true);
+  public Task<bool> AuthenticateAsync(CancellationToken ct = default)
+  {
+    IsAuthenticating = true;
+    return Task.FromResult(false);
+  }
 
-  public Task<bool> AuthorizeStravaAsync(CancellationToken ct = default) => Task.FromResult(true);
-  public Task<bool> DeauthorizeStravaAsync(CancellationToken ct = default) => Task.FromResult(true);
+  public Task<bool> LogoutAsync(CancellationToken ct = default)
+  {
+    IsAuthenticated = false;
+    return Task.FromResult(true);
+  }
+
+  public Task<bool> IsAuthenticatedAsync(CancellationToken ct = default) => Task.FromResult(IsAuthenticated);
+  public Task<bool> VerifyOtpAsync(string token)
+  {
+    IsAuthenticating = false;
+    IsAuthenticated = true;
+    return Task.FromResult(true);
+  }
+
+  public Task AuthorizeGarminAsync(CancellationToken ct = default)
+  {
+    IsAuthenticatingWithGarmin = true;
+    _ = Task.Run(async () =>
+    {
+      await Task.Delay(1000, ct);
+      IsAuthenticatingWithGarmin = false;
+    }, ct);
+    IsAuthenticatedWithGarmin = true;
+    return Task.CompletedTask;
+  }
+
+  public Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default)
+  {
+    IsAuthenticatedWithGarmin = false;
+    return Task.FromResult(true);
+  }
+
+  public async Task<bool> AuthorizeStravaAsync(CancellationToken ct = default)
+  {
+    IsAuthenticatingWithStrava = true;
+    await Task.Delay(1000, ct);
+    IsAuthenticatingWithStrava = false;
+    IsAuthenticatedWithStrava = true;
+    return true;
+  }
+
+  public Task<bool> DeauthorizeStravaAsync(CancellationToken ct = default)
+  {
+    IsAuthenticatedWithStrava = false;
+    return Task.FromResult(true);
+  }
 }

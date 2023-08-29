@@ -1,5 +1,4 @@
-﻿using System.Net;
-
+﻿#nullable enable
 namespace Dauer.Model.GarminConnect;
 
 /// <summary>
@@ -10,10 +9,25 @@ public interface IGarminConnectClient
   GarminConnectConfig Config { get; set; }
 
   /// <summary>
+  /// Supports loading of persisted cookies
+  /// </summary>
+  void AddCookies(Dictionary<string, Cookie>? cookies);
+
+  /// <summary>
+  /// Supports saving of persisted cookies
+  /// </summary>
+  Dictionary<string, Cookie> GetCookies();
+
+  /// <summary>
   /// Authenticates this instance.
   /// </summary>
   /// <returns>Tuple of Cookies and HTTP handler</returns>
-  Task<(CookieContainer, HttpClientHandler)> Authenticate();
+  Task<bool> AuthenticateAsync();
+
+  /// <summary>
+  /// Return true if the SESSIONID cookie is present and unepired and a request to Garmin Connect succeeds
+  /// </summary>
+  Task<bool> IsAuthenticatedAsync();
 
   /// <summary>
   /// Downloads the activity file.

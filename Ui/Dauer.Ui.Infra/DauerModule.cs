@@ -89,6 +89,7 @@ public class DauerModule : Autofac.Module
     string? apiUrl = config_?.GetValue<string>("Api:Url");
     string? projectId = config_?.GetValue<string>("Api:ProjectId");
     string? anonApiKey = config_?.GetValue<string>("Api:AnonKey");
+    string? cryptoPassword = config_?.GetValue<string>("Crypto:Password");
 
     builder.RegisterType<SupabaseAdapter>().As<ISupabaseAdapter>()
       .WithParameter("url", $"https://{projectId}.supabase.co")
@@ -98,6 +99,9 @@ public class DauerModule : Autofac.Module
       .SingleInstance();
     builder.RegisterType<FitEditClient>().As<IFitEditClient>()
       .WithParameter("api", apiUrl ?? "")
+      .SingleInstance();
+    builder.RegisterType<CryptoService>().As<ICryptoService>()
+      .WithParameter("password", cryptoPassword ?? "")
       .SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();

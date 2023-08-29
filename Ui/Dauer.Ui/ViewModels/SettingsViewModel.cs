@@ -1,11 +1,13 @@
 ﻿using System.Reactive.Linq;
 using Dauer.Model;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
+using Dauer.Model.Data;
+using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
-using Dauer.Services;
 using Dauer.Model.Validators;
 using Dauer.Model.Web;
+using Dauer.Services;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -17,6 +19,7 @@ public interface ISettingsViewModel
 public class DesignSettingsViewModel : SettingsViewModel
 {
   public DesignSettingsViewModel() : base(
+    new NullDatabaseAdapter(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
     new NullEmailValidator(),
@@ -25,6 +28,34 @@ public class DesignSettingsViewModel : SettingsViewModel
   )
   {
   }
+
+  public override void HandleManagePaymentsClicked()
+  {
+    if (FitEdit is NullFitEditService fake)
+    {
+      fake.IsActive = false;
+    }
+  }
+
+  public override void HandleSignUpClicked()
+  {
+    if (FitEdit is NullFitEditService fake)
+    {
+      fake.IsActive = true;
+    }
+  }
+
+  public override Task HandleGarminLoginClicked()
+  {
+    IsLoggedInWithGarmin = true;
+    return Task.CompletedTask;
+  }
+
+  public override Task HandleGarminLogoutClicked()
+  {
+    IsLoggedInWithGarmin = false;
+    return Task.CompletedTask;
+  }
 }
 
 public class SettingsViewModel : ViewModelBase, ISettingsViewModel
@@ -32,6 +63,11 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   public IFitEditService FitEdit { get; set; }
 
   [Reactive] public string Otp { get; set; } = "";
+  [Reactive] public string? GarminUsername { get; set; }
+  [Reactive] public string? GarminPassword { get; set; }
+  [Reactive] public string? StravaUsername { get; set; }
+  [Reactive] public string? StravaPassword { get; set; }
+  [Reactive] public bool IsLoggedInWithGarmin { get; set; }
   [Reactive] public string Message { get; set; } = "Please enter an email address and click Sign In";
 
   public string PaymentPortalUrl => $"https://billing.stripe.com/p/login/5kA8Ap72G1oebZK9AA?prefilled_email={FitEdit.Username}";
@@ -39,12 +75,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   public string SignUpUrl => $"https://www.fitedit.io/pricing.html";
 
   private CancellationTokenSource authCancelCts_ = new();
+  private readonly IDatabaseAdapter db_;
   private readonly IGarminConnectClient garmin_;
   private readonly IEmailValidator emailValidator_;
   private readonly IPhoneValidator phoneValidator_;
   private readonly IBrowser browser_;
 
   public SettingsViewModel(
+    IDatabaseAdapter db,
     IFitEditService fitEdit,
     IGarminConnectClient garmin,
     IEmailValidator emailValidator,
@@ -52,11 +90,15 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     IBrowser browser
   )
   {
+    db_ = db;
     FitEdit = fitEdit;
     garmin_ = garmin;
     emailValidator_ = emailValidator;
     phoneValidator_ = phoneValidator;
     browser_ = browser;
+
+    db_.ObservableForProperty(x => x.Ready).Subscribe(async _ => await LoadSettings_());
+    _ = Task.Run(LoadSettings_);
 
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
       .Subscribe(_ =>
@@ -81,7 +123,18 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
           ? "Sign in complete!"
           : "Signed out";
       });
+  }
 
+  private async Task LoadSettings_()
+  {
+    if (!db_.Ready) { return; }
+
+    AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
+    garmin_.AddCookies(settings.GarminCookies);
+
+    GarminUsername = settings.GarminUsername;
+    GarminPassword = settings.GarminPassword;
+    await LoginWithGarminAsync();
   }
 
   public void HandleLoginClicked()
@@ -163,7 +216,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
   }
 
-  public void HandleManagePaymentsClicked()
+  public virtual void HandleManagePaymentsClicked()
   {
     _ = Task.Run(async () =>
     {
@@ -172,7 +225,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
   }
 
-  public void HandleSignUpClicked()
+  public virtual void HandleSignUpClicked()
   {
     _ = Task.Run(async () =>
     {
@@ -201,12 +254,58 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
   }
 
-  public async Task HandleGarminLoginClicked()
+  public virtual async Task HandleGarminLoginClicked()
   {
-    garmin_.Config.Username = "test@test.com";
-    garmin_.Config.Password = "supersecret";
+    await LoginWithGarminAsync();
+  }
 
-    (var cookies, var handler) = await garmin_.Authenticate();
-    var activities = await garmin_.LoadActivities(1, 1, DateTime.UtcNow - TimeSpan.FromDays(7));
+  public async Task LoginWithGarminAsync()
+  { 
+    IsLoggedInWithGarmin = await garmin_.IsAuthenticatedAsync();
+
+    if (IsLoggedInWithGarmin) 
+    {
+      return; 
+    }
+
+    garmin_.Config.Username = GarminUsername;
+    garmin_.Config.Password = GarminPassword;
+
+    IsLoggedInWithGarmin = await garmin_.AuthenticateAsync();
+
+    // Save login
+    if (IsLoggedInWithGarmin)
+    {
+      await UpdateSettingsAsync(settings =>
+      {
+        settings.GarminUsername = GarminUsername;
+        settings.GarminPassword = GarminPassword;
+        settings.GarminCookies = garmin_.GetCookies();
+      });
+    }
+  }
+
+  public virtual async Task HandleGarminLogoutClicked()
+  {
+    GarminUsername = null;
+    GarminPassword = null;
+    IsLoggedInWithGarmin = false;
+
+    await UpdateSettingsAsync(settings =>
+    {
+      settings.GarminUsername = null;
+      settings.GarminPassword = null;
+      settings.GarminCookies = null;
+    });
+  }
+
+  public async Task HandleGarminLoginInfoClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/about-garmin-login.html");
+
+  private async Task UpdateSettingsAsync(Action<AppSettings> action)
+  {
+    AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
+    if (settings is null) { return; }
+    action(settings);
+    await db_.InsertOrUpdateAsync(settings).AnyContext();
   }
 }

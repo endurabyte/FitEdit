@@ -1,11 +1,14 @@
-﻿using System.Net;
-
+﻿#nullable enable
 namespace Dauer.Model.GarminConnect;
 
 public class NullGarminConnectClient : IGarminConnectClient
 {
   public GarminConnectConfig Config { get; set; } = new();
-  public Task<(CookieContainer, HttpClientHandler)> Authenticate() => Task.FromResult((new CookieContainer(), new HttpClientHandler()));
+
+  public void AddCookies(Dictionary<string, Cookie>? cookies) { }
+  public Dictionary<string, Cookie> GetCookies() => new();
+  public Task<bool> AuthenticateAsync() => Task.FromResult(true);
+  public Task<bool> IsAuthenticatedAsync() => Task.FromResult(true);
   public Task<Stream> DownloadActivityFile(long activityId, ActivityFileType fileFormat) => Task.FromResult(new MemoryStream() as Stream);
   public Task<List<Activity>> LoadActivities(int limit, int start, DateTime from) => Task.FromResult(new List<Activity>());
   public Task<Activity> LoadActivity(long activityId) => Task.FromResult(new Activity());

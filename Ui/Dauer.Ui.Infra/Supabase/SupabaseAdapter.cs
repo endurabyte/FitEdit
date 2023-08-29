@@ -5,7 +5,6 @@ using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Model.Validators;
 using Dauer.Ui.Infra.Supabase.Model;
-using Dauer.Ui.Infra.Validators;
 using Dauer.Ui.Model.Supabase;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
