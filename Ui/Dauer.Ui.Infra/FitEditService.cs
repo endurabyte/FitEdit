@@ -104,7 +104,7 @@ public class FitEditService : ReactiveObject, IFitEditService
 
   public async Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default)
   {
-    if (!await client_.DeauthorizeGarminAsync(Username, ct)) { return false; }
+    if (!await client_.DeauthorizeGarminAsync(ct)) { return false; }
 
     IsAuthenticatingWithGarmin = true;
     return true;
@@ -112,7 +112,7 @@ public class FitEditService : ReactiveObject, IFitEditService
 
   public async Task<bool> AuthorizeStravaAsync(CancellationToken ct = default)
   {
-    if (!await client_.AuthorizeStravaAsync(Username, ct)) { return false; }
+    if (!await client_.AuthorizeStravaAsync(ct)) { return false; }
 
     IsAuthenticatingWithStrava = true;
     return true;
@@ -120,7 +120,7 @@ public class FitEditService : ReactiveObject, IFitEditService
 
   public async Task<bool> DeauthorizeStravaAsync(CancellationToken ct = default)
   {
-    if (!await client_.DeauthorizeStravaAsync(Username, ct)) { return false; }
+    if (!await client_.DeauthorizeStravaAsync(ct)) { return false; }
 
     IsAuthenticatingWithStrava = true;
     return true;

@@ -16,12 +16,14 @@ using Dauer.Ui.Infra.Authentication;
 using Dauer.Ui.Infra.Supabase;
 using Dauer.Ui.Model;
 using Dauer.Ui.Model.Supabase;
+using Microsoft.Extensions.Configuration;
 
 namespace Dauer.Ui.Infra;
 
 public class DauerModule : Autofac.Module
 {
   private readonly IApplicationLifetime? lifetime_;
+  private readonly IConfiguration? config_;
 
   private IStorageAdapter Storage_ => true switch
   {
@@ -37,9 +39,10 @@ public class DauerModule : Autofac.Module
     _ => new NullWindowAdapter(),
   };
 
-  public DauerModule(IApplicationLifetime? lifetime)
+  public DauerModule(IApplicationLifetime? lifetime, IConfiguration? config)
   {
     lifetime_ = lifetime;
+    config_ = config;
   }
 
   protected override void Load(ContainerBuilder builder)
@@ -83,21 +86,18 @@ public class DauerModule : Autofac.Module
       return iface ?? t;
     });
 
-    string projectId = "rvhexrgaujaawhgsbzoa";
-    string anonApiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2aGV4cmdhdWphYXdoZ3Niem9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTA4ODIyNzEsImV4cCI6MjAwNjQ1ODI3MX0.motLGzxEKBK81K8C6Ll8-8szi6WgNPBT2ADkCn6jYTk";
-
-    string api = "https://api.fitedit.io/";
-    //string api = "https://stage-api.fitedit.io/";
-    //string api = "http://localhost/";
+    string? apiUrl = config_?.GetValue<string>("Api:Url");
+    string? projectId = config_?.GetValue<string>("Api:ProjectId");
+    string? anonApiKey = config_?.GetValue<string>("Api:AnonKey");
 
     builder.RegisterType<SupabaseAdapter>().As<ISupabaseAdapter>()
       .WithParameter("url", $"https://{projectId}.supabase.co")
-      .WithParameter("key", anonApiKey)
+      .WithParameter("key", anonApiKey ?? "")
       .SingleInstance();
     builder.RegisterType<FitEditService>().As<IFitEditService>()
       .SingleInstance();
     builder.RegisterType<FitEditClient>().As<IFitEditClient>()
-      .WithParameter("api", api)
+      .WithParameter("api", apiUrl ?? "")
       .SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();

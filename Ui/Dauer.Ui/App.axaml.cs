@@ -16,12 +16,11 @@ public partial class App : Application
 
   public override void OnFrameworkInitializationCompleted()
   {
-    if (CompositionRoot.Instance == null) { return; }
+    var root = CompositionRoot.Create();
+    root.RegisterModule(new DauerModule(ApplicationLifetime, root.Config));
+    root.RegisterModule(new UiModule());
 
-    CompositionRoot.Instance.RegisterModule(new DauerModule(ApplicationLifetime));
-    CompositionRoot.Instance.RegisterModule(new UiModule());
-
-    object? dataContext = CompositionRoot.Instance
+    object? dataContext = root
       .Build()
       .Get<IMainViewModel>();
 

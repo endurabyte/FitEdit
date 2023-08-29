@@ -9,6 +9,8 @@ namespace Dauer.Ui.Infra;
 
 public interface ICompositionRoot
 {
+  IConfiguration Config { get; }
+
   T Get<T>() where T : notnull;
   ICompositionRoot Build();
 
@@ -21,17 +23,18 @@ public interface ICompositionRoot
 
 public class CompositionRoot : ICompositionRoot
 {
-  public static ICompositionRoot? Instance { get; set; }
+  public IConfiguration Config { get; private set; }
 
   private readonly ContainerBuilder builder_;
   private IContainer? container_;
 
-  public CompositionRoot()
+  public CompositionRoot(IConfiguration config)
   {
     builder_ = new ContainerBuilder();
+    Config = config;
   }
 
-  public ICompositionRoot Build()
+  public static ICompositionRoot Create()
   {
     string os = RuntimeInformation.OSDescription;
     os = os switch
@@ -45,7 +48,7 @@ public class CompositionRoot : ICompositionRoot
     using var stream = a.GetManifestResourceStream("Dauer.Ui.Infra.appsettings.json");
 
     // Load configuration
-    IConfiguration configuration = new ConfigurationBuilder()
+    IConfiguration config = new ConfigurationBuilder()
      .SetBasePath(AppContext.BaseDirectory) // exe directory
      .AddJsonFile("appsettings.json", true)
      .AddJsonStream(stream!)
@@ -61,16 +64,21 @@ public class CompositionRoot : ICompositionRoot
     foreach (int i in Enumerable.Range(0, 10))
     {
       string key = $"Serilog:WriteTo:{i}:Args:path";
-      string? value = configuration.GetValue<string>(key);
+      string? value = config.GetValue<string>(key);
       if (value != null)
       {
-        configuration[key] = value.Replace("{LogDir}", logDir);
+        config[key] = value.Replace("{LogDir}", logDir);
       }
     }
 
+    return new CompositionRoot(config);
+  }
+
+  public ICompositionRoot Build()
+  {
     // Setup logging
     var logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(configuration)
+        .ReadFrom.Configuration(Config)
         .Enrich.FromLogContext()
         .CreateLogger();
 

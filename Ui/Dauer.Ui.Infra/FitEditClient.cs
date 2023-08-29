@@ -35,7 +35,7 @@ public class FitEditClient : IFitEditClient
   {
     var client = new HttpClient() { BaseAddress = new Uri(api_) };
     client.SetBearerToken(AccessToken);
-    var responseMsg = await client.GetAsync($"garmin/oauth/init?username={HttpUtility.UrlEncode(username)}", ct);
+    var responseMsg = await client.GetAsync($"garmin/oauth/init", ct);
 
     if (!responseMsg.IsSuccessStatusCode)
     {
@@ -70,11 +70,11 @@ public class FitEditClient : IFitEditClient
     return false;
   }
 
-  public async Task<bool> DeauthorizeGarminAsync(string? username, CancellationToken ct = default)
+  public async Task<bool> DeauthorizeGarminAsync(CancellationToken ct = default)
   {
     var client = new HttpClient { BaseAddress = new Uri(api_) };
     client.SetBearerToken(AccessToken);
-    var responseMsg = await client.PostAsync($"garmin/oauth/deregister?username={HttpUtility.UrlEncode(username)}", null, cancellationToken: ct);
+    var responseMsg = await client.PostAsync($"garmin/oauth/deregister", null, cancellationToken: ct);
 
     if (!responseMsg.IsSuccessStatusCode)
     {
@@ -86,7 +86,7 @@ public class FitEditClient : IFitEditClient
     return true;
   }
 
-  public async Task<bool> AuthorizeStravaAsync(string? username, CancellationToken ct = default)
+  public async Task<bool> AuthorizeStravaAsync(CancellationToken ct = default)
   {
     var client = new HttpClient { BaseAddress = new Uri(api_) };
     client.SetBearerToken(AccessToken);
@@ -94,7 +94,7 @@ public class FitEditClient : IFitEditClient
     try
     {
 
-      var responseMsg = await client.GetAsync($"strava/oauth/init?username={HttpUtility.UrlEncode(username)}", ct);
+      var responseMsg = await client.GetAsync($"strava/oauth/init", ct);
 
       if (!responseMsg.IsSuccessStatusCode)
       {
@@ -113,7 +113,7 @@ public class FitEditClient : IFitEditClient
     }
   }
 
-  public async Task<bool> DeauthorizeStravaAsync(string? username, CancellationToken ct = default)
+  public async Task<bool> DeauthorizeStravaAsync(CancellationToken ct = default)
   {
     var client = new HttpClient { BaseAddress = new Uri(api_) };
     client.SetBearerToken(AccessToken);
@@ -121,7 +121,7 @@ public class FitEditClient : IFitEditClient
     try
     {
 
-      var responseMsg = await client.DeleteAsync($"strava/oauth/token?username={HttpUtility.UrlEncode(username)}", ct);
+      var responseMsg = await client.DeleteAsync($"strava/oauth/token", ct);
 
       if (!responseMsg.IsSuccessStatusCode)
       {

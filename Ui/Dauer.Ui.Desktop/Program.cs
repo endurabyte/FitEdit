@@ -12,7 +12,6 @@ internal class Program
   [STAThread]
   public static void Main(string[] args)
   {
-    CompositionRoot.Instance = new DesktopCompositionRoot();
     new AutoUpdater().WatchForUpdates();
 
     BuildAvaloniaApp()
