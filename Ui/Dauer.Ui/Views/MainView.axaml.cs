@@ -10,16 +10,10 @@ public partial class MainView : UserControl
   private readonly RowDefinitions defaultRowDefinitions_;
 
   /// <summary>
-  /// Index of the selected tab in portrait display mode, 
-  /// for example on mobile devices in portrait mode or desktops/laptops when the window height > width
-  /// </summary>
-  private int portraitTabIndex = -1;
-
-  /// <summary>
   /// Index of the selected tab in landscape display mode, 
   /// for example on mobile devices in landscape mode or desktops/laptops when the window height < width
   /// </summary>
-  private int landscapeTabIndex = -1;
+  private int landscapeTabIndex;
 
   public MainView()
   {
@@ -30,8 +24,13 @@ public partial class MainView : UserControl
     MainTabControl.ObservableForProperty(x => x.SelectedIndex).Subscribe(_ =>
     {
       if (DataContext is not IMainViewModel vm) { return; }
-      if (vm.IsPortrait) { portraitTabIndex = MainTabControl.SelectedIndex; }
-      else { landscapeTabIndex = MainTabControl.SelectedIndex; }
+
+      // Remember which tab was selected in landscape mode.
+      // When we leave portrait mode, we'll jump back to it.
+      if (!vm.IsPortrait) 
+      { 
+        landscapeTabIndex = MainTabControl.SelectedIndex; 
+      }
     });
   }
 
@@ -61,15 +60,6 @@ public partial class MainView : UserControl
   {
     MainGrid.RowDefinitions.Clear();
 
-    bool portraitViewWasOnPlotOrMap = 
-         portraitTabIndex == MainTabControl.Items.IndexOf(PlotTab) 
-      || portraitTabIndex == MainTabControl.Items.IndexOf(MapTab);
-
-    // Jump back to plot or map tab if going back to portrait
-    MainTabControl.SelectedIndex = vm.IsPortrait && portraitViewWasOnPlotOrMap
-      ? portraitTabIndex
-      : landscapeTabIndex;
-
     if (vm.IsPortrait)
     {
       MainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
@@ -77,6 +67,9 @@ public partial class MainView : UserControl
       MainGrid.Children.Remove(ChartGrid);
       return;
     }
+
+    // We just left portrait mode. Jump back to last tab that was selected in landscaope mode.
+    MainTabControl.SelectedIndex = landscapeTabIndex;
 
     foreach (var def in defaultRowDefinitions_)
     {
