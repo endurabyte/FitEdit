@@ -68,7 +68,7 @@ public partial class MainView : UserControl
       return;
     }
 
-    // We just left portrait mode. Jump back to last tab that was selected in landscaope mode.
+    // We just left portrait mode. Jump back to last tab that was selected in landscape mode.
     MainTabControl.SelectedIndex = landscapeTabIndex;
 
     foreach (var def in defaultRowDefinitions_)
