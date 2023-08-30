@@ -26,7 +26,6 @@
     <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1" />
     <PackageReference Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="Avalonia.Essentials" Version="1.0.0" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
   </ItemGroup>

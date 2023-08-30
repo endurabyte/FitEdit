@@ -1,14 +1,17 @@
-﻿namespace Dauer.Model;
+﻿#nullable enable
+namespace Dauer.Model;
 
 public static class Cryptography
 {
   /// <summary>
   /// Rotate the string according to a secret permutation. 
   /// This protects the password or salt in case either is hijacked;
-  /// the attacked must also discover the mangle pattern.
+  /// the attacker must also discover the mangle pattern.
   /// </summary>
   public static string Mangle(string s)
   {
+    if (s.Length == 1) { return s; }
+
     int len = s.Length;
 
     int[] permutation = Enumerable

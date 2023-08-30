@@ -8,14 +8,14 @@ namespace Dauer.Services;
 
 public interface ICryptoService
 {
-  string? Decrypt(string salt, string? data);
-  string? Encrypt(string salt, string? data);
+  string? Decrypt(string? salt, string? data);
+  string? Encrypt(string? salt, string? data);
 }
 
 public class NullCryptoService : ICryptoService
 {
-  public string? Decrypt(string salt, string? data) => data;
-  public string? Encrypt(string salt, string? data) => data;
+  public string? Decrypt(string? salt, string? data) => data;
+  public string? Encrypt(string? salt, string? data) => data;
 }
 
 public class CryptoService : ICryptoService
@@ -34,8 +34,9 @@ public class CryptoService : ICryptoService
     }
   }
 
-  public string? Encrypt(string salt, string? data)
+  public string? Encrypt(string? salt, string? data)
   {
+    if (salt is null) { return null; }
     if (data is null) { return null; }
     var algorithm = GetAlgorithm(salt);
 
@@ -49,8 +50,9 @@ public class CryptoService : ICryptoService
     return Convert.ToBase64String(ms.ToArray());
   }
 
-  public string? Decrypt(string salt, string? data)
+  public string? Decrypt(string? salt, string? data)
   {
+    if (salt is null) { return null; }
     if (data is null) { return null; }
 
     var algorithm = GetAlgorithm(salt);
