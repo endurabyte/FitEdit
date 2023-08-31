@@ -285,8 +285,6 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
         settings.GarminPassword = GarminPassword;
         settings.GarminCookies = Garmin.GetCookies();
       });
-
-      await Garmin.UploadActivity(@"F:\syncthing\main\projects\dauer\Data Files (FIT, TCX, GPX, etc)\Problem FIT files\2023-08-24 Lukas\LK_corrupted_fit_file_repaired_by_FitEdit.fit", new FileFormat { FormatKey = "fit" });
     }
   }
 
