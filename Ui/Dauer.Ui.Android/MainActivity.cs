@@ -14,6 +14,7 @@ public class MainActivity : AvaloniaMainActivity<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
+    App.Root = ConfigurationRoot.Bootstrap(new AndroidCompositionRoot());
     return base.CustomizeAppBuilder(builder)
           .UseReactiveUI();
   }

@@ -1,11 +1,10 @@
 using Foundation;
 using UIKit;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.iOS;
-using Avalonia.Media;
 using Avalonia.ReactiveUI;
 using Microsoft.Maui.ApplicationModel;
+using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.iOS;
 
@@ -17,7 +16,7 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
-    CompositionRoot.Instance = new AppleCompositionRoot();
+    App.Root = ConfigurationRoot.Bootstrap(new AppleCompositionRoot());
 
     return base.CustomizeAppBuilder(builder)
       .AfterSetup(_ => Platform.Init(() => Window.RootViewController!))

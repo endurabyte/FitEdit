@@ -8,6 +8,8 @@ namespace Dauer.Ui;
 
 public partial class App : Application
 {
+  public static ICompositionRoot? Root { get; set; }
+
   public override void Initialize()
   {
     AvaloniaXamlLoader.Load(this);
@@ -16,11 +18,12 @@ public partial class App : Application
 
   public override void OnFrameworkInitializationCompleted()
   {
-    var root = CompositionRoot.Create();
-    root.RegisterModule(new DauerModule(ApplicationLifetime, root.Config));
-    root.RegisterModule(new UiModule());
+    if (Root is null) { return; }
 
-    object? dataContext = root
+    Root.RegisterModule(new DauerModule(ApplicationLifetime, Root.Config));
+    Root.RegisterModule(new UiModule());
+
+    object? dataContext = Root
       .Build()
       .Get<IMainViewModel>();
 

@@ -6,7 +6,7 @@
              xmlns:views="clr-namespace:Dauer.Ui.Views"
              xmlns:controls="using:Dauer.Ui.Controls"
              xmlns:converters="using:Dauer.Ui.Converters"
-             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="800"
              x:Class="Dauer.Ui.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <Design.DataContext>
@@ -24,146 +24,174 @@
     </ResourceDictionary>
   </UserControl.Resources>
 
-  <ScrollViewer>
-    <StackPanel Orientation="Vertical">
+  <Grid RowDefinitions="Auto, Auto, *">
 
-      <TextBlock Text="{Binding Message}" Margin="10" Width="300" TextWrapping="Wrap" HorizontalAlignment="Left"/>
-      
-      <Separator Width="{Binding $parent[StackPanel].Width}"/>
-      <Label Content="FitEdit" FontSize="20" Foreground="{StaticResource SystemAccentColor}"/>
-      
-      <WrapPanel Margin="10">
-        <TextBlock Text="Sign in status:" Width="150" VerticalAlignment="Center"/>
-        <Ellipse Fill="{Binding FitEdit.IsAuthenticated, Converter={StaticResource BooleanToColorConverter}}"
-                 Margin="10"
-                 Width="10" Height="10">
-        </Ellipse>
-        <TextBlock Text="{Binding FitEdit.IsAuthenticated, 
-                     Converter={StaticResource BooleanToStringConverter},
-                     ConverterParameter='Signed out'}" 
-                   VerticalAlignment="Center"
-                   Margin="10"/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding !FitEdit.IsAuthenticated}">
+    <TextBlock Grid.Row="0" Text="{Binding Message}" Margin="10" Width="300" TextWrapping="Wrap" HorizontalAlignment="Left"/>
+    <Separator Grid.Row="1" Width="{Binding $parent[StackPanel].Width}"/>
 
-        <TextBlock Text="Username:" VerticalAlignment="Center"/>
-        <TextBox Text="{Binding FitEdit.Username, Mode=TwoWay}"
-                 VerticalAlignment="Center" Margin="10" Width="200"/>
-        <Button Command="{Binding HandleLoginClicked}" Content="Sign In"/>
-      </WrapPanel>
-        
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
-        <TextBlock Text="Username:" VerticalAlignment="Center"/>
-        <TextBlock Text="{Binding FitEdit.Username, Mode=TwoWay}"
-                 VerticalAlignment="Center" Margin="10"/>
-        <Button Command="{Binding HandleLogoutClicked}" Content="Sign Out" />
-      </WrapPanel>
+    <ScrollViewer Grid.Row="2">
+      <StackPanel Orientation="Vertical">
 
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticating}">
-        <TextBlock Text="Enter code:" VerticalAlignment="Center"/>
-        <TextBox Text="{Binding Otp, Mode=TwoWay}" IsVisible="{Binding FitEdit.IsAuthenticating}" 
-                 VerticalAlignment="Center" Margin="10" MinWidth="100"/>
-        <Button Command="{Binding HandleVerifyEmailClicked}" Content="Verify"/>
-      </WrapPanel>
+        <Label Content="FitEdit" FontSize="20" Foreground="{StaticResource SystemAccentColor}"/>
 
-      <WrapPanel Margin="10" IsVisible="{Binding FitEdit.IsAuthenticated}">
-        <TextBlock Text="Payment status:" Width="150" VerticalAlignment="Center"/>
-        <Ellipse Fill="{Binding FitEdit.IsActive, Converter={StaticResource BooleanToColorConverter}}"
-                 Margin="10"
-                 Width="10" Height="10">
-        </Ellipse>
-        <TextBlock Text="{Binding FitEdit.IsActive, 
-                     Converter={StaticResource BooleanToStringConverter},
-                     ConverterParameter='Evaluation Mode'}"
-                   VerticalAlignment="Center" Margin="10"/>
-      </WrapPanel>
-
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
-          <Button Command="{Binding HandleManagePaymentsClicked}" Content="Manage Payments" IsVisible="{Binding FitEdit.IsActive}"/>
-          <Button Command="{Binding HandleSignUpClicked}" Content="Sign Up" IsVisible="{Binding !FitEdit.IsActive}"/>
-      </WrapPanel>
-
-      <Separator Width="{Binding $parent[StackPanel].Width}"/>
-      <Label Content="Integrations" FontSize="20" Foreground="{StaticResource SystemAccentColor}"/>
-      
-      <WrapPanel Margin="10" IsVisible="{Binding FitEdit.IsActive}">
-        <TextBlock Text="Garmin service status:" Width="150" VerticalAlignment="Center"/>
-          <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
+        <WrapPanel Margin="10">
+          <TextBlock Text="Sign in status:" Width="200" VerticalAlignment="Center"/>
+          <Ellipse Fill="{Binding FitEdit.IsAuthenticated, Converter={StaticResource BooleanToColorConverter}}"
                    Margin="10"
                    Width="10" Height="10">
           </Ellipse>
-          <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-      </WrapPanel>
+          <TextBlock Text="{Binding FitEdit.IsAuthenticated, 
+                     Converter={StaticResource BooleanToStringConverter},
+                     ConverterParameter='Signed out'}"
+                     VerticalAlignment="Center"
+                     Margin="10"/>
+        </WrapPanel>
 
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsActive}">
-        <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
-        <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding FitEdit.IsAuthenticatedWithGarmin}"/>
-      </WrapPanel>
+        <WrapPanel Margin="50,10,10,10" IsVisible="{Binding !FitEdit.IsAuthenticated}">
 
-      <WrapPanel Margin="10" IsVisible="{Binding FitEdit.IsActive}">
-        <TextBlock Text="Garmin sign in status:" Width="150" VerticalAlignment="Center"/>
-        <Ellipse Fill="{Binding IsLoggedInWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
-                 Margin="10"
-                 Width="10" Height="10">
-        </Ellipse>
-        <TextBlock Text="{Binding IsLoggedInWithGarmin, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsActive}">
-        <Button
-          Command="{Binding HandleGarminLoginInfoClicked}"
-          Classes="hyperlink"
-          Content="Your password is stored securely on this device.&#10;Click here to learn more."/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="50,10,10,10">
-        <WrapPanel.IsVisible>
-          <MultiBinding Converter="{x:Static BoolConverters.And}">
-            <Binding Path="FitEdit.IsActive"/>
-            <Binding Path="!IsLoggedInWithGarmin"/>
-          </MultiBinding>
-        </WrapPanel.IsVisible>
-        <TextBlock Text="Username:" Width="150" VerticalAlignment="Center"/>
-        <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
-                 VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="50,10,10,10">
-        <WrapPanel.IsVisible>
-          <MultiBinding Converter="{x:Static BoolConverters.And}">
-            <Binding Path="FitEdit.IsActive"/>
-            <Binding Path="!IsLoggedInWithGarmin"/>
-          </MultiBinding>
-        </WrapPanel.IsVisible>
+          <TextBlock Text="Username:" VerticalAlignment="Center"/>
+          <TextBox Text="{Binding FitEdit.Username, Mode=TwoWay}"
+                   VerticalAlignment="Center" Margin="10" Width="200"/>
+          <Button Command="{Binding HandleLoginClicked}" Content="Sign In"/>
+        </WrapPanel>
 
-        <TextBlock Text="Password:" Width="150" VerticalAlignment="Center"/>
-        <TextBox Classes="revealPasswordButton"
-                 PasswordChar="•"
-                 Text="{Binding GarminPassword, Mode=TwoWay}"
-                 VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsActive}">
-          <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !IsLoggedInWithGarmin}"/>
-          <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding IsLoggedInWithGarmin}"/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="10" IsVisible="{Binding FitEdit.IsActive}">
-        <TextBlock Text="Strava Status:" Width="150" VerticalAlignment="Center"/>
-        <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToColorConverter}}"
-                 Margin="10"
-                 Width="10" Height="10">
-        </Ellipse>
-        <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-      </WrapPanel>
-      
-      <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsActive}">
-        <Button Command="{Binding HandleStravaAuthorizeClicked}" Content="Authorize with Strava" IsVisible="{Binding !FitEdit.IsAuthenticatedWithStrava}"/>
-        <Button Command="{Binding HandleStravaDeauthorizeClicked}" Content="Deauthorize with Strava" IsVisible="{Binding FitEdit.IsAuthenticatedWithStrava}"/>
-      </WrapPanel>
-      
-    </StackPanel>
-  </ScrollViewer>
+        <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
+          <TextBlock Text="Username:" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding FitEdit.Username, Mode=TwoWay}"
+                   VerticalAlignment="Center" Margin="10"/>
+          <Button Command="{Binding HandleLogoutClicked}" Content="Sign Out" />
+        </WrapPanel>
 
+        <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticating}">
+          <TextBlock Text="Enter code:" VerticalAlignment="Center"/>
+          <TextBox Text="{Binding Otp, Mode=TwoWay}" IsVisible="{Binding FitEdit.IsAuthenticating}"
+                   VerticalAlignment="Center" Margin="10" MinWidth="100"/>
+          <Button Command="{Binding HandleVerifyEmailClicked}" Content="Verify"/>
+        </WrapPanel>
+
+        <WrapPanel Margin="10" IsVisible="{Binding FitEdit.IsAuthenticated}">
+          <TextBlock Text="Payment status:" Width="200" VerticalAlignment="Center"/>
+          <Ellipse Fill="{Binding FitEdit.IsActive, Converter={StaticResource BooleanToColorConverter}}"
+                   Margin="10"
+                   Width="10" Height="10">
+          </Ellipse>
+          <TextBlock Text="{Binding FitEdit.IsActive, 
+                     Converter={StaticResource BooleanToStringConverter},
+                     ConverterParameter='Evaluation'}"
+                     VerticalAlignment="Center" Margin="10"/>
+        </WrapPanel>
+
+        <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
+          <Button Command="{Binding HandleManagePaymentsClicked}" Content="Manage Payments" IsVisible="{Binding FitEdit.IsActive}"/>
+          <Button Command="{Binding HandleSignUpClicked}" Content="Sign Up" IsVisible="{Binding !FitEdit.IsActive}"/>
+        </WrapPanel>
+
+        <Separator Width="{Binding $parent[StackPanel].Width}"/>
+
+        <StackPanel Orientation="Vertical">
+          <Label Content="Integrations" FontSize="20" Margin="0,0,0,10" Foreground="{StaticResource SystemAccentColor}"/>
+
+          <Label Content="Garmin Connect" Margin="10"/>
+          <Image Source="/Assets/garmin_connect_blue.png" HorizontalAlignment="Left" Margin="50,10,10,10" Width="200"/>
+
+          <WrapPanel Margin="50,10,10,10">
+            <TextBlock Text="Authorization:" Width="160" VerticalAlignment="Center"/>
+            <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
+                     Margin="10"
+                     Width="10" Height="10">
+            </Ellipse>
+            <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <StackPanel Orientation="Vertical">
+              <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                Authorizing with Garmin Connect lets FitEdit show your Garmin activities and activity edits such as title and description.
+              </TextBlock>
+              <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
+              <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding FitEdit.IsAuthenticatedWithGarmin}"/>
+            </StackPanel>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <TextBlock Text="Sign in status:" Width="160" VerticalAlignment="Center"/>
+            <Ellipse Fill="{Binding IsLoggedInWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
+                     Margin="10"
+                     Width="10" Height="10">
+            </Ellipse>
+            <TextBlock Text="{Binding IsLoggedInWithGarmin, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <StackPanel Orientation="Vertical">
+              <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" MaxWidth="400">
+                Sign in with Garmin lets FitEdit upload activities to Garmin and delete activities when you ask.
+                Your credentials are stored securely on this device.
+                By signing in, you agree to the terms and conditions.
+              </TextBlock>
+              <Button
+                Command="{Binding HandleGarminSigninTermsClicked}"
+                Classes="hyperlink"
+                Content="Terms and Conditions"/>
+            </StackPanel>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <WrapPanel.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="!IsLoggedInWithGarmin"/>
+              </MultiBinding>
+            </WrapPanel.IsVisible>
+            <TextBlock Text="Username:" Width="200" VerticalAlignment="Center"/>
+            <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
+                     VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <WrapPanel.IsVisible>
+              <MultiBinding Converter="{x:Static BoolConverters.And}">
+                <Binding Path="!IsLoggedInWithGarmin"/>
+              </MultiBinding>
+            </WrapPanel.IsVisible>
+
+            <TextBlock Text="Password:" Width="200" VerticalAlignment="Center"/>
+            <TextBox Classes="revealPasswordButton"
+                     PasswordChar="•"
+                     Text="{Binding GarminPassword, Mode=TwoWay}"
+                     VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !IsLoggedInWithGarmin}"/>
+            <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding IsLoggedInWithGarmin}"/>
+          </WrapPanel>
+
+          <Label Content="Strava" Margin="10"/>
+          <Image Source="/Assets/powered_by_strava.png" HorizontalAlignment="Left" Margin="50,10,10,10" Width="200"/>
+
+          <WrapPanel Margin="50,10,10,10">
+            <TextBlock Text="Authorization:" Width="160" VerticalAlignment="Center"/>
+            <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToColorConverter}}"
+                     Margin="10"
+                     Width="10" Height="10">
+            </Ellipse>
+            <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+          </WrapPanel>
+
+          <WrapPanel Margin="50,10,10,10">
+            <StackPanel Orientation="Vertical">
+              <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                Authorizing with Strava lets FitEdit show your Strava activities and activity edits such as title and description and to upload activities to Strava.
+              </TextBlock>
+
+              <Button Command="{Binding HandleStravaAuthorizeClicked}" Content="Authorize with Strava" IsVisible="{Binding !FitEdit.IsAuthenticatedWithStrava}"/>
+              <Button Command="{Binding HandleStravaDeauthorizeClicked}" Content="Deauthorize with Strava" IsVisible="{Binding FitEdit.IsAuthenticatedWithStrava}"/>
+            </StackPanel>
+          </WrapPanel>
+
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
 </UserControl>

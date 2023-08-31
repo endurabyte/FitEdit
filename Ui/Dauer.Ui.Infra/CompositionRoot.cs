@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Autofac;
 using Microsoft.Extensions.Configuration;
@@ -9,7 +10,7 @@ namespace Dauer.Ui.Infra;
 
 public interface ICompositionRoot
 {
-  IConfiguration Config { get; }
+  IConfiguration? Config { get; }
 
   T Get<T>() where T : notnull;
   ICompositionRoot Build();
@@ -21,20 +22,9 @@ public interface ICompositionRoot
   ICompositionRoot RegisterModule(Autofac.Module module);
 }
 
-public class CompositionRoot : ICompositionRoot
+public static class ConfigurationRoot
 {
-  public IConfiguration Config { get; private set; }
-
-  private readonly ContainerBuilder builder_;
-  private IContainer? container_;
-
-  public CompositionRoot(IConfiguration config)
-  {
-    builder_ = new ContainerBuilder();
-    Config = config;
-  }
-
-  public static ICompositionRoot Create()
+  public static ICompositionRoot Bootstrap(CompositionRoot root)
   {
     string os = RuntimeInformation.OSDescription;
     os = os switch
@@ -71,11 +61,29 @@ public class CompositionRoot : ICompositionRoot
       }
     }
 
-    return new CompositionRoot(config);
+    root.Config = config;
+    return root;
   }
+}
+
+public class CompositionRoot : ICompositionRoot
+{
+  public IConfiguration? Config { get; set; }
+
+  private readonly ContainerBuilder builder_ = new();
+  private IContainer? container_;
 
   public ICompositionRoot Build()
   {
+    ConfigureAsync(builder_);
+    container_ = builder_.Build();
+    return this;
+  }
+
+  protected virtual Task ConfigureAsync(ContainerBuilder builder)
+  {
+    if (Config is null) { return Task.CompletedTask; }
+
     // Setup logging
     var logger = new LoggerConfiguration()
         .ReadFrom.Configuration(Config)
@@ -88,15 +96,14 @@ public class CompositionRoot : ICompositionRoot
     Dauer.Model.Log.Info($"BaseDirectory: {AppContext.BaseDirectory}");
     Dauer.Model.Log.Info($"OSDescription: {RuntimeInformation.OSDescription}");
 
+    // For e.g. mitmproxy
+    //HttpClient.DefaultProxy = new WebProxy("http://192.168.1.163:8082/", false);
+
     builder_.RegisterInstance(factory).As<ILoggerFactory>();
     builder_.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).SingleInstance();
 
-    ConfigureAsync(builder_);
-    container_ = builder_.Build();
-    return this;
+    return Task.CompletedTask;
   }
-
-  protected virtual Task ConfigureAsync(ContainerBuilder builder) => Task.CompletedTask;
 
   public void Register(Type @interface, Type implementation, bool singleton = false) => builder_?.RegisterType(implementation).As(@interface).SingletonIf(singleton);
   public void Register(Type @interface, object implementation, bool singleton = false) => builder_?.RegisterInstance(implementation).As(@interface).SingletonIf(singleton);

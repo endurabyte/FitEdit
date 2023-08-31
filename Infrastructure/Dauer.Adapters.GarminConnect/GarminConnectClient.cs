@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
+using Dauer.Model.Web;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,48 +47,48 @@ public class GarminConnectClient : IGarminConnectClient
   private const ActivityFileType DefaultFile = ActivityFileType.Fit;
 
   private CookieContainer cookieContainer_;
-  private HttpClientHandler clientHandler_;
+  private HttpMessageHandler clientHandler_;
   private HttpClient httpClient_;
 
   private static readonly Tuple<string, string> BaseHeader = new("NK", "NT");
 
   private static readonly Dictionary<string, string> QueryParams = new()
-      {
-          {"clientId", "GarminConnect"},
-          {"connectLegalTerms", "true"},
-          {"consumeServiceTicket", "false"},
-          {"createAccountShown", "true"},
-          {"cssUrl", CSS_URL},
-          {"displayNameShown", "false"},
-          {"embedWidget", "false"},
-          // ReSharper disable once StringLiteralTypo
-          {"gauthHost", SSO_URL_SSO},
-          {"generateExtraServiceTicket", "true"},
-          {"generateTwoExtraServiceTickets", "false"},
-          {"generateNoServiceTicket", "false"},
-          {"globalOptInChecked", "false"},
-          {"globalOptInShown", "true"},
-          // ReSharper disable once StringLiteralTypo
-          {"id", "gauth-widget"},
-          {"initialFocus", "true"},
-          {"locale", LOCALE},
-          {"locationPromptShon", "true"},
-          {"mobile", "false"},
-          {"openCreateAccount", "false"},
-          {"privacyStatementUrl", PRIVACY_STATEMENT_URL},
-          {"redirectAfterAccountCreationUrl", CONNECT_URL_MODERN},
-          {"redirectAfterAccountLoginUrl", CONNECT_URL_MODERN},
-          {"rememberMeChecked", "false"},
-          {"rememberMeShown", "true"},
-          {"service", CONNECT_URL_MODERN},
-          {"showTermsOfUse", "false"},
-          {"showPrivacyPolicy", "false"},
-          {"showConnectLegalAge", "false"},
-          {"showPassword", "true"},
-          {"source", CONNECT_URL_SIGNIN},
-          {"useCustomHeader", "false"},
-          {"webhost", CONNECT_URL_MODERN}
-      };
+  {
+    {"clientId", "GarminConnect"},
+    {"connectLegalTerms", "true"},
+    {"consumeServiceTicket", "false"},
+    {"createAccountShown", "true"},
+    {"cssUrl", CSS_URL},
+    {"displayNameShown", "false"},
+    {"embedWidget", "false"},
+    // ReSharper disable once StringLiteralTypo
+    {"gauthHost", SSO_URL_SSO},
+    {"generateExtraServiceTicket", "true"},
+    {"generateTwoExtraServiceTickets", "false"},
+    {"generateNoServiceTicket", "false"},
+    {"globalOptInChecked", "false"},
+    {"globalOptInShown", "true"},
+    // ReSharper disable once StringLiteralTypo
+    {"id", "gauth-widget"},
+    {"initialFocus", "true"},
+    {"locale", LOCALE},
+    {"locationPromptShon", "true"},
+    {"mobile", "false"},
+    {"openCreateAccount", "false"},
+    {"privacyStatementUrl", PRIVACY_STATEMENT_URL},
+    {"redirectAfterAccountCreationUrl", CONNECT_URL_MODERN},
+    {"redirectAfterAccountLoginUrl", CONNECT_URL_MODERN},
+    {"rememberMeChecked", "false"},
+    {"rememberMeShown", "true"},
+    {"service", CONNECT_URL_MODERN},
+    {"showTermsOfUse", "false"},
+    {"showPrivacyPolicy", "false"},
+    {"showConnectLegalAge", "false"},
+    {"showPassword", "true"},
+    {"source", CONNECT_URL_SIGNIN},
+    {"useCustomHeader", "false"},
+    {"webhost", CONNECT_URL_MODERN}
+  };
 
   /// <summary>
   /// The logger
@@ -124,22 +125,25 @@ public class GarminConnectClient : IGarminConnectClient
   }
 
   private void GetNewClient()
-  { 
-    clientHandler_ = new()
+  {
+    // Use SocketsHttpHandler to get consistent behavior across platforms.
+    // For example, AndroidMessageHandler seems to only support HTTP/1.1 which Garmin rejects.
+    clientHandler_ = new SocketsHttpHandler()
     {
       AllowAutoRedirect = true,
       UseCookies = true,
-      CookieContainer = cookieContainer_
+      CookieContainer = cookieContainer_,
+
+      // For e.g. mitmproxy
+      //UseProxy = true,
+      //Proxy = HttpClient.DefaultProxy,
     };
 
-    httpClient_ = new(clientHandler_)
+    httpClient_ = new (clientHandler_)
     {
       DefaultRequestVersion = HttpVersion.Version20,
-      DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher
+      DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
-
-    httpClient_.DefaultRequestHeaders.Add("user-agent", USER_AGENT);
-    httpClient_.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
   }
 
   public Dictionary<string, Model.Cookie> GetCookies() => cookieContainer_
@@ -161,7 +165,9 @@ public class GarminConnectClient : IGarminConnectClient
   /// </exception>
   public async Task<bool> AuthenticateAsync()
   {
+    cookieContainer_ = new();
     GetNewClient();
+    httpClient_.DefaultRequestHeaders.Add("user-agent", USER_AGENT);
     var data = await httpClient_.GetStringAsync(CONNECT_MODERN_HOSTNAME);
 
     var ssoHostname = JObject.Parse(data)["host"] == null
@@ -192,6 +198,7 @@ public class GarminConnectClient : IGarminConnectClient
 
     httpClient_.DefaultRequestHeaders.Add("origin", SSO_URL);
     httpClient_.DefaultRequestHeaders.Add("referer", url);
+    httpClient_.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
 
     var formContent = new FormUrlEncodedContent(new[]
     {

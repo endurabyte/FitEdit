@@ -12,6 +12,7 @@ internal class Program
   [STAThread]
   public static void Main(string[] args)
   {
+    App.Root = ConfigurationRoot.Bootstrap(new CompositionRoot());
     new AutoUpdater().WatchForUpdates();
 
     BuildAvaloniaApp()

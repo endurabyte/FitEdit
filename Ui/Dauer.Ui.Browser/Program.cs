@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Browser;
 using Avalonia.Logging;
 using Avalonia.ReactiveUI;
+using Dauer.Ui.Infra;
 
 [assembly: SupportedOSPlatform("browser")]
 namespace Dauer.Ui.Browser;
@@ -11,7 +12,7 @@ internal partial class Program
 {
   private static async Task Main(string[] args)
   {
-    CompositionRoot.Instance = new BrowserCompositionRoot();
+    App.Root = ConfigurationRoot.Bootstrap(new BrowserCompositionRoot());
 
     await BuildAvaloniaApp()
       .UseReactiveUI()

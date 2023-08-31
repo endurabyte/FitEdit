@@ -268,6 +268,8 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       return; 
     }
 
+    if (GarminUsername == null || GarminPassword ==  null) { return; }
+
     garmin_.Config.Username = GarminUsername;
     garmin_.Config.Password = GarminPassword;
 
@@ -289,6 +291,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   {
     GarminUsername = null;
     GarminPassword = null;
+    garmin_.AddCookies(new Dictionary<string, Cookie>());
     IsLoggedInWithGarmin = false;
 
     await UpdateSettingsAsync(settings =>
@@ -299,7 +302,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
   }
 
-  public async Task HandleGarminLoginInfoClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/about-garmin-login.html");
+  public async Task HandleGarminSigninTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/garmin-signin-terms.html");
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)
   {

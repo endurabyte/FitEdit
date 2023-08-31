@@ -1,13 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto" package="com.endurabyte.fitedit">
 	<uses-permission android:name="android.permission.INTERNET" />
-	<application android:label="FitEdit" android:icon="@mipmap/ic_launcher" />
-
-  <queries>
-    <intent>
-      <!-- Declare we use "Custom Tabs" which we need for WebAuthenticator. If not available Intent is started for the URL
+	<application android:label="FitEdit" android:icon="@mipmap/ic_launcher" android:networkSecurityConfig="@xml/network_security_config"/>
+	<queries>
+		<intent>
+			<!-- Declare we use "Custom Tabs" which we need for WebAuthenticator. If not available Intent is started for the URL
            https://learn.microsoft.com/en-us/xamarin/essentials/web-authenticator?tabs=android -->
-      <action android:name="android.support.customtabs.action.CustomTabsService" />
-    </intent>
-  </queries>
+			<action android:name="android.support.customtabs.action.CustomTabsService" />
+		</intent>
+	</queries>
 </manifest>
