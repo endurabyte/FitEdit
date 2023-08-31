@@ -45,10 +45,9 @@ public class DesignSettingsViewModel : SettingsViewModel
     }
   }
 
-  public override Task HandleGarminLoginClicked()
+  public override async Task HandleGarminLoginClicked()
   {
-    IsLoggedInWithGarmin = true;
-    return Task.CompletedTask;
+    IsLoggedInWithGarmin = await Garmin.AuthenticateAsync();
   }
 
   public override Task HandleGarminLogoutClicked()
@@ -61,6 +60,7 @@ public class DesignSettingsViewModel : SettingsViewModel
 public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 {
   public IFitEditService FitEdit { get; set; }
+  public IGarminConnectClient Garmin { get; set; }
 
   [Reactive] public string Otp { get; set; } = "";
   [Reactive] public string? GarminUsername { get; set; }
@@ -76,7 +76,6 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   private CancellationTokenSource authCancelCts_ = new();
   private readonly IDatabaseAdapter db_;
-  private readonly IGarminConnectClient garmin_;
   private readonly IEmailValidator emailValidator_;
   private readonly IPhoneValidator phoneValidator_;
   private readonly IBrowser browser_;
@@ -92,7 +91,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   {
     db_ = db;
     FitEdit = fitEdit;
-    garmin_ = garmin;
+    Garmin = garmin;
     emailValidator_ = emailValidator;
     phoneValidator_ = phoneValidator;
     browser_ = browser;
@@ -130,7 +129,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     if (!db_.Ready) { return; }
 
     AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    garmin_.AddCookies(settings.GarminCookies);
+    Garmin.AddCookies(settings.GarminCookies);
 
     GarminUsername = settings.GarminUsername;
     GarminPassword = settings.GarminPassword;
@@ -173,7 +172,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.LogoutAsync();
-      Message = ok ? "Signed out" : "There was a problem signing out";
+      Message = ok ? "Signed out of FitEdit" : "There was a problem signing out of FitEdit";
     });
   }
 
@@ -184,8 +183,8 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     {
       await FitEdit.AuthorizeGarminAsync();
       Message = FitEdit.IsAuthenticatingWithGarmin
-        ? "Check your web browser. We've opened a page to Garmin" 
-        : "There was a problem connecting to Garmin";
+        ? "Check your web browser. We've opened the Garmin authorize page" 
+        : "There was a problem authorizing with Garmin";
     });
   }
 
@@ -195,7 +194,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.DeauthorizeGarminAsync();
-      Message = ok ? "Disconnected from Garmin" : "There was a problem disconnecting from Garmin";
+      Message = ok ? "Deauthorized Garmin" : "There was a problem deauthorizing Garmin";
     });
   }
 
@@ -240,8 +239,8 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     {
       await FitEdit.AuthorizeStravaAsync();
       Message = FitEdit.IsAuthenticatingWithStrava
-        ? "Check your web browser. We've opened a page to Strava" 
-        : "There was a problem connecting to Strava";
+        ? "Check your web browser. We've opened the Strava authorize page" 
+        : "There was a problem authorizing with Strava";
     });
   }
   
@@ -250,7 +249,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.DeauthorizeStravaAsync();
-      Message = ok ? "Disconnected from Strava" : "There was a problem disconnecting from Strava";
+      Message = ok ? "Deauthorized Strava" : "There was a problem deauthorizing Strava";
     });
   }
 
@@ -261,7 +260,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   public async Task LoginWithGarminAsync()
   { 
-    IsLoggedInWithGarmin = await garmin_.IsAuthenticatedAsync();
+    IsLoggedInWithGarmin = await Garmin.IsAuthenticatedAsync();
 
     if (IsLoggedInWithGarmin) 
     {
@@ -270,10 +269,12 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     if (GarminUsername == null || GarminPassword ==  null) { return; }
 
-    garmin_.Config.Username = GarminUsername;
-    garmin_.Config.Password = GarminPassword;
+    Garmin.Config.Username = GarminUsername;
+    Garmin.Config.Password = GarminPassword;
 
-    IsLoggedInWithGarmin = await garmin_.AuthenticateAsync();
+    IsLoggedInWithGarmin = await Garmin.AuthenticateAsync();
+
+    Message = IsLoggedInWithGarmin ? "Signed in to Garmin" : "There was a problem signing in to Garmin";
 
     // Save login
     if (IsLoggedInWithGarmin)
@@ -282,8 +283,10 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       {
         settings.GarminUsername = GarminUsername;
         settings.GarminPassword = GarminPassword;
-        settings.GarminCookies = garmin_.GetCookies();
+        settings.GarminCookies = Garmin.GetCookies();
       });
+
+      await Garmin.UploadActivity(@"F:\syncthing\main\projects\dauer\Data Files (FIT, TCX, GPX, etc)\Problem FIT files\2023-08-24 Lukas\LK_corrupted_fit_file_repaired_by_FitEdit.fit", new FileFormat { FormatKey = "fit" });
     }
   }
 
@@ -291,7 +294,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   {
     GarminUsername = null;
     GarminPassword = null;
-    garmin_.AddCookies(new Dictionary<string, Cookie>());
+    Garmin.AddCookies(new Dictionary<string, Cookie>());
     IsLoggedInWithGarmin = false;
 
     await UpdateSettingsAsync(settings =>
@@ -300,9 +303,11 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       settings.GarminPassword = null;
       settings.GarminCookies = null;
     });
+
+    Message = "Signed out of Garmin";
   }
 
-  public async Task HandleGarminSigninTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/garmin-signin-terms.html");
+  public async Task HandleGarminSigninTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/integration-signin-terms.html");
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)
   {

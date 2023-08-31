@@ -162,8 +162,11 @@
           </WrapPanel>
 
           <WrapPanel Margin="50,10,10,10">
-            <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !IsLoggedInWithGarmin}"/>
-            <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding IsLoggedInWithGarmin}"/>
+            <StackPanel Orientation="Vertical">
+              <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !IsLoggedInWithGarmin}"/>
+              <ProgressBar Minimum="0" Maximum="100" Value="{Binding Garmin.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !IsLoggedInWithGarmin}"/>
+              <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding IsLoggedInWithGarmin}"/>
+            </StackPanel>
           </WrapPanel>
 
           <Label Content="Strava" Margin="10"/>

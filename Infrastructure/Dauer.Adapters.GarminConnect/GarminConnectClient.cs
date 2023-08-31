@@ -2,14 +2,14 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
-using Dauer.Model.Web;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Adapters.GarminConnect;
 
@@ -19,7 +19,7 @@ namespace Dauer.Adapters.GarminConnect;
 /// Inspired by https://github.com/La0/garmin-uploader
 /// </summary>
 /// <seealso cref="T:Dauer.Adapters.GarminConnect.Services.IClient" />
-public class GarminConnectClient : IGarminConnectClient
+public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 {
   private const string LOCALE = "en_US";
   private const string USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0";
@@ -98,6 +98,8 @@ public class GarminConnectClient : IGarminConnectClient
 
   public GarminConnectConfig Config { get; set; } = new();
 
+  [Reactive] public double AuthenticateProgress { get; private set; }
+
   /// <summary>
   /// Initializes a new instance of the <see cref="GarminConnectClient"/> class.
   /// </summary>
@@ -165,25 +167,36 @@ public class GarminConnectClient : IGarminConnectClient
   /// </exception>
   public async Task<bool> AuthenticateAsync()
   {
+    const double nsteps = 6.0;
+    AuthenticateProgress = 0 / nsteps * 100;
+
     cookieContainer_ = new();
     GetNewClient();
     httpClient_.DefaultRequestHeaders.Add("user-agent", USER_AGENT);
     var data = await httpClient_.GetStringAsync(CONNECT_MODERN_HOSTNAME);
+    AuthenticateProgress = 1 / nsteps * 100;
 
-    var ssoHostname = JObject.Parse(data)["host"] == null
-        ? throw new Exception("SSO hostname is missing")
-        : JObject.Parse(data)["host"].ToString();
+    // data = {"host": "https://connect.garmin.com"}
+    GarminHost host = System.Text.Json.JsonSerializer.Deserialize<GarminHost>(data);
+    if (host?.Host is null)
+    {
+      log_.LogError("SSO hostname is missing");
+      return false;
+    }
 
     var queryParams = string.Join("&", QueryParams.Select(e => $"{e.Key}={WebUtility.UrlEncode(e.Value)}"));
 
     var url = $"{SSO_URL_SSO_SIGNIN}?{queryParams}";
     var res = await httpClient_.GetAsync(url);
+    AuthenticateProgress = 2 / nsteps * 100;
     if (!ValidateResponseMessage(res, "No login form."))
     {
       return false;
     }
 
     data = await res.Content.ReadAsStringAsync();
+    AuthenticateProgress = 3 / nsteps * 100;
+
     var csrfToken = "";
     try
     {
@@ -210,6 +223,8 @@ public class GarminConnectClient : IGarminConnectClient
 
     res = await httpClient_.PostAsync(url, formContent);
     data = await res.Content.ReadAsStringAsync();
+    AuthenticateProgress = 4 / nsteps * 100;
+
     if (!ValidateResponseMessage(res, $"Bad response {res.StatusCode}, expected {HttpStatusCode.OK}"))
     {
       return false;
@@ -227,13 +242,17 @@ public class GarminConnectClient : IGarminConnectClient
     httpClient_.DefaultRequestHeaders.Remove("origin");
     url = $"{CONNECT_URL_MODERN}?ticket={WebUtility.UrlEncode(ticket)}";
     res = await httpClient_.GetAsync(url);
+    AuthenticateProgress = 5 / nsteps * 100;
 
     if (!ValidateModernTicketUrlResponseMessage(res, $"Second auth step failed to produce success or expected 302: {res.StatusCode}."))
     {
       return false;
     }
 
-    return await IsAuthenticatedAsync();
+    bool isAuthenticated = await IsAuthenticatedAsync();
+    AuthenticateProgress = 6 / nsteps * 100;
+
+    return isAuthenticated;
   }
 
   public async Task<bool> IsAuthenticatedAsync()
@@ -373,42 +392,31 @@ public class GarminConnectClient : IGarminConnectClient
     form.Add(content, "file", Path.GetFileName(fileName));
 
     var res = await httpClient_.PostAsync(url, form);
-    // HTTP Status can either be OK or Conflict
-    if (!new HashSet<HttpStatusCode>
-                              {HttpStatusCode.OK, HttpStatusCode.Created, HttpStatusCode.Conflict}
+    var responseData = await res.Content.ReadAsStringAsync();
+
+    DetailedImportResponse response = null;
+
+    try
+    {
+      response = JsonSerializer.Deserialize<DetailedImportResponse>(responseData);
+    }
+    catch (Exception e)
+    {
+      log_.LogError("Could not parse upload response: {e}", e);
+      return (false, -1);
+    }
+
+    if (!new HashSet<HttpStatusCode> { HttpStatusCode.OK, HttpStatusCode.Accepted, HttpStatusCode.Created, HttpStatusCode.Conflict }
         .Contains(res.StatusCode))
     {
-      if (res.StatusCode == HttpStatusCode.PreconditionFailed)
-      {
-        throw new Exception($"Failed to upload {fileName}");
-      }
+      log_.LogError("Failed to upload {@fileName}. Detail: {@responseData}", fileName, response);
+      return (false, -1);
     }
 
-    var responseData = await res.Content.ReadAsStringAsync();
-    var response = JObject.Parse(responseData)["detailedImportResult"];
-    var successes = response["successes"];
-    if (successes.HasValues)
-    {
-      _ = long.TryParse(successes[0]["internalId"].ToString(), out long internalId);
-      return (true, internalId);
-    }
+    Success success = response.DetailImportResult.Successes.FirstOrDefault();
 
-    var failures = response["failures"];
-    if (!failures.HasValues)
-    {
-      throw new Exception($"Unknown error: {response}");
-    }
-
-    var messages = failures[0]["messages"];
-    var code = int.Parse(messages[0]["code"].ToString());
-    if (code == (int)HttpStatusCode.Accepted)
-    {
-      // Activity already exists
-      _ = long.TryParse(successes[0]["internalId"].ToString(), out long internalId);
-      return (false, internalId);
-    }
-
-    throw new Exception(messages.ToString());
+    int id = success is null ? -1 : success.InternalId;
+    return (true, id);
   }
 
   /// <inheritdoc />
@@ -432,7 +440,7 @@ public class GarminConnectClient : IGarminConnectClient
     };
 
     var res = await httpClient_.PostAsync(url,
-        new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json"));
+        new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
     {
@@ -485,7 +493,7 @@ public class GarminConnectClient : IGarminConnectClient
     };
 
     var res = await httpClient_.PostAsync(url,
-        new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json"));
+        new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
     {
@@ -512,7 +520,7 @@ public class GarminConnectClient : IGarminConnectClient
     };
 
     var res = await httpClient_.PostAsync(url,
-        new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json"));
+        new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
     {
@@ -542,7 +550,7 @@ public class GarminConnectClient : IGarminConnectClient
     };
 
     var res = await httpClient_.PostAsync(url,
-        new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json"));
+        new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
     {
@@ -606,7 +614,7 @@ public class GarminConnectClient : IGarminConnectClient
 
   private static T DeserializeData<T>(string data) where T : class
   {
-    return typeof(T) == typeof(string) ? data as T : JsonConvert.DeserializeObject<T>(data);
+    return typeof(T) == typeof(string) ? data as T : JsonSerializer.Deserialize<T>(data);
   }
 
   /// <summary>

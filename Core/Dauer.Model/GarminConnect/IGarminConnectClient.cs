@@ -9,6 +9,12 @@ public interface IGarminConnectClient
   GarminConnectConfig Config { get; set; }
 
   /// <summary>
+  /// Progress 0-100 of the last call to <see cref="AuthenticateAsync"/>
+  /// 100 shall not be a programmatic indicator of completion; for that, use the return value of <see cref="AuthenticateAsync"/>
+  /// </summary>
+  double AuthenticateProgress { get; }
+
+  /// <summary>
   /// Supports loading of persisted cookies
   /// </summary>
   void AddCookies(Dictionary<string, Cookie>? cookies);
