@@ -103,7 +103,7 @@ public class DauerModule : Autofac.Module
     builder.RegisterType<CryptoService>().As<ICryptoService>()
       .WithParameter("password", cryptoPassword ?? "")
       .SingleInstance();
-    builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>();
+    builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>().SingleInstance();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();
     builder.RegisterInstance(Window_).As<IWindowAdapter>();
     builder.RegisterInstance(Storage_).As<IStorageAdapter>();

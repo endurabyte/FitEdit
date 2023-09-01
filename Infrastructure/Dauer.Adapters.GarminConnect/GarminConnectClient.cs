@@ -99,6 +99,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   public GarminConnectConfig Config { get; set; } = new();
 
   [Reactive] public double AuthenticateProgress { get; private set; }
+  [Reactive] public bool IsSignedIn { get; set; }
 
   /// <summary>
   /// Initializes a new instance of the <see cref="GarminConnectClient"/> class.
@@ -109,14 +110,15 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   {
     log_ = log;
 
-    AddCookies(new Dictionary<string, Model.Cookie>());
+    SetCookies(new Dictionary<string, Model.Cookie>());
   }
 
-  public void AddCookies(Dictionary<string, Model.Cookie> cookies)
+  public void SetCookies(Dictionary<string, Model.Cookie> cookies)
   {
     if (cookies == null) { return; }
 
     cookieContainer_ = new();
+    IsSignedIn = false;
 
     foreach (var cookie in cookies.Values)
     {
@@ -252,6 +254,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     bool isAuthenticated = await IsAuthenticatedAsync();
     AuthenticateProgress = 6 / nsteps * 100;
 
+    IsSignedIn = isAuthenticated;
     return isAuthenticated;
   }
 
@@ -260,12 +263,15 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     // Check session cookie
     if (!ValidateCookiePresence(cookieContainer_, "SESSIONID"))
     {
+      IsSignedIn = false;
       return false;
     }
 
     // Check login
     var res = await httpClient_.GetAsync(CONNECT_URL_PROFILE);
-    return ValidateResponseMessage(res, "Login check failed.");
+    bool isLoggedIn = ValidateResponseMessage(res, "Login check failed.");
+    IsSignedIn = isLoggedIn;
+    return isLoggedIn;
   }
 
   /// <summary>

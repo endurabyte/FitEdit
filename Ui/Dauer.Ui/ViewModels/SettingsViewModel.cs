@@ -47,12 +47,12 @@ public class DesignSettingsViewModel : SettingsViewModel
 
   public override async Task HandleGarminLoginClicked()
   {
-    IsLoggedInWithGarmin = await Garmin.AuthenticateAsync();
+    await Garmin.AuthenticateAsync();
   }
 
   public override Task HandleGarminLogoutClicked()
   {
-    IsLoggedInWithGarmin = false;
+    Garmin.SetCookies(new Dictionary<string, Cookie>() { });
     return Task.CompletedTask;
   }
 }
@@ -67,7 +67,6 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   [Reactive] public string? GarminPassword { get; set; }
   [Reactive] public string? StravaUsername { get; set; }
   [Reactive] public string? StravaPassword { get; set; }
-  [Reactive] public bool IsLoggedInWithGarmin { get; set; }
   [Reactive] public string Message { get; set; } = "Please enter an email address and click Sign In";
 
   public string PaymentPortalUrl => $"https://billing.stripe.com/p/login/5kA8Ap72G1oebZK9AA?prefilled_email={FitEdit.Username}";
@@ -129,7 +128,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     if (!db_.Ready) { return; }
 
     AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    Garmin.AddCookies(settings.GarminCookies);
+    Garmin.SetCookies(settings.GarminCookies);
 
     GarminUsername = settings.GarminUsername;
     GarminPassword = settings.GarminPassword;
@@ -259,41 +258,42 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   }
 
   public async Task LoginWithGarminAsync()
-  { 
-    IsLoggedInWithGarmin = await Garmin.IsAuthenticatedAsync();
+  {
+    await Garmin.IsAuthenticatedAsync();
 
-    if (IsLoggedInWithGarmin) 
+    if (Garmin.IsSignedIn)
     {
-      return; 
+      return;
     }
 
-    if (GarminUsername == null || GarminPassword ==  null) { return; }
+    if (GarminUsername == null || GarminPassword == null) { return; }
 
     Garmin.Config.Username = GarminUsername;
     Garmin.Config.Password = GarminPassword;
 
-    IsLoggedInWithGarmin = await Garmin.AuthenticateAsync();
+    bool signedIn = await Garmin.AuthenticateAsync();
 
-    Message = IsLoggedInWithGarmin ? "Signed in to Garmin" : "There was a problem signing in to Garmin";
+    Message = signedIn ? "Signed in to Garmin" : "There was a problem signing in to Garmin";
+
+    if (!signedIn)
+    {
+      return;
+    }
 
     // Save login
-    if (IsLoggedInWithGarmin)
+    await UpdateSettingsAsync(settings =>
     {
-      await UpdateSettingsAsync(settings =>
-      {
-        settings.GarminUsername = GarminUsername;
-        settings.GarminPassword = GarminPassword;
-        settings.GarminCookies = Garmin.GetCookies();
-      });
-    }
+      settings.GarminUsername = GarminUsername;
+      settings.GarminPassword = GarminPassword;
+      settings.GarminCookies = Garmin.GetCookies();
+    });
   }
 
   public virtual async Task HandleGarminLogoutClicked()
   {
     GarminUsername = null;
     GarminPassword = null;
-    Garmin.AddCookies(new Dictionary<string, Cookie>());
-    IsLoggedInWithGarmin = false;
+    Garmin.SetCookies(new Dictionary<string, Cookie>());
 
     await UpdateSettingsAsync(settings =>
     {
