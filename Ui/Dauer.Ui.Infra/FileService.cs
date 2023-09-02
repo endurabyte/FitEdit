@@ -38,8 +38,11 @@ public class FileService : ReactiveObject, IFileService
   {
     _ = Task.Run(async () =>
     {
+      DateTime before = DateTime.UtcNow;
+      DateTime after = before - TimeSpan.FromDays(7);
+
       List<DauerActivity> acts = await db_
-        .GetAllActivitiesAsync()
+        .GetAllActivitiesAsync(after, before)
         .AnyContext();
 
       var files = acts.Select(act => new UiFile
@@ -142,12 +145,14 @@ public class FileService : ReactiveObject, IFileService
     }
   }
 
-  public async Task<List<string>> GetAllActivityIdsAsync() => await db_.GetAllActivityIdsAsync();
+  public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => await db_.GetAllActivityIdsAsync(after, before);
+  public async Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before) => await db_.GetAllActivitiesAsync(after, before);
 
   public void Add(UiFile file)
   {
-    UiFile? previous = Files.FirstOrDefault(f => f.Activity?.StartTime > file.Activity?.StartTime);
-    int idx = previous == null ? 0 : Files.IndexOf(previous);
+    // Find the first activity that is newer. They are sorted newest to oldest; preserve that
+    UiFile? firstNewer = Files.Reverse().FirstOrDefault(f => f.Activity?.StartTime > file.Activity?.StartTime);
+    int idx = firstNewer == null ? 0 : Files.IndexOf(firstNewer) + 1;
     Files.Insert(idx, file);
   }
 
