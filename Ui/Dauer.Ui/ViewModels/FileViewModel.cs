@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia.Controls;
+using Avalonia.Threading;
 using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
@@ -16,6 +17,13 @@ namespace Dauer.Ui.ViewModels;
 
 public interface IFileViewModel
 {
+  /// <summary>
+  /// Percentage 0-100 representing how far down the file list the user has scrolled.
+  /// 0 => top,
+  /// 50 => halfway,
+  /// 100 => bottom
+  /// </summary>
+  double ScrollPercent { get; set; }
 }
 
 public class DesignFileViewModel : FileViewModel
@@ -33,6 +41,29 @@ public class DesignFileViewModel : FileViewModel
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
   [Reactive] public int SelectedIndex { get; set; }
+
+  /// <summary>
+  /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
+  /// </summary>
+  private const int loadMorePercent_ = 90;
+
+  private double scrollPercent_;
+  public double ScrollPercent
+  {
+    get => scrollPercent_;
+    set
+    {
+      if (scrollPercent_ > loadMorePercent_) 
+      {
+        scrollPercent_ = value;
+        return; 
+      }
+      scrollPercent_ = value;
+
+      if (scrollPercent_ < loadMorePercent_) { return; }
+      Dispatcher.UIThread.Invoke(async () => await LoadMore());
+    }
+  }
 
   public IFileService FileService { get; }
   public IFitEditService FitEdit { get; }
@@ -450,7 +481,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await browser_.OpenAsync(act.OnlineUrl);
   }
 
-  public async Task HandleLoadMoreClicked()
+  private async Task LoadMore()
   {
     DateTime oldest = FileService.Files
       .Select(f => f.Activity?.StartTime ?? DateTime.UtcNow)

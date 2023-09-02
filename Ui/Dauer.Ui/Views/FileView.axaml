@@ -16,7 +16,7 @@
     <StyleInclude Source="../Styles.axaml"/> 
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto, *, Auto">
+  <Grid RowDefinitions="Auto, *">
     
     <WrapPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
@@ -109,7 +109,7 @@
       </Button>
     </WrapPanel>
 
-    <ListBox Grid.Row="1" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
+    <ListBox x:Name="FileListBox" Grid.Row="1" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
 
       <ListBox.ItemsPanel>
         <ItemsPanelTemplate>
@@ -161,8 +161,6 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
-
-    <Button Grid.Row="2" Command="{Binding HandleLoadMoreClicked}" Content="Load More" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
   </Grid>
 
 </UserControl>
