@@ -16,14 +16,14 @@ public partial class FileView : UserControl
     });
   }
 
-  private void HandleScrollChanged(object? sender, ScrollChangedEventArgs e)
+  private void HandleScrollChanged(object? sender, ScrollChangedEventArgs _)
   {
     if (DataContext is not IFileViewModel vm) { return; }
-    if (e.Source is not ScrollViewer sv) { return; }
+    if (sender is not ScrollViewer sv) { return; }
 
     double maximumScroll = sv.Extent.Height - sv.Viewport.Height;
     if (maximumScroll <= 0) { return; }
 
-    vm.ScrollPercent = (sv.Offset.Y / maximumScroll) * 100;
+    vm.ScrollPercent = sv.Offset.Y / maximumScroll * 100;
   }
 }
