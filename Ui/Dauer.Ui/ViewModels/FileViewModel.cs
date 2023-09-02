@@ -3,6 +3,7 @@ using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Extensions;
+using Dauer.Model.GarminConnect;
 using Dauer.Model.Storage;
 using Dauer.Model.Web;
 using Dauer.Services;
@@ -21,8 +22,9 @@ public class DesignFileViewModel : FileViewModel
 {
   public DesignFileViewModel() : base(
     new NullFileService(),
-    new NullStorageAdapter(),
     new NullFitEditService(),
+    new NullStorageAdapter(),
+    new NullGarminConnectClient(),
     new NullSupabaseAdapter(),
     new NullBrowser(),
     new DesignLogViewModel()) { }
@@ -35,14 +37,16 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IFileService FileService { get; }
   public IFitEditService FitEdit { get; }
   private readonly IStorageAdapter storage_;
+  private readonly IGarminConnectClient garmin_;
   private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
 
   public FileViewModel(
     IFileService fileService,
-    IStorageAdapter storage,
     IFitEditService fitEdit,
+    IStorageAdapter storage,
+    IGarminConnectClient garmin,
     ISupabaseAdapter supa,
     IBrowser browser,
     ILogViewModel log
@@ -52,8 +56,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FitEdit = fitEdit;
     supa_ = supa;
     storage_ = storage;
+    garmin_ = garmin;
     log_ = log;
     browser_ = browser;
+
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       int i = property.Value;
@@ -95,7 +101,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public async void HandleActivityImportClicked(DauerActivity? act)
+  /// <summary>
+  /// Import a file and associate it with an existing activity.
+  /// </summary>
+  public async Task HandleActivityImportClicked(DauerActivity? act)
   {
     Log.Info($"{nameof(HandleActivityImportClicked)} clicked");
 
@@ -123,10 +132,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     if (act.File is null) { return; }
 
-    if (!await supa_.UpdateAsync(act)) // Sets DauerActivity.BucketUrl
-    {
-      // TODO Show error
-    }
+    await supa_.UpdateAsync(act); // Sets DauerActivity.BucketUrl
+
+    // TODO Show result
+  }
+
   }
 
   private async Task<UiFile?> Persist(FileReference? file)
@@ -417,5 +427,24 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (act == null) { return; }
     await browser_.OpenAsync(act.OnlineUrl);
+  }
+
+  public async Task HandleLoadMoreClicked()
+  {
+    DateTime oldest = FileService.Files
+      .Select(f => f.Activity?.StartTime ?? DateTime.UtcNow)
+      .OrderBy(d => d)
+      .FirstOrDefault();
+
+    List<DauerActivity> more = await FileService.GetAllActivitiesAsync(oldest - TimeSpan.FromDays(7), oldest);
+    more.Sort((a1, a2) => a2.StartTime.CompareTo(a1.StartTime));
+
+    foreach (DauerActivity activity in more)
+    {
+      FileService.Add(new UiFile
+      {
+        Activity = activity
+      });
+    } 
   }
 }

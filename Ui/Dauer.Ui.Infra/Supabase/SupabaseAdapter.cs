@@ -428,19 +428,24 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     try
     {
+      DateTime before = DateTime.UtcNow;
+      DateTime after = before - TimeSpan.FromDays(30);
+
       List<object> ids = (await fileService_
-        .GetAllActivityIdsAsync()
+        // Get up to last 30 days
+        .GetAllActivityIdsAsync(after, before)
         .AnyContext())
         .Cast<object>()
         .ToList();
 
       // We make two requests to the database:
-      // First, we want only new activities (i.e. whose IDs we don't already know)
+      // First, we want only new activities (i.e. whose IDs we don't already know, within the last 30 days)
       // Then, we want updated activities. (activities we know about but were updated since the last sync)
       // Row-level security ensures we only get the user's activities.
 
       // Get user's new activities 
       var newActivities = await client_.Postgrest.Table<Model.GarminActivity>()
+        .Where(a => a.LastUpdated > after && a.LastUpdated < before)
         .Not("Id", Postgrest.Constants.Operator.In, ids)
         .Get()
         .AnyContext();

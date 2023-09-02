@@ -126,10 +126,14 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return model;
   }
 
-  public async Task<List<Model.DauerActivity>> GetAllActivitiesAsync()
+  public async Task<List<Model.DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before)
   {
     Log.Info($"{nameof(SqliteAdapter)}.{nameof(GetAllActivitiesAsync)}()");
-    List<DauerActivity> activities = await db_?.Table<DauerActivity>().ToListAsync().AnyContext();
+    List<DauerActivity> activities = await db_?
+      .Table<DauerActivity>()
+      .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
+      .ToListAsync()
+      .AnyContext();
 
     var models = new List<Model.DauerActivity>(activities.Count);
 
@@ -144,9 +148,11 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return models;
   }
 
-  public async Task<List<string>> GetAllActivityIdsAsync() => await db_
-    .QueryScalarsAsync<string>($"SELECT Id from {nameof(DauerActivity)}")
-    .AnyContext();
+  public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => (await db_?
+    .Table<DauerActivity>()
+      .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
+      .ToListAsync().AnyContext())?
+    .Select(act => act.Id).ToList() ?? new List<string>();
 
   public virtual async Task<bool> InsertAsync(Model.FileReference t) => 1 == await db_?.InsertAsync(t.MapEntity()).AnyContext();
   public async Task UpdateAsync(Model.FileReference t) => await db_?.UpdateAsync(t.MapEntity()).AnyContext();

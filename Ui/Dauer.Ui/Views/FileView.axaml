@@ -16,7 +16,7 @@
     <StyleInclude Source="../Styles.axaml"/> 
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto, *">
+  <Grid RowDefinitions="Auto, *, Auto">
     
     <WrapPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
@@ -161,6 +161,8 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
+
+    <Button Grid.Row="2" Command="{Binding HandleLoadMoreClicked}" Content="Load More" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
   </Grid>
 
 </UserControl>

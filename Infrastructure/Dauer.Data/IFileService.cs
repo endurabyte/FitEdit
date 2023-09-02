@@ -14,7 +14,8 @@ public interface IFileService
   Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default);
   Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default);
   Task<bool> DeleteAsync(DauerActivity? act);
-  Task<List<string>> GetAllActivityIdsAsync();
+  Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
+  Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before);
 
   void Add(UiFile file);
 }
