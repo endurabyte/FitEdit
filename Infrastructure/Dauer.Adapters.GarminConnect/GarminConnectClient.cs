@@ -13,12 +13,6 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Adapters.GarminConnect;
 
-/// <inheritdoc />
-/// <summary>
-/// Client implementation.
-/// Inspired by https://github.com/La0/garmin-uploader
-/// </summary>
-/// <seealso cref="T:Dauer.Adapters.GarminConnect.Services.IClient" />
 public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 {
   private const string LOCALE = "en_US";
@@ -362,30 +356,20 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return streamCopy;
   }
 
-  /// <inheritdoc />
-  /// <summary>
-  /// Uploads the activity.
-  /// </summary>
-  /// <param name="fileName">Name of the file.</param>
-  /// <param name="fileFormat">The file format.</param>
-  /// <returns>
-  /// Tuple of result and activity id
-  /// </returns>
-  /// <exception cref="T:System.Exception">
-  /// Failed to upload {fileName}
-  /// or
-  /// or
-  /// Unknown error: {response.ToString()}
-  /// </exception>
   public async Task<(bool Success, long ActivityId)> UploadActivity(string fileName, FileFormat fileFormat)
   {
+    using var stream = new FileStream(fileName, FileMode.Open);
+    return await UploadActivity(fileName, stream, fileFormat).AnyContext();
+  }
+
+  public async Task<(bool Success, long ActivityId)> UploadActivity(string fileName, Stream stream, FileFormat fileFormat)
+  { 
     var extension = fileFormat.FormatKey;
     var url = $"{URL_UPLOAD}/.{extension}";
 
     var form = new MultipartFormDataContent(
         $"------WebKitFormBoundary{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}");
 
-    using var stream = new FileStream(fileName, FileMode.Open);
     using var content = new StreamContent(stream);
 
     content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")

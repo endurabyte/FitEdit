@@ -91,10 +91,19 @@ public interface IGarminConnectClient
   Task SetActivityType(long activityId, ActivityType activityType);
 
   /// <summary>
-  /// Uploads the activity.
+  /// Uploads the activity from a file on the filesystem.
   /// </summary>
   /// <param name="fileName">Name of the file.</param>
   /// <param name="fileFormat">The file format.</param>
   /// <returns>Tuple of result and activity id</returns>
   Task<(bool Success, long ActivityId)> UploadActivity(string fileName, FileFormat fileFormat);
+
+  /// <summary>
+  /// Uploads the activity from a stream.
+  /// </summary>
+  /// <param name="fileName">Name of the file.</param>
+  /// <param name="stream">Stream of the file.</param>
+  /// <param name="fileFormat">The file format.</param>
+  /// <returns>Tuple of result and activity id</returns>
+  Task<(bool Success, long ActivityId)> UploadActivity(string fileName, Stream stream, FileFormat fileFormat);
 }

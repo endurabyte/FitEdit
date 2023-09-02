@@ -137,6 +137,27 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     // TODO Show result
   }
 
+  /// <summary>
+  /// Upload a file to Garmin. We don't actually associate it with the activity because that will happen in the Garmin webhook handler.
+  /// </summary>
+  public async Task HandleActivityGarminUploadClicked(DauerActivity? act)
+  {
+    if (act is null) { return; }
+    if (act.File?.Bytes is null) { return; }
+
+    var ms = new MemoryStream(act.File.Bytes);
+
+    (bool ok, long id) = await garmin_
+      .UploadActivity(act.File.Name ?? "upload-by-fitedit.fit", ms, new FileFormat { FormatKey = "fit" })
+      .AnyContext();
+
+    // TODO show result
+
+    act.SourceId = $"{id}";
+
+    await supa_.UpdateAsync(act);
+
+    // TODO Show result
   }
 
   private async Task<UiFile?> Persist(FileReference? file)
