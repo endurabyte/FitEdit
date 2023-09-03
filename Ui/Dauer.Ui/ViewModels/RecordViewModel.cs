@@ -99,6 +99,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     window_.Resized.Subscribe(tup =>
     {
+      if (TabIndex < 0 || TabIndex >= ShownData.Count) { return; }
       DataGridWrapper data = ShownData[TabIndex];
       if (data?.DataGrid is null) { return; }
       data.DataGrid.ScrollIntoView(data.DataGrid.SelectedItem, null);
