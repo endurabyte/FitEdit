@@ -10,7 +10,6 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
-    <PublishTrimmed>true</PublishTrimmed>
     <AssemblyName>FitEdit</AssemblyName>
   </PropertyGroup>
 

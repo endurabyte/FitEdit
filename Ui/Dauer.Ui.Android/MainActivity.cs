@@ -1,5 +1,6 @@
 ﻿using Android.Content;
 using Android.Content.PM;
+using Android.Views;
 using Avalonia;
 using Avalonia.Android;
 using Avalonia.ReactiveUI;
@@ -9,12 +10,14 @@ using Microsoft.Maui.ApplicationModel;
 namespace Dauer.Ui.Android;
 
 [Activity(Label = "FitEdit", Theme = "@style/MyTheme.NoActionBar", Icon = "@mipmap/ic_launcher", MainLauncher = true, 
+  WindowSoftInputMode = SoftInput.AdjustResize, 
   ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity<App>
 {
   protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
   {
     App.Root = ConfigurationRoot.Bootstrap(new AndroidCompositionRoot());
+
     return base.CustomizeAppBuilder(builder)
           .UseReactiveUI();
   }
@@ -22,7 +25,7 @@ public class MainActivity : AvaloniaMainActivity<App>
   protected override void OnCreate(Bundle? savedInstanceState)
   {
     base.OnCreate(savedInstanceState);
-		Platform.Init(this, savedInstanceState);
+    Platform.Init(this, savedInstanceState);
   }
 
   protected override void OnResume()
@@ -41,5 +44,4 @@ public class MainActivity : AvaloniaMainActivity<App>
   {
     base.OnDestroy();
   }
-
 }
