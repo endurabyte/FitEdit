@@ -11,6 +11,7 @@ using Dauer.Data.Fit;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Converters;
+using Dauer.Ui.Model;
 using DynamicData.Binding;
 using Dynastream.Fit;
 using ReactiveUI;
@@ -31,7 +32,7 @@ public interface IRecordViewModel
 
 public class DesignRecordViewModel : RecordViewModel
 {
-  public DesignRecordViewModel() : base(new NullFileService())
+  public DesignRecordViewModel() : base(new NullFileService(), new NullWindowAdapter())
   {
   }
 }
@@ -80,6 +81,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   [Reactive] public long HexDataSelectionEnd { get; set; }
 
   private readonly IFileService fileService_;
+  private readonly IWindowAdapter window_;
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
   private readonly HashSet<IDisposable> messageSubs_ = new();
@@ -88,10 +90,20 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private readonly MesgFieldValueConverter converter_;
 
   public RecordViewModel(
-    IFileService fileService
+    IFileService fileService,
+    IWindowAdapter window
   )
   {
     fileService_ = fileService;
+    window_ = window;
+
+    window_.Resized.Subscribe(tup =>
+    {
+      DataGridWrapper data = ShownData[TabIndex];
+      if (data?.DataGrid is null) { return; }
+      data.DataGrid.ScrollIntoView(data.DataGrid.SelectedItem, null);
+    });
+
     converter_ = new MesgFieldValueConverter(prettify: PrettifyFields);
 
     fileService.ObservableForProperty(x => x.MainFile).Subscribe(property => HandleMainFileChanged(fileService.MainFile));
@@ -138,7 +150,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void HandleTabIndexChanged()
   {
     if (!TabIndexIsValid_) { return; }
-    var data = ShownData[TabIndex];
+    DataGridWrapper data = ShownData[TabIndex];
     if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
 
     SelectHexData(wrapper);
