@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Markup.Xaml;
+using Dauer.Model;
 using Dauer.Ui.Infra;
 using Dauer.Ui.ViewModels;
 using Dauer.Ui.Views;
@@ -14,6 +15,12 @@ public partial class App : Application
   {
     AvaloniaXamlLoader.Load(this);
     StyleExtensions.LoadStyles();
+    AppDomain.CurrentDomain.UnhandledException += HandleException;
+  }
+
+  private void HandleException(object sender, UnhandledExceptionEventArgs e)
+  {
+    Log.Debug($"Unhandled Exception: {e}");
   }
 
   public override void OnFrameworkInitializationCompleted()

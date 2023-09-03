@@ -100,6 +100,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     FileService.SubscribeAdds(file => file.SubscribeToIsLoaded(LoadOrUnload));
 
+    if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
     {
       file.SubscribeToIsLoaded(LoadOrUnload);
