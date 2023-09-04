@@ -132,7 +132,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     GarminUsername = settings.GarminUsername;
     GarminPassword = settings.GarminPassword;
-    await LoginWithGarminAsync();
+    //await LoginWithGarminAsync();
   }
 
   public void HandleLoginClicked()

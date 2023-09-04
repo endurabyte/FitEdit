@@ -98,13 +98,37 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       fileService.MainFile = fileService.Files[i];
     });
 
-    FileService.SubscribeAdds(file => file.SubscribeToIsLoaded(LoadOrUnload));
+    FileService.SubscribeAdds(file =>
+    {
+      file.SubscribeToIsLoaded(LoadOrUnload);
+      SubscribeNameAndDescriptionChanges(file);
+    });
 
     if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
     {
       file.SubscribeToIsLoaded(LoadOrUnload);
+      SubscribeNameAndDescriptionChanges(file);
     }
+  }
+
+  private void SubscribeNameAndDescriptionChanges(UiFile file)
+  {
+    if (file.Activity is null) { return; }
+
+    file.Activity.ObservableForProperty(x => x.Name).Subscribe(_ =>
+    {
+      if (!garmin_.IsSignedIn) { return; }
+      if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
+      garmin_.SetActivityName(id, file.Activity.Name ?? "");
+    });
+
+    file.Activity.ObservableForProperty(x => x.Description).Subscribe(_ =>
+    {
+      if (!garmin_.IsSignedIn) { return; }
+      if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
+      garmin_.SetActivityDescription(id, file.Activity.Description ?? "");
+    });
   }
 
   public async void HandleImportClicked()
@@ -170,7 +194,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   }
 
   /// <summary>
-  /// Upload a file to Garmin. We don't actually associate it with the activity because that will happen in the Garmin webhook handler.
+  /// Upload a file to Garmin. We don't associate it with the activity because that will happen in the Garmin webhook handler.
   /// </summary>
   public async Task HandleActivityGarminUploadClicked(DauerActivity? act)
   {

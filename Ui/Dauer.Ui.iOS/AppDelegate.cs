@@ -1,13 +1,11 @@
-using Foundation;
-using UIKit;
 using Avalonia;
 using Avalonia.iOS;
 using Avalonia.ReactiveUI;
+using Foundation;
+using UIKit;
 using Microsoft.Maui.ApplicationModel;
-using Dauer.Ui.Infra;
-using Dauer.Model;
 using System.Runtime.InteropServices;
-using Dauer.Ui.Views;
+using Dauer.Ui.Infra;
 
 namespace Dauer.Ui.iOS;
 
@@ -38,13 +36,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     if (_isKeyboardShown) { return; }
     _isKeyboardShown = true;
 
-    UIView? activeView = Window.FindAvaloniaView();
-    if (activeView == null) { return; }
+    UIView? view = Window.FindAvaloniaView();
+    if (view == null) { return; }
 
-    bool isOverlapping = activeView.IsKeyboardOverlapping(Window, args.FrameEnd);
+    bool isOverlapping = view.IsKeyboardOverlapping(Window, args.FrameEnd);
     if (!isOverlapping) { return; }
 
-    ShiftPageUp(args.FrameEnd.Height, activeView);
+    ShiftViewUp(args.FrameEnd.Height, view);
 
     _pageWasShiftedUp = true;
   }
@@ -65,7 +63,10 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     _pageWasShiftedUp = false;
   }
 
-  private void ShiftPageUp(nfloat keyboardHeight, UIView view)
+  /// <summary>
+  /// Resize the view so that the keyboard does not cover it.
+  /// </summary>
+  private void ShiftViewUp(nfloat keyboardHeight, UIView view)
   {
     CGRect rect = view.Frame;
 
@@ -75,6 +76,9 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     view.Frame = new CGRect(rect.X, rect.Y, rect.Width, new NFloat(newHeight));
   }
 
+  /// <summary>
+  /// Restore the view to its full height.
+  /// </summary>
   private void ShiftPageDown(UIView view) => view.Frame = Window.Frame;
 
   private static double GetShift(double pageHeight, nfloat keyboardHeight, double activeViewBottom) => 

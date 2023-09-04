@@ -5,7 +5,7 @@
              xmlns:controls="clr-namespace:Dauer.Ui.Controls"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
-             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
              x:Class="Dauer.Ui.Views.FileView"
              x:DataType="vm:FileViewModel">
   <Design.DataContext>
@@ -121,7 +121,25 @@
         <DataTemplate>
           <Border Background="Gray" CornerRadius="4" Padding="4">
             <StackPanel Orientation="Vertical">
-              <StackPanel Orientation="Horizontal">
+
+              <TextBlock Text="Title" Margin="0 10 0 0" FontWeight="Bold"/>
+              <controls:EditableTextBlock DisplayText="{Binding Activity.Name, Mode=OneWay}"
+                                          Text="{Binding Activity.Name, Mode=TwoWay}"
+                                          Margin="10 5 0 0"/>
+              
+              <TextBlock Text="Date" Margin="0 10 0 0" FontWeight="Bold"/>
+              <TextBlock Text="{Binding Activity.StartTimeLocal, StringFormat={}{0:F}}" Margin="10 5 0 0"/>
+              
+              <TextBlock Text="Description" Margin="0 10 0 0" FontWeight="Bold"/>
+              <controls:EditableTextBlock DisplayText="{Binding Activity.Description, Mode=OneWay}"
+                                          Text="{Binding Activity.Description, Mode=TwoWay}"
+                                          HorizontalAlignment="Left"
+                                          Margin="10 5 0 0"
+                                          MaxWidth="300"/>
+
+              <TextBlock Text="Actions" Margin="0 10 0 0" FontWeight="Bold"/>
+              <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
+                <TextBlock Text="Show" VerticalAlignment="Center"/>
                 <CheckBox IsChecked="{Binding IsVisible}" Margin="8,0,0,0"
                           IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
                   <ToolTip.Tip>
@@ -148,14 +166,15 @@
                 <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="5"/>
               </StackPanel>
 
-              <TextBlock Text="{Binding Activity.StartTime, StringFormat={}{0:yyyy-MM-dd HH:mm:ss}}"/>
-              <TextBlock FontWeight="Bold" Text="{Binding Activity.Name}" TextWrapping="Wrap" />
-              <TextBlock HorizontalAlignment="Left" Text="{Binding Activity.Description}" TextWrapping="Wrap" MaxWidth="300"/>
               <Button
+                Margin="10 0 0 0"
+                VerticalAlignment="Center"
                 Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
                 CommandParameter="{Binding Activity}"
+                IsVisible="{Binding Activity.OnlineUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                 Classes="hyperlink"
                 Content="View Online"/>
+
             </StackPanel>
           </Border>
         </DataTemplate>

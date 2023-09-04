@@ -27,6 +27,7 @@ public class DauerActivity : ReactiveObject
   public string? Type { get; set; }
   public string? DeviceName { get; set; }
   [Reactive] public DateTime StartTime { get; set; }
+  public DateTime StartTimeLocal => StartTime.ToLocalTime();
   public long Duration { get; set; }
   public Quantity Distance { get; set; }
   public bool Manual { get; set; }

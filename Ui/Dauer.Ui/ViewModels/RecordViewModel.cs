@@ -97,13 +97,9 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     fileService_ = fileService;
     window_ = window;
 
-    window_.Resized.Subscribe(tup =>
-    {
-      if (TabIndex < 0 || TabIndex >= ShownData.Count) { return; }
-      DataGridWrapper data = ShownData[TabIndex];
-      if (data?.DataGrid is null) { return; }
-      data.DataGrid.ScrollIntoView(data.DataGrid.SelectedItem, null);
-    });
+    // When the window resizes, the selection can go out of view.
+    // Scroll it back into view.
+    window_.Resized.Subscribe(_ => ScrollToSelection());
 
     converter_ = new MesgFieldValueConverter(prettify: PrettifyFields);
 
@@ -146,6 +142,15 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     this.ObservableForProperty(x => x.TabIndex).Subscribe(_ => HandleTabIndexChanged());
     this.ObservableForProperty(x => x.ShowHexData).Subscribe(_ => InitHexData());
+  }
+
+  private void ScrollToSelection()
+  {
+    if (TabIndex < 0 || TabIndex >= ShownData.Count) { return; }
+    DataGridWrapper data = ShownData[TabIndex];
+    if (data?.DataGrid is null) { return; }
+
+    data.DataGrid.ScrollIntoView(data.DataGrid.SelectedItem, null);
   }
 
   private void HandleTabIndexChanged()

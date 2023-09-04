@@ -9,26 +9,26 @@ namespace Dauer.Ui.Controls;
 
 public class EditableTextBlock : UserControl
 {
-  public static readonly DirectProperty<EditableTextBlock, string> TextProperty =
-      AvaloniaProperty.RegisterDirect<EditableTextBlock, string>(nameof(Text), o => o.Text, (o, v) => o.Text = v);
+  public static readonly DirectProperty<EditableTextBlock, string?> TextProperty =
+      AvaloniaProperty.RegisterDirect<EditableTextBlock, string?>(nameof(Text), o => o.Text, (o, v) => o.Text = v);
 
-  public static readonly DirectProperty<EditableTextBlock, string> DisplayTextProperty =
-      AvaloniaProperty.RegisterDirect<EditableTextBlock, string>(nameof(DisplayText), o => o.DisplayText, (o, v) => o.DisplayText = v);
+  public static readonly DirectProperty<EditableTextBlock, string?> DisplayTextProperty =
+      AvaloniaProperty.RegisterDirect<EditableTextBlock, string?>(nameof(DisplayText), o => o.DisplayText, (o, v) => o.DisplayText = v);
 
-  public string Text
+  public string? Text
   {
     get { return text_; }
     set { SetAndRaise(TextProperty, ref text_, value); }
   }
 
-  public string DisplayText
+  public string? DisplayText
   {
     get { return displayText_; }
     set { SetAndRaise(DisplayTextProperty, ref displayText_, value); }
   }
 
-  private string text_ = "";
-  private string displayText_ = "";
+  private string? text_ = "";
+  private string? displayText_ = "";
   private bool isEditing_ = false;
 
   private readonly TextBlock textBlock_;
@@ -38,6 +38,12 @@ public class EditableTextBlock : UserControl
   {
     textBlock_ = new TextBlock();
     textBox_ = new TextBox();
+
+    textBlock_.TextWrapping = TextWrapping.Wrap;
+    textBox_.TextWrapping = TextWrapping.Wrap;
+
+    // Ensure there is something to click on even if text is empty
+    textBox_.MinWidth = 100;
 
     // Set underline text decoration when mouse over
     textBlock_.TextDecorations = new TextDecorationCollection { new TextDecoration { Location = TextDecorationLocation.Underline } };
@@ -58,6 +64,16 @@ public class EditableTextBlock : UserControl
     textBox_.Bind(TextBox.TextProperty, this.WhenAnyValue(x => x.Text), BindingPriority.LocalValue);
   }
 
+  protected override void OnInitialized()
+  {
+    base.OnInitialized();
+
+    if (string.IsNullOrEmpty(DisplayText))
+    {
+      DisplayText = "(None)";
+    }
+  }
+
   private void StartEditing()
   {
     if (!isEditing_)
@@ -73,7 +89,7 @@ public class EditableTextBlock : UserControl
     if (isEditing_)
     {
       isEditing_ = false;
-      Text = textBox_.Text ?? "";
+      Text = textBox_.Text ?? "(None)";
       Content = textBlock_;
     }
   }

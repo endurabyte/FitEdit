@@ -17,16 +17,17 @@ public class NullFileService : IFileService
   {
     int i = 0;
 
-    AddFake(i++);
-    AddFake(i++);
-    AddFake(i++);
     var file = AddFake(i++);
+    AddFake(i++);
+    AddFake(i++);
+    AddFake(i++);
 
     file.Activity = new DauerActivity
     {
       Name = "Activity name",
       Description = "This is the activity description.\nIt can get pretty long, so make sure to provide enough space for it, but it should be responsive in case it is not very long.",
-      File = new FileReference("fitfile.fit", Array.Empty<byte>())
+      File = new FileReference("fitfile.fit", Array.Empty<byte>()),
+      Source = ActivitySource.GarminConnect,
     };
   }
 
