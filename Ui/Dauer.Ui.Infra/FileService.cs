@@ -150,6 +150,8 @@ public class FileService : ReactiveObject, IFileService
 
   public void Add(UiFile file)
   {
+    if (file is null) { return; }
+
     // Find the first activity that is newer. They are sorted newest to oldest; preserve that
     UiFile? firstNewer = Files.Reverse().FirstOrDefault(f => f.Activity?.StartTime > file.Activity?.StartTime);
     int idx = firstNewer == null ? 0 : Files.IndexOf(firstNewer) + 1;
