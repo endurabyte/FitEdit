@@ -458,7 +458,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns>
   /// The task
   /// </returns>
-  public async Task SetActivityName(long activityId, string activityName)
+  public async Task<bool> SetActivityName(long activityId, string activityName)
   {
     using HttpClient client = await GetAuthenticatedClient();
 
@@ -477,8 +477,11 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     if (!res.IsSuccessStatusCode)
     {
-      throw new Exception($"Activity name not set: {await res.Content.ReadAsStringAsync()}");
+      log_.LogError("Activity name not set: {@error}", await res.Content.ReadAsStringAsync());
+      return false;
     }
+
+    return true;
   }
 
   /// <inheritdoc />
@@ -513,7 +516,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns>
   /// The task
   /// </returns>
-  public async Task SetActivityType(long activityId, ActivityType activityType)
+  public async Task<bool> SetActivityType(long activityId, ActivityType activityType)
   {
     using HttpClient client = await GetAuthenticatedClient();
 
@@ -532,8 +535,11 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     if (!res.IsSuccessStatusCode)
     {
-      throw new Exception($"Activity type not set: {await res.Content.ReadAsStringAsync()}");
+      log_.LogError("Activity type not set: {@error}", await res.Content.ReadAsStringAsync());
+      return false;
     }
+
+    return true;
   }
 
   /// <summary>
@@ -542,7 +548,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <param name="activityId">The activity identifier.</param>
   /// <param name="eventType">Type of the event.</param>
   /// <returns></returns>
-  public async Task SetEventType(long activityId, ActivityType eventType)
+  public async Task<bool> SetEventType(long activityId, ActivityType eventType)
   {
     using HttpClient client = await GetAuthenticatedClient();
 
@@ -561,8 +567,11 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     if (!res.IsSuccessStatusCode)
     {
-      throw new Exception($"Event type not set: {await res.Content.ReadAsStringAsync()}");
+      log_.LogError("Event type not set: {@error}", await res.Content.ReadAsStringAsync());
+      return false;
     }
+
+    return true;
   }
 
   /// <inheritdoc />
@@ -574,7 +583,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns>
   /// The task
   /// </returns>
-  public async Task SetActivityDescription(long activityId, string description)
+  public async Task<bool> SetActivityDescription(long activityId, string description)
   {
     using HttpClient client = await GetAuthenticatedClient();
 
@@ -593,9 +602,11 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     if (!res.IsSuccessStatusCode)
     {
-      var content = await res.Content.ReadAsStringAsync();
-      log_.LogError("Activity description not set: {@content}", content);
+      log_.LogError("Activity description not set: {@error}", await res.Content.ReadAsStringAsync());
+      return false;
     }
+
+    return true;
   }
 
   /// <inheritdoc />

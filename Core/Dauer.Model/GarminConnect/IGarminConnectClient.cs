@@ -65,7 +65,7 @@ public interface IGarminConnectClient
   /// <param name="activityId">The activity identifier.</param>
   /// <param name="description">The description.</param>
   /// <returns>The task</returns>
-  Task SetActivityDescription(long activityId, string description);
+  Task<bool> SetActivityDescription(long activityId, string description);
 
   /// <summary>
   /// Sets the name of the activity.
@@ -73,7 +73,7 @@ public interface IGarminConnectClient
   /// <param name="activityId">The activity identifier.</param>
   /// <param name="activityName">Name of the activity.</param>
   /// <returns>The task</returns>
-  Task SetActivityName(long activityId, string activityName);
+  Task<bool> SetActivityName(long activityId, string activityName);
 
   /// <summary>
   /// Sets the type of the activity.
@@ -81,7 +81,9 @@ public interface IGarminConnectClient
   /// <param name="activityId">The activity identifier.</param>
   /// <param name="activityType">Type of the activity.</param>
   /// <returns>The task</returns>
-  Task SetActivityType(long activityId, ActivityType activityType);
+  Task<bool> SetActivityType(long activityId, ActivityType activityType);
+
+  Task<bool> SetEventType(long activityId, ActivityType eventType);
 
   /// <summary>
   /// Uploads the activity from a file on the filesystem.
