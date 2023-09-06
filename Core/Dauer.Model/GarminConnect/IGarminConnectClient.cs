@@ -7,7 +7,8 @@ namespace Dauer.Model.GarminConnect;
 public interface IGarminConnectClient
 {
   GarminConnectConfig Config { get; set; }
-  bool IsSignedIn { get; }
+  bool IsSignedIn { get;  }
+  Dictionary<string, Cookie>? Cookies { get; set; }
 
   /// <summary>
   /// Progress 0-100 of the last call to <see cref="AuthenticateAsync"/>
@@ -16,23 +17,15 @@ public interface IGarminConnectClient
   double AuthenticateProgress { get; }
 
   /// <summary>
-  /// Supports loading of persisted cookies
-  /// </summary>
-  void SetCookies(Dictionary<string, Cookie>? cookies);
-
-  /// <summary>
-  /// Supports saving of persisted cookies
-  /// </summary>
-  Dictionary<string, Cookie> GetCookies();
-
-  /// <summary>
   /// Authenticates this instance.
   /// </summary>
   /// <returns>Tuple of Cookies and HTTP handler</returns>
   Task<bool> AuthenticateAsync();
 
+  Task<bool> LogoutAsync();
+
   /// <summary>
-  /// Return true if the SESSIONID cookie is present and unepired and a request to Garmin Connect succeeds
+  /// Return true if the SESSIONID cookie is present and a request to Garmin Connect succeeds
   /// </summary>
   Task<bool> IsAuthenticatedAsync();
 

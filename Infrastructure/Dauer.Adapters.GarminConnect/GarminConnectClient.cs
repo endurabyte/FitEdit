@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -40,9 +41,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
   private const ActivityFileType DefaultFile = ActivityFileType.Fit;
 
-  private CookieContainer cookieContainer_;
-  private HttpMessageHandler clientHandler_;
-  private HttpClient httpClient_;
+  public Dictionary<string, Model.Cookie> Cookies { get; set; }
+  private GarminAccessToken token_;
 
   private static readonly Tuple<string, string> BaseHeader = new("NK", "NT");
 
@@ -104,50 +104,42 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   {
     log_ = log;
 
-    SetCookies(new Dictionary<string, Model.Cookie>());
+    Cookies = new Dictionary<string, Model.Cookie>();
   }
 
-  public void SetCookies(Dictionary<string, Model.Cookie> cookies)
-  {
-    if (cookies == null) { return; }
+  private CookieContainer GetCachedCookies() => Cookies.MapCookieContainer();
 
-    cookieContainer_ = new();
-    IsSignedIn = false;
-
-    foreach (var cookie in cookies.Values)
-    {
-      cookieContainer_.Add(cookie.MapSystemCookie());
-    }
-
-    GetNewClient();
-  }
-
-  private void GetNewClient()
+  private static HttpClient GetUnauthenticatedClient(CookieContainer cookies)
   {
     // Use SocketsHttpHandler to get consistent behavior across platforms.
     // For example, AndroidMessageHandler seems to only support HTTP/1.1 which Garmin rejects.
-    clientHandler_ = new SocketsHttpHandler()
+    var clientHandler_ = new SocketsHttpHandler
     {
       AllowAutoRedirect = true,
       UseCookies = true,
-      CookieContainer = cookieContainer_,
-
-      // For e.g. mitmproxy
-      //UseProxy = true,
-      //Proxy = HttpClient.DefaultProxy,
+      CookieContainer = cookies,
     };
 
-    httpClient_ = new (clientHandler_)
+    var client = new HttpClient(clientHandler_)
     {
       DefaultRequestVersion = HttpVersion.Version20,
       DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
     };
+    client.DefaultRequestHeaders.Add("user-agent", USER_AGENT);
+
+    return client;
   }
 
-  public Dictionary<string, Model.Cookie> GetCookies() => cookieContainer_
-    .GetAllCookies()
-    .Select(c => c.MapModel())
-    .ToDictionaryAllowDuplicateKeys(c => c.Name, c => c);
+  private async Task<HttpClient> GetAuthenticatedClient(CookieContainer cookies = null)
+  {
+    var client = GetUnauthenticatedClient(cookies ?? GetCachedCookies());
+
+    client.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
+    client.DefaultRequestHeaders.Add("origin", CONNECT_URL);
+    client.DefaultRequestHeaders.Add("referer", $"{CONNECT_URL}/modern");
+
+    return await EnsureTokenAsync(client) ? client : null;
+  }
 
   /// <inheritdoc />
   /// <summary>
@@ -165,15 +157,16 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   {
     const double nsteps = 6.0;
     AuthenticateProgress = 0 / nsteps * 100;
+    IsSignedIn = false;
 
-    cookieContainer_ = new();
-    GetNewClient();
-    httpClient_.DefaultRequestHeaders.Add("user-agent", USER_AGENT);
-    var data = await httpClient_.GetStringAsync(CONNECT_MODERN_HOSTNAME);
+    CookieContainer cookies = GetCachedCookies();
+    HttpClient client = GetUnauthenticatedClient(cookies);
+
+    var data = await client.GetStringAsync(CONNECT_MODERN_HOSTNAME);
     AuthenticateProgress = 1 / nsteps * 100;
 
     // data = {"host": "https://connect.garmin.com"}
-    GarminHost host = System.Text.Json.JsonSerializer.Deserialize<GarminHost>(data);
+    GarminHost host = JsonSerializer.Deserialize<GarminHost>(data);
     if (host?.Host is null)
     {
       log_.LogError("SSO hostname is missing");
@@ -183,7 +176,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     var queryParams = string.Join("&", QueryParams.Select(e => $"{e.Key}={WebUtility.UrlEncode(e.Value)}"));
 
     var url = $"{SSO_URL_SSO_SIGNIN}?{queryParams}";
-    var res = await httpClient_.GetAsync(url);
+    var res = await client.GetAsync(url);
     AuthenticateProgress = 2 / nsteps * 100;
     if (!ValidateResponseMessage(res, "No login form."))
     {
@@ -205,9 +198,9 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       throw;
     }
 
-    httpClient_.DefaultRequestHeaders.Add("origin", SSO_URL);
-    httpClient_.DefaultRequestHeaders.Add("referer", url);
-    httpClient_.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
+    client.DefaultRequestHeaders.Add("origin", SSO_URL);
+    client.DefaultRequestHeaders.Add("referer", url);
+    client.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
 
     var formContent = new FormUrlEncodedContent(new[]
     {
@@ -217,7 +210,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       new KeyValuePair<string, string>("_csrf", csrfToken)
     });
 
-    res = await httpClient_.PostAsync(url, formContent);
+    res = await client.PostAsync(url, formContent);
     data = await res.Content.ReadAsStringAsync();
     AuthenticateProgress = 4 / nsteps * 100;
 
@@ -226,7 +219,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       return false;
     }
 
-    if (!ValidateCookiePresence(cookieContainer_, "GARMIN-SSO-GUID"))
+    if (!ValidateCookiePresence(cookies, "GARMIN-SSO-GUID"))
     {
       return false;
     }
@@ -235,9 +228,9 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     // Second auth step
     // Needs a service ticket from previous response
-    httpClient_.DefaultRequestHeaders.Remove("origin");
+    client.DefaultRequestHeaders.Remove("origin");
     url = $"{CONNECT_URL_MODERN}?ticket={WebUtility.UrlEncode(ticket)}";
-    res = await httpClient_.GetAsync(url);
+    res = await client.GetAsync(url);
     AuthenticateProgress = 5 / nsteps * 100;
 
     if (!ValidateModernTicketUrlResponseMessage(res, $"Second auth step failed to produce success or expected 302: {res.StatusCode}."))
@@ -245,27 +238,70 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       return false;
     }
 
+    Cookies = cookies.MapModel();
     bool isAuthenticated = await IsAuthenticatedAsync();
     AuthenticateProgress = 6 / nsteps * 100;
-
-    IsSignedIn = isAuthenticated;
     return isAuthenticated;
   }
 
-  public async Task<bool> IsAuthenticatedAsync()
+  public Task<bool> LogoutAsync()
+  {
+    Config = new();
+    token_ = null;
+    Cookies = new Dictionary<string, Model.Cookie>();
+    IsSignedIn = false;
+    return Task.FromResult(true);
+  }
+
+  private async Task<bool> EnsureTokenAsync(HttpClient client)
+  {
+    if (token_ is not null) 
+    {
+      client.DefaultRequestHeaders.Remove("authorization");
+      client.DefaultRequestHeaders.Add("authorization", $"Bearer {token_.AccessToken}");
+      return true; 
+    }
+
+    // Exchange for oauth token
+    string url = $"{CONNECT_URL}/modern/di-oauth/exchange";
+
+    try
+    {
+      HttpResponseMessage res = await client.PostAsync(url, null);
+
+      if (!res.IsSuccessStatusCode)
+      {
+        return false;
+      }
+
+      token_ = await res.Content.ReadFromJsonAsync<GarminAccessToken>();
+      client.DefaultRequestHeaders.Remove("Authorization");
+      client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token_.AccessToken}");
+      return token_.AccessToken is not null;
+    }
+    catch (Exception e)
+    {
+      log_.LogError($"{nameof(EnsureTokenAsync)}(): {e}", e);
+      return false;
+    }
+  }
+
+  public async Task<bool> IsAuthenticatedAsync() => await IsAuthenticatedAsync(GetCachedCookies());
+
+  private async Task<bool> IsAuthenticatedAsync(CookieContainer cookies)
   { 
     // Check session cookie
-    if (!ValidateCookiePresence(cookieContainer_, "SESSIONID"))
+    if (!ValidateCookiePresence(cookies, "SESSIONID"))
     {
-      IsSignedIn = false;
       return false;
     }
 
+    var client = await GetAuthenticatedClient(cookies);
+
     // Check login
-    var res = await httpClient_.GetAsync(CONNECT_URL_PROFILE);
-    bool isLoggedIn = ValidateResponseMessage(res, "Login check failed.");
-    IsSignedIn = isLoggedIn;
-    return isLoggedIn;
+    var res = await client.GetAsync(CONNECT_URL_PROFILE);
+    IsSignedIn = ValidateResponseMessage(res, "Login check failed.");
+    return IsSignedIn;
   }
 
   /// <summary>
@@ -345,12 +381,14 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// </returns>
   public async Task<Stream> DownloadActivityFile(long activityId, ActivityFileType fileFormat)
   {
+    using HttpClient client = await GetAuthenticatedClient();
+
     var url = fileFormat == DefaultFile
         ? string.Format(UrlActivityDownloadDefaultFile, activityId)
         : string.Format(UrlActivityDownloadFile, fileFormat.ToString().ToLower(), activityId);
 
     Stream streamCopy = new MemoryStream();
-    var res = await httpClient_.GetAsync(url);
+    var res = await client.GetAsync(url);
 
     await (await res.Content.ReadAsStreamAsync()).CopyToAsync(streamCopy);
     return streamCopy;
@@ -364,6 +402,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
   public async Task<(bool Success, long ActivityId)> UploadActivity(string fileName, Stream stream, FileFormat fileFormat)
   { 
+    using HttpClient client = await GetAuthenticatedClient();
+
     var extension = fileFormat.FormatKey;
     var url = $"{URL_UPLOAD}/.{extension}";
 
@@ -381,7 +421,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     form.Add(content, "file", Path.GetFileName(fileName));
 
-    var res = await httpClient_.PostAsync(url, form);
+    var res = await client.PostAsync(url, form);
     var responseData = await res.Content.ReadAsStringAsync();
 
     DetailedImportResponse response = null;
@@ -420,8 +460,10 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// </returns>
   public async Task SetActivityName(long activityId, string activityName)
   {
-    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
-    httpClient_.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
+    using HttpClient client = await GetAuthenticatedClient();
+
+    client.DefaultRequestHeaders.Remove("X-HTTP-Method-Override");
+    client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
 
     var data = new
     {
@@ -429,7 +471,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       activityName
     };
 
-    var res = await httpClient_.PostAsync(url,
+    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    var res = await client.PostAsync(url,
         new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
@@ -472,9 +515,10 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// </returns>
   public async Task SetActivityType(long activityId, ActivityType activityType)
   {
-    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    using HttpClient client = await GetAuthenticatedClient();
 
-    httpClient_.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
+    client.DefaultRequestHeaders.Remove("X-HTTP-Method-Override");
+    client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
 
     var data = new
     {
@@ -482,7 +526,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       activityTypeDTO = activityType
     };
 
-    var res = await httpClient_.PostAsync(url,
+    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    var res = await client.PostAsync(url,
         new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
@@ -499,9 +544,10 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns></returns>
   public async Task SetEventType(long activityId, ActivityType eventType)
   {
-    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    using HttpClient client = await GetAuthenticatedClient();
 
-    httpClient_.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
+    client.DefaultRequestHeaders.Remove("X-HTTP-Method-Override");
+    client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
 
     var data = new
     {
@@ -509,7 +555,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       eventTypeDTO = eventType
     };
 
-    var res = await httpClient_.PostAsync(url,
+    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    var res = await client.PostAsync(url,
         new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
@@ -529,9 +576,10 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// </returns>
   public async Task SetActivityDescription(long activityId, string description)
   {
-    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    using HttpClient client = await GetAuthenticatedClient();
 
-    httpClient_.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
+    client.DefaultRequestHeaders.Remove("X-HTTP-Method-Override");
+    client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "PUT");
 
     var data = new
     {
@@ -539,12 +587,14 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       description
     };
 
-    var res = await httpClient_.PostAsync(url,
+    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    var res = await client.PostAsync(url,
         new StringContent(JsonSerializer.Serialize(data), Encoding.UTF8, "application/json"));
 
     if (!res.IsSuccessStatusCode)
     {
-      throw new Exception($"Activity description not set: {await res.Content.ReadAsStringAsync()}");
+      var content = await res.Content.ReadAsStringAsync();
+      log_.LogError("Activity description not set: {@content}", content);
     }
   }
 
@@ -616,7 +666,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns></returns>
   private async Task<T> ExecuteUrlGetRequest<T>(string url, string errorMessage) where T : class
   {
-    var res = await httpClient_.GetAsync(url);
+    using HttpClient client = await GetAuthenticatedClient();
+    var res = await client.GetAsync(url);
     var data = await res.Content.ReadAsStringAsync();
     if (!res.IsSuccessStatusCode)
     {
@@ -624,19 +675,5 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     }
 
     return DeserializeData<T>(data);
-  }
-
-  /// <summary>
-  /// Finalizes an instance of the <see cref="GarminConnectClient" /> class.
-  /// </summary>
-  ~GarminConnectClient()
-  {
-    if (httpClient_ == null)
-    {
-      return;
-    }
-
-    httpClient_.Dispose();
-    httpClient_ = null;
   }
 }

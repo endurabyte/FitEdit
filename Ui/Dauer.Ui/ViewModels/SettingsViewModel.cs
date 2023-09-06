@@ -50,10 +50,9 @@ public class DesignSettingsViewModel : SettingsViewModel
     await Garmin.AuthenticateAsync();
   }
 
-  public override Task HandleGarminLogoutClicked()
+  public override async Task HandleGarminLogoutClicked()
   {
-    Garmin.SetCookies(new Dictionary<string, Cookie>() { });
-    return Task.CompletedTask;
+    await Garmin.LogoutAsync();
   }
 }
 
@@ -128,11 +127,11 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     if (!db_.Ready) { return; }
 
     AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    Garmin.SetCookies(settings.GarminCookies);
-
+    Garmin.Cookies = settings.GarminCookies;
     GarminUsername = settings.GarminUsername;
     GarminPassword = settings.GarminPassword;
-    //await LoginWithGarminAsync();
+
+    await Garmin.IsAuthenticatedAsync(); 
   }
 
   public void HandleLoginClicked()
@@ -259,9 +258,9 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   public async Task LoginWithGarminAsync()
   {
-    await Garmin.IsAuthenticatedAsync();
+    bool signedIn = await Garmin.IsAuthenticatedAsync();
 
-    if (Garmin.IsSignedIn)
+    if (signedIn)
     {
       return;
     }
@@ -271,7 +270,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     Garmin.Config.Username = GarminUsername;
     Garmin.Config.Password = GarminPassword;
 
-    bool signedIn = await Garmin.AuthenticateAsync();
+    signedIn = await Garmin.AuthenticateAsync();
 
     Message = signedIn ? "Signed in to Garmin" : "There was a problem signing in to Garmin";
 
@@ -285,15 +284,16 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     {
       settings.GarminUsername = GarminUsername;
       settings.GarminPassword = GarminPassword;
-      settings.GarminCookies = Garmin.GetCookies();
+      settings.GarminCookies = Garmin.Cookies;
     });
   }
 
   public virtual async Task HandleGarminLogoutClicked()
   {
+    await Garmin.LogoutAsync();
+
     GarminUsername = null;
     GarminPassword = null;
-    Garmin.SetCookies(new Dictionary<string, Cookie>());
 
     await UpdateSettingsAsync(settings =>
     {

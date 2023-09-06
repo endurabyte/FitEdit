@@ -8,14 +8,9 @@ public class NullGarminConnectClient : ReactiveObject, IGarminConnectClient
 {
   public GarminConnectConfig Config { get; set; } = new();
   [Reactive] public double AuthenticateProgress { get; private set; }
-  [Reactive] public bool IsSignedIn { get; private set; }
+  [Reactive] public bool IsSignedIn { get; set; }
+  public Dictionary<string, Cookie>? Cookies { get => null; set => IsSignedIn = false; }
 
-  public void SetCookies(Dictionary<string, Cookie>? cookies) 
-  { 
-    IsSignedIn = false;
-  }
-
-  public Dictionary<string, Cookie> GetCookies() => new();
   public async Task<bool> AuthenticateAsync()
   {
     AuthenticateProgress = 0;
@@ -32,6 +27,12 @@ public class NullGarminConnectClient : ReactiveObject, IGarminConnectClient
     IsSignedIn = true;
 
     return true;
+  }
+
+  public Task<bool> LogoutAsync()
+  {
+    IsSignedIn = false;
+    return Task.FromResult(true);
   }
 
   public Task<bool> IsAuthenticatedAsync() => Task.FromResult(IsSignedIn);
