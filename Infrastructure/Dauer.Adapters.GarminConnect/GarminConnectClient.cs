@@ -298,6 +298,12 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     var client = await GetAuthenticatedClient(cookies);
 
+    if (client is null) 
+    {
+      IsSignedIn = false;
+      return false;
+    }
+
     // Check login
     var res = await client.GetAsync(CONNECT_URL_PROFILE);
     IsSignedIn = ValidateResponseMessage(res, "Login check failed.");

@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls;
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
