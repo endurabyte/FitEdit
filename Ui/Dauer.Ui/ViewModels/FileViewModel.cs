@@ -192,29 +192,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     // TODO Show result
   }
 
-  /// <summary>
-  /// Upload a file to Garmin. We don't associate it with the activity because that will happen in the Garmin webhook handler.
-  /// </summary>
-  public async Task HandleActivityGarminUploadClicked(DauerActivity? act)
-  {
-    if (act is null) { return; }
-    if (act.File?.Bytes is null) { return; }
-
-    var ms = new MemoryStream(act.File.Bytes);
-
-    (bool ok, long id) = await garmin_
-      .UploadActivity(act.File.Name ?? "upload-by-fitedit.fit", ms, new FileFormat { FormatKey = "fit" })
-      .AnyContext();
-
-    // TODO show result
-
-    act.SourceId = $"{id}";
-
-    await supa_.UpdateAsync(act);
-
-    // TODO Show result
-  }
-
   private async Task<UiFile?> Persist(FileReference? file)
   {
     if (file == null) { return null; }
@@ -503,6 +480,46 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (act == null) { return; }
     await browser_.OpenAsync(act.OnlineUrl);
+  }
+
+  public async Task HandleDeleteOnlineClicked(DauerActivity? act)
+  {
+    if (act == null) { return; }
+
+    if (act.Source == ActivitySource.GarminConnect)
+    {
+      if (!long.TryParse(act.SourceId, out long id)) { return; }
+      await garmin_.DeleteActivity(id);
+    }
+  }
+
+  public async Task HandleUploadClicked(DauerActivity? act)
+  {
+    if (act is null) { return; }
+    await UploadGarminActivity(act);
+  }
+
+  /// <summary>
+  /// Upload a file to Garmin. We don't associate it with the activity because that will happen in the Garmin webhook handler.
+  /// </summary>
+  private async Task UploadGarminActivity(DauerActivity? act)
+  {
+    if (act is null) { return; }
+    if (act.File?.Bytes is null) { return; }
+
+    var ms = new MemoryStream(act.File.Bytes);
+
+    (bool ok, long id) = await garmin_
+      .UploadActivity(act.File.Name ?? "upload-by-fitedit.fit", ms, new FileFormat { FormatKey = "fit" })
+      .AnyContext();
+
+    if (id < 0) { return; }
+
+    act.SourceId = $"{id}";
+
+    await supa_.UpdateAsync(act);
+
+    // TODO Show result
   }
 
   private async Task LoadMore()

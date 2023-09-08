@@ -5,7 +5,7 @@ namespace Dauer.Adapters.GarminConnect;
 public class DetailedImportResult
 {
   [JsonPropertyName("uploadId")]
-  public long UploadId { get; set; }
+  public string UploadId { get; set; }
 
   [JsonPropertyName("uploadUuid")]
   public UploadUuid UploadUuid { get; set; }

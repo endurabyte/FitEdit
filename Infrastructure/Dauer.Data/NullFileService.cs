@@ -17,18 +17,39 @@ public class NullFileService : IFileService
   {
     int i = 0;
 
-    var file = AddFake(i++);
-    AddFake(i++);
-    AddFake(i++);
-    AddFake(i++);
-
-    file.Activity = new DauerActivity
+    var activity = new DauerActivity
     {
-      Name = "Activity name",
+      Id = $"{Guid.NewGuid()}",
+      Name = "Workout with imported, uploaded file",
       Description = "This is the activity description.\nIt can get pretty long, so make sure to provide enough space for it, but it should be responsive in case it is not very long.",
       File = new FileReference("fitfile.fit", Array.Empty<byte>()),
       Source = ActivitySource.GarminConnect,
+      SourceId = "12345678",
     };
+
+    Files.Add(new UiFile
+    {
+      Activity = activity,
+      Progress = 66.7,
+    });
+
+    var file = new UiFile
+    {
+      Activity = new DauerActivity
+      {
+        Id = $"{Guid.NewGuid()}",
+        Name = $"Workout with imported file but not uploaded",
+        Description = null,
+        File = new FileReference("fitfile.fit", Array.Empty<byte>()),
+        SourceId = "",
+      },
+      Progress = 0,
+    };
+
+    Files.Add(file);
+
+    AddFake(i++);
+    AddFake(i++);
   }
 
   private UiFile AddFake(int i)
@@ -41,7 +62,7 @@ public class NullFileService : IFileService
         Name = $"Workout {i}",
         Description = $"Description {i}"
       },
-      Progress = 66.7,
+      Progress = 0,
     };
 
     Files.Add(file);

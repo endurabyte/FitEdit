@@ -138,42 +138,64 @@
                                           MaxWidth="300"/>
 
               <TextBlock Text="Actions" Margin="0 10 0 0" FontWeight="Bold"/>
+
               <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
-                <TextBlock Text="Show" VerticalAlignment="Center"/>
-                <CheckBox IsChecked="{Binding IsVisible}" Margin="8,0,0,0"
-                          IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
-                  <ToolTip.Tip>
-                    <TextBlock TextWrapping="Wrap" IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
-                      Load and show the file
-                    </TextBlock>
-                  </ToolTip.Tip>
-                </CheckBox>
-                <Button FontSize="10"
-                        Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
-                        CommandParameter="{Binding Activity}"
-                        IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
-                        Content="?"
-                        Margin="5"
-                        ToolTip.Tip="Import a file from disk and associate it with this activity">
 
-                  <ToolTip.Tip>
-                    <TextBlock TextWrapping="Wrap"
-                               IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}">
-                      Garmin told us about this workout, but didn't provide the file. Click to upload.
-                    </TextBlock>
-                  </ToolTip.Tip>
+                <Button
+                    Margin="5"
+                    VerticalAlignment="Center"
+                    Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
+                    CommandParameter="{Binding Activity}"
+                    IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
+                    ToolTip.Tip="Import a file from disk and associate it with this activity"
+                    Content="+">
                 </Button>
-                <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="5"/>
-              </StackPanel>
 
-              <Button
-                Margin="10 0 0 0"
-                VerticalAlignment="Center"
-                Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
-                CommandParameter="{Binding Activity}"
-                IsVisible="{Binding Activity.OnlineUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                Classes="hyperlink"
-                Content="View Online"/>
+                <Grid
+                  IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+                  <Button
+                    Margin="5"
+                    VerticalAlignment="Center"
+                    Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleUploadClicked}"
+                    CommandParameter="{Binding Activity}"
+                    IsVisible="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                    ToolTip.Tip="Upload"
+                    Content="↑">
+                  </Button>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal"
+                            IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
+                  <CheckBox IsChecked="{Binding IsVisible}" Margin="10 0 0 0">
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap">
+                        Load and show the file
+                      </TextBlock>
+                    </ToolTip.Tip>
+                  </CheckBox>
+                  <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="0 0 10 0"/>
+                </StackPanel>
+
+                <Button
+                  Margin="5"
+                  VerticalAlignment="Center"
+                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleDeleteOnlineClicked}"
+                  CommandParameter="{Binding Activity}"
+                  IsVisible="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                  ToolTip.Tip="Delete online e.g. Garmin, Strava"
+                  Content="🗑"/>
+
+                <Button
+                  Margin="5"
+                  VerticalAlignment="Center"
+                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
+                  CommandParameter="{Binding Activity}"
+                  IsVisible="{Binding Activity.OnlineUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                  Classes="hyperlink"
+                  Content="View Online"/>
+
+              </StackPanel>
 
             </StackPanel>
           </Border>

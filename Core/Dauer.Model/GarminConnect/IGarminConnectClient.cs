@@ -86,6 +86,12 @@ public interface IGarminConnectClient
   Task<bool> SetEventType(long activityId, ActivityType eventType);
 
   /// <summary>
+  /// Delete the activity.
+  /// </summary>
+  /// <param name="activityId">The activity identifier.</param>
+  Task<bool> DeleteActivity(long activityId);
+
+  /// <summary>
   /// Uploads the activity from a file on the filesystem.
   /// </summary>
   /// <param name="fileName">Name of the file.</param>

@@ -20,7 +20,7 @@ public class DauerActivity : ReactiveObject
   /// <summary>
   /// e.g. Garmin Activity ID
   /// </summary>
-  public string SourceId { get; set; } = "";
+  [Reactive] public string SourceId { get; set; } = "";
 
   [Reactive] public string? Name { get; set; }
   [Reactive] public string? Description { get; set; }

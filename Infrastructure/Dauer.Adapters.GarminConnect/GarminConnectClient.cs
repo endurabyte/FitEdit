@@ -615,6 +615,25 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return true;
   }
 
+  public async Task<bool> DeleteActivity(long activityId)
+  {
+    using HttpClient client = await GetAuthenticatedClient();
+
+    client.DefaultRequestHeaders.Remove("X-HTTP-Method-Override");
+    client.DefaultRequestHeaders.Add("X-HTTP-Method-Override", "DELETE");
+
+    var url = $"{URL_ACTIVITY_BASE}/{activityId}";
+    var res = await client.PostAsync(url, null);
+
+    if (!res.IsSuccessStatusCode)
+    {
+      log_.LogError("Activity not deleted: {@error}", await res.Content.ReadAsStringAsync());
+      return false;
+    }
+
+    return true;
+  }
+
   /// <inheritdoc />
   /// <summary>
   /// Loads the activity.
