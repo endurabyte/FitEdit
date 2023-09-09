@@ -6,7 +6,7 @@
              xmlns:views="clr-namespace:Dauer.Ui.Views"
              xmlns:controls="using:Dauer.Ui.Controls"
              xmlns:converters="using:Dauer.Ui.Converters"
-             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="800"
+             mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="1400"
              x:Class="Dauer.Ui.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <Design.DataContext>
@@ -91,43 +91,12 @@
         <StackPanel Orientation="Vertical">
           <Label Content="Integrations" FontSize="20" Margin="0,0,0,10" Foreground="{StaticResource SystemAccentColor}"/>
 
-          <Label Content="Garmin Connect" Margin="10"/>
-          <Image Source="/Assets/garmin_connect_blue.png" HorizontalAlignment="Left" Margin="50,10,10,10" Width="200"/>
-
-          <WrapPanel Margin="50,10,10,10">
-            <TextBlock Text="Authorization:" Width="160" VerticalAlignment="Center"/>
-            <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
-                     Margin="10"
-                     Width="10" Height="10">
-            </Ellipse>
-            <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-          </WrapPanel>
-
-          <WrapPanel Margin="50,10,10,10">
-            <StackPanel Orientation="Vertical">
-              <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
-                Authorizing with Garmin Connect lets FitEdit show your Garmin activities and activity edits such as title and description.
-              </TextBlock>
-              <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
-              <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding FitEdit.IsAuthenticatedWithGarmin}"/>
-            </StackPanel>
-          </WrapPanel>
-
-          <WrapPanel Margin="50,10,10,10">
-            <TextBlock Text="Sign in status:" Width="160" VerticalAlignment="Center"/>
-            <Ellipse Fill="{Binding Garmin.IsSignedIn, Converter={StaticResource BooleanToColorConverter}}"
-                     Margin="10"
-                     Width="10" Height="10">
-            </Ellipse>
-            <TextBlock Text="{Binding Garmin.IsSignedIn, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-          </WrapPanel>
-
           <WrapPanel Margin="50,10,10,10">
             <StackPanel Orientation="Vertical">
               <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" MaxWidth="400">
-                Sign in with Garmin lets FitEdit upload activities to Garmin and delete activities when you ask.
-                Your credentials are stored securely on this device.
+                FitEdit provides integrations with various third parties. These integrations improve your experience using FitEdit, for example by enabling the import or export of your data to or from that service.
                 By signing in, you agree to the terms and conditions.
+                Your credentials are stored securely on this device.
               </TextBlock>
               <Button
                 Command="{Binding HandleGarminSigninTermsClicked}"
@@ -136,61 +105,148 @@
             </StackPanel>
           </WrapPanel>
 
-          <WrapPanel Margin="50,10,10,10">
-            <WrapPanel.IsVisible>
-              <MultiBinding Converter="{x:Static BoolConverters.And}">
-                <Binding Path="!Garmin.IsSignedIn"/>
-              </MultiBinding>
-            </WrapPanel.IsVisible>
-            <TextBlock Text="Username:" Width="200" VerticalAlignment="Center"/>
-            <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
-                     VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-          </WrapPanel>
+          <TabControl>
+            <TabItem Header="Garmin">
+              <StackPanel Orientation="Vertical">
+                <Image Source="/Assets/garmin_connect_blue.png" HorizontalAlignment="Left" Margin="50,10,10,10" Width="200"/>
 
-          <WrapPanel Margin="50,10,10,10">
-            <WrapPanel.IsVisible>
-              <MultiBinding Converter="{x:Static BoolConverters.And}">
-                <Binding Path="!Garmin.IsSignedIn"/>
-              </MultiBinding>
-            </WrapPanel.IsVisible>
+                <WrapPanel Margin="50,10,10,10">
+                  <TextBlock Text="Authorization:" Width="160" VerticalAlignment="Center"/>
+                  <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToColorConverter}}"
+                           Margin="10"
+                           Width="10" Height="10">
+                  </Ellipse>
+                  <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithGarmin, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                </WrapPanel>
 
-            <TextBlock Text="Password:" Width="200" VerticalAlignment="Center"/>
-            <TextBox Classes="revealPasswordButton"
-                     PasswordChar="•"
-                     Text="{Binding GarminPassword, Mode=TwoWay}"
-                     VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-          </WrapPanel>
+                <WrapPanel Margin="50,10,10,10">
+                  <StackPanel Orientation="Vertical">
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                      Authorizing with Garmin Connect lets FitEdit show your Garmin activities and activity edits such as title and description.
+                    </TextBlock>
+                    <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
+                    <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding FitEdit.IsAuthenticatedWithGarmin}"/>
+                  </StackPanel>
+                </WrapPanel>
 
-          <WrapPanel Margin="50,10,10,10">
-            <StackPanel Orientation="Vertical">
-              <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !Garmin.IsSignedIn}"/>
-              <ProgressBar Minimum="0" Maximum="100" Value="{Binding Garmin.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Garmin.IsSignedIn}"/>
-              <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding Garmin.IsSignedIn}"/>
-            </StackPanel>
-          </WrapPanel>
+                <WrapPanel Margin="50,10,10,10">
+                  <TextBlock Text="Sign in status:" Width="160" VerticalAlignment="Center"/>
+                  <Ellipse Fill="{Binding Garmin.IsSignedIn, Converter={StaticResource BooleanToColorConverter}}"
+                           Margin="10"
+                           Width="10" Height="10">
+                  </Ellipse>
+                  <TextBlock Text="{Binding Garmin.IsSignedIn, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                </WrapPanel>
 
-          <Label Content="Strava" Margin="10"/>
-          <Image Source="/Assets/powered_by_strava.png" HorizontalAlignment="Left" Margin="50,10,10,10" Width="200"/>
+                <WrapPanel Margin="50,10,10,10">
+                  <WrapPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="!Garmin.IsSignedIn"/>
+                    </MultiBinding>
+                  </WrapPanel.IsVisible>
+                  <TextBlock Text="Username:" Width="200" VerticalAlignment="Center"/>
+                  <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
+                           VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                </WrapPanel>
 
-          <WrapPanel Margin="50,10,10,10">
-            <TextBlock Text="Authorization:" Width="160" VerticalAlignment="Center"/>
-            <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToColorConverter}}"
-                     Margin="10"
-                     Width="10" Height="10">
-            </Ellipse>
-            <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
-          </WrapPanel>
+                <WrapPanel Margin="50,10,10,10">
+                  <WrapPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="!Garmin.IsSignedIn"/>
+                    </MultiBinding>
+                  </WrapPanel.IsVisible>
 
-          <WrapPanel Margin="50,10,10,10">
-            <StackPanel Orientation="Vertical">
-              <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
-                Authorizing with Strava lets FitEdit show your Strava activities and activity edits such as title and description and to upload activities to Strava.
-              </TextBlock>
+                  <TextBlock Text="Password:" Width="200" VerticalAlignment="Center"/>
+                  <TextBox Classes="revealPasswordButton"
+                           PasswordChar="•"
+                           Text="{Binding GarminPassword, Mode=TwoWay}"
+                           VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                </WrapPanel>
 
-              <Button Command="{Binding HandleStravaAuthorizeClicked}" Content="Authorize with Strava" IsVisible="{Binding !FitEdit.IsAuthenticatedWithStrava}"/>
-              <Button Command="{Binding HandleStravaDeauthorizeClicked}" Content="Deauthorize with Strava" IsVisible="{Binding FitEdit.IsAuthenticatedWithStrava}"/>
-            </StackPanel>
-          </WrapPanel>
+                <WrapPanel Margin="50,10,10,10">
+                  <StackPanel Orientation="Vertical">
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                      Signing in with Garmin Connect lets FitEdit at your request to update your activities, such as title and descriptions, upload new activities, and delete existing activities.
+                    </TextBlock>
+                    <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !Garmin.IsSignedIn}"/>
+                    <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Garmin.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Garmin.IsSignedIn}"/>
+                    <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding Garmin.IsSignedIn}"/>
+                  </StackPanel>
+                </WrapPanel>
+              </StackPanel>
+            </TabItem>
+
+            <TabItem Header="Strava">
+              <StackPanel Orientation="Vertical">
+                <Image Source="/Assets/powered_by_strava.png" HorizontalAlignment="Left" Margin="50,10,10,10" Width="200"/>
+
+                <WrapPanel Margin="50,10,10,10">
+                  <TextBlock Text="Authorization:" Width="160" VerticalAlignment="Center"/>
+                  <Ellipse Fill="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToColorConverter}}"
+                           Margin="10"
+                           Width="10" Height="10">
+                  </Ellipse>
+                  <TextBlock Text="{Binding FitEdit.IsAuthenticatedWithStrava, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                </WrapPanel>
+
+                <WrapPanel Margin="50,10,10,10">
+                  <StackPanel Orientation="Vertical">
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                      Authorizing with Strava lets FitEdit show your Strava activities and activity edits such as title and description and to upload activities to Strava.
+                    </TextBlock>
+
+                    <Button Command="{Binding HandleStravaAuthorizeClicked}" Content="Authorize with Strava" IsVisible="{Binding !FitEdit.IsAuthenticatedWithStrava}"/>
+                    <Button Command="{Binding HandleStravaDeauthorizeClicked}" Content="Deauthorize with Strava" IsVisible="{Binding FitEdit.IsAuthenticatedWithStrava}"/>
+                  </StackPanel>
+                </WrapPanel>
+
+                <WrapPanel Margin="50,10,10,10">
+                  <TextBlock Text="Sign in status:" Width="160" VerticalAlignment="Center"/>
+                  <Ellipse Fill="{Binding Strava.IsSignedIn, Converter={StaticResource BooleanToColorConverter}}"
+                           Margin="10"
+                           Width="10" Height="10">
+                  </Ellipse>
+                  <TextBlock Text="{Binding Strava.IsSignedIn, Converter={StaticResource BooleanToStringConverter}, ConverterParameter='Signed out'}" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                </WrapPanel>
+
+                <WrapPanel Margin="50,10,10,10">
+                  <WrapPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="!Strava.IsSignedIn"/>
+                    </MultiBinding>
+                  </WrapPanel.IsVisible>
+                  <TextBlock Text="Username:" Width="200" VerticalAlignment="Center"/>
+                  <TextBox Text="{Binding StravaUsername, Mode=TwoWay}"
+                           VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                </WrapPanel>
+
+                <WrapPanel Margin="50,10,10,10">
+                  <WrapPanel.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="!Strava.IsSignedIn"/>
+                    </MultiBinding>
+                  </WrapPanel.IsVisible>
+
+                  <TextBlock Text="Password:" Width="200" VerticalAlignment="Center"/>
+                  <TextBox Classes="revealPasswordButton"
+                           PasswordChar="•"
+                           Text="{Binding StravaPassword, Mode=TwoWay}"
+                           VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                </WrapPanel>
+
+                <WrapPanel Margin="50,10,10,10">
+                  <StackPanel Orientation="Vertical">
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                      Signing in with Strava lets FitEdit at your request to download detailed activity data such as FIT files and delete existing activities.
+                    </TextBlock>
+                    <Button Command="{Binding HandleStravaLoginClicked}" Content="Sign in to Strava" IsVisible="{Binding !Strava.IsSignedIn}"/>
+                    <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Strava.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Strava.IsSignedIn}"/>
+                    <Button Command="{Binding HandleStravaLogoutClicked}" Content="Sign out from Strava" IsVisible="{Binding Strava.IsSignedIn}"/>
+                  </StackPanel>
+                </WrapPanel>
+              </StackPanel>
+            </TabItem>
+          </TabControl>
 
         </StackPanel>
       </StackPanel>

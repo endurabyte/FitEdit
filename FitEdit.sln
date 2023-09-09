@@ -74,6 +74,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Units.Tests", "units\Units.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.GarminConnect", "Infrastructure\Dauer.Adapters.GarminConnect\Dauer.Adapters.GarminConnect.csproj", "{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.Strava", "Infrastructure\Dauer.Adapters.Strava\Dauer.Adapters.Strava.csproj", "{C2016AC1-02FC-4663-B487-FC9DBE550F30}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -137,6 +139,7 @@ Global
 		{60DD7DB8-0002-40FD-9871-B3A1E85ABC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{60DD7DB8-0002-40FD-9871-B3A1E85ABC68}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{60DD7DB8-0002-40FD-9871-B3A1E85ABC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60DD7DB8-0002-40FD-9871-B3A1E85ABC68}.Release|Any CPU.Build.0 = Release|Any CPU
 		{60DD7DB8-0002-40FD-9871-B3A1E85ABC68}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{9E59264C-C345-46A2-9FFB-9822C3DC1C83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9E59264C-C345-46A2-9FFB-9822C3DC1C83}.Debug|Any CPU.Build.0 = Debug|Any CPU
@@ -145,6 +148,7 @@ Global
 		{9B06A0E5-9409-4D7C-B532-364C12264BE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9B06A0E5-9409-4D7C-B532-364C12264BE1}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{9B06A0E5-9409-4D7C-B532-364C12264BE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B06A0E5-9409-4D7C-B532-364C12264BE1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9B06A0E5-9409-4D7C-B532-364C12264BE1}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{21ECAE7A-E6E1-4857-9631-F24951E3CA17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{21ECAE7A-E6E1-4857-9631-F24951E3CA17}.Debug|Any CPU.Build.0 = Debug|Any CPU
@@ -170,6 +174,10 @@ Global
 		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -198,6 +206,7 @@ Global
 		{DC1814CC-1211-4E50-82A3-2F248CDA1C56} = {97C9CF2E-86B0-465F-9F7A-39A0B36133B8}
 		{FFBA1B00-F007-466C-81EB-36E291BD72C8} = {97C9CF2E-86B0-465F-9F7A-39A0B36133B8}
 		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
+		{C2016AC1-02FC-4663-B487-FC9DBE550F30} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}

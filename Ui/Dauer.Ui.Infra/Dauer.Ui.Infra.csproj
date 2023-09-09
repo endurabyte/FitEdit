@@ -44,6 +44,7 @@
     <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Fit\Dauer.Adapters.Fit.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.GarminConnect\Dauer.Adapters.GarminConnect.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Sqlite\Dauer.Adapters.Sqlite.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Dauer.Adapters.Strava\Dauer.Adapters.Strava.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Dauer.Data\Dauer.Data.csproj" />
     <ProjectReference Include="..\Dauer.Ui.Model\Dauer.Ui.Model.csproj" />
   </ItemGroup>

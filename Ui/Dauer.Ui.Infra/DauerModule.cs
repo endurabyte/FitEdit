@@ -3,12 +3,14 @@ using Autofac;
 using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Adapters.GarminConnect;
 using Dauer.Adapters.Sqlite;
+using Dauer.Adapters.Strava;
 using Dauer.Data;
 using Dauer.Model;
 using Dauer.Model.Clients;
 using Dauer.Model.Data;
 using Dauer.Model.GarminConnect;
 using Dauer.Model.Storage;
+using Dauer.Model.Strava;
 using Dauer.Services;
 using Dauer.Ui.Infra.Adapters.Storage;
 using Dauer.Ui.Infra.Adapters.Windowing;
@@ -103,6 +105,7 @@ public class DauerModule : Autofac.Module
     builder.RegisterType<CryptoService>().As<ICryptoService>()
       .WithParameter("password", cryptoPassword ?? "")
       .SingleInstance();
+    builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>().SingleInstance();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();
     builder.RegisterInstance(Window_).As<IWindowAdapter>();

@@ -55,14 +55,12 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     {"cssUrl", CSS_URL},
     {"displayNameShown", "false"},
     {"embedWidget", "false"},
-    // ReSharper disable once StringLiteralTypo
     {"gauthHost", SSO_URL_SSO},
     {"generateExtraServiceTicket", "true"},
     {"generateTwoExtraServiceTickets", "false"},
     {"generateNoServiceTicket", "false"},
     {"globalOptInChecked", "false"},
     {"globalOptInShown", "true"},
-    // ReSharper disable once StringLiteralTypo
     {"id", "gauth-widget"},
     {"initialFocus", "true"},
     {"locale", LOCALE},
@@ -87,7 +85,6 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <summary>
   /// The logger
   /// </summary>
-  // ReSharper disable once NotAccessedField.Local
   private readonly ILogger<GarminConnectClient> log_;
 
   public GarminConnectConfig Config { get; set; } = new();
@@ -355,7 +352,6 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return true;
   }
 
-  // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
   private bool ValidateResponseMessage(HttpResponseMessage responseMessage, string errorMessage)
   {
     if (!responseMessage.IsSuccessStatusCode)

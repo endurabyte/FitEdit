@@ -17,4 +17,5 @@ public class AppSettings
   public string? GarminCookies { get; set; }
   public string? StravaUsername { get; set; }
   public string? StravaPassword { get; set; }
+  public string? StravaCookies { get; set; }
 }

@@ -3,6 +3,7 @@ using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
+using Dauer.Model.Strava;
 using Dauer.Model.Validators;
 using Dauer.Model.Web;
 using Dauer.Services;
@@ -22,6 +23,7 @@ public class DesignSettingsViewModel : SettingsViewModel
     new NullDatabaseAdapter(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
+    new NullStravaClient(),
     new NullEmailValidator(),
     new NullPhoneValidator(),
     new NullBrowser()
@@ -54,12 +56,23 @@ public class DesignSettingsViewModel : SettingsViewModel
   {
     await Garmin.LogoutAsync();
   }
+
+  public override async Task HandleStravaLoginClicked()
+  {
+    await Strava.AuthenticateAsync();
+  }
+
+  public override async Task HandleStravaLogoutClicked()
+  {
+    await Strava.LogoutAsync();
+  }
 }
 
 public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 {
   public IFitEditService FitEdit { get; set; }
   public IGarminConnectClient Garmin { get; set; }
+  public IStravaClient Strava { get; }
 
   [Reactive] public string Otp { get; set; } = "";
   [Reactive] public string? GarminUsername { get; set; }
@@ -82,6 +95,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     IDatabaseAdapter db,
     IFitEditService fitEdit,
     IGarminConnectClient garmin,
+    IStravaClient strava,
     IEmailValidator emailValidator,
     IPhoneValidator phoneValidator,
     IBrowser browser
@@ -90,6 +104,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     db_ = db;
     FitEdit = fitEdit;
     Garmin = garmin;
+    Strava = strava;
     emailValidator_ = emailValidator;
     phoneValidator_ = phoneValidator;
     browser_ = browser;
@@ -251,10 +266,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
   }
 
-  public virtual async Task HandleGarminLoginClicked()
-  {
-    await LoginWithGarminAsync();
-  }
+  public virtual async Task HandleGarminLoginClicked() => await LoginWithGarminAsync();
 
   public async Task LoginWithGarminAsync()
   {
@@ -306,6 +318,46 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   }
 
   public async Task HandleGarminSigninTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/integration-signin-terms.html");
+
+
+  public virtual async Task HandleStravaLoginClicked() => await LoginWithStravaAsync();
+
+  public async Task LoginWithStravaAsync()
+  {
+    bool signedIn = await Strava.IsAuthenticatedAsync();
+
+    if (signedIn)
+    {
+      return;
+    }
+
+    if (StravaUsername == null || StravaPassword == null) { return; }
+
+    Strava.Config.Username = StravaUsername;
+    Strava.Config.Password = StravaPassword;
+
+    signedIn = await Strava.AuthenticateAsync();
+
+    Message = signedIn ? "Signed in to Strava" : "There was a problem signing in to Strava";
+
+    if (!signedIn)
+    {
+      return;
+    }
+
+    // Save login
+    await UpdateSettingsAsync(settings =>
+    {
+      settings.StravaUsername = StravaUsername;
+      settings.StravaPassword = StravaPassword;
+      settings.StravaCookies = Strava.Cookies;
+    });
+  }
+
+  public virtual async Task HandleStravaLogoutClicked()
+  {
+    await Strava.LogoutAsync();
+  }
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)
   {

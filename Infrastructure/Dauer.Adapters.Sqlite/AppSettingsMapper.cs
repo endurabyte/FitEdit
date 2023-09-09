@@ -16,6 +16,9 @@ public static class AppSettingsMapper
       : JsonSerializer.Deserialize<Dictionary<string, Model.Cookie>>(entity.GarminCookies),
     StravaUsername = entity.StravaUsername,
     StravaPassword = entity.StravaPassword,
+    StravaCookies = entity.StravaCookies == null 
+      ? null
+      : JsonSerializer.Deserialize<Dictionary<string, Model.Cookie>>(entity.StravaCookies),
   };
 
   public static AppSettings MapEntity(this Model.AppSettings model) => new()
@@ -27,5 +30,6 @@ public static class AppSettingsMapper
     GarminCookies = JsonSerializer.Serialize(model.GarminCookies),
     StravaUsername = model.StravaUsername,
     StravaPassword = model.StravaPassword,
+    StravaCookies = JsonSerializer.Serialize(model.StravaCookies),
   };
 }
