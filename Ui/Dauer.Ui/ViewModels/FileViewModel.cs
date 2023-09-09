@@ -204,8 +204,38 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     });
   }
 
+  /// <summary>
+  /// Load first bit of the given FIT file to get its start time
+  /// </summary>
+  private async Task<DateTime> GetStartTimeAsync(FileReference? file)
+  {
+    if (file is null) { return default; }
+
+    using var ms = new MemoryStream(file.Bytes);
+    await log_.Log($"Reading FIT file {file.Name}");
+
+    var reader = new Reader();
+    if (reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
+    {
+      await reader.ReadOneAsync(ms, decoder, 100);
+    }
+
+    var fileIdMesg = fit.Messages.FirstOrDefault(mesg => mesg is Dynastream.Fit.FileIdMesg) as Dynastream.Fit.FileIdMesg;
+    if (fileIdMesg is not null)
+    {
+      return fileIdMesg.GetTimeCreated().GetDateTime();
+    }
+
+    return default;
+  }
+
   private async Task<UiFile> Persist(DauerActivity act)
   { 
+    if (act.StartTime == default)
+    {
+      act.StartTime = await GetStartTimeAsync(act.File);
+    }
+
     UiFile sf = await Task.Run(async () =>
     {
       bool ok = await FileService.CreateAsync(act);
@@ -316,17 +346,26 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       // Instead of reading all FIT messages at once,
       // Read just a few FIT messages at a time so that other tasks can run on the main thread e.g. in WASM
       sf.Progress = 0;
-      while (await reader.ReadOneAsync(ms, decoder, 100))
-      {
-        if (ms.Position - lastPosition < resolution)
-        {
-          continue;
-        }
 
-        double progress = (double)ms.Position / ms.Length * 100;
-        sf.Progress = progress;
-        await TaskUtil.MaybeYield();
-        lastPosition = ms.Position;
+      try
+      {
+        while (await reader.ReadOneAsync(ms, decoder, 100))
+        {
+          if (ms.Position - lastPosition < resolution)
+          {
+            continue;
+          }
+
+          double progress = (double)ms.Position / ms.Length * 100;
+          sf.Progress = progress;
+          await TaskUtil.MaybeYield();
+          lastPosition = ms.Position;
+        }
+      }
+      catch (Exception e)
+      {
+        Log.Error($"{e}");
+        // Try to proceed despite the exception
       }
 
       fit.ForwardfillEvents();
@@ -346,7 +385,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     catch (Exception e)
     {
       Log.Error($"{e}");
-      return;
     }
   }
 
