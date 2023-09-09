@@ -228,7 +228,9 @@ namespace Dynastream.Fit
       }
       else
       {
-        int numElements = size / Fit.BaseType[baseType].size; 
+        int numElements = baseType < 0 || baseType >= Fit.BaseType.Length
+          ? 1
+          : size / Fit.BaseType[baseType].size; 
         
         for (int i = 0; i < numElements; i++)
         {
@@ -248,7 +250,7 @@ namespace Dynastream.Fit
         // Save raw bytes
         if (!FitConfig.CacheSourceData) { return; }
 
-        mesgReader.BaseStream.Position -= size;
+        mesgReader.BaseStream.Position -= Math.Min(mesgReader.BaseStream.Position, size);
         field.SourceData = mesgReader.ReadBytes(size);
       }
     }
