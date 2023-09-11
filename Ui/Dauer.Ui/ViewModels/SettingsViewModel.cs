@@ -286,6 +286,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     Garmin.Config.Username = GarminUsername;
     Garmin.Config.Password = GarminPassword;
+    Garmin.Cookies = new();
 
     signedIn = await Garmin.AuthenticateAsync();
 
