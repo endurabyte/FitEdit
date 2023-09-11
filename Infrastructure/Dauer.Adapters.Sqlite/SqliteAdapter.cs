@@ -190,6 +190,8 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     e.GarminPassword = crypto_.Decrypt(e.GarminUsername, e.GarminPassword);
     e.GarminCookies = crypto_.Decrypt(e.GarminUsername, e.GarminCookies);
     e.StravaPassword = crypto_.Decrypt(e.StravaUsername, e.StravaPassword);
+    e.StravaCookies = crypto_.Encrypt(e.StravaUsername, e.StravaCookies);
+
     return e.MapModel();
   }
 }

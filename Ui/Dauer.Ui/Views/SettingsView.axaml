@@ -166,7 +166,7 @@
                 <WrapPanel Margin="50,10,10,10">
                   <StackPanel Orientation="Vertical">
                     <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
-                      Signing in with Garmin Connect lets FitEdit at your request to update your activities, such as title and descriptions, upload new activities, and delete existing activities.
+                      Signing in to Garmin Connect lets FitEdit at your request to update your activities, such as title and descriptions, upload new activities, and delete existing activities.
                     </TextBlock>
                     <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !Garmin.IsSignedIn}"/>
                     <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Garmin.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Garmin.IsSignedIn}"/>
@@ -237,7 +237,7 @@
                 <WrapPanel Margin="50,10,10,10">
                   <StackPanel Orientation="Vertical">
                     <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
-                      Signing in with Strava lets FitEdit at your request to download detailed activity data such as FIT files and delete existing activities.
+                      Signing in to Strava lets FitEdit at your request to download detailed activity data such as FIT files and delete existing activities.
                     </TextBlock>
                     <Button Command="{Binding HandleStravaLoginClicked}" Content="Sign in to Strava" IsVisible="{Binding !Strava.IsSignedIn}"/>
                     <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Strava.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Strava.IsSignedIn}"/>

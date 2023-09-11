@@ -13,12 +13,12 @@ public static class AppSettingsMapper
     GarminPassword = entity.GarminPassword,
     GarminCookies = entity.GarminCookies == null 
       ? null
-      : JsonSerializer.Deserialize<Dictionary<string, Model.Cookie>>(entity.GarminCookies),
+      : Deserialize<Dictionary<string, Model.Cookie>>(entity.GarminCookies),
     StravaUsername = entity.StravaUsername,
     StravaPassword = entity.StravaPassword,
     StravaCookies = entity.StravaCookies == null 
       ? null
-      : JsonSerializer.Deserialize<Dictionary<string, Model.Cookie>>(entity.StravaCookies),
+      : Deserialize<Dictionary<string, Model.Cookie>>(entity.StravaCookies),
   };
 
   public static AppSettings MapEntity(this Model.AppSettings model) => new()
@@ -32,4 +32,16 @@ public static class AppSettingsMapper
     StravaPassword = model.StravaPassword,
     StravaCookies = JsonSerializer.Serialize(model.StravaCookies),
   };
+
+  private static T? Deserialize<T>(this string json)
+  {
+    try
+    {
+      return JsonSerializer.Deserialize<T>(json);
+    }
+    catch (JsonException)
+    {
+      return default;
+    }
+  }
 }

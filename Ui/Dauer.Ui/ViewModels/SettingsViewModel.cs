@@ -146,7 +146,12 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     GarminUsername = settings.GarminUsername;
     GarminPassword = settings.GarminPassword;
 
+    Strava.Cookies = settings.StravaCookies;
+    StravaUsername = settings.StravaUsername;
+    StravaPassword = settings.StravaPassword;
+
     await LoginWithGarminAsync();
+    await LoginWithStravaAsync();
   }
 
   public void HandleLoginClicked()
@@ -357,6 +362,16 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   public virtual async Task HandleStravaLogoutClicked()
   {
     await Strava.LogoutAsync();
+
+    StravaUsername = null;
+    StravaPassword = null;
+
+    await UpdateSettingsAsync(settings =>
+    {
+      settings.StravaUsername = StravaUsername;
+      settings.StravaPassword = StravaPassword;
+      settings.StravaCookies = Strava.Cookies;
+    });
   }
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)

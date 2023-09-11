@@ -14,8 +14,14 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Adapters.GarminConnect;
 
-public class GarminConnectClient : ReactiveObject, IGarminConnectClient
+public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
 {
+  [GeneratedRegex("input type=\\\"hidden\\\" name=\\\"_csrf\\\" value=\\\"(\\w+)\\\" \\/>")]
+  private static partial Regex GetCsrfRegex();
+
+  [GeneratedRegex("var response_url(\\s+)= (\\\"|\\').*?ticket=([\\w\\-]+)(\\\"|\\')")]
+  private static partial Regex GetTicketRegex();
+
   private const string LOCALE = "en_US";
   private const string USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0";
   private const string CONNECT_DNS = "connect.garmin.com";
@@ -175,7 +181,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     var url = $"{SSO_URL_SSO_SIGNIN}?{queryParams}";
     var res = await client.GetAsync(url);
     AuthenticateProgress = 2 / nsteps * 100;
-    if (!ValidateResponseMessage(res, "No login form."))
+    if (!res.RequireHttpOk("No login form."))
     {
       return false;
     }
@@ -183,16 +189,12 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     data = await res.Content.ReadAsStringAsync();
     AuthenticateProgress = 3 / nsteps * 100;
 
-    var csrfToken = "";
-    try
+    string csrfToken = GetCsrfRegex().GetSingleValue(data, 2, 1);
+
+    if (csrfToken is null)
     {
-      csrfToken = GetValueByPattern(data, @"input type=\""hidden\"" name=\""_csrf\"" value=\""(\w+)\"" \/>", 2, 1);
-    }
-    catch (Exception e)
-    {
-      log_.LogError("Exception finding token by pattern: ", e);
-      log_.LogError("data:\n", data);
-      throw;
+      log_.LogError("Could not find Garmin Connect CSRF token in HTML response {@data}", data);
+      return false;
     }
 
     client.DefaultRequestHeaders.Add("origin", SSO_URL);
@@ -204,24 +206,24 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
       new KeyValuePair<string, string>("embed", "false"),
       new KeyValuePair<string, string>("username", Config.Username),
       new KeyValuePair<string, string>("password", Config.Password),
-      new KeyValuePair<string, string>("_csrf", csrfToken)
+      new KeyValuePair<string, string>("_csrf", "")
     });
 
     res = await client.PostAsync(url, formContent);
     data = await res.Content.ReadAsStringAsync();
     AuthenticateProgress = 4 / nsteps * 100;
 
-    if (!ValidateResponseMessage(res, $"Bad response {res.StatusCode}, expected {HttpStatusCode.OK}"))
+    if (!res.RequireHttpOk( $"Bad response {res.StatusCode}, expected {HttpStatusCode.OK}"))
     {
       return false;
     }
 
-    if (!ValidateCookiePresence(cookies, "GARMIN-SSO-GUID"))
+    if (!cookies.ValidateCookiePresence("GARMIN-SSO-GUID", CONNECT_URL_MODERN))
     {
       return false;
     }
 
-    var ticket = GetValueByPattern(data, @"var response_url(\s+)= (\""|\').*?ticket=([\w\-]+)(\""|\')", 5, 3);
+    string ticket = GetTicketRegex().GetSingleValue(data, 5, 3);
 
     // Second auth step
     // Needs a service ticket from previous response
@@ -230,7 +232,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     res = await client.GetAsync(url);
     AuthenticateProgress = 5 / nsteps * 100;
 
-    if (!ValidateModernTicketUrlResponseMessage(res, $"Second auth step failed to produce success or expected 302: {res.StatusCode}."))
+    if (!res.RequireHttpOk200($"Second auth step failed to produce success or expected 302: {res.StatusCode}."))
     {
       return false;
     }
@@ -288,7 +290,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   private async Task<bool> IsAuthenticatedAsync(CookieContainer cookies)
   { 
     // Check session cookie
-    if (!ValidateCookiePresence(cookies, "SESSIONID"))
+    if (!cookies.ValidateCookiePresence("SESSIONID", CONNECT_URL_MODERN))
     {
       return false;
     }
@@ -303,73 +305,8 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     // Check login
     var res = await client.GetAsync(CONNECT_URL_PROFILE);
-    IsSignedIn = ValidateResponseMessage(res, "Login check failed.");
+    IsSignedIn = res.RequireHttpOk("Login check failed.");
     return IsSignedIn;
-  }
-
-  /// <summary>
-  /// Gets the value by pattern.
-  /// </summary>
-  /// <param name="data">The data.</param>
-  /// <param name="pattern">The pattern.</param>
-  /// <param name="expectedCountOfGroups">The expected count of groups.</param>
-  /// <param name="groupPosition">The group position.</param>
-  /// <returns>Value of particular match group.</returns>
-  /// <exception cref="Exception">Could not match expected pattern {pattern}</exception>
-  private static string GetValueByPattern(string data, string pattern, int expectedCountOfGroups, int groupPosition)
-  {
-    var regex = new Regex(pattern);
-    var match = regex.Match(data);
-    if (!match.Success || match.Groups.Count != expectedCountOfGroups)
-    {
-      throw new Exception($"Could not match expected pattern {pattern}.");
-    }
-    return match.Groups[groupPosition].Value;
-  }
-
-  /// <summary>
-  /// Validates the cookie presence.
-  /// </summary>
-  /// <param name="container">The container.</param>
-  /// <param name="cookieName">Name of the cookie.</param>
-  /// <exception cref="Exception">Missing cookie {cookieName}</exception>
-  private bool ValidateCookiePresence(CookieContainer container, string cookieName)
-  {
-    var cookies = container.GetCookies(new Uri(CONNECT_URL_MODERN)).Cast<System.Net.Cookie>().ToList();
-    System.Net.Cookie cookie = cookies.Find(e => string.Equals(cookieName, e.Name, StringComparison.InvariantCultureIgnoreCase));
-    if (cookie is null)
-    {
-      log_.LogError("Missing Garmin cookie {@cookieName}", cookieName);
-      return false;
-    }
-
-    if (cookie.Expired)
-    {
-      log_.LogError("Expird Garmin cookie {@cookieName}", cookieName);
-      return false;
-    }
-
-    return true;
-  }
-
-  private bool ValidateResponseMessage(HttpResponseMessage responseMessage, string errorMessage)
-  {
-    if (!responseMessage.IsSuccessStatusCode)
-    {
-      log_.LogError(errorMessage);
-      return false;
-    }
-    return true;
-  }
-
-  private bool ValidateModernTicketUrlResponseMessage(HttpResponseMessage responseMessage, string error)
-  {
-    if (!responseMessage.IsSuccessStatusCode && !responseMessage.StatusCode.Equals(HttpStatusCode.OK))
-    {
-      log_.LogError(error);
-      return false;
-    }
-    return true;
   }
 
   /// <inheritdoc />
@@ -409,8 +346,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
     var extension = fileFormat.FormatKey;
     var url = $"{URL_UPLOAD}/.{extension}";
 
-    var form = new MultipartFormDataContent(
-        $"------WebKitFormBoundary{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}");
+    var form = new MultipartFormDataContent($"------WebKitFormBoundary{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}");
 
     using var content = new StreamContent(stream);
 
@@ -646,16 +582,6 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   }
 
   /// <summary>
-  /// Gets the unix timestamp.
-  /// </summary>
-  /// <param name="date">The date.</param>
-  /// <returns></returns>
-  private static int GetUnixTimestamp(DateTime date)
-  {
-    return (int)date.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
-  }
-
-  /// <summary>
   /// Creates the activities URL.
   /// </summary>
   /// <param name="limit">The limit.</param>
@@ -664,7 +590,7 @@ public class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns></returns>
   private static string CreateActivitiesUrl(int limit, int start, DateTime date)
   {
-    return $"{UrlActivitiesBase}?limit={limit}&start={start}&_={GetUnixTimestamp(date)}";
+    return $"{UrlActivitiesBase}?limit={limit}&start={start}&_={date.GetUnixTimestamp()}";
   }
 
   /// <inheritdoc />
