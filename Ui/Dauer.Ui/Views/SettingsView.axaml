@@ -99,7 +99,7 @@
                 Your credentials are stored securely on this device.
               </TextBlock>
               <Button
-                Command="{Binding HandleGarminSigninTermsClicked}"
+                Command="{Binding HandleTermsClicked}"
                 Classes="hyperlink"
                 Content="Terms and Conditions"/>
             </StackPanel>

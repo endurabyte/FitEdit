@@ -323,8 +323,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     Message = "Signed out of Garmin";
   }
 
-  public async Task HandleGarminSigninTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/integration-signin-terms.html");
-
+  public async Task HandleTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/integration-signin-terms.html");
 
   public virtual async Task HandleStravaLoginClicked() => await LoginWithStravaAsync();
 
@@ -341,6 +340,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     Strava.Config.Username = StravaUsername;
     Strava.Config.Password = StravaPassword;
+    Strava.Cookies = new();
 
     signedIn = await Strava.AuthenticateAsync();
 
@@ -373,6 +373,8 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       settings.StravaPassword = StravaPassword;
       settings.StravaCookies = Strava.Cookies;
     });
+    
+    Message = "Signed out of Strava";
   }
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)
