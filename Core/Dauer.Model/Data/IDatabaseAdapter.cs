@@ -22,7 +22,7 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   Task<bool> UpdateAsync(DauerActivity t);
   Task<bool> DeleteAsync(DauerActivity t);
   Task<DauerActivity> GetActivityAsync(string id);
-  Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before);
+  Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
   Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
 
   Task<bool> DeleteAsync(FileReference t);

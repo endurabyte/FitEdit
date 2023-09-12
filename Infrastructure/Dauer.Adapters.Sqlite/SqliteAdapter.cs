@@ -126,12 +126,14 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return model;
   }
 
-  public async Task<List<Model.DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before)
+  public async Task<List<Model.DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit)
   {
     Log.Info($"{nameof(SqliteAdapter)}.{nameof(GetAllActivitiesAsync)}()");
     List<DauerActivity> activities = await db_?
       .Table<DauerActivity>()
       .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
+      .OrderByDescending(act => act.StartTime)
+      .Take(limit)
       .ToListAsync()
       .AnyContext();
 

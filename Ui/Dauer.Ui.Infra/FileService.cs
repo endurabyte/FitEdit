@@ -34,26 +34,7 @@ public class FileService : ReactiveObject, IFileService
     };
   }
 
-  private void InitFilesList()
-  {
-    _ = Task.Run(async () =>
-    {
-      DateTime before = DateTime.UtcNow;
-      DateTime after = before - TimeSpan.FromDays(7);
-
-      List<DauerActivity> acts = await db_
-        .GetAllActivitiesAsync(after, before)
-        .AnyContext();
-
-      var files = acts.Select(act => new UiFile
-      {
-        FitFile = null, // Don't parse the blobs, that would be too slow
-        Activity = act,
-      }).OrderByDescending(uif => uif.Activity?.StartTime).ToList();
-
-      Files.AddRange(files);
-    });
-  }
+  private void InitFilesList() => _ = Task.Run(LoadMore);
 
   public async Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default)
   {
@@ -146,7 +127,7 @@ public class FileService : ReactiveObject, IFileService
   }
 
   public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => await db_.GetAllActivityIdsAsync(after, before);
-  public async Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before) => await db_.GetAllActivitiesAsync(after, before);
+  public async Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => await db_.GetAllActivitiesAsync(after, before, limit);
 
   public void Add(UiFile file)
   {
@@ -156,6 +137,43 @@ public class FileService : ReactiveObject, IFileService
     UiFile? firstNewer = Files.Reverse().FirstOrDefault(f => f.Activity?.StartTime > file.Activity?.StartTime);
     int idx = firstNewer == null ? 0 : Files.IndexOf(firstNewer) + 1;
     Files.Insert(idx, file);
+  }
+
+  public async Task LoadMore()
+  {
+    DateTime oldest = Files
+      .Select(f => f.Activity?.StartTime ?? DateTime.UtcNow)
+      .OrderBy(d => d)
+      .FirstOrDefault();
+
+    if (oldest == default)
+    {
+      oldest = DateTime.UtcNow;
+    }
+
+    var backfill = TimeSpan.FromDays(7);
+    var backfillLimit = TimeSpan.FromDays(365 * 10); // 10 years
+    int limit = 25;
+
+    List<DauerActivity> more = new();
+
+    // While no results found, keep looking further into the past until we get a result or hit the limit
+    while (more.Count == 0 && backfill < backfillLimit)
+    {
+      more = await GetAllActivitiesAsync(oldest - backfill, oldest, limit);
+      backfill *= 2;
+    }
+
+    more.Sort((a1, a2) => a2.StartTime.CompareTo(a1.StartTime));
+
+    foreach (DauerActivity activity in more)
+    {
+      Add(new UiFile
+      {
+        FitFile = null, // Don't parse the blobs, that would be too slow
+        Activity = activity
+      });
+    } 
   }
 
   private static bool CreateParentDir(string? path)

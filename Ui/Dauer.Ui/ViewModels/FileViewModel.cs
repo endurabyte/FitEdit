@@ -60,7 +60,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       scrollPercent_ = value;
 
       if (scrollPercent_ < loadMorePercent_) { return; }
-      Dispatcher.UIThread.Invoke(async () => await LoadMore());
+      Dispatcher.UIThread.Invoke(async () => await FileService.LoadMore());
     }
   }
 
@@ -115,18 +115,24 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (file.Activity is null) { return; }
 
-    file.Activity.ObservableForProperty(x => x.Name).Subscribe(_ =>
+    file.Activity.ObservableForProperty(x => x.Name).Subscribe(async _ =>
     {
+      await FileService.UpdateAsync(file.Activity);
+
+      if (!FitEdit.IsActive) { return; }
       if (!garmin_.IsSignedIn) { return; }
       if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
-      garmin_.SetActivityName(id, file.Activity.Name ?? "");
+      await garmin_.SetActivityName(id, file.Activity.Name ?? "");
     });
 
-    file.Activity.ObservableForProperty(x => x.Description).Subscribe(_ =>
+    file.Activity.ObservableForProperty(x => x.Description).Subscribe(async _ =>
     {
+      await FileService.UpdateAsync(file.Activity);
+
+      if (!FitEdit.IsActive) { return; }
       if (!garmin_.IsSignedIn) { return; }
       if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
-      garmin_.SetActivityDescription(id, file.Activity.Description ?? "");
+      await garmin_.SetActivityDescription(id, file.Activity.Description ?? "");
     });
   }
 
@@ -534,6 +540,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public async Task HandleUploadClicked(DauerActivity? act)
   {
     if (act is null) { return; }
+
+    if (!FitEdit.IsActive) { return; }
     await UploadGarminActivity(act);
   }
 
@@ -558,24 +566,5 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await supa_.UpdateAsync(act);
 
     // TODO Show result
-  }
-
-  private async Task LoadMore()
-  {
-    DateTime oldest = FileService.Files
-      .Select(f => f.Activity?.StartTime ?? DateTime.UtcNow)
-      .OrderBy(d => d)
-      .FirstOrDefault();
-
-    List<DauerActivity> more = await FileService.GetAllActivitiesAsync(oldest - TimeSpan.FromDays(7), oldest);
-    more.Sort((a1, a2) => a2.StartTime.CompareTo(a1.StartTime));
-
-    foreach (DauerActivity activity in more)
-    {
-      FileService.Add(new UiFile
-      {
-        Activity = activity
-      });
-    } 
   }
 }
