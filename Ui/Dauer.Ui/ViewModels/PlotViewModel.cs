@@ -173,6 +173,8 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     var cadenceSeries = new LineSeries { Title = "Cadence", YAxisKey = "Cadence", TrackerFormatString = str, XAxisKey = "Time" };
     var speedSeries = new LineSeries { Title = "Speed", YAxisKey = "Speed", TrackerFormatString = str, XAxisKey = "Time" };
 
+    if (!fit.Records.Any()) { return; }
+
     DateTime start = fit.Records.First().Start();
 
     foreach (var record in fit.Records)
