@@ -482,9 +482,11 @@ public static class FitFileExtensions
 
     var dest = new FitFile(source);
 
+    const double spike = 1000; // meters per second
+
     List<RecordMesg> records = source
       .Get<RecordMesg>()
-      .Where(r => r.GetEnhancedSpeed() < 1000) // filter out speed spikes
+      .Where(r => r.GetEnhancedSpeed() < spike)
       .ToList()
       .Sorted(MessageExtensions.Sort);
 
@@ -496,9 +498,12 @@ public static class FitFileExtensions
 
     var sport = source.Get<SportMesg>().FirstOrDefault();
     var lap = source.Get<LapMesg>().FirstOrDefault();
-    var session = source.Get<SessionMesg>().FirstOrDefault();
     var activity = source.Get<ActivityMesg>().FirstOrDefault();
 
+    ReconstructSessions(source, dest);
+    var session = dest.Get<SessionMesg>().FirstOrDefault();
+
+    // If there is still no session message after ReconstructSessions, fallback to creating one from records
     if (session is null)
     {
       session = new SessionMesg();
@@ -515,21 +520,13 @@ public static class FitFileExtensions
       session.SetTotalDistance(totalDistance ?? 0);
       session.SetTrigger(SessionTrigger.ActivityEnd);
 
-      if (sport != null) 
-      { 
+      if (sport != null)
+      {
         session.SetSport(sport.GetSport());
         session.SetSubSport(sport.GetSubSport());
       }
 
-      if (!dest.MessagesByDefinition.ContainsKey(session.Num))
-      {
-        dest.MessagesByDefinition[session.Num] = new List<Mesg>();
-      }
-      dest.MessagesByDefinition[session.Num].Add(session);
-
-      var def = new MesgDefinition(session);
-      dest.Events.Add(new MesgDefinitionEventArgs(def));
-      dest.Events.Add(new MesgEventArgs(session));
+      Add(dest, session);
     }
 
     if (lap is null)
@@ -554,15 +551,7 @@ public static class FitFileExtensions
         lap.SetSubSport(sport.GetSubSport());
       }
 
-      if (!dest.MessagesByDefinition.ContainsKey(lap.Num))
-      {
-        dest.MessagesByDefinition[lap.Num] = new List<Mesg>();
-      }
-      dest.MessagesByDefinition[lap.Num].Add(lap);
-
-      var def = new MesgDefinition(lap);
-      dest.Events.Add(new MesgDefinitionEventArgs(def));
-      dest.Events.Add(new MesgEventArgs(activity));
+      Add(dest, lap);
     }
 
     if (activity is null)
@@ -575,18 +564,87 @@ public static class FitFileExtensions
       activity.SetEvent(Event.Activity);
       activity.SetEventType(EventType.Stop);
 
-      if (!dest.MessagesByDefinition.ContainsKey(activity.Num))
-      {
-        dest.MessagesByDefinition[activity.Num] = new List<Mesg>();
-      }
-      dest.MessagesByDefinition[activity.Num].Add(activity);
-
-      var def = new MesgDefinition(activity);
-      dest.Events.Add(new MesgDefinitionEventArgs(def));
-      dest.Events.Add(new MesgEventArgs(activity));
+      Add(dest, activity);
     }
 
     dest.ForwardfillEvents();
     return dest;
+  }
+
+  /// <summary>
+  /// Reconstruct missing Session messages from Lap messages.
+  /// 
+  /// <para/>
+  /// GC import validates that each Sport message in the FIT file has a corresponding Session message.
+  /// Garmin devices often fail to record the last Session message and last Activity message.
+  /// </summary>
+  private static void ReconstructSessions(FitFile? source, FitFile dest)
+  {
+    var sessions = source.Get<SessionMesg>();
+    var sports = source.Get<SportMesg>();
+
+    if (sessions.Count >= sports.Count)
+    {
+      foreach (SessionMesg session in sessions)
+      {
+        Add(dest, session);
+      }
+      return;
+    }
+
+    var laps = source.Get<LapMesg>();
+    laps.Sort((l1, l2) => l1.Start().CompareTo(l2.Start()));
+
+    foreach (int i in Enumerable.Range(0, sports.Count))
+    {
+      SessionMesg? existing = sessions[i];
+      SportMesg sportMesg = sports[i];
+      Sport? sport = sportMesg.GetSport();
+      SubSport? subSport = sportMesg.GetSubSport();
+      
+      // Sport already a session
+      if (existing is not null && existing.GetSport() == sport) { return; }
+
+      // Get start time of first lap of this sport
+      LapMesg? firstMatchingLap = laps.FirstOrDefault(l => l.GetSport() == sport);
+      LapMesg? lastMatchingLap = laps.LastOrDefault(l => l.GetSport() == sport);
+
+      if (firstMatchingLap == null) { continue; }
+      if (lastMatchingLap == null) { continue; }
+
+      var sess = new SessionMesg();
+      sess.SetStartTime(firstMatchingLap.GetStartTime());
+      sess.SetTimestamp(lastMatchingLap.GetTimestamp());
+      sess.SetEvent(Event.Lap);
+      sess.SetEventType(EventType.Stop);
+      sess.SetStartPositionLat(firstMatchingLap.GetStartPositionLat());
+      sess.SetStartPositionLong(firstMatchingLap.GetStartPositionLong());
+      sess.SetEndPositionLat(lastMatchingLap.GetEndPositionLat());
+      sess.SetEndPositionLong(lastMatchingLap.GetEndPositionLong());
+      float elapsed = (float)(lastMatchingLap.GetTimestamp().GetDateTime() - firstMatchingLap.GetStartTime().GetDateTime()).TotalSeconds;
+      sess.SetTotalElapsedTime(elapsed);
+      sess.SetTotalTimerTime(elapsed);
+
+      float? dist = laps.Where(l => l.GetSport() == sport).Sum(l => l.GetTotalDistance());
+      sess.SetTotalDistance(dist ?? 0);
+
+      sess.SetSport(sport);
+      sess.SetSubSport(subSport);
+
+      Add(dest, sess);
+    }
+  }
+
+  private static void Add(FitFile dest, Mesg mesg)
+  {
+    if (!dest.MessagesByDefinition.ContainsKey(mesg.Num))
+    {
+      dest.MessagesByDefinition[mesg.Num] = new List<Mesg>();
+    }
+    dest.MessagesByDefinition[mesg.Num].Add(mesg);
+
+    var def = new MesgDefinition(mesg);
+    dest.Events.Add(new MesgDefinitionEventArgs(def));
+    dest.Events.Add(new MesgEventArgs(mesg));
   }
 }
