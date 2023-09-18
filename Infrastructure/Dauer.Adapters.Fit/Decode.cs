@@ -363,21 +363,24 @@ namespace Dynastream.Fit
           && localMesgDefs_[def.LocalMesgNum] != null
           && localMesgDefs_[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
         {
-          Log.Debug($"Discarding suspicious redefinition of local mesg def with different global mesg num");
+          Log.Warn($"Discarding suspicious redefinition of local mesg def with different global mesg num");
+          Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
           return;
         }
 
         if (FitConfig.Discard.DefinitionMessages.ContainingUnknownType 
           && !def.GetFields().Any(field => FitTypes.TypeMap.ContainsKey(field.Type)))
         {
-          Log.Debug($"Discarding suspicious definition containing unknown types");
+          Log.Warn($"Discarding suspicious definition containing unknown types");
+          Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
           return;
         }
 
         if (FitConfig.Discard.DefinitionMessages.WithBigUnknownMessageNum 
           && def.GlobalMesgNum > 500)
         {
-          Log.Debug("Discarding suspicious definition containing big unknown mesg_num");
+          Log.Warn("Discarding suspicious definition containing big unknown mesg_num");
+          Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
           return;
         }
 
@@ -444,7 +447,8 @@ namespace Dynastream.Fit
 
           if (suspicious)
           {
-            Log.Error($"Discarding suspicious message with large latitude change of {diff.ToDegrees()}deg");
+            Log.Warn($"Discarding suspicious message with large latitude change of {diff.ToDegrees()}deg");
+            Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
             return;
           }
 
@@ -461,7 +465,8 @@ namespace Dynastream.Fit
 
           if (suspicious)
           {
-            Log.Debug($"Discarding suspicious message with large longitude change of {diff.ToDegrees()}");
+            Log.Warn($"Discarding suspicious message with large longitude change of {diff.ToDegrees()}");
+            Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
             return;
           }
 
@@ -477,7 +482,8 @@ namespace Dynastream.Fit
 
           if (timeTraveled)
           {
-            Log.Debug($"Discarding suspicious message with timestamp change of {diff}s");
+            Log.Warn($"Discarding suspicious message with timestamp change of {diff}s");
+            Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
             return;
           }
 
