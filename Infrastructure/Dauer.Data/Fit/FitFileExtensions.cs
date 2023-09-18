@@ -36,6 +36,13 @@ public static class FitFileExtensions
     return ms.ToArray();
   }
 
+  /// <summary>
+  /// Return the timestamp from the first FileID message. Return default if there is no such message.
+  /// </summary>
+  public static System.DateTime GetStartTime(this FitFile f) => f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) is FileIdMesg mesg 
+    ? mesg.GetTimeCreated().GetDateTime() 
+    : default;
+
   public static List<T> Get<T>(this FitFile f) where T : Mesg => f.Messages
     .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])
     .Select(message => message as T)

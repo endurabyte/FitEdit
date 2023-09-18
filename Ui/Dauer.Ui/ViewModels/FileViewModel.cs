@@ -211,7 +211,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   }
 
   /// <summary>
-  /// Load first bit of the given FIT file to get its start time
+  /// Load first few messages of the given FIT file to get its start time
   /// </summary>
   private async Task<DateTime> GetStartTimeAsync(FileReference? file)
   {
@@ -226,13 +226,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await reader.ReadOneAsync(ms, decoder, 100);
     }
 
-    var fileIdMesg = fit.Messages.FirstOrDefault(mesg => mesg is Dynastream.Fit.FileIdMesg) as Dynastream.Fit.FileIdMesg;
-    if (fileIdMesg is not null)
-    {
-      return fileIdMesg.GetTimeCreated().GetDateTime();
-    }
-
-    return default;
+    return fit.GetStartTime();
   }
 
   private async Task<UiFile> Persist(DauerActivity act)

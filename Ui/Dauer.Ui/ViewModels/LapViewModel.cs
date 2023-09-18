@@ -165,7 +165,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
   {
     if (uneditedLaps_ == null) { return; }
 
-    FitFile? fit = fileService_.MainFile?.FitFile;
+    FitFile? fit = new FitFile(fileService_.MainFile?.FitFile);
 
     if (fit == null)
     {
@@ -196,13 +196,24 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Backfilling: 100%");
 
-    UiFile? file = fileService_.MainFile;
+    UiFile? originalFile = fileService_.MainFile;
+
+    var newFile = new UiFile
+    {
+      FitFile = fit,
+      Activity = new DauerActivity(),
+    };
+
+    newFile.Activity.Id = $"{Guid.NewGuid()}";
+    newFile.Activity.Name = originalFile?.Activity?.Name + " (Edited)";
+    newFile.Activity.FileType = "fit";
+    newFile.Activity.StartTime = fit.GetStartTime();
+    newFile.Activity.File = new FileReference(newFile.Activity.Name, fit.GetBytes());
+    fileService_.Add(newFile);
+
+    bool ok = await fileService_.CreateAsync(newFile.Activity);
 
     // Trigger property change
-    await Dispatcher.UIThread.InvokeAsync(() =>
-    {
-      fileService_.MainFile = null;
-      fileService_.MainFile = file;
-    });
+    await Dispatcher.UIThread.InvokeAsync(() => fileService_.MainFile = newFile);
   }
 }
