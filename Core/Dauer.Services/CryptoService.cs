@@ -53,7 +53,7 @@ public class CryptoService : ICryptoService
   public string? Decrypt(string? salt, string? data)
   {
     if (salt is null) { return null; }
-    if (data is null) { return null; }
+    if (data is null || data == "null") { return null; }
 
     var algorithm = GetAlgorithm(salt);
 

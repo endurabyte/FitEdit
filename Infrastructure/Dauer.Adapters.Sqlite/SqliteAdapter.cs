@@ -179,6 +179,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     e.GarminPassword = crypto_.Encrypt(e.GarminUsername, e.GarminPassword);
     e.GarminCookies = crypto_.Encrypt(e.GarminUsername, e.GarminCookies);
     e.StravaPassword = crypto_.Encrypt(e.StravaUsername, e.StravaPassword);
+    e.StravaCookies = crypto_.Encrypt(e.StravaUsername, e.StravaCookies);
 
     return 1 == await db_?.InsertOrReplaceAsync(e).AnyContext();
   }
@@ -192,7 +193,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     e.GarminPassword = crypto_.Decrypt(e.GarminUsername, e.GarminPassword);
     e.GarminCookies = crypto_.Decrypt(e.GarminUsername, e.GarminCookies);
     e.StravaPassword = crypto_.Decrypt(e.StravaUsername, e.StravaPassword);
-    e.StravaCookies = crypto_.Encrypt(e.StravaUsername, e.StravaCookies);
+    e.StravaCookies = crypto_.Decrypt(e.StravaUsername, e.StravaCookies);
 
     return e.MapModel();
   }
