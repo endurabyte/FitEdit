@@ -206,7 +206,16 @@ public partial class MessageWrapper : HasProperties
   private string PrependSourceType(string fieldName)
   {
     var sourceType = Mesg.GetFieldValue(nameof(SourceType));
-    string? stName = Enum.GetName(typeof(SourceType), sourceType);
+    string? stName = null;
+
+    try
+    {
+      stName = Enum.GetName(typeof(SourceType), sourceType);
+    }
+    catch (Exception)
+    {
+      stName = null;
+    }
     return stName == null ? fieldName : $"{stName}{fieldName}";
   }
 

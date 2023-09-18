@@ -597,7 +597,7 @@ public static class FitFileExtensions
 
     foreach (int i in Enumerable.Range(0, sports.Count))
     {
-      SessionMesg? existing = sessions[i];
+      SessionMesg? existing = i < sessions.Count ? sessions[i] : null;
       SportMesg sportMesg = sports[i];
       Sport? sport = sportMesg.GetSport();
       SubSport? subSport = sportMesg.GetSubSport();

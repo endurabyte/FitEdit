@@ -5,7 +5,7 @@ namespace Dauer.Adapters.GarminConnect;
 public class DetailedImportResult
 {
   [JsonPropertyName("uploadId")]
-  public string UploadId { get; set; }
+  public long UploadId { get; set; }
 
   [JsonPropertyName("uploadUuid")]
   public UploadUuid UploadUuid { get; set; }
@@ -20,7 +20,7 @@ public class DetailedImportResult
   public int ProcessingTime { get; set; }
 
   [JsonPropertyName("creationDate")]
-  public string CreationDate { get; set; } // You can also use DateTime if you plan to parse this value
+  public string CreationDate { get; set; } 
 
   [JsonPropertyName("ipAddress")]
   public string IpAddress { get; set; }

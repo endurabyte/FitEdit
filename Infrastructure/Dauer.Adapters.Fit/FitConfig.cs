@@ -23,6 +23,12 @@
         public static bool WithLargeLatitudeChange { get; set; } = true;
         public static bool WithLargeLongitudeChange { get; set; } = true;
         public static bool WithLargeTimestampChange { get; set; } = true;
+
+        /// <summary>
+        /// Ignore any FileId message other than the first or any FileId message that is not at the beginning of the file.
+        /// In corrupted files, we see a lot of spurious messages with global and local num == 0 ( == MesgNum.FileId).
+        /// </summary>
+        public static bool UnexpectedFileIdMessage { get; set; } = true;
       }
     }
   }

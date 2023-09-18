@@ -254,10 +254,17 @@ namespace Dynastream.Fit
       long sourceIndex = fitStream.Position;
 
       byte nextByte = br.ReadByte();
+      Log.Debug($"Message header: {nextByte:X2}");
+
       bool isCompressedHeader = (nextByte & Fit.CompressedHeaderMask) == Fit.CompressedHeaderMask;
       bool isMesgDefinition = (nextByte & Fit.MesgDefinitionMask) == Fit.MesgDefinitionMask;
       bool isDataMessage = (nextByte & Fit.MesgDefinitionMask) == Fit.MesgHeaderMask;
       bool isDevData = (nextByte & Fit.DevDataMask) == Fit.DevDataMask;
+
+      Log.Debug($"  Compressed: {isCompressedHeader}");
+      Log.Debug($"  Definition: {isMesgDefinition}");
+      Log.Debug($"  Data: {isDataMessage}");
+      Log.Debug($"  DevData: {isDevData}");
 
       // Is it a compressed timestamp mesg?
       if (isCompressedHeader)
@@ -296,8 +303,16 @@ namespace Dynastream.Fit
           SourceIndex = sourceIndex
         };
         mesg.InsertField(0, timestampField);
-        RaiseMesgEvent(mesg);
 
+        if (FitConfig.Discard.DataMessages.UnexpectedFileIdMessage 
+          && mesg.Num == MesgNum.FileId && fitStream.Position > 1024)
+        {
+          Log.Warn($"Discarding suspicious FileID compressed header message.");
+          fitStream.Position = FindNextMessageByTimestamp(timestamp_, fitStream);
+          return;
+        }
+
+        RaiseMesgEvent(mesg);
         return;
       }
 
@@ -394,12 +409,16 @@ namespace Dynastream.Fit
       {
         var mesgBuffer = new MemoryStream();
         byte localMesgNum = (byte)(nextByte & Fit.LocalMesgNumMask);
+
         mesgBuffer.WriteByte(localMesgNum);
         if (localMesgDefs_[localMesgNum] == null)
         {
           throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
         }
-        int fieldsSize = localMesgDefs_[localMesgNum].GetMesgSize() - 1;
+
+        MesgDefinition def = localMesgDefs_[localMesgNum];
+        Log.Debug($"  (global, local) message num: ({localMesgNum}, {def.GlobalMesgNum})");
+        int fieldsSize = def.GetMesgSize() - 1;
 
         if (FitConfig.Discard.DataMessages.OfLargeSize 
           && fieldsSize > 1024)
@@ -422,7 +441,7 @@ namespace Dynastream.Fit
           throw new FitException($"Data Message unexpected end of file.  Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
         }
 
-        var mesg = new Mesg(mesgBuffer, localMesgDefs_[localMesgNum])
+        var mesg = new Mesg(mesgBuffer, def)
         {
           SourceIndex = sourceIndex,
         };
@@ -491,6 +510,14 @@ namespace Dynastream.Fit
           lastTimeOffset_ = (int)timestamp_ & Fit.CompressedTimeMask;
         }
 
+        if (FitConfig.Discard.DataMessages.UnexpectedFileIdMessage
+          && mesg is FileIdMesg && fitStream.Position > 1024)
+        {
+          Log.Warn($"Discarding suspicious FileID message.");
+          fitStream.Position = FindNextMessageByTimestamp(timestamp_, fitStream);
+          return;
+        }
+
         foreach (var kvp in mesg.Fields)
         {
           Field field = kvp.Value;
@@ -527,6 +554,42 @@ namespace Dynastream.Fit
       }
 
       throw new FitException("Decode:Read - FIT decode error: Unexpected Record Header Byte 0x" + nextByte.ToString("X") + " at stream position: " + fitStream.Position);
+    }
+
+    /// <summary>
+    /// Find next message after the given timestamp. Return the stream position of that message.
+    /// Return the unchanged stream position if no message is found.
+    /// 
+    /// <para/>
+    /// Algorithm:
+    /// Find the next occurence of a timestamp similar to the given one in the file.
+    /// We define timestamp similarity as matching the 2 most significant bytes, 
+    /// i.e. the last 2 of the 4 sequential bytes in the file,
+    /// i.e. the two bytes that change the least frequently in a timestamp.
+    /// Then we return the stream position of the start of the message that the found timestamp is a part of.
+    ///   position = timestamp third byte position (of 4) - 2 (to rewind to the start of timestamp) - 1 (to rewind to the message header byte)
+    private long FindNextMessageByTimestamp(uint timestamp, Stream fitStream)
+    {
+      Log.Info($"Seeking to next timestamp");
+
+      long position = fitStream.Position;
+
+      var buf = new byte[256];
+      int count = fitStream.Read(buf, 0, 256);
+
+      if (count <= 0)
+      {
+        return position;
+      }
+
+      // Extract the last two bytes from the uint
+      byte byte1 = (byte)((timestamp) & 0xFF);
+      byte byte2 = (byte)((timestamp >> 8) & 0xFF);
+      byte byte3 = (byte)((timestamp >> 16) & 0xFF);
+      byte byte4 = (byte)((timestamp >> 24) & 0xFF);
+
+      int nextTimestamp = buf.FindNextOccurrence(new[] { byte3, byte4 }, 0);
+      return position + nextTimestamp - 2 - 1;
     }
 
     /// <summary>
