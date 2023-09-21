@@ -21,10 +21,10 @@ using System.Linq;
 
 namespace Dynastream.Fit
 {
-    /// <summary>
-    /// Implements the Session profile message.
-    /// </summary>
-    public class SessionMesg : Mesg
+  /// <summary>
+  /// Implements the Session profile message.
+  /// </summary>
+  public class SessionMesg : Mesg,  IDurationOfTime
     {
         #region Fields
         static class TotalCyclesSubfield

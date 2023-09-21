@@ -99,6 +99,13 @@
           </TextBlock>
         </ToolTip.Tip>
       </Button>
+      <Button Command="{Binding HandleSplitByLapsClicked}" Content="Split By Lap">
+        <ToolTip.Tip>
+          <TextBlock TextWrapping="Wrap">
+            Split the file into multiple files, one for each lap.
+          </TextBlock>
+        </ToolTip.Tip>
+      </Button>
       <Button Command="{Binding HandleMergeClicked}" Content="Merge">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">

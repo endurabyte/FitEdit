@@ -49,6 +49,27 @@ public static class FitFileExtensions
     .ToList();
 
   /// <summary>
+  /// Return only the <see cref="T"/>s which occur between the given times.
+  /// Used for e.g. Laps, Sessions, and other messages hich span a duration of time and don't only occupy an instant in time.
+  /// </summary>
+  public static IEnumerable<T> DurationBetween<T>(this IEnumerable<T> ts, System.DateTime after = default, System.DateTime before = default)
+    where T : IDurationOfTime => ts.Where(t => t.Start() > after && t.End() < before);
+
+  /// <summary>
+  /// Return only the <see cref="T"/>s which occur in the given <see cref="System.DateTime"/> range.
+  /// Used for e.g. Records and other messages which don't span a duration of time and instead only occupy an instant in time.
+  /// </summary>
+  public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, System.DateTime after = default, System.DateTime before = default)
+    where T : IInstantOfTime => ts.Where(t => t.InstantOfTime() > after && t.InstantOfTime() < before).Cast<T>();
+
+  /// <summary>
+  /// Return only the <see cref="T"/>s which occur in the given <see cref="Dynastream.Fit.DateTime"/> range.
+  /// Used for e.g. Records and other messages which don't span a duration of time and instead only occupy an instant in time.
+  /// </summary>
+  public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, Dynastream.Fit.DateTime after = default, Dynastream.Fit.DateTime before = default)
+    where T : IInstantOfTime => ts.Where(t => t.GetTimestamp().CompareTo(after) >= 0 && t.GetTimestamp().CompareTo(before) < 0).Cast<T>();
+  
+  /// <summary>
   /// Compute Session, Records, and Laps from Events
   /// </summary>
   public static FitFile ForwardfillEvents(this FitFile f)
@@ -159,8 +180,7 @@ public static class FitFileExtensions
     {
       print($"    From {lap.Start()} to {lap.End()}: {lap.GetTotalDistance()} m in {lap.GetTotalElapsedTime()}s ({lap.GetEnhancedAvgSpeed():0.##} m/s)");
 
-      var lapRecords = records.Where(rec => rec.Start() > lap.Start() && rec.Start() < lap.End())
-                              .ToList();
+      var lapRecords = records.InstantBetween(lap.Start(), lap.End()).ToList();
 
       print($"      {lapRecords.Count} {(lapRecords.Count == 1 ? "record" : "records")}");
 
@@ -174,7 +194,7 @@ public static class FitFileExtensions
         var speed = new Speed { Unit = Unit.MetersPerSecond, Value = (double)rec.GetEnhancedSpeed() };
         var distance = new Distance { Unit = Unit.Meter, Value = (double)rec.GetDistance() };
 
-        print($"        At {rec.Start():HH:mm:ss}: {distance.Miles():0.##} mi, {speed.Convert(Unit.MinutesPerMile)}, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
+        print($"        At {rec.InstantOfTime():HH:mm:ss}: {distance.Miles():0.##} mi, {speed.Convert(Unit.MinutesPerMile)}, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
         //print($"        At {rec.Start():HH:mm:ss}: {rec.GetDistance():0.##} m, {rec.GetEnhancedSpeed():0.##} m/s, {rec.GetHeartRate()} bpm, {(rec.GetCadence() + rec.GetFractionalCadence()) * 2} cad");
       }
     }
@@ -238,7 +258,7 @@ public static class FitFileExtensions
       .Select(_ => new Distance { Unit = Unit.Meter })
       .ToList();
 
-    System.DateTime lastTimestamp = records.First().Start();
+    System.DateTime lastTimestamp = records.First().InstantOfTime();
 
     int recordIndex = 0;
     foreach (RecordMesg record in records)
@@ -257,7 +277,7 @@ public static class FitFileExtensions
         ? value.Convert(Unit.MetersPerSecond).Value
         : record.GetEnhancedSpeed() ?? 0;
 
-      System.DateTime timestamp = record.Start();
+      System.DateTime timestamp = record.InstantOfTime();
       double elapsedSeconds = (timestamp - lastTimestamp).TotalSeconds;
       lastTimestamp = timestamp;
 
@@ -363,32 +383,66 @@ public static class FitFileExtensions
       .Get<RecordMesg>()
       .Where(r => r.GetEnhancedSpeed() < 1000) // filter out speed spikes
       .ToList()
-      .Sorted(MessageExtensions.Sort)
-      //.Skip(500000)
-      //.Take(100000)
-      .ToList();
+      .Sorted(MessageExtensions.Sort);
 
+    return RepairAdditively(source, records);
+  }
+
+  public static List<FitFile> SplitByLap(this FitFile? source)
+  {
+    var fits = new List<FitFile>();
+    var laps = source.Get<LapMesg>();
+
+    foreach (var lap in laps)
+    {
+      System.DateTime start = lap.Start();
+      System.DateTime end = lap.End();
+
+      List<RecordMesg> records = source
+        .Get<RecordMesg>()
+        .InstantBetween(start, end)
+        .ToList()
+        .Sorted(MessageExtensions.Sort);
+
+      FitFile? fit = RepairAdditively(source, records);
+
+      if (fit != null)
+      {
+        fits.Add(fit);
+      }
+    }
+
+    return fits;
+  }
+
+  private static FitFile? RepairAdditively(this FitFile? source, List<RecordMesg> records)
+  {
     if (!records.Any()) { return null; }
-
-    SessionMesg session = ReconstructSession(records);
-    LapMesg lap = ReconstructLap(records);
+    var start = records.First().GetTimestamp();
+    var end = records.Last().GetTimestamp();
 
     var fileId = source.Get<FileIdMesg>().FirstOrDefault();
+    fileId!.SetTimeCreated(start);
+
     var fileCreator = source.Get<FileCreatorMesg>().FirstOrDefault();
-    var startEvent = source.Get<EventMesg>().FirstOrDefault();
-    var deviceInfo = source.Get<DeviceInfoMesg>();
+    var deviceInfo = source.Get<DeviceInfoMesg>().InstantBetween(start, end);
     var deviceSettings = source.Get<DeviceSettingsMesg>().FirstOrDefault();
     var userProfile = source.Get<UserProfileMesg>().FirstOrDefault();
     var sport = source.Get<SportMesg>().FirstOrDefault();
-    var activity = source.Get<ActivityMesg>().FirstOrDefault();
+
+    var startEvent = new EventMesg();
+    startEvent.SetTimestamp(start);
+    startEvent.SetEvent(Event.Timer);
+    startEvent.SetEventType(EventType.Start);
 
     var stopEvent = new EventMesg();
-    var end = records.Last().GetTimestamp();
     stopEvent.SetTimestamp(end);
     stopEvent.SetEvent(Event.Timer);
     stopEvent.SetEventType(EventType.StopDisableAll);
 
-    activity ??= ReconstructActivity(records);
+    SessionMesg session = ReconstructSession(records);
+    LapMesg lap = ReconstructLap(records);
+    ActivityMesg activity = ReconstructActivity(records);
 
     List<Mesg> mesgs = new();
 
@@ -543,7 +597,7 @@ public static class FitFileExtensions
   {
     double? sum = 0;
 
-    foreach (int i in Enumerable.Range(1, records.Count))
+    foreach (int i in Enumerable.Range(1, records.Count - 1))
     {
       sum += records[i].GetDistance() - (double?)records[i - 1].GetDistance();
     }

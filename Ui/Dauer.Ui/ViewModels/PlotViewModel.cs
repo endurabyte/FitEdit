@@ -175,14 +175,14 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     if (!fit.Records.Any()) { return; }
 
-    DateTime start = fit.Records.First().Start();
+    DateTime start = fit.Records.First().InstantOfTime();
 
     foreach (var record in fit.Records)
     {
       var speed = (double?)record.GetEnhancedSpeed() ?? 0;
       var hr = (double?)record.GetHeartRate() ?? 0;
       var cadence = (double?)record.GetCadence() ?? 0;
-      var time = record.Start();
+      var time = record.InstantOfTime();
       double elapsedSeconds = (time - start).TotalMinutes;
 
       hrSeries.Points.Add(new(elapsedSeconds, hr));

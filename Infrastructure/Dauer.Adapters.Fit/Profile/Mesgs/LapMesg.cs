@@ -24,7 +24,7 @@ namespace Dynastream.Fit
     /// <summary>
     /// Implements the Lap profile message.
     /// </summary>
-    public class LapMesg : Mesg
+    public class LapMesg : Mesg, IDurationOfTime
     {
         #region Fields
         static class TotalCyclesSubfield

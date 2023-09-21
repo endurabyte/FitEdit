@@ -89,8 +89,8 @@ public class LapViewModel : ViewModelBase, ILapViewModel
         Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, Unit.Meter).Convert(Unit.Mile),
 
         // Find first record of lap by timestamp
-        RecordFirstIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.Start()),
-        RecordLastIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.Start() == lap.End()),
+        RecordFirstIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.InstantOfTime() == lap.Start()),
+        RecordLastIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.InstantOfTime() == lap.End()),
       };
 
       if (rl.RecordFirstIndex < 0)

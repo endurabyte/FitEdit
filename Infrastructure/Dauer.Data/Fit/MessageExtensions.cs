@@ -51,18 +51,15 @@ namespace Dauer.Data.Fit
     {
       System.DateTime lapStartTime = lap.Start();
       System.DateTime lapEndTime = lap.End();
-      System.DateTime recordStartTime = record.Start();
+      System.DateTime recordStartTime = record.InstantOfTime();
 
       return lapStartTime <= recordStartTime && recordStartTime <= lapEndTime;
     });
 
-    public static System.DateTime Start(this RecordMesg record) => record.GetTimestamp().GetDateTime();
-    public static System.DateTime Start(this LapMesg lap) => lap.GetStartTime().GetDateTime();
-    public static System.DateTime End(this LapMesg lap) => lap.GetTimestamp().GetDateTime();
-    public static System.DateTime Start(this SessionMesg sess) => sess.GetStartTime().GetDateTime();
-    public static System.DateTime End(this SessionMesg sess) => sess.GetTimestamp().GetDateTime();
+    public static System.DateTime Start(this IDurationOfTime mesg) => mesg.GetStartTime().GetDateTime();
+    public static System.DateTime End(this IDurationOfTime hts) => hts.GetTimestamp().GetDateTime();
+    public static System.DateTime InstantOfTime(this IInstantOfTime hts) => hts.GetTimestamp().GetDateTime();
 
-    public static Comparison<RecordMesg> Sort => (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
-
+    public static Comparison<IInstantOfTime> Sort => (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
   }
 }

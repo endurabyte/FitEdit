@@ -24,7 +24,7 @@ namespace Dynastream.Fit
     /// <summary>
     /// Implements the DeviceInfo profile message.
     /// </summary>
-    public class DeviceInfoMesg : Mesg
+    public class DeviceInfoMesg : Mesg, IInstantOfTime
     {
         #region Fields
         static class DeviceTypeSubfield

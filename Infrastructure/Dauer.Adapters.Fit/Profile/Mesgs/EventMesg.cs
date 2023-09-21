@@ -24,7 +24,7 @@ namespace Dynastream.Fit
     /// <summary>
     /// Implements the Event profile message.
     /// </summary>
-    public class EventMesg : Mesg
+    public class EventMesg : Mesg, IDurationOfTime
     {
         #region Fields
         static class DataSubfield
@@ -998,6 +998,9 @@ namespace Dynastream.Fit
             return TimestampToDateTime(Convert.ToUInt32(val));
             
         }
+
+        public DateTime GetStartTime() => GetStartTime();
+        public void SetStartTime(DateTime dt) => SetStartTimestamp(dt);
 
         /// <summary>
         /// Set StartTimestamp field

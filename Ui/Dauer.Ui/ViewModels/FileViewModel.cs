@@ -425,6 +425,25 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
+  public void HandleSplitByLapsClicked() => _ = Task.Run(() => SplitByLap(FileService.MainFile));
+
+  private async Task SplitByLap(UiFile? file)
+  {
+    if (file == null) { return; }
+    if (file.FitFile == null) { return; }
+
+    List<FitFile> fits = file.FitFile.SplitByLap();
+
+    foreach (FitFile fit in fits)
+    {
+      await Persist(new FileReference
+      (
+        $"Repaired {file.Activity?.Name}",
+        fit.GetBytes()
+      ));
+    }
+  }
+
   public async void HandleMergeClicked()
   {
     List<UiFile> files = FileService.Files.Where(f => f.IsVisible).ToList();

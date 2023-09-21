@@ -24,7 +24,7 @@ namespace Dynastream.Fit
     /// <summary>
     /// Implements the Record profile message.
     /// </summary>
-    public class RecordMesg : Mesg
+    public class RecordMesg : Mesg, IInstantOfTime
     {
         #region Fields
         #endregion
