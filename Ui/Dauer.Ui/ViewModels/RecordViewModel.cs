@@ -132,11 +132,11 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     this.ObservableForProperty(x => x.PrettifyFields).Subscribe(_ =>
     {
-      PreserveCurrentTab(() =>
+      PreserveCurrentTab(async () =>
       {
         converter_.Prettify = PrettifyFields;
         if (fileService_.MainFile?.FitFile == null) { return; }
-        Show(fileService_.MainFile.FitFile);
+        await Show(fileService_.MainFile.FitFile);
       });
     });
 
@@ -273,7 +273,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     messageSubs_.Clear();
 
     InitHexData();
-    PreserveCurrentTab(() => Show(file.FitFile));
+    PreserveCurrentTab(async () => await Show(file.FitFile));
 
     selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
@@ -307,7 +307,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
   }
 
-  private void Show(FitFile ff)
+  private async Task Show(FitFile ff)
   {
     // Remeber which groups were expanded
     var expandedGroups = AllData_
@@ -327,7 +327,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     foreach (var kvp in ff.MessagesByDefinition)
     {
-      DataGridWrapper group = CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
+      DataGridWrapper group = await CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
       group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
       if (group.DataGrid != null)
       {
@@ -450,20 +450,23 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     return newHexData;
   }
 
-  private DataGridWrapper CreateGroup(MesgDefinition def, List<Mesg> mesgs)
+  private async Task<DataGridWrapper> CreateGroup(MesgDefinition def, List<Mesg> mesgs)
   {
     Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
 
     var defMessage = new MessageWrapper(defMesg);
     var wrappers = mesgs.Select(mesg => new MessageWrapper(mesg)).ToList();
 
-    foreach (var wrapper in wrappers)
+    await Task.Run(() =>
     {
-      IDisposable sub = wrapper
-        .WhenPropertyChanged(x => x.Mesg, notifyOnInitialValue: false)
-        .Subscribe(_ => HandleMessagePropertyChanged(wrapper));
-      messageSubs_.Add(sub);
-    }
+      foreach (var wrapper in wrappers)
+      {
+        IDisposable sub = wrapper
+          .WhenPropertyChanged(x => x.Mesg, notifyOnInitialValue: false)
+          .Subscribe(_ => HandleMessagePropertyChanged(wrapper));
+        messageSubs_.Add(sub);
+      }
+    });
 
     // Categories of fields:
     // Known/unknown fields:
@@ -498,12 +501,17 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     defOnly.ExceptWith(actualFieldNames);
     msgOnly.ExceptWith(definedFieldNames);
 
-    List<ColumnWrapper> columns = onEither.Select(fieldName => new ColumnWrapper
+    List<ColumnWrapper> columns = new();
+
+    await Task.Run(() =>
     {
-      Name = fieldName,
-      NamedValues = GetNamedValues(wrappers, defMesg.Name, fieldName),
-      IsUsed = !defOnly.Contains(fieldName),
-    }).ToList();
+      columns.AddRange(onEither.Select(fieldName => new ColumnWrapper
+      {
+        Name = fieldName,
+        NamedValues = GetNamedValues(wrappers, defMesg.Name, fieldName),
+        IsUsed = !defOnly.Contains(fieldName),
+      }));
+    });
 
     var dg = new DataGrid
     {

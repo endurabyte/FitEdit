@@ -317,7 +317,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private ILayer? Add(
+  private ILayer? Add
+  (
     FitFile fit,
     string name,
     int layer,
@@ -325,7 +326,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     bool editable = false,
     int lineWidth = 4,
     int index = -1,
-    int count = -1)
+    int count = -1
+  )
   {
     var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
 
