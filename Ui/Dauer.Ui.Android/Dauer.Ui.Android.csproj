@@ -5,12 +5,18 @@
     <TargetFramework>net7.0-android</TargetFramework>
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
-    <ApplicationId>com.fitedit.editor</ApplicationId>
+    <ApplicationId>com.endurabyte.fitedit</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <AndroidPackageFormat>apk</AndroidPackageFormat>
     <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
     <AssemblyName>FitEdit</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--<AndroidPackageFormat>apk</AndroidPackageFormat>-->
+    <AndroidUseAapt2>True</AndroidUseAapt2>
+    <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+    <AndroidPackageFormat>aab</AndroidPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
