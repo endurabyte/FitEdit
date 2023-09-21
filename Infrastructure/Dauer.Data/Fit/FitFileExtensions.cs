@@ -359,49 +359,19 @@ public static class FitFileExtensions
   {
     if (source == null) { return null; }
 
-    var dest = new FitFile();
-
-    List<Mesg> mesgs = new();
-
     List<RecordMesg> records = source
       .Get<RecordMesg>()
       .Where(r => r.GetEnhancedSpeed() < 1000) // filter out speed spikes
       .ToList()
-      .Sorted(MessageExtensions.Sort);
+      .Sorted(MessageExtensions.Sort)
+      //.Skip(500000)
+      //.Take(100000)
+      .ToList();
 
-    var start = records.First().GetTimestamp();
-    var end = records.Last().GetTimestamp();
+    if (!records.Any()) { return null; }
 
-    // sum the distance between all records
-    float? totalDistance = records.Last().GetDistance();
-
-    var session = new SessionMesg();
-    session.SetStartTime(start);
-    session.SetTimestamp(end);
-    session.SetEvent(Event.Lap);
-    session.SetEventType(EventType.Stop);
-    session.SetStartPositionLat(records.First().GetPositionLat());
-    session.SetStartPositionLong(records.First().GetPositionLong());
-    session.SetEndPositionLat(records.Last().GetPositionLat());
-    session.SetEndPositionLong(records.Last().GetPositionLong());
-    session.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
-    session.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-    session.SetTotalDistance(totalDistance ?? 0);
-    session.SetTrigger(SessionTrigger.ActivityEnd);
-
-    var lap = new LapMesg();
-    lap.SetStartTime(start);
-    lap.SetTimestamp(end);
-    lap.SetEvent(Event.Lap);
-    lap.SetEventType(EventType.Stop);
-    lap.SetStartPositionLat(records.First().GetPositionLat());
-    lap.SetStartPositionLong(records.First().GetPositionLong());
-    lap.SetEndPositionLat(records.Last().GetPositionLat());
-    lap.SetEndPositionLong(records.Last().GetPositionLong());
-    lap.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
-    lap.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-    lap.SetTotalDistance(totalDistance ?? 0);
-    lap.SetLapTrigger(LapTrigger.SessionEnd);
+    SessionMesg session = ReconstructSession(records);
+    LapMesg lap = ReconstructLap(records);
 
     var fileId = source.Get<FileIdMesg>().FirstOrDefault();
     var fileCreator = source.Get<FileCreatorMesg>().FirstOrDefault();
@@ -413,20 +383,14 @@ public static class FitFileExtensions
     var activity = source.Get<ActivityMesg>().FirstOrDefault();
 
     var stopEvent = new EventMesg();
+    var end = records.Last().GetTimestamp();
     stopEvent.SetTimestamp(end);
     stopEvent.SetEvent(Event.Timer);
     stopEvent.SetEventType(EventType.StopDisableAll);
 
-    if (activity == null)
-    {
-      activity = new ActivityMesg();
-      activity.SetTimestamp(start);
-      activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-      activity.SetNumSessions(1);
-      activity.SetType(Activity.Manual);
-      activity.SetEvent(Event.Activity);
-      activity.SetEventType(EventType.Stop);
-    }
+    activity ??= ReconstructActivity(records);
+
+    List<Mesg> mesgs = new();
 
     if (fileId != null) { mesgs.Add(fileId); }
     if (fileCreator != null) { mesgs.Add(fileCreator); }
@@ -451,20 +415,11 @@ public static class FitFileExtensions
     mesgs.Add(lap);
     mesgs.Add(activity);
 
+    var dest = new FitFile();
+
     foreach (Mesg mesg in mesgs)
     {
-      var def = new MesgDefinition(mesg);
-      dest.Events.Add(new MesgDefinitionEventArgs(def));
-      dest.Events.Add(new MesgEventArgs(mesg));
-
-      dest.MessageDefinitions[mesg.Num] = def;
-
-      if (!dest.MessagesByDefinition.ContainsKey(mesg.Num))
-      {
-        dest.MessagesByDefinition[mesg.Num] = new List<Mesg>();
-      }
-
-      dest.MessagesByDefinition[mesg.Num].Add(mesg);
+      Add(dest, mesg);
     }
 
     dest.Events.AddRange(dest.Records.Select(r => new MesgEventArgs(r)));
@@ -482,6 +437,9 @@ public static class FitFileExtensions
 
     var dest = new FitFile(source);
 
+    // First try to reconstruct sessions from laps
+    ReconstructSessions(source, dest);
+
     const double spike = 1000; // meters per second
 
     List<RecordMesg> records = source
@@ -490,60 +448,14 @@ public static class FitFileExtensions
       .ToList()
       .Sorted(MessageExtensions.Sort);
 
-    var start = records.First().GetTimestamp();
-    var end = records.Last().GetTimestamp();
-
-    // sum the distance between all records
-    float? totalDistance = records.Last().GetDistance();
-
     var sport = source.Get<SportMesg>().FirstOrDefault();
     var lap = source.Get<LapMesg>().FirstOrDefault();
-    var activity = source.Get<ActivityMesg>().FirstOrDefault();
-
-    ReconstructSessions(source, dest);
     var session = dest.Get<SessionMesg>().FirstOrDefault();
-
-    // If there is still no session message after ReconstructSessions, fallback to creating one from records
-    if (session is null)
-    {
-      session = new SessionMesg();
-      session.SetStartTime(start);
-      session.SetTimestamp(end);
-      session.SetEvent(Event.Lap);
-      session.SetEventType(EventType.Stop);
-      session.SetStartPositionLat(records.First().GetPositionLat());
-      session.SetStartPositionLong(records.First().GetPositionLong());
-      session.SetEndPositionLat(records.Last().GetPositionLat());
-      session.SetEndPositionLong(records.Last().GetPositionLong());
-      session.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
-      session.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-      session.SetTotalDistance(totalDistance ?? 0);
-      session.SetTrigger(SessionTrigger.ActivityEnd);
-
-      if (sport != null)
-      {
-        session.SetSport(sport.GetSport());
-        session.SetSubSport(sport.GetSubSport());
-      }
-
-      Add(dest, session);
-    }
+    var activity = source.Get<ActivityMesg>().FirstOrDefault();
 
     if (lap is null)
     {
-      lap = new LapMesg();
-      lap.SetStartTime(start);
-      lap.SetTimestamp(end);
-      lap.SetEvent(Event.Lap);
-      lap.SetEventType(EventType.Stop);
-      lap.SetStartPositionLat(records.First().GetPositionLat());
-      lap.SetStartPositionLong(records.First().GetPositionLong());
-      lap.SetEndPositionLat(records.Last().GetPositionLat());
-      lap.SetEndPositionLong(records.Last().GetPositionLong());
-      lap.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
-      lap.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-      lap.SetTotalDistance(totalDistance ?? 0);
-      lap.SetLapTrigger(LapTrigger.SessionEnd);
+      lap = ReconstructLap(records);
 
       if (sport != null)
       {
@@ -554,21 +466,89 @@ public static class FitFileExtensions
       Add(dest, lap);
     }
 
+    // If there are still no session messages, fallback to creating one from records
+    if (session is null)
+    {
+      session = ReconstructSession(records);
+      if (sport != null)
+      {
+        session.SetSport(sport.GetSport());
+        session.SetSubSport(sport.GetSubSport());
+      }
+
+      Add(dest, session);
+    }
+
     if (activity is null)
     {
-      activity = new ActivityMesg();
-      activity.SetTimestamp(start);
-      activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-      activity.SetNumSessions(1);
-      activity.SetType(Activity.Manual);
-      activity.SetEvent(Event.Activity);
-      activity.SetEventType(EventType.Stop);
-
+      activity = ReconstructActivity(records);
       Add(dest, activity);
     }
 
     dest.ForwardfillEvents();
     return dest;
+  }
+
+  private static LapMesg ReconstructLap(List<RecordMesg> records)
+  {
+    var start = records.First().GetTimestamp();
+    var end = records.Last().GetTimestamp();
+
+    float totalDistance = SumDistance(records);
+
+    var lap = new LapMesg();
+    lap.SetStartTime(start);
+    lap.SetTimestamp(end);
+    lap.SetEvent(Event.Lap);
+    lap.SetEventType(EventType.Stop);
+    lap.SetStartPositionLat(records.First().GetPositionLat());
+    lap.SetStartPositionLong(records.First().GetPositionLong());
+    lap.SetEndPositionLat(records.Last().GetPositionLat());
+    lap.SetEndPositionLong(records.Last().GetPositionLong());
+    lap.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
+    lap.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+    lap.SetTotalDistance(totalDistance);
+    lap.SetLapTrigger(LapTrigger.SessionEnd);
+
+    return lap;
+  }
+
+  private static SessionMesg ReconstructSession(List<RecordMesg> records)
+  {
+    var start = records.First().GetTimestamp();
+    var end = records.Last().GetTimestamp();
+
+    float totalDistance = SumDistance(records);
+
+    var session = new SessionMesg();
+    session.SetStartTime(start);
+    session.SetTimestamp(end);
+    session.SetEvent(Event.Lap);
+    session.SetEventType(EventType.Stop);
+    session.SetStartPositionLat(records.First().GetPositionLat());
+    session.SetStartPositionLong(records.First().GetPositionLong());
+    session.SetEndPositionLat(records.Last().GetPositionLat());
+    session.SetEndPositionLong(records.Last().GetPositionLong());
+    session.SetTotalElapsedTime(end.GetTimeStamp() - start.GetTimeStamp());
+    session.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+    session.SetTotalDistance(totalDistance);
+    session.SetTrigger(SessionTrigger.ActivityEnd);
+    return session;
+  }
+
+  /// <summary>
+  /// Sum the distance between all records
+  /// </summary>
+  private static float SumDistance(List<RecordMesg> records)
+  {
+    double? sum = 0;
+
+    foreach (int i in Enumerable.Range(1, records.Count))
+    {
+      sum += records[i].GetDistance() - (double?)records[i - 1].GetDistance();
+    }
+
+    return (float)(sum ?? 0);
   }
 
   /// <summary>
@@ -602,10 +582,9 @@ public static class FitFileExtensions
       Sport? sport = sportMesg.GetSport();
       SubSport? subSport = sportMesg.GetSubSport();
       
-      // Sport already a session
-      if (existing is not null && existing.GetSport() == sport) { return; }
+      // Sport already has a session
+      if (existing is not null && existing.GetSport() == sport) { continue; }
 
-      // Get start time of first lap of this sport
       LapMesg? firstMatchingLap = laps.FirstOrDefault(l => l.GetSport() == sport);
       LapMesg? lastMatchingLap = laps.LastOrDefault(l => l.GetSport() == sport);
 
@@ -633,6 +612,22 @@ public static class FitFileExtensions
 
       Add(dest, sess);
     }
+  }
+
+  private static ActivityMesg ReconstructActivity(List<RecordMesg> records)
+  {
+    var start = records.First().GetTimestamp();
+    var end = records.Last().GetTimestamp();
+    var activity = new ActivityMesg();
+
+    activity.SetTimestamp(start);
+    activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+    activity.SetNumSessions(1);
+    activity.SetType(Activity.Manual);
+    activity.SetEvent(Event.Activity);
+    activity.SetEventType(EventType.Stop);
+
+    return activity;
   }
 
   private static void Add(FitFile dest, Mesg mesg)
