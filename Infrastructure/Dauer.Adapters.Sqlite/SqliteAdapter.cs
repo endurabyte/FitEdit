@@ -126,6 +126,15 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return model;
   }
 
+  public async Task<bool> ActivityExistsAsync(string id)
+  {
+    var act = await db_?.Table<DauerActivity>()
+      .Where(act => act.Id == id)
+      .FirstOrDefaultAsync();
+
+    return act != null;
+  }
+
   public async Task<List<Model.DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit)
   {
     Log.Info($"{nameof(SqliteAdapter)}.{nameof(GetAllActivitiesAsync)}()");

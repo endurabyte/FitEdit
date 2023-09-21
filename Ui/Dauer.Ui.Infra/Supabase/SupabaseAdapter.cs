@@ -443,22 +443,27 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       // Then, we want updated activities. (activities we know about but were updated since the last sync)
       // Row-level security ensures we only get the user's activities.
 
-      // Get user's new activities 
-      var newActivities = await client_.Postgrest.Table<Model.GarminActivity>()
+      // Get user's new activities. We label them "possible" because we'll verify each against the DB.
+      var possiblyNewActivities = await client_.Postgrest.Table<Model.GarminActivity>()
         .Where(a => a.LastUpdated > after && a.LastUpdated < before)
         .Not("Id", Postgrest.Constants.Operator.In, ids)
         .Get()
         .AnyContext();
 
-      if (newActivities == null) { return; }
+      Dictionary<string, bool> existing = new();
+      Parallel.ForEach(possiblyNewActivities.Models, async act => existing[act.Id] = await fileService_.ActivityExistsAsync(act.Id));
 
+      List<GarminActivity> definitelyNewActivities = possiblyNewActivities.Models
+        .Where(act => !existing[act.Id])
+        .ToList();
+      
       // Get user's updated activities
       var updatedActivities = await client_.Postgrest.Table<Model.GarminActivity>()
         .Where(a => a.LastUpdated > lastSync)
         .Get()
         .AnyContext();
 
-      List<GarminActivity> activities = newActivities.Models
+      List<GarminActivity> activities = definitelyNewActivities
         .Concat(updatedActivities.Models)
         .ToList();
 

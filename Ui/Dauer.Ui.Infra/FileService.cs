@@ -128,6 +128,7 @@ public class FileService : ReactiveObject, IFileService
 
   public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => await db_.GetAllActivityIdsAsync(after, before);
   public async Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => await db_.GetAllActivitiesAsync(after, before, limit);
+  public async Task<bool> ActivityExistsAsync(string id) => await db_.ActivityExistsAsync(id).AnyContext();
 
   public void Add(UiFile file)
   {
