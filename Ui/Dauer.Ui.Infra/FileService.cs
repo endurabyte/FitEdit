@@ -4,6 +4,7 @@ using Dauer.Data;
 using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
+using Dauer.Services;
 using DynamicData;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -16,6 +17,7 @@ namespace Dauer.Ui.Infra;
 public class FileService : ReactiveObject, IFileService
 {
   private readonly IDatabaseAdapter db_;
+  private readonly ICryptoService crypto_;
 
   [Reactive] public UiFile? MainFile { get; set; }
   [Reactive] public ObservableCollection<UiFile> Files { get; set; } = new();
@@ -23,10 +25,10 @@ public class FileService : ReactiveObject, IFileService
   public IObservable<DauerActivity> Deleted => deletedSubject_;
   private readonly ISubject<DauerActivity> deletedSubject_ = new Subject<DauerActivity>();
 
-  public FileService(IDatabaseAdapter db)
+  public FileService(IDatabaseAdapter db, ICryptoService crypto)
   {
     db_ = db;
-
+    crypto_ = crypto;
     db.PropertyChanged += (o, e) =>
     {
       if (!db.Ready) { return; }
@@ -46,7 +48,11 @@ public class FileService : ReactiveObject, IFileService
 
       if (act.File == null) { return true; }
       if (!CreateParentDir(act.File.Path)) { return false; }
-      await File.WriteAllBytesAsync(act.File.Path, act.File.Bytes, ct).AnyContext();
+
+      byte[]? encrypted = crypto_.Encrypt(GetSalt(act), act.File.Bytes);
+      if (encrypted == null) { return false; }
+      await File.WriteAllBytesAsync(act.File.Path, encrypted, ct).AnyContext();
+
       return true;
     }
     catch (Exception e)
@@ -64,7 +70,8 @@ public class FileService : ReactiveObject, IFileService
       if (act == null) { return null; }
 
       act.File ??= new FileReference(act.Name ?? id, null) { Id = id };
-      act.File.Bytes = await File.ReadAllBytesAsync(act.File.Path, ct).AnyContext();
+      byte[]? encrypted = await File.ReadAllBytesAsync(act.File.Path, ct).AnyContext();
+      act.File.Bytes = crypto_.Decrypt(GetSalt(act), encrypted) ?? Array.Empty<byte>();
 
       if (act.File.Bytes.Length == 0)
       {
@@ -95,7 +102,10 @@ public class FileService : ReactiveObject, IFileService
       if (act.File == null) { return true; }
       if (act.File.Bytes.Length == 0) { return true; }
       if (!CreateParentDir(act.File.Path)) { return false; }
-      await File.WriteAllBytesAsync(act.File.Path, act.File.Bytes, ct).AnyContext();
+
+      byte[]? encrypted = crypto_.Encrypt(GetSalt(act), act.File.Bytes);
+      if (encrypted == null) { return false; }
+      await File.WriteAllBytesAsync(act.File.Path, encrypted, ct).AnyContext();
       return true;
     }
     catch (Exception e)
@@ -196,5 +206,7 @@ public class FileService : ReactiveObject, IFileService
     Directory.Delete(parent, recursive: true);
     return true;
   }
+
+  private static string GetSalt(DauerActivity? act) => $"{act?.Id}+$F#6$ugnlsn91=@nq2kHznq";
 }
 

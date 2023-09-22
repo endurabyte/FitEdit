@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using Dauer.Model;
+using Dauer.Model.Extensions;
 
 namespace Dauer.Services;
 
@@ -10,12 +11,17 @@ public interface ICryptoService
 {
   string? Decrypt(string? salt, string? data);
   string? Encrypt(string? salt, string? data);
+
+  byte[]? Decrypt(string? salt, byte[] data);
+  byte[]? Encrypt(string? salt, byte[] data);
 }
 
 public class NullCryptoService : ICryptoService
 {
   public string? Decrypt(string? salt, string? data) => data;
   public string? Encrypt(string? salt, string? data) => data;
+  public byte[]? Decrypt(string? salt, byte[] data) => data;
+  public byte[]? Encrypt(string? salt, byte[] data) => data;
 }
 
 public class CryptoService : ICryptoService
@@ -36,6 +42,16 @@ public class CryptoService : ICryptoService
 
   public string? Encrypt(string? salt, string? data)
   {
+    if (data is null || data == "null") { return null; }
+    byte[] unencrypted = Encoding.UTF8.GetBytes(data);
+    byte[]? encrypted = Encrypt(salt, unencrypted);
+    if (encrypted == null) { return null; }
+
+    return Convert.ToBase64String(encrypted);
+  }
+
+  public byte[]? Encrypt(string? salt, byte[] data)
+  {
     if (salt is null) { return null; }
     if (data is null) { return null; }
     var algorithm = GetAlgorithm(salt);
@@ -43,11 +59,11 @@ public class CryptoService : ICryptoService
     using ICryptoTransform encryptor = algorithm.CreateEncryptor();
     using var ms = new MemoryStream();
     using var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write);
-    using var sw = new StreamWriter(cs);
+    using var sw = new BinaryWriter (cs);
     sw.Write(data);
     sw.Flush();
     cs.FlushFinalBlock();
-    return Convert.ToBase64String(ms.ToArray());
+    return ms.ToArray();
   }
 
   public string? Decrypt(string? salt, string? data)
@@ -55,13 +71,32 @@ public class CryptoService : ICryptoService
     if (salt is null) { return null; }
     if (data is null || data == "null") { return null; }
 
+    byte[] encrypted = Convert.FromBase64String(data);
+    byte[]? decrypted = Decrypt(salt, encrypted);
+    if (decrypted is null) { return null; }
+
+    return Encoding.UTF8.GetString(decrypted);
+  }
+
+  public byte[]? Decrypt(string? salt, byte[]? data)
+  {
+    if (salt is null) { return null; }
+    if (data is null) { return null; }
+
     var algorithm = GetAlgorithm(salt);
 
     using ICryptoTransform decryptor = algorithm.CreateDecryptor();
-    using var ms = new MemoryStream(Convert.FromBase64String(data));
+    using var ms = new MemoryStream(data);
     using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-    using var sr = new StreamReader(cs);
-    return sr.ReadToEnd();
+
+    try
+    {
+      return cs.ReadAllBytes();
+    }
+    catch (CryptographicException) // Not encrypted?
+    {
+      return data;
+    }
   }
 
   private SymmetricAlgorithm GetAlgorithm(string salt)
