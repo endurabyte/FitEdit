@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using Dauer.Model.Clients;
 using Dauer.Ui.Infra.Supabase;
 using Dauer.Ui.Model.Supabase;
@@ -9,8 +10,11 @@ using Supabase.Gotrue.Exceptions;
 
 namespace Dauer.Ui.Infra.Authentication;
 
-public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
+public partial class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 {
+  [GeneratedRegex("tester-(\\w+)@fitedit.io")]
+  private static partial Regex TestAccountRegex();
+
   private static readonly string defaultUsername_ = "Please provide an email address";
   private readonly ILogger<SupabaseWebAuthenticator> log_;
 
@@ -45,7 +49,14 @@ public class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticator
 
     try
     {
-      //return await AuthenticateClientSideAsync(Email, "supersecret", ct);
+      Regex regex = TestAccountRegex();
+      Match match = regex.Match(username);
+      bool isTestAccount = match.Success && match.Groups.Count > 1;
+      if (isTestAccount)
+      {
+        string password = match.Groups[1].Value;
+        return await supa_.SignInWithEmailAndPassword(username, password, ct);
+      }
       return await AuthenticateClientSideAsync(username, ct)
        && await GetIsAuthenticatedAsync(ct);
     }

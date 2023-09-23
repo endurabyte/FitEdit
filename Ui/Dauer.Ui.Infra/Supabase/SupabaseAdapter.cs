@@ -262,7 +262,6 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   public async Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default)
   {
-    await Task.CompletedTask;
     //await client_.Auth.ResetPasswordForEmail(email);
     Session? session = await client_.Auth.SignInWithPassword(email, password);
 

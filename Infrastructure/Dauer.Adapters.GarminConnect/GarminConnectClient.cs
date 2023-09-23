@@ -163,7 +163,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     IsSignedIn = false;
 
     CookieContainer cookies = GetCachedCookies();
-    HttpClient client = GetUnauthenticatedClient(cookies);
+    using HttpClient client = GetUnauthenticatedClient(cookies);
 
     var data = await client.GetStringAsync(CONNECT_MODERN_HOSTNAME);
     AuthenticateProgress = 1 / nsteps * 100;
