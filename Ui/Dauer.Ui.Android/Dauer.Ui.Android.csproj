@@ -6,8 +6,11 @@
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ApplicationId>com.endurabyte.fitedit</ApplicationId>
-    <ApplicationVersion>1</ApplicationVersion>
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>2</ApplicationVersion>
+    <ApplicationDisplayVersion>$(VersionPrefix)</ApplicationDisplayVersion>
+    <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
+    <Version>$(VersionPrefix)</Version>
+    <FileVersion>$(VersionPrefix)</FileVersion>
     <AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
     <AssemblyName>FitEdit</AssemblyName>
   </PropertyGroup>
