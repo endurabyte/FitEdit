@@ -124,7 +124,7 @@
                     <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
                       Authorizing with Garmin Connect lets FitEdit show your Garmin activities and activity edits such as title and description.
                     </TextBlock>
-                    <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
+                    <Button Command="{Binding HandleGarminAuthorizeClicked}" Content="Authorize with Garmin" IsEnabled="{Binding FitEdit.IsAuthenticated}" IsVisible="{Binding !FitEdit.IsAuthenticatedWithGarmin}"/>
                     <Button Command="{Binding HandleGarminDeauthorizeClicked}" Content="Deauthorize with Garmin" IsVisible="{Binding FitEdit.IsAuthenticatedWithGarmin}"/>
                   </StackPanel>
                 </WrapPanel>
@@ -168,7 +168,7 @@
                     <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
                       Signing in to Garmin Connect lets FitEdit at your request to update your activities, such as title and descriptions, upload new activities, and delete existing activities.
                     </TextBlock>
-                    <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsVisible="{Binding !Garmin.IsSignedIn}"/>
+                    <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsEnabled="{Binding FitEdit.IsAuthenticated}" IsVisible="{Binding !Garmin.IsSignedIn}"/>
                     <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Garmin.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Garmin.IsSignedIn}"/>
                     <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding Garmin.IsSignedIn}"/>
                   </StackPanel>
@@ -195,7 +195,7 @@
                       Authorizing with Strava lets FitEdit show your Strava activities and activity edits such as title and description and to upload activities to Strava.
                     </TextBlock>
 
-                    <Button Command="{Binding HandleStravaAuthorizeClicked}" Content="Authorize with Strava" IsVisible="{Binding !FitEdit.IsAuthenticatedWithStrava}"/>
+                    <Button Command="{Binding HandleStravaAuthorizeClicked}" Content="Authorize with Strava" IsEnabled="{Binding FitEdit.IsAuthenticated}" IsVisible="{Binding !FitEdit.IsAuthenticatedWithStrava}"/>
                     <Button Command="{Binding HandleStravaDeauthorizeClicked}" Content="Deauthorize with Strava" IsVisible="{Binding FitEdit.IsAuthenticatedWithStrava}"/>
                   </StackPanel>
                 </WrapPanel>
@@ -239,7 +239,7 @@
                     <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
                       Signing in to Strava lets FitEdit at your request to download detailed activity data such as FIT files and delete existing activities.
                     </TextBlock>
-                    <Button Command="{Binding HandleStravaLoginClicked}" Content="Sign in to Strava" IsVisible="{Binding !Strava.IsSignedIn}"/>
+                    <Button Command="{Binding HandleStravaLoginClicked}" Content="Sign in to Strava" IsEnabled="{Binding FitEdit.IsAuthenticated}" IsVisible="{Binding !Strava.IsSignedIn}"/>
                     <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Strava.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Strava.IsSignedIn}"/>
                     <Button Command="{Binding HandleStravaLogoutClicked}" Content="Sign out from Strava" IsVisible="{Binding Strava.IsSignedIn}"/>
                   </StackPanel>
