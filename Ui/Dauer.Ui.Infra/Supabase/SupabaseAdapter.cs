@@ -90,6 +90,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       IsAuthenticated = await IsAuthenticatedAsync();
 
       await SyncUserInfo();
+      _ = Task.Run(GetRecentActivities);
     });
 
     db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
