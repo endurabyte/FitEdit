@@ -338,6 +338,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     if (act.File is null) { return false; }
     if (!IsAuthenticated) { return false; }
     if (Authorization?.Sub is null) { return false; }
+    if (!IsActive) { return false; } // Should we nudge the user to subscribe?
 
     string bucketUrl = $"{Authorization?.Sub}/{act.Id}";
 
@@ -359,7 +360,6 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       log_.LogError(e, "Could not update activity");
       return false;
     }
-
 
     return true;
   }
