@@ -143,6 +143,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     // On macOS and iOS, the file picker must run on the main thread
     FileReference? file = await storage_.OpenFileAsync();
 
+    _ = Task.Run(async () => await ImportAsync(file));
+  }
+
+  private async Task ImportAsync(FileReference? file)
+  { 
     if (file == null)
     {
       Log.Info("No file selected in the file dialog");
@@ -249,6 +254,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FileService.Add(sf);
     FileService.MainFile = sf;
 
+    await supa_.UpdateAsync(act);
+
     return sf;
   }
 
@@ -280,14 +287,17 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private void LoadOrUnload(UiFile sf)
   {
-    if (sf.IsVisible)
+    _ = Task.Run(async () =>
     {
-      _ = Task.Run(async () => await LoadFile(sf).AnyContext());
-    }
-    else
-    {
-      UnloadFile(sf);
-    }
+      if (sf.IsVisible)
+      {
+        await LoadFile(sf).AnyContext();
+      }
+      else
+      {
+        UnloadFile(sf);
+      }
+    });
   }
 
   private void UnloadFile(UiFile? sf)
@@ -448,8 +458,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public async void HandleMergeClicked()
-  {
+  public void HandleMergeClicked() => _ = Task.Run(Merge);
+
+  private async Task Merge()
+  { 
     List<UiFile> files = FileService.Files.Where(f => f.IsVisible).ToList();
     if (files.Count < 2) { return; }
     if (files.Any(f => f.FitFile == null)) { return; }

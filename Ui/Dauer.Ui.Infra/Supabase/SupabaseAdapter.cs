@@ -105,7 +105,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     });
 
     // When files are deleted from the app, also delete their database record and bucket file
-    fileService_.Deleted.Subscribe(async act => await DeleteActivity(act).AnyContext());
+    fileService_.Deleted.Subscribe(async act => await DeleteAsync(act).AnyContext());
   }
 
   private void InitClient()
