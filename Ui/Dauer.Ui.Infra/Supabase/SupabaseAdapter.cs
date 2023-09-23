@@ -482,14 +482,16 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
   }
 
-  private async Task DeleteActivity(DauerActivity act)
+  public async Task<bool> DeleteAsync(DauerActivity? act)
   {
+    if (act is null) { return false; }
+    
     await client_.Postgrest.Table<Model.GarminActivity>()
       .Filter("Id", Postgrest.Constants.Operator.Equals, act.Id)
       .Delete()
       .AnyContext();
 
-    if (Authorization?.Sub is null) { return; }
+    if (Authorization?.Sub is null) { return false; }
 
     string supabaseUserId = Authorization.Sub;
     string bucketUrl = $"{supabaseUserId}/{act.Id}";
@@ -498,6 +500,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       .From("activity-files")
       .Remove(bucketUrl)
       .AnyContext();
-  }
 
+    return true;
+  }
 }

@@ -272,9 +272,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task Remove(int index)
   {
     UiFile file = FileService.Files[index];
+    FileService.Files.Remove(file);
 
     await FileService.DeleteAsync(file.Activity);
-    FileService.Files.Remove(file);
+    await supa_.DeleteAsync(file.Activity);
   }
 
   private void LoadOrUnload(UiFile sf)

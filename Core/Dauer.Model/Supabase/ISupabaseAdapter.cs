@@ -35,4 +35,5 @@ public interface ISupabaseAdapter
   Task<bool> LogoutAsync();
 
   Task<bool> UpdateAsync(DauerActivity? act);
+  Task<bool> DeleteAsync(DauerActivity? act);
 }

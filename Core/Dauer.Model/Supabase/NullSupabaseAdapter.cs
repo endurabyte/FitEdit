@@ -19,4 +19,5 @@ public class NullSupabaseAdapter : ISupabaseAdapter
   public Task<bool> LogoutAsync() => Task.FromResult(false);
 
   public Task<bool> UpdateAsync(DauerActivity? act) => Task.FromResult(false);
+  public Task<bool> DeleteAsync(DauerActivity? act) => Task.FromResult(false);
 }
