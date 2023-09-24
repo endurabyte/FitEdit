@@ -21,15 +21,15 @@
     <WrapPanel Grid.Row="0" Orientation="Horizontal" >
       <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
       <Button Command="{Binding HandleExportClicked}" Content="Export" 
-              IsEnabled="{Binding FitEdit.IsActive}" 
               ToolTip.Tip="Export a file to disk"/>
       <Button Command="{Binding HandleGarminUploadClicked}" Content="Garmin Upload Page" ToolTip.Tip="Open the Garmin Connect file upload page"/>
       <Button Command="{Binding HandleStravaUploadClicked}" Content="Strava Upload Page" ToolTip.Tip="Open the Strava file upload page"/>
       <Button Command="{Binding HandleRemoveClicked}" Content="Remove">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">
-            Remove the selected file from the file list. <LineBreak/>
-            Does not delete any file on disk.
+            Remove the selected activity. <LineBreak/>
+            Removes the activity from the list, local cache and database, and remote cache and database (if logged in). <LineBreak/>
+            Does not affect the activity stored by external services such as Garmin or Strava.
           </TextBlock>
         </ToolTip.Tip>
       </Button>
