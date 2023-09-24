@@ -451,7 +451,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .AnyContext();
 
       Dictionary<string, bool> existing = new();
-      Parallel.ForEach(possiblyNewActivities.Models, async act => existing[act.Id] = await fileService_.ActivityExistsAsync(act.Id));
+      await Parallel.ForEachAsync(possiblyNewActivities.Models, async (act, ct) => existing[act.Id] = await fileService_.ActivityExistsAsync(act.Id));
 
       List<GarminActivity> definitelyNewActivities = possiblyNewActivities.Models
         .Where(act => !existing[act.Id])
