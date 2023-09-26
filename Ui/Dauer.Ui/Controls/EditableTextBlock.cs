@@ -89,7 +89,14 @@ public class EditableTextBlock : UserControl
     if (isEditing_)
     {
       isEditing_ = false;
-      Text = textBox_.Text ?? "(None)";
+      try
+      {
+        Text = textBox_.Text ?? "(None)";
+      }
+      catch (Exception)
+      {
+        // e.g. user entered ".5" instead of ".5km"
+      }
       Content = textBlock_;
     }
   }

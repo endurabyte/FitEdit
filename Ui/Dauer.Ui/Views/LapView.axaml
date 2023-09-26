@@ -36,23 +36,23 @@
 
         <Label Content="Lap Speeds" Margin="5"/>
 
-        <WrapPanel>
-          <Button Content="✓" Command="{Binding HandleSetLapSpeedsClicked}"
-                  Width="50" Height="50"
-                  VerticalContentAlignment="Center"
-                  HorizontalContentAlignment="Center">
-            <ToolTip.Tip>
-              <TextBlock TextWrapping="Wrap">
-                Set lap speeds. <LineBreak/>
-                A new activity will be created where each lap has the given flat speed.
-                Only edited laps are affected.
-                See the results in the charts tab.
-                Useful for treadmill workouts which have inaccurate speeds.
-              </TextBlock>
-            </ToolTip.Tip>
-          </Button>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+          <StackPanel Orientation="Horizontal">
+            <Button Content="✓" Command="{Binding HandleSetLapSpeedsClicked}"
+                    Width="50" Height="50"
+                    VerticalContentAlignment="Center"
+                    HorizontalContentAlignment="Center">
+              <ToolTip.Tip>
+                <TextBlock TextWrapping="Wrap">
+                  Set lap speeds. <LineBreak/>
+                  A new activity will be created where each lap has the given flat speed.
+                  Only edited laps are affected.
+                  See the results in the charts tab.
+                  Useful for treadmill workouts which have inaccurate speeds.
+                </TextBlock>
+              </ToolTip.Tip>
+            </Button>
 
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
             <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}" Background="Transparent">
 
               <ListBox.ItemsPanel>
@@ -82,10 +82,10 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-          </ScrollViewer>
 
-        </WrapPanel>
-        <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="{Binding ApplyingLapSpeeds}"/>
+          </StackPanel>
+        </ScrollViewer>
+        <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" IsVisible="{Binding ApplyingLapSpeeds}" ShowProgressText="True"/>
       </StackPanel>
     </Border>
 
@@ -95,46 +95,48 @@
       <StackPanel Orientation="Vertical">
         <Label Content="Lap Distances" Margin="5"/>
 
-        <WrapPanel>
-          <Button Content="✓" Command="{Binding HandleSetLapDistancesClicked}" 
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+          <StackPanel Orientation="Horizontal">
+            <Button Content="✓" Command="{Binding HandleSetLapDistancesClicked}"
                   Width="50" Height="50"
                   VerticalContentAlignment="Center"
                   HorizontalContentAlignment="Center">
 
-            <ToolTip.Tip>
-              <TextBlock TextWrapping="Wrap">
-                Set lap distances. <LineBreak/>
-                A new activity will be created where each lap has the given distance. <LineBreak/>
-                If the activity does not cover the requested distance, then the last laps will be ignored, and the last lap may not have the full requested distance.
-                The granularity is constrained by the granularity of the records.
-                For example, if the first lap should be 1000m, but record n is at 999m and record n+1 is at 1001m,
-                the then first lap will actually be 999m.
-              </TextBlock>
-            </ToolTip.Tip>
-          </Button>
+              <ToolTip.Tip>
+                <TextBlock TextWrapping="Wrap">
+                  Set lap distances. <LineBreak/>
+                  A new activity will be created where each lap has the given distance. <LineBreak/>
+                  If the activity does not cover the requested distance, then the last laps will be ignored, and the last lap may not have the full requested distance.
+                  The granularity is constrained by the granularity of the records.
+                  For example, if the first lap should be 1000m, but record n is at 999m and record n+1 is at 1001m,
+                  the then first lap will actually be 999m.
+                </TextBlock>
+              </ToolTip.Tip>
+            </Button>
 
-          <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}" Background="Transparent">
+            <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}" Background="Transparent">
 
-            <ListBox.ItemsPanel>
-              <ItemsPanelTemplate>
-                <StackPanel Orientation="Horizontal"/>
-              </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
 
-            <ListBox.ItemTemplate>
-              <DataTemplate>
+              <ListBox.ItemTemplate>
+                <DataTemplate>
 
-                <Border CornerRadius="4" Padding="4"
-                        Background="{StaticResource FitLeadBlack}"
-                        BorderBrush="{StaticResource FitLicoriceBlackBrush}" BorderThickness="2">
-                  <controls:EditableTextBlock DisplayText="{Binding Distance, Mode=OneWay, Converter={StaticResource DistanceToStringValueConverter}}"
-                                              Text="{Binding Distance, Mode=TwoWay, Converter={StaticResource DistanceToStringValueConverter}}"
-                                              Margin="10"/>
-                </Border>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </WrapPanel>
+                  <Border CornerRadius="4" Padding="4"
+                          Background="{StaticResource FitLeadBlack}"
+                          BorderBrush="{StaticResource FitLicoriceBlackBrush}" BorderThickness="2">
+                    <controls:EditableTextBlock DisplayText="{Binding Distance, Mode=OneWay, Converter={StaticResource DistanceToStringValueConverter}}"
+                                                Text="{Binding Distance, Mode=TwoWay, Converter={StaticResource DistanceToStringValueConverter}}"
+                                                Margin="10"/>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+        </ScrollViewer>
       </StackPanel>
     </Border>
 
