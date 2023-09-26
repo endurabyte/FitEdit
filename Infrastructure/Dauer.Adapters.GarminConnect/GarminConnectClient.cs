@@ -16,28 +16,16 @@ namespace Dauer.Adapters.GarminConnect;
 
 public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
 {
-  [GeneratedRegex("input type=\\\"hidden\\\" name=\\\"_csrf\\\" value=\\\"(\\w+)\\\" \\/>")]
-  private static partial Regex GetCsrfRegex();
-
-  [GeneratedRegex("var response_url(\\s+)= (\\\"|\\').*?ticket=([\\w\\-]+)(\\\"|\\')")]
-  private static partial Regex GetTicketRegex();
-
-  private const string LOCALE = "en_US";
-  private const string USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) Gecko/20100101 Firefox/64.0";
-  private const string CONNECT_DNS = "connect.garmin.com";
-  private const string CONNECT_URL = "https://" + CONNECT_DNS;
-  private const string CONNECT_URL_MODERN = CONNECT_URL + "/";
-  private const string CONNECT_URL_SIGNIN = CONNECT_URL + "/signin/";
-  private const string SSO_DNS = "sso.garmin.com";
-  private const string SSO_URL = "https://" + SSO_DNS;
-  private const string SSO_URL_SSO = SSO_URL + "/sso";
-  private const string SSO_URL_SSO_SIGNIN = SSO_URL_SSO + "/signin";
-  private const string CONNECT_URL_PROFILE = CONNECT_URL_MODERN + "proxy/userprofile-service/socialProfile/";
+  private const string LOCALE = "en-US";
+  private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0";
+  private const string SSO_URL = "https://sso.garmin.com";
+  private const string SSO_LOGIN = SSO_URL + "/portal/api/login";
+  private const string CONNECT_URL = "https://connect.garmin.com";
+  private const string CONNECT_URL_MODERN = CONNECT_URL + "/modern";
   private const string CONNECT_MODERN_HOSTNAME = "https://connect.garmin.com/modern/auth/hostname";
-  private const string CSS_URL = CONNECT_URL + "/gauth-custom-v1.2-min.css";
-  private const string PRIVACY_STATEMENT_URL = "https://www.garmin.com/en-US/privacy/connect/";
+  private const string URL_PROFILE = CONNECT_URL_MODERN + "/proxy/userprofile-service/socialProfile/";
   private const string URL_UPLOAD = CONNECT_URL + "/proxy/upload-service/upload";
-  private const string URL_ACTIVITY_BASE = CONNECT_URL + "/modern/proxy/activity-service/activity";
+  private const string URL_ACTIVITY_BASE = CONNECT_URL_MODERN + "/proxy/activity-service/activity";
 
   private const string UrlActivityTypes = "https://connect.garmin.com/proxy/activity-service/activity/activityTypes";
   private const string UrlEventTypes = "https://connect.garmin.com/proxy/activity-service/activity/eventTypes";
@@ -55,37 +43,8 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   private static readonly Dictionary<string, string> QueryParams = new()
   {
     {"clientId", "GarminConnect"},
-    {"connectLegalTerms", "true"},
-    {"consumeServiceTicket", "false"},
-    {"createAccountShown", "true"},
-    {"cssUrl", CSS_URL},
-    {"displayNameShown", "false"},
-    {"embedWidget", "false"},
-    {"gauthHost", SSO_URL_SSO},
-    {"generateExtraServiceTicket", "true"},
-    {"generateTwoExtraServiceTickets", "false"},
-    {"generateNoServiceTicket", "false"},
-    {"globalOptInChecked", "false"},
-    {"globalOptInShown", "true"},
-    {"id", "gauth-widget"},
-    {"initialFocus", "true"},
     {"locale", LOCALE},
-    {"locationPromptShon", "true"},
-    {"mobile", "false"},
-    {"openCreateAccount", "false"},
-    {"privacyStatementUrl", PRIVACY_STATEMENT_URL},
-    {"redirectAfterAccountCreationUrl", CONNECT_URL_MODERN},
-    {"redirectAfterAccountLoginUrl", CONNECT_URL_MODERN},
-    {"rememberMeChecked", "false"},
-    {"rememberMeShown", "true"},
     {"service", CONNECT_URL_MODERN},
-    {"showTermsOfUse", "false"},
-    {"showPrivacyPolicy", "false"},
-    {"showConnectLegalAge", "false"},
-    {"showPassword", "true"},
-    {"source", CONNECT_URL_SIGNIN},
-    {"useCustomHeader", "false"},
-    {"webhost", CONNECT_URL_MODERN}
   };
 
   /// <summary>
@@ -140,8 +99,14 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     client.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
     client.DefaultRequestHeaders.Add("origin", CONNECT_URL);
     client.DefaultRequestHeaders.Add("referer", $"{CONNECT_URL}/modern");
+    client.DefaultRequestHeaders.Add("dnt", "1");
 
-    return await EnsureTokenAsync(client) ? client : null;
+    // First try can fail. Try twice.
+    return await EnsureTokenAsync(client) 
+      ? client 
+      : await EnsureTokenAsync(client)
+       ? client
+       : null;
   }
 
   /// <inheritdoc />
@@ -158,7 +123,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// </exception>
   public async Task<bool> AuthenticateAsync()
   {
-    const double nsteps = 6.0;
+    const double nsteps = 5.0;
     AuthenticateProgress = 0 / nsteps * 100;
     IsSignedIn = false;
 
@@ -176,61 +141,53 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
       return false;
     }
 
+    data = await client.GetStringAsync(host.Host);
+    AuthenticateProgress = 2 / nsteps * 100;
+
+    var tmpCookies = cookies.MapModel();
+
+    var dict = new Dictionary<string, object>
+    {
+      ["captchaToken"] = "",
+      ["rememberMe"] = false,
+      ["username"] = Config.Username,
+      ["password"] = Config.Password,
+    };
+
     var queryParams = string.Join("&", QueryParams.Select(e => $"{e.Key}={WebUtility.UrlEncode(e.Value)}"));
 
-    var url = $"{SSO_URL_SSO_SIGNIN}?{queryParams}";
-    var res = await client.GetAsync(url);
-    AuthenticateProgress = 2 / nsteps * 100;
-    if (!res.RequireHttpOk("No login form."))
-    {
-      return false;
-    }
+    client.DefaultRequestHeaders.Remove("dnt");
+    client.DefaultRequestHeaders.Add("dnt", "1");
+    client.DefaultRequestHeaders.Remove("referer");
+    client.DefaultRequestHeaders.Add("referer", SSO_URL + $"/portal/sso/{LOCALE}/sign-in?{queryParams}");
 
-    data = await res.Content.ReadAsStringAsync();
+    var url = $"{SSO_LOGIN}?{queryParams}";
+    var res = await client.PostAsJsonAsync(url, dict);
     AuthenticateProgress = 3 / nsteps * 100;
+    var loginString = await res.Content.ReadAsStringAsync();
+    var loginResponse = await res.Content.ReadFromJsonAsync<GarminLoginResponse>();
 
-    string csrfToken = GetCsrfRegex().GetSingleValue(data, 2, 1);
-
-    if (csrfToken is null)
+    if (!res.RequireHttpOk($"POST {SSO_LOGIN} failed"))
     {
-      log_.LogError("Could not find Garmin Connect CSRF token in HTML response {@data}", data);
+      log_.LogError("Login response: {@loginResponse}", loginResponse);
       return false;
     }
 
-    client.DefaultRequestHeaders.Add("origin", SSO_URL);
-    client.DefaultRequestHeaders.Add("referer", url);
-    client.DefaultRequestHeaders.Add(BaseHeader.Item1, BaseHeader.Item2);
-
-    var formContent = new FormUrlEncodedContent(new[]
+    if (loginResponse?.ServiceTicketId is null)
     {
-      new KeyValuePair<string, string>("embed", "false"),
-      new KeyValuePair<string, string>("username", Config.Username),
-      new KeyValuePair<string, string>("password", Config.Password),
-      new KeyValuePair<string, string>("_csrf", "")
-    });
-
-    res = await client.PostAsync(url, formContent);
-    data = await res.Content.ReadAsStringAsync();
-    AuthenticateProgress = 4 / nsteps * 100;
-
-    if (!res.RequireHttpOk( $"Bad response {res.StatusCode}, expected {HttpStatusCode.OK}"))
-    {
+      log_.LogError("No Garmin login ticket");
       return false;
     }
 
-    if (!cookies.ValidateCookiePresence("GARMIN-SSO-GUID", CONNECT_URL_MODERN))
-    {
-      return false;
-    }
-
-    string ticket = GetTicketRegex().GetSingleValue(data, 5, 3);
+    client.DefaultRequestHeaders.Remove("referer");
+    client.DefaultRequestHeaders.Add("referer", SSO_URL);
 
     // Second auth step
     // Needs a service ticket from previous response
     client.DefaultRequestHeaders.Remove("origin");
-    url = $"{CONNECT_URL_MODERN}?ticket={WebUtility.UrlEncode(ticket)}";
+    url = $"{CONNECT_URL_MODERN}?ticket={WebUtility.UrlEncode(loginResponse.ServiceTicketId)}";
     res = await client.GetAsync(url);
-    AuthenticateProgress = 5 / nsteps * 100;
+    AuthenticateProgress = 4 / nsteps * 100;
 
     if (!res.RequireHttpOk200($"Second auth step failed to produce success or expected 302: {res.StatusCode}."))
     {
@@ -239,7 +196,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
 
     Cookies = cookies.MapModel();
     bool isAuthenticated = await IsAuthenticatedAsync();
-    AuthenticateProgress = 6 / nsteps * 100;
+    AuthenticateProgress = 5 / nsteps * 100;
     return isAuthenticated;
   }
 
@@ -304,7 +261,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     }
 
     // Check login
-    var res = await client.GetAsync(CONNECT_URL_PROFILE);
+    var res = await client.GetAsync(URL_PROFILE);
     IsSignedIn = res.RequireHttpOk("Login check failed.");
     return IsSignedIn;
   }
