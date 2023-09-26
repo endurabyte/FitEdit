@@ -265,32 +265,28 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public void HandleRemoveClicked()
   {
-    _ = Task.Run(async () =>
+    int index = SelectedIndex;
+    if (index < 0 || index >= FileService.Files.Count)
     {
-      int index = SelectedIndex;
-      if (index < 0 || index >= FileService.Files.Count)
-      {
-        SelectedIndex = 0;
-        Log.Info("No file selected; cannot remove file");
-        return;
-      }
+      SelectedIndex = 0;
+      Log.Info("No file selected; cannot remove file");
+      return;
+    }
 
-      await Remove(index);
-      SelectedIndex = Math.Min(index, FileService.Files.Count);
-    });
+    Remove(index);
+    SelectedIndex = Math.Min(index, FileService.Files.Count);
   }
 
-  private async Task Remove(int index)
+  private void Remove(int index)
   {
     UiFile file = FileService.Files[index];
+    FileService.Files.Remove(file);
 
-    await Dispatcher.UIThread.InvokeAsync(() =>
+    _ = Task.Run(async () =>
     {
-      FileService.Files.Remove(file);
+      await FileService.DeleteAsync(file.Activity);
+      await supa_.DeleteAsync(file.Activity);
     });
-
-    await FileService.DeleteAsync(file.Activity);
-    await supa_.DeleteAsync(file.Activity);
   }
 
   private void LoadOrUnload(UiFile sf)
