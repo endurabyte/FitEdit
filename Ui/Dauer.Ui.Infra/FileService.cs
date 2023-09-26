@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
+using Avalonia.Threading;
 using Dauer.Data;
+using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Data;
 using Dauer.Model.Extensions;
@@ -37,6 +39,33 @@ public class FileService : ReactiveObject, IFileService
   }
 
   private void InitFilesList() => _ = Task.Run(LoadMore);
+  
+  public async Task CreateAsync(FitFile fit)
+  { 
+    UiFile? originalFile = MainFile;
+
+    var newFile = new UiFile
+    {
+      FitFile = fit,
+      Activity = new DauerActivity(),
+    };
+
+    newFile.Activity.Id = $"{Guid.NewGuid()}";
+    newFile.Activity.Name = originalFile?.Activity?.Name + " (Edited)";
+    newFile.Activity.FileType = "fit";
+    newFile.Activity.StartTime = fit.GetStartTime();
+    newFile.Activity.File = new FileReference(newFile.Activity.Name, fit.GetBytes());
+    Add(newFile);
+
+    bool ok = await CreateAsync(newFile.Activity);
+
+    // Make the new file the active one
+    await Dispatcher.UIThread.InvokeAsync(() =>
+    {
+      if (MainFile != null) { MainFile.IsVisible = false; }
+      MainFile = newFile;
+    });
+  }
 
   public async Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default)
   {

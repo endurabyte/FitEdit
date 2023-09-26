@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
+using Dauer.Data.Fit;
 using Dauer.Model;
 
 namespace Dauer.Data;
@@ -69,6 +70,7 @@ public class NullFileService : IFileService
     return file;
   }
 
+  public Task CreateAsync(FitFile fit) => Task.CompletedTask;
   public Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);
   public Task<bool> DeleteAsync(DauerActivity? act) => Task.FromResult(true);
   public Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => Task.FromResult(new List<string>());

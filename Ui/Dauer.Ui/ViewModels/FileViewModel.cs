@@ -251,8 +251,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return new UiFile { Activity = act };
     });
 
-    FileService.Add(sf);
-    FileService.MainFile = sf;
+
+    await Dispatcher.UIThread.InvokeAsync(() =>
+    {
+      FileService.Add(sf);
+      FileService.MainFile = sf;
+    });
 
     await supa_.UpdateAsync(act);
 
@@ -265,11 +269,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     {
       int index = SelectedIndex;
       if (index < 0 || index >= FileService.Files.Count)
-    {
-      SelectedIndex = 0;
-      Log.Info("No file selected; cannot remove file");
-      return;
-    }
+      {
+        SelectedIndex = 0;
+        Log.Info("No file selected; cannot remove file");
+        return;
+      }
 
       await Remove(index);
       SelectedIndex = Math.Min(index, FileService.Files.Count);
@@ -279,7 +283,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task Remove(int index)
   {
     UiFile file = FileService.Files[index];
-    FileService.Files.Remove(file);
+
+    await Dispatcher.UIThread.InvokeAsync(() =>
+    {
+      FileService.Files.Remove(file);
+    });
 
     await FileService.DeleteAsync(file.Activity);
     await supa_.DeleteAsync(file.Activity);
@@ -287,17 +295,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private void LoadOrUnload(UiFile sf)
   {
-    _ = Task.Run(async () =>
+    if (sf.IsVisible)
     {
-      if (sf.IsVisible)
-      {
-        await LoadFile(sf).AnyContext();
-      }
-      else
-      {
-        UnloadFile(sf);
-      }
-    });
+      _ = Task.Run(async () => await LoadFile(sf).AnyContext());
+      return;
+    }
+
+    UnloadFile(sf);
   }
 
   private void UnloadFile(UiFile? sf)

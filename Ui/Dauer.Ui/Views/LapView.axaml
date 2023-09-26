@@ -20,46 +20,135 @@
     <sys:Boolean x:Key="TrueBool">true</sys:Boolean>
     <sys:Boolean x:Key="FalseBool">false</sys:Boolean>
   </UserControl.Resources>
-  
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
   <Design.DataContext>
     <vm:DesignLapViewModel />
   </Design.DataContext>
 
   <StackPanel>
 
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-      <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}">
+    <Border CornerRadius="4" Padding="4" Background="{StaticResource FitLeadBlack2}">
+      <StackPanel Orientation="Vertical">
 
-        <ListBox.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal"/>
-          </ItemsPanelTemplate>
-        </ListBox.ItemsPanel>
+        <Label Content="Lap Speeds" Margin="5"/>
 
-        <ListBox.ItemTemplate>
-          <DataTemplate>
+        <WrapPanel>
+          <Button Content="✓" Command="{Binding HandleSetLapSpeedsClicked}"
+                  Width="50" Height="50"
+                  VerticalContentAlignment="Center"
+                  HorizontalContentAlignment="Center">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Set lap speeds. <LineBreak/>
+                A new activity will be created where each lap has the given flat speed.
+                Only edited laps are affected.
+                See the results in the charts tab.
+                Useful for treadmill workouts which have inaccurate speeds.
+              </TextBlock>
+            </ToolTip.Tip>
+          </Button>
 
-            <Border Background="Gray" CornerRadius="4" Padding="4">
-              <StackPanel Orientation="Vertical">
-                <TextBlock Text="{Binding Start, StringFormat={}{0:HH:mm:ss}}"/>
-                <TextBlock Text="{Binding Distance, Converter={StaticResource DistanceToStringValueConverter}}"/>
-                <TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanToStringValueConverter}}"/>
-                <controls:EditableTextBlock DisplayText="{Binding Speed, Mode=OneWay, Converter={StaticResource SpeedToStringValueConverter}, 
-                                                                                      ConverterParameter={StaticResource FalseBool}}" 
-                                            Text="{Binding Speed, Mode=TwoWay, Converter={StaticResource SpeedToStringValueConverter},
-                                                                               ConverterParameter={StaticResource TrueBool}}" />
-              </StackPanel>
-            </Border>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+            <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}" Background="Transparent">
 
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
-    </ScrollViewer>
+              <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+              </ListBox.ItemsPanel>
+
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+
+                  <Border CornerRadius="4" Padding="4"
+                          Background="{StaticResource FitLeadBlack}"
+                          BorderBrush="{StaticResource FitLicoriceBlackBrush}" BorderThickness="2">
+                    <StackPanel Orientation="Vertical">
+                      <!--<TextBlock Text="{Binding Start, StringFormat={}{0:HH:mm:ss}}"/>-->
+                      <!--<TextBlock Text="{Binding Distance, Converter={StaticResource DistanceToStringValueConverter}}"/>-->
+                      <!--<TextBlock Text="{Binding Duration, Converter={StaticResource TimeSpanToStringValueConverter}}"/>-->
+                      <controls:EditableTextBlock DisplayText="{Binding Speed, Mode=OneWay, Converter={StaticResource SpeedToStringValueConverter}, 
+                                                                                      ConverterParameter={StaticResource FalseBool}}"
+                                                  Text="{Binding Speed, Mode=TwoWay, Converter={StaticResource SpeedToStringValueConverter},
+                                                                               ConverterParameter={StaticResource TrueBool}}"
+                                                  Margin="10"/>
+                    </StackPanel>
+                  </Border>
+
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </ScrollViewer>
+
+        </WrapPanel>
+        <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="{Binding ApplyingLapSpeeds}"/>
+      </StackPanel>
+    </Border>
+
+    <Separator/>
+
+    <Border CornerRadius="4" Padding="4" Background="{StaticResource FitLeadBlack2}">
+      <StackPanel Orientation="Vertical">
+        <Label Content="Lap Distances" Margin="5"/>
+
+        <WrapPanel>
+          <Button Content="✓" Command="{Binding HandleSetLapDistancesClicked}" 
+                  Width="50" Height="50"
+                  VerticalContentAlignment="Center"
+                  HorizontalContentAlignment="Center">
+
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Set lap distances. <LineBreak/>
+                A new activity will be created where each lap has the given distance. <LineBreak/>
+                If the activity does not cover the requested distance, then the last laps will be ignored, and the last lap may not have the full requested distance.
+                The granularity is constrained by the granularity of the records.
+                For example, if the first lap should be 1000m, but record n is at 999m and record n+1 is at 1001m,
+                the then first lap will actually be 999m.
+              </TextBlock>
+            </ToolTip.Tip>
+          </Button>
+
+          <ListBox ItemsSource="{Binding Laps}" SelectedIndex="{Binding SelectedIndex}" Background="Transparent">
+
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal"/>
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+
+                <Border CornerRadius="4" Padding="4"
+                        Background="{StaticResource FitLeadBlack}"
+                        BorderBrush="{StaticResource FitLicoriceBlackBrush}" BorderThickness="2">
+                  <controls:EditableTextBlock DisplayText="{Binding Distance, Mode=OneWay, Converter={StaticResource DistanceToStringValueConverter}}"
+                                              Text="{Binding Distance, Mode=TwoWay, Converter={StaticResource DistanceToStringValueConverter}}"
+                                              Margin="10"/>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </WrapPanel>
+      </StackPanel>
+    </Border>
 
     <WrapPanel>
-      <Button Content="Apply" Command="{Binding HandleApplyClicked}"/>
-      <ProgressBar Minimum="0" Maximum="100" Value="{Binding Progress}" ShowProgressText="true"/>
+      <Button Content="-" Command="{Binding HandleRemoveLapClicked}"
+              ToolTip.Tip="Remove the selected lap"
+              Width="100" Height="50"
+              VerticalContentAlignment="Center"
+              HorizontalContentAlignment="Center"/>
+      <Button Content="+" Command="{Binding HandleAddLapClicked}"
+              ToolTip.Tip="Add a new lap to the end"
+              Width="100" Height="50"
+              VerticalContentAlignment="Center"
+              HorizontalContentAlignment="Center"/>
     </WrapPanel>
-
   </StackPanel>
 </UserControl>

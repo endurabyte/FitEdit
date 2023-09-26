@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Dauer.Model.Extensions;
 using Dauer.Model.Workouts;
@@ -473,7 +472,7 @@ public static class FitFileExtensions
 
     foreach (Mesg mesg in mesgs)
     {
-      Add(dest, mesg);
+      dest.Add(mesg);
     }
 
     dest.Events.AddRange(dest.Records.Select(r => new MesgEventArgs(r)));
@@ -517,7 +516,7 @@ public static class FitFileExtensions
         lap.SetSubSport(sport.GetSubSport());
       }
 
-      Add(dest, lap);
+      dest.Add(lap);
     }
 
     // If there are still no session messages, fallback to creating one from records
@@ -530,13 +529,13 @@ public static class FitFileExtensions
         session.SetSubSport(sport.GetSubSport());
       }
 
-      Add(dest, session);
+      dest.Add(session);
     }
 
     if (activity is null)
     {
       activity = ReconstructActivity(records);
-      Add(dest, activity);
+      dest.Add(activity);
     }
 
     dest.ForwardfillEvents();
@@ -621,7 +620,7 @@ public static class FitFileExtensions
     {
       foreach (SessionMesg session in sessions)
       {
-        Add(dest, session);
+        dest.Add(session);
       }
       return;
     }
@@ -664,7 +663,7 @@ public static class FitFileExtensions
       sess.SetSport(sport);
       sess.SetSubSport(subSport);
 
-      Add(dest, sess);
+      dest.Add(sess);
     }
   }
 
@@ -684,7 +683,7 @@ public static class FitFileExtensions
     return activity;
   }
 
-  private static void Add(FitFile dest, Mesg mesg)
+  public static void Add(this FitFile dest, Mesg mesg)
   {
     if (!dest.MessagesByDefinition.ContainsKey(mesg.Num))
     {
@@ -696,4 +695,11 @@ public static class FitFileExtensions
     dest.Events.Add(new MesgDefinitionEventArgs(def));
     dest.Events.Add(new MesgEventArgs(mesg));
   }
+
+  /// <summary>
+  /// Remove all messages and message definitions for the given message type.
+  /// </summary>
+  public static void RemoveAll<T>(this FitFile fit) where T : Mesg => fit.Events.RemoveAll(e => 
+     e is MesgEventArgs mea && mea.mesg.Num == MessageFactory.MesgNums[typeof(T)]
+  || e is MesgDefinitionEventArgs mdea && mdea.mesgDef.GlobalMesgNum == MessageFactory.MesgNums[typeof(T)]);
 }

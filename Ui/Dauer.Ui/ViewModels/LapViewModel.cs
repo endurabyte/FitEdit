@@ -8,8 +8,8 @@ using DynamicData.Binding;
 using Dauer.Ui.Extensions;
 using Units;
 using Avalonia.Threading;
-using Dauer.Model.Data;
 using Dauer.Data;
+using Dauer.Model.Workouts;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -23,19 +23,52 @@ public class DesignLapViewModel : LapViewModel
   public DesignLapViewModel() : base(new NullFileService())
   {
     var now = DateTime.Now;
-    Laps.Add(new Lap { Start = now, End = now + TimeSpan.FromSeconds(60), Speed = new(3.12345, Unit.MetersPerSecond) });
-    Laps.Add(new Lap { Start = now + TimeSpan.FromSeconds(60), End = now + TimeSpan.FromSeconds(120), Speed = new(3.5, Unit.MetersPerSecond) });
-    Laps.Add(new Lap { Start = now + TimeSpan.FromSeconds(120), End = now + TimeSpan.FromSeconds(180), Speed = new(2.7, Unit.MetersPerSecond) });
+    Laps.Add(new Lap 
+    { 
+      Start = now, 
+      End = now + TimeSpan.FromSeconds(60), 
+      Speed = new(3.12345, Unit.MetersPerSecond),
+      Distance = new(123.2, Unit.Meter),
+    });
+    Laps.Add(new Lap 
+    { 
+      Start = now + TimeSpan.FromSeconds(60), 
+      End = now + TimeSpan.FromSeconds(120), 
+      Speed = new(3.5, Unit.MetersPerSecond),
+      Distance = new(1.23, Unit.Mile),
+    });
+    Laps.Add(new Lap
+    {
+      Start = now + TimeSpan.FromSeconds(120),
+      End = now + TimeSpan.FromSeconds(180),
+      Speed = new(2.7, Unit.MetersPerSecond),
+      Distance = new(2.34, Unit.Kilometer),
+    });
   }
+}
+
+public class ReactiveThing<T> : ReactiveObject
+{
+  [Reactive] public T? Value { get; set; }
+
+  public ReactiveThing() { }
+  public ReactiveThing(T value)
+  {
+    Value = value;
+  }
+
+  public override string ToString() => $"{Value}";
 }
 
 public class LapViewModel : ViewModelBase, ILapViewModel
 {
   [Reactive] public ObservableCollection<Lap> Laps { get; set; } = new();
+
+  [Reactive] public bool ApplyingLapSpeeds { get; set; }
   [Reactive] public double Progress { get; set; }
   [Reactive] public int SelectedIndex { get; set; }
 
-  private readonly Dictionary<int, Dauer.Model.Workouts.Speed> editedLaps_ = new();
+  private readonly Dictionary<int, Speed> editedLaps_ = new();
 
   private readonly List<IDisposable> subscriptions_ = new();
   private List<Lap>? uneditedLaps_;
@@ -85,8 +118,8 @@ public class LapViewModel : ViewModelBase, ILapViewModel
       {
         Start = lap.Start().ToLocalTime(),
         End = lap.End().ToLocalTime(),
-        Speed = new Dauer.Model.Workouts.Speed(lap.GetEnhancedAvgSpeed() ?? 0, Unit.MetersPerSecond).Convert(Unit.MilesPerHour),
-        Distance = new Dauer.Model.Workouts.Distance(lap.GetTotalDistance() ?? 0, Unit.Meter).Convert(Unit.Mile),
+        Speed = new Speed(lap.GetEnhancedAvgSpeed() ?? 0, Unit.MetersPerSecond).Convert(Unit.MilesPerHour),
+        Distance = new Distance(lap.GetTotalDistance() ?? 0, Unit.Meter).Convert(Unit.Mile),
 
         // Find first record of lap by timestamp
         RecordFirstIndex = fit.Records.FindIndex(0, fit.Records.Count, r => r.InstantOfTime() == lap.Start()),
@@ -139,7 +172,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     subscriptions_.Add(sub);
   }
 
-  private void SubscribeToLapSpeedValueChanges(int i, Dauer.Model.Workouts.Speed speed)
+  private void SubscribeToLapSpeedValueChanges(int i, Speed speed)
   {
     var sub = speed.WhenPropertyChanged(x => x.Value).Subscribe(property =>
     {
@@ -159,13 +192,21 @@ public class LapViewModel : ViewModelBase, ILapViewModel
     subscriptions_.Add(sub);
   }
 
-  public void HandleApplyClicked() => _ = Task.Run(async () => await ApplyLapSpeeds(editedLaps_));
+  public void HandleSetLapSpeedsClicked() => _ = Task.Run(async () => await ApplyLapSpeeds(editedLaps_));
+  public void HandleSetLapDistancesClicked() => _ = Task.Run(async () => await SetLapDistances(Laps.Select(l => l.Distance!).ToList()));
 
-  public async Task ApplyLapSpeeds(Dictionary<int, Dauer.Model.Workouts.Speed> speeds)
+  public void HandleAddLapClicked() => Laps.Add(new Lap());
+  public void HandleRemoveLapClicked()
+  {
+    if (SelectedIndex < 0 || SelectedIndex >= Laps.Count) { return; }
+    Laps.RemoveAt(SelectedIndex);
+  }
+
+  private async Task ApplyLapSpeeds(Dictionary<int, Speed> speeds)
   {
     if (uneditedLaps_ == null) { return; }
 
-    FitFile? fit = new FitFile(fileService_.MainFile?.FitFile);
+    var fit = new FitFile(fileService_.MainFile?.FitFile);
 
     if (fit == null)
     {
@@ -175,6 +216,7 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Applying new lap speeds");
 
+    ApplyingLapSpeeds = true;
     fit.ApplySpeeds(speeds, 100, async (i, count) =>
     {
       Progress = 0.5 * i / count * 100;
@@ -196,24 +238,103 @@ public class LapViewModel : ViewModelBase, ILapViewModel
 
     Log.Info("Backfilling: 100%");
 
-    UiFile? originalFile = fileService_.MainFile;
+    await fileService_.CreateAsync(fit);
+    ApplyingLapSpeeds = false;
+  }
 
-    var newFile = new UiFile
+  private async Task SetLapDistances(List<Distance> distances)
+  {
+    if (fileService_.MainFile?.FitFile is null) { return; }
+
+    var fit = new FitFile(fileService_.MainFile?.FitFile);
+
+    if (fit == null)
     {
-      FitFile = fit,
-      Activity = new DauerActivity(),
-    };
+      Log.Error("No file loaded");
+      return;
+    }
 
-    newFile.Activity.Id = $"{Guid.NewGuid()}";
-    newFile.Activity.Name = originalFile?.Activity?.Name + " (Edited)";
-    newFile.Activity.FileType = "fit";
-    newFile.Activity.StartTime = fit.GetStartTime();
-    newFile.Activity.File = new FileReference(newFile.Activity.Name, fit.GetBytes());
-    fileService_.Add(newFile);
+    Log.Info($"Setting lap distances");
 
-    bool ok = await fileService_.CreateAsync(newFile.Activity);
+    var laps = new List<Lap>();
 
-    // Trigger property change
-    await Dispatcher.UIThread.InvokeAsync(() => fileService_.MainFile = newFile);
+    int lapi = 0;
+    int recordi = 0;
+
+    double cumulativeDistance = distances[lapi].Meters();
+
+    foreach (var record in fit.Records)
+    {
+      double dist = record.GetDistance() ?? 0;
+      if (dist < cumulativeDistance)
+      {
+        recordi++;
+        continue;
+      }
+
+      laps.Add(new Lap
+      {
+        RecordFirstIndex = lapi == 0 ? 0 : laps[lapi - 1].RecordLastIndex + 1,
+        RecordLastIndex = recordi
+      });
+
+      lapi++;
+      recordi++;
+
+      if (lapi == distances.Count)
+      {
+        break;
+      }
+
+      cumulativeDistance += distances[lapi].Meters();
+    }
+
+    double remainder = recordi < 0 || recordi >= fit.Records.Count 
+      ? 0 
+      : (fit.Records.Last().GetDistance() ?? 0) - (fit.Records[recordi].GetDistance() ?? 0);
+
+    if (remainder > 0)
+    {
+      laps.Add(new Lap
+      {
+        RecordFirstIndex = lapi == 0 ? 0 : laps[lapi - 1].RecordLastIndex + 1,
+        RecordLastIndex = fit.Records.Count - 1,
+      });
+    }
+
+    fit.RemoveAll<Dynastream.Fit.LapMesg>();
+    fit.MessagesByDefinition.Remove(Dynastream.Fit.MesgNum.Lap);
+
+    foreach (var lap in laps)
+    {
+      var r1 = fit.Records[lap.RecordFirstIndex];
+      var r2 = fit.Records[lap.RecordLastIndex];
+
+      var lapMesg = new Dynastream.Fit.LapMesg();
+      float? dist = r2.GetDistance() - r1.GetDistance();
+      lapMesg.SetTotalDistance(dist);
+      lapMesg.SetStartTime(r1.GetTimestamp());
+      lapMesg.SetTimestamp(r2.GetTimestamp());
+
+      lapMesg.SetStartPositionLat(r1.GetPositionLat());
+      lapMesg.SetEndPositionLat(r1.GetPositionLat());
+      lapMesg.SetStartPositionLong(r2.GetPositionLong());
+      lapMesg.SetEndPositionLong(r2.GetPositionLong());
+
+      var seconds = (float)(r2.InstantOfTime() - r1.InstantOfTime()).TotalSeconds;
+      lapMesg.SetTotalElapsedTime(seconds);
+      lapMesg.SetTotalTimerTime(seconds);
+
+      lapMesg.SetSport(fit.Get<Dynastream.Fit.SportMesg>().FirstOrDefault()?.GetSport() ?? Dynastream.Fit.Sport.Generic);
+      lapMesg.SetSubSport(fit.Get<Dynastream.Fit.SportMesg>().FirstOrDefault()?.GetSubSport() ?? Dynastream.Fit.SubSport.Generic);
+      lapMesg.SetLapTrigger(Dynastream.Fit.LapTrigger.Distance);
+
+      lapMesg.SetEnhancedAvgSpeed(dist / seconds);
+
+      fit.Add(lapMesg);
+    }
+
+    fit.ForwardfillEvents();
+    await fileService_.CreateAsync(fit);
   }
 }

@@ -1,4 +1,5 @@
-﻿using Dauer.Model.Workouts;
+﻿#nullable enable
+using Dauer.Model.Workouts;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -8,8 +9,8 @@ public class Lap : ReactiveObject
 {
   [Reactive] public DateTime Start { get; set; }
   [Reactive] public DateTime End { get; set; }
-  [Reactive] public Speed? Speed { get; set; }
-  [Reactive] public Distance? Distance { get; set; }
+  [Reactive] public Speed Speed { get; set; } = new() { Unit = Units.Unit.MetersPerSecond };
+  [Reactive] public Distance Distance { get; set; } = new() { Unit = Units.Unit.Meter };
 
   /// <summary>
   /// Index of first record for this lap.

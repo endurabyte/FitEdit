@@ -1,17 +1,31 @@
-﻿using Units;
+﻿using ReactiveUI;
+using ReactiveUI.Fody.Helpers;
+using Units;
 
 namespace Dauer.Model.Workouts
 {
-  public class Distance
+  public class Distance : ReactiveObject
   {
-    public double Value { get; set; }
-    public Unit Unit { get; set; }
+    [Reactive] public double Value { get; set; }
+    [Reactive] public Unit Unit { get; set; }
 
     public Distance() { }
 
+    public Distance(string s)
+    {
+      if (string.IsNullOrEmpty(s))
+      {
+        return;
+      }
+
+      var q = new ParsedQuantity(s);
+      Value = q.Value;
+      Unit = UnitMapper.MapUnit(q.Unit);
+    }
+
     public Distance(Distance other)
     {
-      Value =other.Value;
+      Value = other.Value;
       Unit = other.Unit;
     }
 

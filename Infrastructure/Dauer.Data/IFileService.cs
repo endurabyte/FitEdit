@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System.Collections.ObjectModel;
+using Dauer.Data.Fit;
 using Dauer.Model;
 
 namespace Dauer.Data;
@@ -10,6 +11,10 @@ public interface IFileService
   ObservableCollection<UiFile> Files { get; set; }
   IObservable<DauerActivity> Deleted { get; }
 
+  /// <summary>
+  /// Create a new file and file list entry for the given FIT file
+  /// </summary>
+  Task CreateAsync(FitFile fit);
   Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default);
   Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default);
   Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default);
