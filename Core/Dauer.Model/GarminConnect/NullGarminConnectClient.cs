@@ -45,6 +45,6 @@ public class NullGarminConnectClient : ReactiveObject, IGarminConnectClient
   public Task<bool> SetActivityType(long activityId, ActivityType activityType) => Task.FromResult(true);
   public Task<bool> DeleteActivity(long activityId) => Task.FromResult(true);
   public Task<bool> SetEventType(long activityId, ActivityType eventType) => Task.FromResult(true);
-  public Task<(bool Success, long ActivityId)> UploadActivity(string fileName, Stream stream, FileFormat fileFormat) => Task.FromResult((true, 0L));
+  public Task<(bool Success, long ActivityId)> UploadActivity(Stream stream, FileFormat fileFormat) => Task.FromResult((true, 0L));
   public Task<(bool Success, long ActivityId)> UploadActivity(string fileName, FileFormat fileFormat) => Task.FromResult((true, 0L));
 }

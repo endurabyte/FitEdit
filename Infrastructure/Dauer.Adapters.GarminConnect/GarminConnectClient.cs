@@ -293,14 +293,15 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   public async Task<(bool Success, long ActivityId)> UploadActivity(string fileName, FileFormat fileFormat)
   {
     using var stream = new FileStream(fileName, FileMode.Open);
-    return await UploadActivity(fileName, stream, fileFormat).AnyContext();
+    return await UploadActivity(stream, fileFormat).AnyContext();
   }
 
-  public async Task<(bool Success, long ActivityId)> UploadActivity(string fileName, Stream stream, FileFormat fileFormat)
+  public async Task<(bool Success, long ActivityId)> UploadActivity(Stream stream, FileFormat fileFormat)
   { 
     using HttpClient client = await GetAuthenticatedClient();
 
     var extension = fileFormat.FormatKey;
+    string fileName = $"upload.{extension}";
     var url = $"{URL_UPLOAD}/.{extension}";
 
     var form = new MultipartFormDataContent($"------WebKitFormBoundary{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}");

@@ -102,9 +102,8 @@ public interface IGarminConnectClient
   /// <summary>
   /// Uploads the activity from a stream.
   /// </summary>
-  /// <param name="fileName">Name of the file.</param>
   /// <param name="stream">Stream of the file.</param>
   /// <param name="fileFormat">The file format.</param>
   /// <returns>Tuple of result and activity id</returns>
-  Task<(bool Success, long ActivityId)> UploadActivity(string fileName, Stream stream, FileFormat fileFormat);
+  Task<(bool Success, long ActivityId)> UploadActivity(Stream stream, FileFormat fileFormat);
 }
