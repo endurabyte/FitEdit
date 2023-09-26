@@ -303,6 +303,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var items = new DataGridCollectionView(dg.ItemsSource);
     foreach (int i in Enumerable.Range(SelectedIndex, SelectionCount))
     {
+      if (i < 0 || i >= items.Count) { break; }
       dg.SelectedItems.Add(items[i]);
     }
   }

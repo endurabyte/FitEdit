@@ -206,6 +206,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   {
     if (traces_.TryGetValue(selectionTraceId_, out ILayer? value))
     {
+      layers_.Remove(selectionLayerIndex_);
       traces_.Remove(selectionTraceId_);
       HandleLayersChanged();
     }
