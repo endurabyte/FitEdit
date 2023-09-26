@@ -80,17 +80,17 @@
           </TextBlock>
         </ToolTip.Tip>
       </Button>
-      <Button Command="{Binding HandleRepairAddMissingFieldsClicked}" Content="Repair (Add Missing Fields)">
+      <Button Command="{Binding HandleRepairBackfillMissingFieldsClicked}" Content="Repair (Add Missing Fields)">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">
             Attempt to repair the file <LineBreak/>
 
             <LineBreak/>
-            This strategy attempts to add missing fields. <LineBreak/>
+            This strategy attempts to backfill missing fields. <LineBreak/>
             
             <LineBreak/>
             If there are no lap messages, one is added.
-            If there are no session messages, one is added.
+            If there are no session messages, one for each sport message is added.
             If there are no activity messages, one is added.
 
             <LineBreak/>

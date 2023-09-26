@@ -484,7 +484,7 @@ public static class FitFileExtensions
   /// <summary>
   /// Repair by adding missing Session and Activity messages
   /// </summary>
-  public static FitFile? RepairAddMissingFields(this FitFile? source)
+  public static FitFile? RepairBackfillMissingFields(this FitFile? source)
   {
     if (source == null) { return null; }
 

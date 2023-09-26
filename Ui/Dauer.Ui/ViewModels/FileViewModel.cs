@@ -515,7 +515,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Additive));
   }
 
-  public void HandleRepairAddMissingFieldsClicked()
+  public void HandleRepairBackfillMissingFieldsClicked()
   {
     int index = SelectedIndex;
     if (index < 0 || index >= FileService.Files.Count)
@@ -524,7 +524,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.AddMissingFields));
+    _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.BackfillMissingFields));
   }
 
   public async Task<UiFile?> RepairAsync(UiFile? file, RepairStrategy strategy)
@@ -535,7 +535,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FitFile? fit = strategy switch
     {
       RepairStrategy.Additive => file.FitFile.RepairAdditively(),
-      RepairStrategy.AddMissingFields => file.FitFile.RepairAddMissingFields(),
+      RepairStrategy.BackfillMissingFields => file.FitFile.RepairBackfillMissingFields(),
       _ => file.FitFile.RepairSubtractively(),
     };
 
@@ -585,7 +585,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     var ms = new MemoryStream(act.File.Bytes);
 
     (bool ok, long id) = await garmin_
-      .UploadActivity(act.File.Name ?? "upload-by-fitedit.fit", ms, new FileFormat { FormatKey = "fit" })
+      .UploadActivity(ms, new FileFormat { FormatKey = "fit" })
       .AnyContext();
 
     if (id < 0) { return; }
