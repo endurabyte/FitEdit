@@ -10,6 +10,7 @@ public interface IFitEditService
   bool IsAuthenticatingWithStrava { get; }
   bool IsAuthenticatedWithStrava { get; }
   bool IsActive { get; }
+  bool SupportsPayments { get; }
   string? Username { get; set; }
 
   Task<bool> AuthenticateAsync(CancellationToken ct = default);

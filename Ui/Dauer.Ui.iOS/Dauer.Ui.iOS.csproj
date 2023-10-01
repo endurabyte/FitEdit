@@ -7,13 +7,15 @@
     <ProvisioningType>manual</ProvisioningType>
     <Nullable>enable</Nullable>
     <RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
-    
     <!-- Temporary workaround for Avalonia GL interface broken in net7.0 (runtime attempts to JIT) -->
     <UseInterpreter>True</UseInterpreter>
-    
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <!-- These properties need to be set in order to run on a real iDevice -->
     <!--<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>-->
-    <!--<CodesignKey></CodesignKey>-->
+    <CodesignKey>Apple Distribution: Carl Slater (D89E59Y3DZ)</CodesignKey>
+    <CodesignProvision>FitEdit</CodesignProvision>
   </PropertyGroup>
 
   <ItemGroup>

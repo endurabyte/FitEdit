@@ -7,9 +7,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.endurabyte.fitedit</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>2.1.58</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>2</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -45,19 +45,18 @@
 	<false/>
 	<key>XSAppIconAssets</key>
 	<string>Media.xcassets/AppIcons.appiconset</string>
-	<!-- Register fitedit protocol -->
 	<key>CFBundleURLTypes</key>
 	<array>
-    <dict>
-      <key>CFBundleURLName</key>
-      <string>fitedit</string>
-      <key>CFBundleURLSchemes</key>
-      <array>
-        <string>fitedit</string>
-      </array>
-      <key>CFBundleTypeRole</key>
-      <string>Editor</string>
-    </dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>fitedit</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>fitedit</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
 	</array>
 </dict>
 </plist>

@@ -16,6 +16,7 @@ public class FitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool IsAuthenticatedWithStrava { get; private set; }
   [Reactive] public bool IsAuthenticatingWithStrava { get; private set; }
   [Reactive] public bool IsActive { get; private set; }
+  [Reactive] public bool SupportsPayments { get; private set; }
   [Reactive] public string? Username { get; set; }
 
   private readonly ISupabaseAdapter supa_;
@@ -29,6 +30,7 @@ public class FitEditService : ReactiveObject, IFitEditService
     supa_ = supa;
     authenticator_ = authenticator;
     client_ = client;
+    SupportsPayments = !OperatingSystem.IsIOS();
 
     supa_
       .ObservableForProperty(x => x.IsAuthenticatedWithGarmin)

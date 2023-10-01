@@ -28,9 +28,11 @@
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="HarfBuzzSharp" Version="2.8.2.5" />
     <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
   </ItemGroup>
 
   <ItemGroup>

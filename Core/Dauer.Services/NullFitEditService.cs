@@ -13,6 +13,7 @@ public class NullFitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool IsAuthenticatedWithStrava { get; private set; } = true;
   [Reactive] public bool IsAuthenticatingWithStrava { get; private set; } = false;
   [Reactive] public bool IsActive { get; set; } = true;
+  [Reactive] public bool SupportsPayments { get; set; } = true;
   [Reactive] public string? Username { get; set; } = "fake@fake.com";
 
   public Task<bool> AuthenticateAsync(CancellationToken ct = default)
