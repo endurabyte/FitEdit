@@ -4,7 +4,6 @@ using ReactiveUI.Fody.Helpers;
 using System.Reactive.Linq;
 using Dauer.Model.Data;
 using Dauer.Model;
-using Mapsui.UI.Avalonia;
 using Dauer.Data;
 using Dauer.Ui.Extensions;
 

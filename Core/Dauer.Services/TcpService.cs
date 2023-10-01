@@ -1,11 +1,12 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using Dauer.Model.Abstractions;
 
-namespace Dauer.Ui.Infra.Authentication;
+namespace Dauer.Services;
 
-public static class Tcp
+public class TcpService : ITcpService
 {
-  public static int GetRandomUnusedPort()
+  public int GetRandomUnusedPort()
   {
     var listener = new TcpListener(IPAddress.Loopback, 0);
     listener.Start();

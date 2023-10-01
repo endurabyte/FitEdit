@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using System.Runtime.CompilerServices;
 using Dauer.Model.Extensions;
 
 namespace Dauer.Model;
@@ -29,12 +28,22 @@ public static class CookieMapper
     Expires = c.Expires,
   };
   
-  public static System.Net.CookieContainer MapCookieContainer(this Dictionary<string, Cookie> cookies)
+  /// <summary>
+  /// Domain:
+  /// null: return all cookies.
+  /// empty string: return  no cookies.
+  /// nonempty: return cookies only for the given domain.
+  /// </summary>
+  public static System.Net.CookieContainer MapCookieContainer(this Dictionary<string, Cookie> cookies, string? domain = null)
   { 
     var cookieContainer = new System.Net.CookieContainer();
     if (cookies == null) { return cookieContainer; }
 
-    foreach (var cookie in cookies.Values)
+    IEnumerable<Cookie> domainOnly = cookies.Values
+      .Where(c => domain == null || c.Domain == domain)
+      .ToList();
+
+    foreach (var cookie in domainOnly)
     {
       cookieContainer.Add(cookie.MapSystemCookie());
     }

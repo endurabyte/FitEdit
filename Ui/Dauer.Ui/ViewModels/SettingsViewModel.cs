@@ -77,6 +77,11 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   [Reactive] public string Otp { get; set; } = "";
   [Reactive] public string? GarminUsername { get; set; }
   [Reactive] public string? GarminPassword { get; set; }
+
+  [Reactive] public bool GarminManualLogin { get; set; }
+  [Reactive] public string? GarminSsoId { get; set; }
+  [Reactive] public string? GarminSessionId { get; set; }
+
   [Reactive] public string? StravaUsername { get; set; }
   [Reactive] public string? StravaPassword { get; set; }
   [Reactive] public string Message { get; set; } = "Please enter an email address and click Sign In";
@@ -135,6 +140,11 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
           ? "Sign in complete!"
           : "Signed out";
       });
+
+    garmin.ObservableForProperty(x => x.Cookies).Subscribe(async _ =>
+    {
+      await UpdateSettingsAsync(settings => settings.GarminCookies = Garmin.Cookies);
+    });
   }
 
   private async Task LoadSettings_()
@@ -142,13 +152,16 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     if (!db_.Ready) { return; }
 
     AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    Garmin.Cookies = settings.GarminCookies;
     GarminUsername = settings.GarminUsername;
     GarminPassword = settings.GarminPassword;
+    GarminSsoId = settings.GarminSsoId;
+    GarminSessionId = settings.GarminSessionId;
+    Garmin.Cookies = settings.GarminCookies;
+    GarminManualLogin = GarminSsoId != null && GarminSessionId != null;
 
-    Strava.Cookies = settings.StravaCookies;
     StravaUsername = settings.StravaUsername;
     StravaPassword = settings.StravaPassword;
+    Strava.Cookies = settings.StravaCookies;
 
     await LoginWithGarminAsync();
     await LoginWithStravaAsync();
@@ -275,20 +288,33 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   public async Task LoginWithGarminAsync()
   {
-    bool signedIn = await Garmin.IsAuthenticatedAsync();
+    bool signedIn = false; 
 
-    if (signedIn)
+    if (GarminManualLogin)
     {
-      return;
+      if (GarminSsoId == null || GarminSessionId == null) { return; }
+
+      Garmin.Config.SsoId = GarminSsoId;
+      Garmin.Config.SessionId = GarminSessionId;
+
+      Garmin.Config.Username = null;
+      Garmin.Config.Password = null;
+      Garmin.Cookies = new();
+      signedIn = await Garmin.IsAuthenticatedAsync();
     }
+    else
+    {
+      if (GarminUsername == null || GarminPassword == null) { return; }
 
-    if (GarminUsername == null || GarminPassword == null) { return; }
+      Garmin.Config.SsoId = null;
+      Garmin.Config.SessionId = null;
+      Garmin.Config.JwtId = null;
 
-    Garmin.Config.Username = GarminUsername;
-    Garmin.Config.Password = GarminPassword;
-    Garmin.Cookies = new();
-
-    signedIn = await Garmin.AuthenticateAsync();
+      Garmin.Config.Username = GarminUsername;
+      Garmin.Config.Password = GarminPassword;
+      Garmin.Cookies = new();
+      signedIn = await Garmin.AuthenticateAsync();
+    }
 
     Message = signedIn ? "Signed in to Garmin" : "There was a problem signing in to Garmin";
 
@@ -300,8 +326,10 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     // Save login
     await UpdateSettingsAsync(settings =>
     {
-      settings.GarminUsername = GarminUsername;
-      settings.GarminPassword = GarminPassword;
+      settings.GarminUsername = Garmin.Config.Username;
+      settings.GarminPassword = Garmin.Config.Password;
+      settings.GarminSsoId = Garmin.Config.SsoId;
+      settings.GarminSessionId = Garmin.Config.SessionId;
       settings.GarminCookies = Garmin.Cookies;
     });
   }
@@ -312,11 +340,15 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     GarminUsername = null;
     GarminPassword = null;
+    GarminSsoId = null;
+    GarminSessionId = null;
 
     await UpdateSettingsAsync(settings =>
     {
       settings.GarminUsername = null;
       settings.GarminPassword = null;
+      settings.GarminSsoId = null;
+      settings.GarminSessionId = null;
       settings.GarminCookies = null;
     });
 

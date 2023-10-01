@@ -69,7 +69,14 @@
           <Button Command="{Binding HandleVerifyEmailClicked}" Content="Verify"/>
         </WrapPanel>
 
-        <WrapPanel Margin="10" IsVisible="{Binding FitEdit.IsAuthenticated}">
+        <WrapPanel Margin="10">
+          
+          <WrapPanel.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="FitEdit.IsAuthenticated"/>
+              <Binding Path="FitEdit.SupportsPayments"/>
+            </MultiBinding>
+          </WrapPanel.IsVisible>
           <TextBlock Text="Payment status:" Width="200" VerticalAlignment="Center"/>
           <Ellipse Fill="{Binding FitEdit.IsActive, Converter={StaticResource BooleanToColorConverter}}"
                    Margin="10"
@@ -81,7 +88,13 @@
                      VerticalAlignment="Center" Margin="10"/>
         </WrapPanel>
 
-        <WrapPanel Margin="50,10,10,10" IsVisible="{Binding FitEdit.IsAuthenticated}">
+        <WrapPanel Margin="50,10,10,10">
+          <WrapPanel.IsVisible>
+            <MultiBinding Converter="{x:Static BoolConverters.And}">
+              <Binding Path="FitEdit.IsAuthenticated"/>
+              <Binding Path="FitEdit.SupportsPayments"/>
+            </MultiBinding>
+          </WrapPanel.IsVisible>
           <Button Command="{Binding HandleManagePaymentsClicked}" Content="Manage Payments" IsVisible="{Binding FitEdit.IsActive}"/>
           <Button Command="{Binding HandleSignUpClicked}" Content="Sign Up" IsVisible="{Binding !FitEdit.IsActive}"/>
         </WrapPanel>
@@ -144,23 +157,26 @@
                       <Binding Path="!Garmin.IsSignedIn"/>
                     </MultiBinding>
                   </WrapPanel.IsVisible>
-                  <TextBlock Text="Username:" Width="200" VerticalAlignment="Center"/>
-                  <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
-                           VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-                </WrapPanel>
-
-                <WrapPanel Margin="50,10,10,10">
-                  <WrapPanel.IsVisible>
-                    <MultiBinding Converter="{x:Static BoolConverters.And}">
-                      <Binding Path="!Garmin.IsSignedIn"/>
-                    </MultiBinding>
-                  </WrapPanel.IsVisible>
-
-                  <TextBlock Text="Password:" Width="200" VerticalAlignment="Center"/>
-                  <TextBox Classes="revealPasswordButton"
-                           PasswordChar="•"
-                           Text="{Binding GarminPassword, Mode=TwoWay}"
-                           VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                
+                  <StackPanel Orientation="Vertical">
+                    <CheckBox Content="Manual Login" IsChecked="{Binding GarminManualLogin}" VerticalAlignment="Bottom"/>
+                    <StackPanel Orientation="Vertical" IsVisible="{Binding !GarminManualLogin}">
+                      <TextBlock Text="Username:" Width="200" />
+                      <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
+                               VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                      <TextBlock Text="Password:" Width="200" />
+                      <TextBox Classes="revealPasswordButton"
+                               PasswordChar="•"
+                               Text="{Binding GarminPassword, Mode=TwoWay}"
+                               VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" IsVisible="{Binding GarminManualLogin}">
+                      <TextBlock Text="SSO ID:" Width="200" />
+                      <TextBox Text="{Binding GarminSsoId, Mode=TwoWay}" VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                      <TextBlock Text="Session ID:" Width="200" />
+                      <TextBox Text="{Binding GarminSessionId, Mode=TwoWay}" VerticalAlignment="Center" Margin="10" MinWidth="240"/>
+                    </StackPanel>
+                  </StackPanel>
                 </WrapPanel>
 
                 <WrapPanel Margin="50,10,10,10">

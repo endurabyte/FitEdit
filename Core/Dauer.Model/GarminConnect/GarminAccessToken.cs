@@ -1,7 +1,7 @@
 ﻿#nullable enable
 using System.Text.Json.Serialization;
 
-namespace Dauer.Adapters.GarminConnect;
+namespace Dauer.Model.GarminConnect;
 
 public class GarminAccessToken
 {
@@ -25,4 +25,16 @@ public class GarminAccessToken
 
   [JsonPropertyName("token_type")]
   public required string TokenType { get; set; }
+
+  /// <summary>
+  /// Computed from <see cref="ExpiresIn"/> when the token is received
+  /// </summary>
+  [JsonIgnore]
+  public DateTime ExpiresAt { get; set; }
+
+  /// <summary>
+  /// Computed from <see cref="RefreshTokenExpiresIn"/> when the token is received
+  /// </summary>
+  [JsonIgnore]
+  public DateTime RefreshTokenExpiresAt { get; set; }
 }

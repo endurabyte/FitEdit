@@ -414,7 +414,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     if (!db_.Ready) { return; }
 
-    bool entered = !await updateSem_.WaitAsync(TimeSpan.Zero).AnyContext();
+    bool entered = await updateSem_.WaitAsync(TimeSpan.Zero).AnyContext();
 
     if (!entered)
     {

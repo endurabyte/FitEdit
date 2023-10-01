@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using Dauer.Model.Abstractions;
 using Dauer.Model.Clients;
 using Dauer.Ui.Infra.Supabase;
 using Dauer.Ui.Model.Supabase;
@@ -20,6 +21,7 @@ public partial class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticato
 
   private readonly IFitEditClient fitEdit_;
   private readonly ISupabaseAdapter supa_;
+  private readonly ITcpService tcp_;
 
   [Reactive] public string? Username { get; set; } = defaultUsername_;
   [Reactive] public bool IsAuthenticated { get; set; }
@@ -27,13 +29,14 @@ public partial class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticato
   public SupabaseWebAuthenticator(
     ILogger<SupabaseWebAuthenticator> log,
     IFitEditClient fitEdit,
-    ISupabaseAdapter supa
+    ISupabaseAdapter supa,
+    ITcpService tcp
   )
   {
     log_ = log;
     fitEdit_ = fitEdit;
     supa_ = supa;
-
+    tcp_ = tcp;
     supa_.ObservableForProperty(x => x.IsAuthenticated).Subscribe(async _ => await GetIsAuthenticatedAsync());
   }
 
@@ -74,7 +77,7 @@ public partial class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticato
 
   public async Task<bool> AuthenticateClientSideAsync(string username, CancellationToken ct = default)
   {
-    int port = Tcp.GetRandomUnusedPort();
+    int port = tcp_.GetRandomUnusedPort();
 
     // Supabase is designed for web apps.
     // PKCE redirects the access token in the URL fragment (after a #) instead of in the query string (after a ?)
