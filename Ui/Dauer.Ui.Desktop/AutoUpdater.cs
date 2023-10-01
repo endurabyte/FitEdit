@@ -48,12 +48,12 @@ public class AutoUpdater
 
     _ = Task.Run(async () =>
     {
-      await Task.Delay(TimeSpan.FromMinutes(1), ct);
+      await Task.Delay(TimeSpan.FromSeconds(30), ct);
 
       while (!ct.IsCancellationRequested)
       {
         await CheckForUpdates(ct);
-        await Task.Delay(TimeSpan.FromHours(1), ct);
+        await Task.Delay(TimeSpan.FromMinutes(30), ct);
       }
     }, ct);
   }
