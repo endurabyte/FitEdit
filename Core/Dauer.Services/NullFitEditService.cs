@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using Dauer.Model.GarminConnect;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -15,6 +16,7 @@ public class NullFitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool IsActive { get; set; } = true;
   [Reactive] public bool SupportsPayments { get; set; } = true;
   [Reactive] public string? Username { get; set; } = "fake@fake.com";
+  [Reactive] public List<GarminCookie> GarminCookies { get; set; } = new();
 
   public Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {

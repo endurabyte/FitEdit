@@ -101,7 +101,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
       cookies.Add(new Model.Cookie
       {
         Name = "GARMIN-SSO",
-        Domain = "connect.garmin.com",
+        Domain = ".garmin.com",
         Path = "/",
         Value = "1",
       }.MapSystemCookie());
@@ -109,7 +109,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
       cookies.Add(new Model.Cookie
       {
         Name = "GARMIN-SSO-CUST-GUID",
-        Domain = "connect.garmin.com",
+        Domain = ".garmin.com",
         Path = "/",
         Value = Config.SsoId,
       }.MapSystemCookie());
@@ -125,7 +125,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
       cookies.Add(new Model.Cookie
       {
         Name = "JWT_FGP",
-        Domain = "connect.garmin.com",
+        Domain = ".connect.garmin.com",
         Path = "/",
         Value = Config.JwtId, // This will be null the first time this method runs, and nonnull after the first access token exchange.
       }.MapSystemCookie());
@@ -135,6 +135,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     client.DefaultRequestHeaders.Add("DNT", "1");
 
     // Sets some cloudflare cookies
+    Cookies = cookies.MapModel();
     HttpResponseMessage init = await client.GetAsync("https://connect.garmin.com");
     Cookies = cookies.MapModel();
 
@@ -302,7 +303,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
       var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
       _ = Task.Run(async () =>
       {
-        json = await ServeAsync(client, cookies, listener, autoLogin: true, ct: cts.Token);
+        json = await ServeAsync(client, cookies, listener, autoLogin: false, ct: cts.Token);
         cts.Cancel();
       }, cts.Token);
 
@@ -415,10 +416,10 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     client.DefaultRequestHeaders.Add("referer", $"https://sso.garmin.com/portal/sso/{LOCALE}/sign-in?{queryParams}");
 
     var url = $"https://sso.garmin.com/portal/api/login?{queryParams}";
-    HttpResponseMessage resp3 = await client.PostAsJsonAsync(url, dict);
+    HttpResponseMessage resp = await client.PostAsJsonAsync(url, dict);
 
-    json = await resp3.Content.ReadAsStringAsync();
-    if (!resp3.RequireHttpOk($"POST login credentials failed"))
+    json = await resp.Content.ReadAsStringAsync();
+    if (!resp.RequireHttpOk($"POST login credentials failed"))
     {
       // Fall through, the validation below for GarminLoginError will handle this
     }
@@ -466,7 +467,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     }
   }
 
-  public async Task<bool> IsAuthenticatedAsync() => await IsAuthenticatedAsync(GetCachedCookies("connect.garmin.com"));
+  public async Task<bool> IsAuthenticatedAsync() => await IsAuthenticatedAsync(GetCachedCookies(null));
 
   private async Task<bool> IsAuthenticatedAsync(CookieContainer cookies)
   { 

@@ -9,4 +9,7 @@ public class GarminUser : BaseModel
   public string Id { get; set; } = "";
   [Column(nameof(AccessToken))]
   public string? AccessToken { get; set; }
+
+  [Column(nameof(Cookies))]
+  public string? Cookies { get; set; }
 }

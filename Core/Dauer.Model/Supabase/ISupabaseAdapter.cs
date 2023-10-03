@@ -10,6 +10,7 @@ public interface ISupabaseAdapter
   bool IsAuthenticatedWithStrava { get; }
   bool IsActive { get; }
   Authorization? Authorization { get; set; }
+  string? GarminCookies { get; }
 
   Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default);
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);

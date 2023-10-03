@@ -33,6 +33,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   [Reactive] public bool IsAuthenticatedWithStrava { get; private set; }
   [Reactive] public bool IsActive { get; private set; }
   [Reactive] public Authorization? Authorization { get; set; }
+  [Reactive] public string? GarminCookies { get; private set; }
 
   private RealtimeChannel? userChannel_;
   private RealtimeChannel? stravaUserChannel_;
@@ -404,6 +405,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     if (user is null) { return false; }
     IsAuthenticatedWithGarmin = !string.IsNullOrEmpty(user.AccessToken);
+    GarminCookies = user.Cookies;
     return true;
   }
 

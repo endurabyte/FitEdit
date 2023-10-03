@@ -1,4 +1,6 @@
 ﻿#nullable enable
+using Dauer.Model.GarminConnect;
+
 namespace Dauer.Services;
 
 public interface IFitEditService
@@ -12,6 +14,7 @@ public interface IFitEditService
   bool IsActive { get; }
   bool SupportsPayments { get; }
   string? Username { get; set; }
+  List<GarminCookie> GarminCookies { get; }
 
   Task<bool> AuthenticateAsync(CancellationToken ct = default);
   Task<bool> LogoutAsync(CancellationToken ct = default);

@@ -141,6 +141,26 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
           : "Signed out";
       });
 
+    FitEdit.ObservableForProperty(x => x.GarminCookies)
+      .Subscribe(async _ =>
+      {
+        GarminSsoId = FitEdit.GarminCookies.FirstOrDefault(c => c.Name == "GARMIN-SSO-CUST-GUID")?.Value ?? null;
+        GarminSessionId = FitEdit.GarminCookies.FirstOrDefault(c => c.Name == "SESSIONID")?.Value ?? null;
+        Garmin.Config.SsoId = GarminSsoId;
+        Garmin.Config.SessionId = GarminSessionId;
+
+        garmin.Cookies = FitEdit.GarminCookies.ToDictionaryAllowDuplicateKeys(c => c.Name ?? "", c => new Cookie
+        {
+          Name = c.Name ?? "",
+          Value = c.Value ?? "",
+          Path = c.Path ?? "",
+          Domain = c.Domain ?? ""
+        });
+
+        GarminManualLogin = GarminSsoId != null && GarminSessionId != null;
+        await LoginWithGarminAsync();
+      });
+
     garmin.ObservableForProperty(x => x.Cookies).Subscribe(async _ =>
     {
       await UpdateSettingsAsync(settings => settings.GarminCookies = Garmin.Cookies);
@@ -163,7 +183,10 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     StravaPassword = settings.StravaPassword;
     Strava.Cookies = settings.StravaCookies;
 
-    await LoginWithGarminAsync();
+    if (GarminManualLogin)
+    {
+      await LoginWithGarminAsync();
+    }
     await LoginWithStravaAsync();
   }
 

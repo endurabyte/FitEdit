@@ -1,5 +1,7 @@
 ﻿using Dauer.Model;
 using Dauer.Model.Clients;
+using Dauer.Model.Data;
+using Dauer.Model.GarminConnect;
 using Dauer.Services;
 using Dauer.Ui.Model.Supabase;
 using ReactiveUI;
@@ -18,6 +20,7 @@ public class FitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool IsActive { get; private set; }
   [Reactive] public bool SupportsPayments { get; private set; }
   [Reactive] public string? Username { get; set; }
+  [Reactive] public List<GarminCookie> GarminCookies { get; set; } = new();
 
   private readonly ISupabaseAdapter supa_;
   private readonly IWebAuthenticator authenticator_;
@@ -69,6 +72,13 @@ public class FitEditService : ReactiveObject, IFitEditService
       {
         Username = supa_.Authorization?.Username;
         client_.AccessToken = AccessToken_;
+      });
+
+    supa_
+      .ObservableForProperty(x => x.GarminCookies)
+      .Subscribe(_ =>
+      {
+        GarminCookies = Json.MapFromJson<List<GarminCookie>>(supa_.GarminCookies ?? "") ?? new List<GarminCookie>();
       });
 
     this
