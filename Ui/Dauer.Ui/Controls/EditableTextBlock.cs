@@ -68,7 +68,7 @@ public class EditableTextBlock : UserControl
   {
     base.OnInitialized();
 
-    if (string.IsNullOrEmpty(DisplayText))
+    if (string.IsNullOrWhiteSpace(DisplayText))
     {
       DisplayText = "(None)";
     }
@@ -91,7 +91,7 @@ public class EditableTextBlock : UserControl
       isEditing_ = false;
       try
       {
-        Text = textBox_.Text ?? "(None)";
+        Text = string.IsNullOrWhiteSpace(textBox_.Text) ? "(None)" : textBox_.Text;
       }
       catch (Exception)
       {

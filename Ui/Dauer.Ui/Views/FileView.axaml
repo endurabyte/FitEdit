@@ -80,7 +80,7 @@
           </TextBlock>
         </ToolTip.Tip>
       </Button>
-      <Button Command="{Binding HandleRepairBackfillMissingFieldsClicked}" Content="Repair (Add Missing Fields)">
+      <Button Command="{Binding HandleRepairBackfillMissingFieldsClicked}" Content="Repair (Backfill)">
         <ToolTip.Tip>
           <TextBlock TextWrapping="Wrap">
             Attempt to repair the file <LineBreak/>
@@ -132,6 +132,7 @@
               <TextBlock Text="Title" Margin="0 10 0 0" FontWeight="Bold"/>
               <controls:EditableTextBlock DisplayText="{Binding Activity.Name, Mode=OneWay}"
                                           Text="{Binding Activity.Name, Mode=TwoWay}"
+                                          MinWidth="50"
                                           Margin="10 5 0 0"/>
               
               <TextBlock Text="Date" Margin="0 10 0 0" FontWeight="Bold"/>
@@ -142,6 +143,7 @@
                                           Text="{Binding Activity.Description, Mode=TwoWay}"
                                           HorizontalAlignment="Left"
                                           Margin="10 5 0 0"
+                                          MinWidth="50"
                                           MaxWidth="300"/>
 
               <TextBlock Text="Actions" Margin="0 10 0 0" FontWeight="Bold"/>
