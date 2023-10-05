@@ -30,8 +30,8 @@ public class DesignFileViewModel : FileViewModel
   public DesignFileViewModel() : base(
     new NullFileService(),
     new NullFitEditService(),
-    new NullStorageAdapter(),
     new NullGarminConnectClient(),
+    new NullStorageAdapter(),
     new NullSupabaseAdapter(),
     new NullBrowser(),
     new DesignLogViewModel()) { }
@@ -66,8 +66,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public IFileService FileService { get; }
   public IFitEditService FitEdit { get; }
+  public IGarminConnectClient Garmin { get; }
   private readonly IStorageAdapter storage_;
-  private readonly IGarminConnectClient garmin_;
   private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
@@ -75,8 +75,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public FileViewModel(
     IFileService fileService,
     IFitEditService fitEdit,
-    IStorageAdapter storage,
     IGarminConnectClient garmin,
+    IStorageAdapter storage,
     ISupabaseAdapter supa,
     IBrowser browser,
     ILogViewModel log
@@ -84,9 +84,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     FileService = fileService;
     FitEdit = fitEdit;
+    Garmin = garmin;
     supa_ = supa;
     storage_ = storage;
-    garmin_ = garmin;
     log_ = log;
     browser_ = browser;
 
@@ -97,16 +97,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       fileService.MainFile = fileService.Files[i];
     });
 
-    FileService.SubscribeAdds(file =>
-    {
-      file.SubscribeToIsLoaded(LoadOrUnload);
-      SubscribeNameAndDescriptionChanges(file);
-    });
+    FileService.SubscribeAdds(SubscribeNameAndDescriptionChanges);
 
     if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
     {
-      file.SubscribeToIsLoaded(LoadOrUnload);
       SubscribeNameAndDescriptionChanges(file);
     }
   }
@@ -120,9 +115,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await FileService.UpdateAsync(file.Activity);
 
       if (!FitEdit.IsActive) { return; }
-      if (!garmin_.IsSignedIn) { return; }
+      if (!Garmin.IsSignedIn) { return; }
       if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
-      await garmin_.SetActivityName(id, file.Activity.Name ?? "");
+      await Garmin.SetActivityName(id, file.Activity.Name ?? "");
     });
 
     file.Activity.ObservableForProperty(x => x.Description).Subscribe(async _ =>
@@ -130,9 +125,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await FileService.UpdateAsync(file.Activity);
 
       if (!FitEdit.IsActive) { return; }
-      if (!garmin_.IsSignedIn) { return; }
+      if (!Garmin.IsSignedIn) { return; }
       if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
-      await garmin_.SetActivityDescription(id, file.Activity.Description ?? "");
+      await Garmin.SetActivityDescription(id, file.Activity.Description ?? "");
     });
   }
 
@@ -289,46 +284,48 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     });
   }
 
-  private void LoadOrUnload(UiFile sf)
+  public void LoadOrUnload(UiFile uif)
   {
-    if (sf.IsVisible)
+    if (!uif.IsVisible)
     {
-      _ = Task.Run(async () => await LoadFile(sf).AnyContext());
+      _ = Task.Run(async () => await LoadFile(uif).AnyContext());
       return;
     }
 
-    UnloadFile(sf);
+    UnloadFile(uif);
   }
 
-  private void UnloadFile(UiFile? sf)
+  private void UnloadFile(UiFile? uif)
   {
-    if (sf == null) { return; }
+    if (uif == null) { return; }
     FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsVisible);
-    sf.Progress = 0;
+    uif.Progress = 0;
+    uif.IsVisible = false;
   }
 
-  private async Task LoadFile(UiFile? sf)
+  private async Task LoadFile(UiFile? uif)
   {
-    if (sf == null || sf.Activity == null || sf.Activity.File == null)
+    if (uif == null || uif.Activity == null || uif.Activity.File == null)
     {
       Log.Info("Could not load null file");
       return;
     }
 
-    if (sf.FitFile != null) 
+    if (uif.FitFile != null) 
     {
-      Log.Info($"File {sf.Activity.Name} is already loaded");
-      sf.Progress = 100;
+      Log.Info($"File {uif.Activity.Name} is already loaded");
+      uif.Progress = 100;
+      uif.IsVisible = true;
       return;
     }
 
-    DauerActivity? act = await FileService.ReadAsync(sf.Activity.Id);
+    DauerActivity? act = await FileService.ReadAsync(uif.Activity.Id);
     FileReference? file = act?.File;
-    sf.Activity.File = act?.File;
+    uif.Activity.File = act?.File;
 
     if (file == null) 
     {
-      Log.Error($"Could not load file {sf.Activity.Name}");
+      Log.Error($"Could not load file {uif.Activity.Name}");
       return;
     }
 
@@ -359,7 +356,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       // Instead of reading all FIT messages at once,
       // Read just a few FIT messages at a time so that other tasks can run on the main thread e.g. in WASM
-      sf.Progress = 0;
+      uif.Progress = 0;
 
       try
       {
@@ -371,7 +368,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
           }
 
           double progress = (double)ms.Position / ms.Length * 100;
-          sf.Progress = progress;
+          uif.Progress = progress;
           await TaskUtil.MaybeYield();
           lastPosition = ms.Position;
         }
@@ -387,12 +384,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       // Do on the main thread because there are subscribers which update the UI
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
-        sf.FitFile = fit;
+        uif.FitFile = fit;
+        uif.IsVisible = true;
         FileService.MainFile = null; // Trigger notification
-        FileService.MainFile = sf;
+        FileService.MainFile = uif;
       });
 
-      sf.Progress = 100;
+      uif.Progress = 100;
       await log_.Log($"Done reading FIT file");
       Log.Info(fit.Print(showRecords: false));
     }
@@ -515,7 +513,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Additive));
   }
 
-  public void HandleRepairBackfillMissingFieldsClicked()
+  public void HandleRepairBackfillClicked()
   {
     int index = SelectedIndex;
     if (index < 0 || index >= FileService.Files.Count)
@@ -562,7 +560,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (act.Source == ActivitySource.GarminConnect)
     {
       if (!long.TryParse(act.SourceId, out long id)) { return; }
-      await garmin_.DeleteActivity(id);
+      await Garmin.DeleteActivity(id);
     }
   }
 
@@ -581,10 +579,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (act is null) { return; }
     if (act.File?.Bytes is null) { return; }
+    if (act.File.Bytes.Length == 0) { return; }
 
     var ms = new MemoryStream(act.File.Bytes);
 
-    (bool ok, long id) = await garmin_
+    (bool ok, long id) = await Garmin
       .UploadActivity(ms, new FileFormat { FormatKey = "fit" })
       .AnyContext();
 

@@ -18,106 +18,31 @@
 
   <Grid RowDefinitions="Auto, *">
     
-    <WrapPanel Grid.Row="0" Orientation="Horizontal" >
-      <Button Command="{Binding HandleImportClicked}" Content="Import" ToolTip.Tip="Import a file from disk"/>
-      <Button Command="{Binding HandleExportClicked}" Content="Export" 
-              ToolTip.Tip="Export a file to disk"/>
-      <Button Command="{Binding HandleGarminUploadClicked}" Content="Garmin Upload Page" ToolTip.Tip="Open the Garmin Connect file upload page"/>
-      <Button Command="{Binding HandleStravaUploadClicked}" Content="Strava Upload Page" ToolTip.Tip="Open the Strava file upload page"/>
-      <Button Command="{Binding HandleRemoveClicked}" Content="Remove">
-        <ToolTip.Tip>
-          <TextBlock TextWrapping="Wrap">
-            Remove the selected activity. <LineBreak/>
-            Removes the activity from the list, local cache and database, and remote cache and database (if logged in). <LineBreak/>
-            Does not affect the activity stored by external services such as Garmin or Strava.
-          </TextBlock>
-        </ToolTip.Tip>
-      </Button>
-      <Button Command="{Binding HandleRepairSubtractivelyClicked}" Content="Repair (Subtractive)">
-        <ToolTip.Tip>
-          <TextBlock TextWrapping="Wrap">
-            Attempt to repair the file <LineBreak/>
-
-            <LineBreak/>
-            This strategy preserves more information than the additive method.
-            It starts with a copy of the given file and removes unnecessary messages. <LineBreak/>
-            
-            <LineBreak/>
-            The resulting file preserves sport-specific data such as power, swim strokes, vertical osclliation.
-            It preserves laps, sessions, and individual sports in multisport activities like triathlons. <LineBreak/>
-
-            <LineBreak/>
-            The repaired file should be uploadable to Garmin Connect.
-            If this strategy does not work, try the additive method.
-          </TextBlock>
-        </ToolTip.Tip>
-      </Button>
-      <Button Command="{Binding HandleRepairAdditivelyClicked}" Content="Repair (Additive)">
-        <ToolTip.Tip>
-          <TextBlock TextWrapping="Wrap">
-            Attempt to repair the file <LineBreak/>
-
-            <LineBreak/>
-            This strategy preserves less information than the subtractive method.
-            It starts with a blank file and copies over the bare minimum data. <LineBreak/>
-            
-            <LineBreak/>
-            The resulting file will be condensed into one lap, session, and sport. 
-            It will contain the generic data from the original file, such as GPS coordinates (if available),
-            heart rate (if available), timestamp, and speed/pace. 
-            Sport-specific data such as power, swim strokes, and vertical oscillation will not be preserved.<LineBreak/>
-            
-            <LineBreak/>
-            Multisport events like triathlons will be condensed into one sport.
-            The resulting sport will be the first in the given file, i.e. typically open water swim.
-            This can be changed in Data -> Sport.<LineBreak/>
-
-            <LineBreak/>
-            The repaired file includes all lat/lon records except those with speed spikes (speeds greater than 1000m/s)
-
-            <LineBreak/>
-            The repaired file should be uploadable to Garmin Connect.
-          </TextBlock>
-        </ToolTip.Tip>
-      </Button>
-      <Button Command="{Binding HandleRepairBackfillMissingFieldsClicked}" Content="Repair (Backfill)">
-        <ToolTip.Tip>
-          <TextBlock TextWrapping="Wrap">
-            Attempt to repair the file <LineBreak/>
-
-            <LineBreak/>
-            This strategy attempts to backfill missing fields. <LineBreak/>
-            
-            <LineBreak/>
-            If there are no lap messages, one is added.
-            If there are no session messages, one for each sport message is added.
-            If there are no activity messages, one is added.
-
-            <LineBreak/>
-            <LineBreak/>
-            The repaired file should be uploadable to Garmin Connect.
-          </TextBlock>
-        </ToolTip.Tip>
-      </Button>
-      <Button Command="{Binding HandleSplitByLapsClicked}" Content="Split By Lap">
-        <ToolTip.Tip>
-          <TextBlock TextWrapping="Wrap">
-            Split the file into multiple files, one for each lap.
-          </TextBlock>
-        </ToolTip.Tip>
-      </Button>
-      <Button Command="{Binding HandleMergeClicked}" Content="Merge">
-        <ToolTip.Tip>
-          <TextBlock TextWrapping="Wrap">
-            Merge the selected files.<LineBreak/>
-            This creates a new file containing the data from all selected files.
-          </TextBlock>
-        </ToolTip.Tip>
-      </Button>
-    </WrapPanel>
+    <Menu HorizontalAlignment="Right" Margin="0 0 0 20">
+      <MenuItem Header="⋮" FontSize="24"
+                ToolTip.Tip="Show the menu">
+        <MenuItem Command="{Binding HandleImportClicked}" Header="Import" ToolTip.Tip="Import a file from disk"/>
+        <MenuItem Command="{Binding HandleGarminUploadClicked}" Header="Garmin Upload Page" ToolTip.Tip="Open the Garmin Connect file upload page"/>
+        <MenuItem Command="{Binding HandleStravaUploadClicked}" Header="Strava Upload Page" ToolTip.Tip="Open the Strava file upload page"/>
+        <MenuItem Command="{Binding HandleMergeClicked}" Header="Merge">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Merge the selected files.<LineBreak/>
+              This creates a new file containing the data from all loaded files.
+            </TextBlock>
+          </ToolTip.Tip>
+        </MenuItem>
+      </MenuItem>
+    </Menu>
 
     <ListBox x:Name="FileListBox" Grid.Row="1" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
 
+      <ListBox.Styles>
+        <Style Selector="TextBlock">
+          <Setter Property="Margin" Value="0 5 5 0"/>
+        </Style>
+      </ListBox.Styles>
+        
       <ListBox.ItemsPanel>
         <ItemsPanelTemplate>
           <StackPanel Orientation="Vertical"/>
@@ -126,87 +51,184 @@
 
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <Border Background="Gray" CornerRadius="4" Padding="4">
-            <StackPanel Orientation="Vertical">
+          <Border Background="{StaticResource FitLeadBlack2}" CornerRadius="20" Padding="20">
 
-              <TextBlock Text="Title" Margin="0 10 0 0" FontWeight="Bold"/>
-              <controls:EditableTextBlock DisplayText="{Binding Activity.Name, Mode=OneWay}"
+            <Grid RowDefinitions="*, *, *, Auto" ColumnDefinitions="Auto, *, Auto">
+              
+              <TextBlock Grid.Row="0" Text="Title" FontWeight="Bold"/>
+
+              <controls:EditableTextBlock Grid.Row="0" Grid.Column="1" 
+                                          DisplayText="{Binding Activity.Name, Mode=OneWay}"
                                           Text="{Binding Activity.Name, Mode=TwoWay}"
-                                          MinWidth="50"
-                                          Margin="10 5 0 0"/>
+                                          MinWidth="50"/>
               
-              <TextBlock Text="Date" Margin="0 10 0 0" FontWeight="Bold"/>
-              <TextBlock Text="{Binding Activity.StartTimeLocal, StringFormat={}{0:F}}" Margin="10 5 0 0"/>
+              <TextBlock Grid.Row="1" Text="Date" FontWeight="Bold"/>
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Activity.StartTimeLocal, StringFormat={}{0:F}}" />
               
-              <TextBlock Text="Description" Margin="0 10 0 0" FontWeight="Bold"/>
-              <controls:EditableTextBlock DisplayText="{Binding Activity.Description, Mode=OneWay}"
+              <TextBlock Grid.Row="2" Text="Description" FontWeight="Bold"/>
+              <controls:EditableTextBlock Grid.Row="2" Grid.Column="1"
+                                          DisplayText="{Binding Activity.Description, Mode=OneWay}"
                                           Text="{Binding Activity.Description, Mode=TwoWay}"
                                           HorizontalAlignment="Left"
-                                          Margin="10 5 0 0"
                                           MinWidth="50"
-                                          MaxWidth="300"/>
+                                          MaxWidth="300"/> 
 
-              <TextBlock Text="Actions" Margin="0 10 0 0" FontWeight="Bold"/>
+              <controls:PieProgressIndicator Grid.Row="0" Grid.Column="2" 
+                                             VerticalAlignment="Top"
+                                             IsVisible="{Binding Progress > 0}"
+                                             Maximum="100" Value="{Binding Progress}" Height="15"/>
+              
+              <Menu Grid.Row="2" Grid.RowSpan="2" Grid.Column="2" VerticalAlignment="Bottom">
+                
+                <MenuItem Header="⋮" FontSize="24"
+                          ToolTip.Tip="Show activity menu">
+                
+                  <MenuItem Header="_Load" 
+                            IsVisible="{Binding !IsVisible}"
+                            IsEnabled="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).LoadOrUnload}"
+                            CommandParameter="{Binding}"
+                            ToolTip.Tip="Load the file"/>
+                  <MenuItem Header="Unload"
+                            IsVisible="{Binding IsVisible}"
+                            Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).LoadOrUnload}"
+                            CommandParameter="{Binding}"
+                            ToolTip.Tip="Unload the file"/>
 
-              <StackPanel Orientation="Horizontal" Margin="10 0 0 0">
+                  <MenuItem Header="Import"
+                      Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
+                      CommandParameter="{Binding Activity}"
+                      IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
+                      ToolTip.Tip="Import a file from disk and associate it with this activity"/>
 
-                <Button
-                    Margin="5"
-                    VerticalAlignment="Center"
-                    Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleActivityImportClicked}"
-                    CommandParameter="{Binding Activity}"
-                    IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
-                    ToolTip.Tip="Import a file from disk and associate it with this activity"
-                    Content="+">
-                </Button>
-
-                <Grid
-                  IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
-
-                  <Button
-                    Margin="5"
-                    VerticalAlignment="Center"
-                    Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleUploadClicked}"
-                    CommandParameter="{Binding Activity}"
-                    IsVisible="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNullOrEmpty}}"
-                    ToolTip.Tip="Upload"
-                    Content="↑">
-                  </Button>
-                </Grid>
-
-                <StackPanel Orientation="Horizontal"
-                            IsVisible="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}">
-                  <CheckBox IsChecked="{Binding IsVisible}" Margin="10 0 0 0">
+                  <MenuItem Header="Export"
+                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleExportClicked}"
+                          CommandParameter="{Binding}"
+                          ToolTip.Tip="Export to file"/>
+                  
+                  <MenuItem Header="Remove"
+                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRemoveClicked}"
+                          CommandParameter="{Binding}">
                     <ToolTip.Tip>
                       <TextBlock TextWrapping="Wrap">
-                        Load and show the file
+                        Remove the selected activity. <LineBreak/>
+                        Removes the activity from the list, local cache and database, and remote cache and database (if logged in). <LineBreak/>
+                        Does not affect the activity stored by external services such as Garmin or Strava.
                       </TextBlock>
                     </ToolTip.Tip>
-                  </CheckBox>
-                  <controls:PieProgressIndicator Maximum="100" Value="{Binding Progress}" Margin="0 0 10 0"/>
-                </StackPanel>
+                  </MenuItem>
+                  
+                  <MenuItem Header="-"/>
+                  
+                  <MenuItem Header ="Split by Lap"
+                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleSplitByLapsClicked}"
+                          CommandParameter="{Binding}">
+                    <ToolTip.Tip>
+                      <TextBlock TextWrapping="Wrap">
+                        Split the file into multiple files, one for each lap.
+                      </TextBlock>
+                    </ToolTip.Tip>
+                  </MenuItem>
+                  
+                  <MenuItem Header="Repair">
+                    <MenuItem Header="Subtractively"
+                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRepairSubtractivelyClicked}"
+                          CommandParameter="{Binding}">
+                      <ToolTip.Tip>
+                        <TextBlock TextWrapping="Wrap">
+                          Attempt to repair the file <LineBreak/>
 
-                <Button
-                  Margin="5"
-                  VerticalAlignment="Center"
-                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleDeleteOnlineClicked}"
-                  CommandParameter="{Binding Activity}"
-                  IsVisible="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                  ToolTip.Tip="Delete online e.g. Garmin, Strava"
-                  Content="🗑"/>
+                          <LineBreak/>
+                          This strategy preserves more information than the additive method.
+                          It starts with a copy of the given file and removes unnecessary messages. <LineBreak/>
 
-                <Button
-                  Margin="5"
-                  VerticalAlignment="Center"
-                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
-                  CommandParameter="{Binding Activity}"
-                  IsVisible="{Binding Activity.OnlineUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                  Classes="hyperlink"
-                  Content="View Online"/>
+                          <LineBreak/>
+                          The resulting file preserves sport-specific data such as power, swim strokes, vertical osclliation.
+                          It preserves laps, sessions, and individual sports in multisport activities like triathlons. <LineBreak/>
 
-              </StackPanel>
+                          <LineBreak/>
+                          The repaired file should be uploadable to Garmin Connect.
+                          If this strategy does not work, try the additive method.
+                        </TextBlock>
+                      </ToolTip.Tip>
+                    </MenuItem>
+                    <MenuItem Header="Additively"
+                              Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRepairAdditivelyClicked}"
+                              CommandParameter="{Binding}">
+                      <ToolTip.Tip>
+                        <TextBlock TextWrapping="Wrap">
+                          Attempt to repair the file <LineBreak/>
 
-            </StackPanel>
+                          <LineBreak/>
+                          This strategy preserves less information than the subtractive method.
+                          It starts with a blank file and copies over the bare minimum data. <LineBreak/>
+
+                          <LineBreak/>
+                          The resulting file will be condensed into one lap, session, and sport.
+                          It will contain the generic data from the original file, such as GPS coordinates (if available),
+                          heart rate (if available), timestamp, and speed/pace.
+                          Sport-specific data such as power, swim strokes, and vertical oscillation will not be preserved.<LineBreak/>
+
+                          <LineBreak/>
+                          Multisport events like triathlons will be condensed into one sport.
+                          The resulting sport will be the first in the given file, i.e. typically open water swim.
+                          This can be changed in Data -> Sport.<LineBreak/>
+
+                          <LineBreak/>
+                          The repaired file includes all lat/lon records except those with speed spikes (speeds greater than 1000m/s)
+
+                          <LineBreak/>
+                          The repaired file should be uploadable to Garmin Connect.
+                        </TextBlock>
+                      </ToolTip.Tip>
+                    </MenuItem>
+                    <MenuItem Header="Backfill"
+                              Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRepairBackfillClicked}"
+                              CommandParameter="{Binding}">
+                      <ToolTip.Tip>
+                        <TextBlock TextWrapping="Wrap">
+                          Attempt to repair the file <LineBreak/>
+
+                          <LineBreak/>
+                          This strategy attempts to backfill missing fields. <LineBreak/>
+
+                          <LineBreak/>
+                          If there are no lap messages, one is added.
+                          If there are no session messages, one for each sport message is added.
+                          If there are no activity messages, one is added.
+
+                          <LineBreak/>
+                          <LineBreak/>
+                          The repaired file should be uploadable to Garmin Connect.
+                        </TextBlock>
+                      </ToolTip.Tip>
+                    </MenuItem>
+                  </MenuItem>
+                
+                  <MenuItem Header="-"/>
+                  
+                  <MenuItem Header="Garmin"
+                            IsEnabled="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).Garmin.IsSignedIn}">
+
+                    <MenuItem Header="Delete from Garmin"
+                        Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleDeleteOnlineClicked}"
+                        CommandParameter="{Binding Activity}"
+                        IsEnabled="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                        InputGesture="Shift+Delete"
+                        ToolTip.Tip="Delete from Garmin"/>
+
+                    <MenuItem Header="Upload to Garmin"
+                      Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleUploadClicked}"
+                      CommandParameter="{Binding Activity}"
+                      IsEnabled="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                      ToolTip.Tip="Upload to Garmin, if signed in and not already uploaded"/>
+                  </MenuItem>
+
+              </MenuItem>
+
+              </Menu>
+            </Grid>
+
           </Border>
         </DataTemplate>
       </ListBox.ItemTemplate>

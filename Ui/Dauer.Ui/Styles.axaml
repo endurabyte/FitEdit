@@ -1,15 +1,18 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:oxy="clr-namespace:OxyPlot.Avalonia;assembly=OxyPlot.Avalonia">
   <Design.PreviewWith>
-    <Border Padding="20">
+    <Border Padding="20" Background="#1f1f1f">
       <StackPanel>
         <TextBlock Text="TextBlock"/>
         <Button Content="Button"/>
         <Button Content="Button (Disabled)" IsEnabled="False"/>
         <Button Classes="hyperlink" Content="https://www.avaloniaui.net/"/>
+        <Button Classes="hyperlink" IsEnabled="False" Content="https://www.not-enabled.net/"/>
         <TextBox Text="TextBox"/>
         <Label Content="Label"/>
+        <CheckBox Content="CheckBox"/>
         <Separator Classes="vertical" Height="50"/>
         <Separator Width="50"/>
       </StackPanel>
@@ -18,6 +21,7 @@
 
   <Styles.Resources>
     <ResourceDictionary>
+      <sys:Int32 x:Key="FitFontSize">14</sys:Int32>
       <Color x:Key="FitOceanBlue">#005C8D</Color>
       <Color x:Key="FitSkyBlue">#8CD1F4</Color>
       <Color x:Key="FitLicoriceBlack">#000000</Color>
@@ -104,6 +108,31 @@
     </Setter>
   </Style>
 
+  <Style Selector="CheckBox">
+    <Setter Property="FontSize" Value="{DynamicResource FitFontSize}"/>
+  </Style>
+  
+  <Style Selector="Label">
+    <Setter Property="FontSize" Value="{DynamicResource FitFontSize}"/>
+  </Style>
+  
+  <Style Selector="TextBox">
+    <Setter Property="FontSize" Value="{DynamicResource FitFontSize}"/>
+  </Style>
+  
+  <Style Selector="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource FitFontSize}"/>
+  </Style>
+  
+  <Style Selector="Button">
+    <Setter Property="Padding" Value="10"/>
+    <Setter Property="Margin" Value="5"/>
+    <Setter Property="FontSize" Value="{DynamicResource FitFontSize}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource FitLicoriceBlack}"/>
+    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+  </Style>
+
   <Style Selector="Button.hyperlink">
     <Setter Property="Template">
       <ControlTemplate>
@@ -111,6 +140,9 @@
           <TextBlock.Styles>
             <Style Selector="TextBlock:pointerover">
               <Setter Property="Foreground" Value="{StaticResource SystemAccentColorLight3}"/>
+            </Style>
+            <Style Selector="TextBlock:disabled">
+              <Setter Property="Foreground" Value="{StaticResource FitLeadBlack2}"/>
             </Style>
           </TextBlock.Styles>
         </TextBlock>
