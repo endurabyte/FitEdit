@@ -131,6 +131,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       if (!long.TryParse(file.Activity.SourceId, out long id)) { return; }
       await Garmin.SetActivityDescription(id, file.Activity.Description ?? "");
     });
+
+    file.Activity.ObservableForProperty(x => x.OnlineUrl).Subscribe(async _ =>
+    {
+      await FileService.UpdateAsync(file.Activity);
+      await supa_.UpdateAsync(file.Activity);
+    });
   }
 
   public async void HandleImportClicked()

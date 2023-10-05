@@ -5,6 +5,8 @@
              xmlns:controls="clr-namespace:Dauer.Ui.Controls"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
+             xmlns:model="clr-namespace:Dauer.Model;assembly=Dauer.Model"
+             xmlns:converters="clr-namespace:Dauer.Ui.Converters"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
              x:Class="Dauer.Ui.Views.FileView"
              x:DataType="vm:FileViewModel">
@@ -16,6 +18,11 @@
     <StyleInclude Source="../Styles.axaml"/> 
   </UserControl.Styles>
 
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <converters:ObjectEqualityToBooleanConverter x:Key="ObjectEqualityToBooleanConverter"/>
+    </ResourceDictionary>
+  </UserControl.Resources>
   <Grid RowDefinitions="Auto, *">
     
     <Menu HorizontalAlignment="Right" Margin="0 0 0 20">
@@ -53,7 +60,7 @@
         <DataTemplate>
           <Border Background="{StaticResource FitLeadBlack2}" CornerRadius="20" Padding="20">
 
-            <Grid RowDefinitions="*, *, *, Auto" ColumnDefinitions="Auto, *, Auto">
+            <Grid RowDefinitions="*, *, *, *, Auto" ColumnDefinitions="Auto, *, Auto">
               
               <TextBlock Grid.Row="0" Text="Title" FontWeight="Bold"/>
 
@@ -73,12 +80,26 @@
                                           MinWidth="50"
                                           MaxWidth="300"/> 
 
+              <TextBlock Grid.Row="3" Text="URL" FontWeight="Bold"/>
+              <WrapPanel Grid.Row="3" Grid.Column="1" >
+                <controls:EditableTextBlock
+                                            DisplayText="{Binding Activity.OnlineUrlSetter, Mode=OneWay}"
+                                            Text="{Binding Activity.OnlineUrlSetter, Mode=TwoWay}"
+                                            MinWidth="50"/>
+
+                <Button Margin="0"
+                  Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleViewOnlineClicked}"
+                  CommandParameter="{Binding Activity}"
+                  IsVisible="{Binding Activity.OnlineUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                  Classes="textonly"
+                  Content="🔗"/>
+              </WrapPanel>
               <controls:PieProgressIndicator Grid.Row="0" Grid.Column="2" 
                                              VerticalAlignment="Top"
                                              IsVisible="{Binding Progress > 0}"
                                              Maximum="100" Value="{Binding Progress}" Height="15"/>
               
-              <Menu Grid.Row="2" Grid.RowSpan="2" Grid.Column="2" VerticalAlignment="Bottom">
+              <Menu Grid.Row="3" Grid.RowSpan="2" Grid.Column="2" VerticalAlignment="Bottom">
                 
                 <MenuItem Header="⋮" FontSize="24"
                           ToolTip.Tip="Show activity menu">
@@ -223,11 +244,11 @@
                     <MenuItem Header="Upload to Garmin"
                       Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleUploadClicked}"
                       CommandParameter="{Binding Activity}"
-                      IsEnabled="{Binding Activity.SourceId, Converter={x:Static StringConverters.IsNullOrEmpty}}"
-                      ToolTip.Tip="Upload to Garmin, if signed in and not already uploaded"/>
+                      IsEnabled="{Binding Activity.Source, Converter={StaticResource ObjectEqualityToBooleanConverter}, ConverterParameter={x:Static model:ActivitySource.File}}"
+                      ToolTip.Tip="Upload to Garmin."/>
                   </MenuItem>
 
-              </MenuItem>
+                </MenuItem>
 
               </Menu>
             </Grid>

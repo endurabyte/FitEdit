@@ -1,12 +1,14 @@
 ﻿#nullable enable
+using System.Text.RegularExpressions;
 using System.Web;
+using Dauer.Model.Extensions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using Units;
 
 namespace Dauer.Model;
 
-public class DauerActivity : ReactiveObject
+public partial class DauerActivity : ReactiveObject
 {
   /// <summary>
   /// NOT Garmin activity ID; our own independent ID
@@ -34,7 +36,22 @@ public class DauerActivity : ReactiveObject
   public string? FileType { get; set; }
   public string? BucketUrl { get; set; }
 
-  public string? OnlineUrl => Source switch
+  public string? OnlineUrl => InferUrl();
+  public string? OnlineUrlSetter
+  {
+    get => OnlineUrl;
+    set
+    {
+      SourceId = InferSourceId(value, Source);
+      (this as IReactiveObject).RaisePropertyChanged(nameof(SourceId));
+      (this as IReactiveObject).RaisePropertyChanged(nameof(OnlineUrlSetter));
+      (this as IReactiveObject).RaisePropertyChanged(nameof(OnlineUrl));
+    }
+  }
+
+  public DateTime? LastUpdated { get; set; }
+
+  private string InferUrl() => Source switch
   {
     ActivitySource.GarminConnect when !string.IsNullOrEmpty(SourceId) => $"https://connect.garmin.com/activity/{SourceId}",
     // When we don't have the Garmin ID, search Garmin Connect by activity name
@@ -46,5 +63,24 @@ public class DauerActivity : ReactiveObject
     _ => ""
   };
 
-  public DateTime? LastUpdated { get; set; }
+
+  private static string InferSourceId(string? url, ActivitySource source)
+  {
+    if (url is null) { return ""; }
+
+    var garminRegex = GarminRegex();
+    var stravaRegex = StravaRegex();
+
+    return source switch
+    {
+      ActivitySource.GarminConnect => garminRegex.GetSingleValue(url, 2, 1) ?? "",
+      ActivitySource.Strava => stravaRegex.GetSingleValue(url, 2, 1) ?? "",
+      _ => "",
+    };
+  }
+
+  [GeneratedRegex(".*activity/(\\d+)")]
+  private static partial Regex GarminRegex();
+  [GeneratedRegex(".*activities/(\\d+)")]
+  private static partial Regex StravaRegex();
 }

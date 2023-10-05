@@ -8,6 +8,7 @@
         <TextBlock Text="TextBlock"/>
         <Button Content="Button"/>
         <Button Content="Button (Disabled)" IsEnabled="False"/>
+        <Button Classes="textonly" Content="🔗"/>
         <Button Classes="hyperlink" Content="https://www.avaloniaui.net/"/>
         <Button Classes="hyperlink" IsEnabled="False" Content="https://www.not-enabled.net/"/>
         <TextBox Text="TextBox"/>
@@ -137,6 +138,25 @@
     <Setter Property="Template">
       <ControlTemplate>
         <TextBlock Text="{TemplateBinding Content}" Foreground="{StaticResource SystemAccentColorLight1}" TextDecorations="Underline">
+          <TextBlock.Styles>
+            <Style Selector="TextBlock:pointerover">
+              <Setter Property="Foreground" Value="{StaticResource SystemAccentColorLight3}"/>
+            </Style>
+            <Style Selector="TextBlock:disabled">
+              <Setter Property="Foreground" Value="{StaticResource FitLeadBlack2}"/>
+            </Style>
+          </TextBlock.Styles>
+        </TextBlock>
+      </ControlTemplate>
+    </Setter>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
+  <Style Selector="Button.textonly">
+    <Setter Property="Template">
+      <ControlTemplate>
+        <TextBlock Text="{TemplateBinding Content}" Foreground="{StaticResource SystemAccentColorLight1}">
           <TextBlock.Styles>
             <Style Selector="TextBlock:pointerover">
               <Setter Property="Foreground" Value="{StaticResource SystemAccentColorLight3}"/>
