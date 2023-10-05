@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 using Dauer.Data;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -41,6 +42,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private RealtimeChannel? garminActivityChannel_;
 
   private readonly SemaphoreSlim updateSem_ = new(1, 1);
+  private readonly SemaphoreSlim downloadSem_ = new(1, 1);
 
   public SupabaseAdapter(
     ILogger<SupabaseAdapter> log,
@@ -163,15 +165,41 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     if (activity == null) { return; }
 
     DauerActivity toWrite = activity.MapDauerActivity();
-    UiFile? uiFile = fileService_.Files.FirstOrDefault(f => f?.Activity?.Id == toWrite.Id);
 
-    if (uiFile != null)
+    UiFile? uif;
+    bool isNew = false;
+
+    // Prevent downloading the same new upload more than once.
+    // I've seen as many as 5 rapid notifications from Garmin for the same activity upload.
+    // Proceed even if we didn't enter the semaphore, since we prefer duplicate downloads over missing any.
+    bool entered = await downloadSem_.WaitAsync(TimeSpan.FromMinutes(1)).AnyContext();
+
+    try
     {
-      await UpdateExistingActivity(uiFile, toWrite).AnyContext();
+      uif = fileService_.Files.FirstOrDefault(f => f?.Activity?.Id == toWrite.Id);
+      isNew = uif == null;
+
+      if (isNew)
+      {
+        uif = new UiFile { Activity = toWrite, };
+        fileService_.Add(uif);
+      }
+    }
+    finally
+    {
+      if (entered)
+      {
+        downloadSem_.Release();
+      }
+    }
+
+    if (isNew && uif != null)
+    {
+      await AddNewActivity(uif, activity?.BucketUrl).AnyContext();
       return;
     }
 
-    await AddNewActivity(toWrite, uiFile, activity?.BucketUrl).AnyContext();
+    await UpdateExistingActivity(uif, toWrite).AnyContext();
   }
 
   /// <summary>
@@ -180,8 +208,11 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   /// </summary>
   private static string RemoveLeadingBucketName(string bucketUrl) => bucketUrl[(bucketUrl.IndexOf("/") + 1)..];
 
-  private async Task AddNewActivity(DauerActivity toWrite, UiFile? uiFile, string? bucketUrl)
+  private async Task AddNewActivity(UiFile uiFile, string? bucketUrl)
   {
+    DauerActivity? toWrite = uiFile.Activity;
+    if (toWrite is null) { return; }
+
     if (bucketUrl != null)
     {
       string path = RemoveLeadingBucketName(bucketUrl);
@@ -208,13 +239,6 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     if (ok) { log_.LogInformation("Created activity {@activity}", toWrite); }
     else { log_.LogInformation("Could not create activity {@activity}", toWrite); }
-
-
-    uiFile ??= new UiFile { Activity = toWrite, };
-
-    // Trigger update
-    fileService_.Files.Remove(uiFile);
-    fileService_.Add(uiFile);
   }
 
   private async Task UpdateExistingActivity(UiFile? existing, DauerActivity update)
@@ -431,10 +455,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     try
     {
       DateTime before = DateTime.UtcNow;
-      DateTime after = before - TimeSpan.FromDays(30);
+        // Get up to last 30 days
+      DateTime after = before - TimeSpan.FromDays(365);
 
       List<object> ids = (await fileService_
-        // Get up to last 30 days
         .GetAllActivityIdsAsync(after, before)
         .AnyContext())
         .Cast<object>()
@@ -452,7 +476,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .Get()
         .AnyContext();
 
-      Dictionary<string, bool> existing = new();
+      ConcurrentDictionary<string, bool> existing = new();
       await Parallel.ForEachAsync(possiblyNewActivities.Models, async (act, ct) => existing[act.Id] = await fileService_.ActivityExistsAsync(act.Id));
 
       List<GarminActivity> definitelyNewActivities = possiblyNewActivities.Models
