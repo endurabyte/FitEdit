@@ -135,7 +135,6 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     client.DefaultRequestHeaders.Add("DNT", "1");
 
     // Sets some cloudflare cookies
-    Cookies = cookies.MapModel();
     HttpResponseMessage init = await client.GetAsync("https://connect.garmin.com");
     Cookies = cookies.MapModel();
 
@@ -523,7 +522,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     string fileName = $"upload.{extension}";
     var url = $"{URL_UPLOAD}/.{extension}";
 
-    var form = new MultipartFormDataContent($"------WebKitFormBoundary{DateTime.UtcNow.ToString(CultureInfo.InvariantCulture)}");
+    var form = new MultipartFormDataContent($"---------------------------");
 
     using var content = new StreamContent(stream);
 
@@ -547,7 +546,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     }
     catch (Exception e)
     {
-      log_.LogError("Could not parse upload response: {e}", e);
+      log_.LogError("Could not parse upload response: {responseData} {e}", responseData, e);
       return (false, -1);
     }
 
@@ -558,7 +557,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
       return (false, -1);
     }
 
-    Success success = response.DetailImportResult.Successes.FirstOrDefault();
+    Success success = response.DetailedImportResult.Successes.FirstOrDefault();
 
     int id = success is null ? -1 : success.InternalId;
     return (true, id);

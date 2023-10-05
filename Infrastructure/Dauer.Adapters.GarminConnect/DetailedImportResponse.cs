@@ -5,5 +5,5 @@ namespace Dauer.Adapters.GarminConnect;
 public class DetailedImportResponse
 {
   [JsonPropertyName("detailedImportResult")]
-  public DetailedImportResult DetailImportResult { get; set; }
+  public DetailedImportResult DetailedImportResult { get; set; }
 }

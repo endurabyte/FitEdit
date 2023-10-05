@@ -183,10 +183,6 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     StravaPassword = settings.StravaPassword;
     Strava.Cookies = settings.StravaCookies;
 
-    if (GarminManualLogin)
-    {
-      await LoginWithGarminAsync();
-    }
     await LoginWithStravaAsync();
   }
 

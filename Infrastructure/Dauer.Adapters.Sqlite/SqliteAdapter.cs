@@ -186,7 +186,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
   { 
     AppSettings e = a.MapEntity();
     e.GarminPassword = crypto_.Encrypt(e.GarminUsername, e.GarminPassword);
-    e.GarminCookies = crypto_.Encrypt(e.GarminUsername, e.GarminCookies);
+    e.GarminCookies = crypto_.Encrypt(e.GarminSsoId, e.GarminCookies);
     e.StravaPassword = crypto_.Encrypt(e.StravaUsername, e.StravaPassword);
     e.StravaCookies = crypto_.Encrypt(e.StravaUsername, e.StravaCookies);
 
@@ -200,7 +200,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     if (e is null) { return null; }
 
     e.GarminPassword = crypto_.Decrypt(e.GarminUsername, e.GarminPassword);
-    e.GarminCookies = crypto_.Decrypt(e.GarminUsername, e.GarminCookies);
+    e.GarminCookies = crypto_.Decrypt(e.GarminSsoId, e.GarminCookies);
     e.StravaPassword = crypto_.Decrypt(e.StravaUsername, e.StravaPassword);
     e.StravaCookies = crypto_.Decrypt(e.StravaUsername, e.StravaCookies);
 

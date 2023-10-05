@@ -9,7 +9,7 @@ public static class GarminActivityMapper
   {
     Id = a.Id,
     Source = ActivitySource.GarminConnect,
-    SourceId = $"{a.GarminId}",
+    SourceId = a.GarminId <= 0 ? "" : $"{a.GarminId}",
     Name = a.Name,
     Description = a.Description,
     Type = a.Type,
