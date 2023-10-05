@@ -113,6 +113,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     file.Activity.ObservableForProperty(x => x.Name).Subscribe(async _ =>
     {
       await FileService.UpdateAsync(file.Activity);
+      await supa_.UpdateAsync(file.Activity);
 
       if (!FitEdit.IsActive) { return; }
       if (!Garmin.IsSignedIn) { return; }
@@ -123,6 +124,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     file.Activity.ObservableForProperty(x => x.Description).Subscribe(async _ =>
     {
       await FileService.UpdateAsync(file.Activity);
+      await supa_.UpdateAsync(file.Activity);
 
       if (!FitEdit.IsActive) { return; }
       if (!Garmin.IsSignedIn) { return; }
@@ -400,9 +402,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public async void HandleExportClicked()
+  public async void HandleExportClicked(UiFile uif)
   {
-    int index = SelectedIndex;
+    int index = FileService.Files.IndexOf(uif);
     if (index < 0 || FileService.Files.Count == 0)
     {
       Log.Info("No file selected; cannot export file");
@@ -489,9 +491,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     sf.Progress = 100;
   }
 
-  public void HandleRepairSubtractivelyClicked()
+  public void HandleRepairSubtractivelyClicked(UiFile uif)
   {
-    int index = SelectedIndex;
+    int index = FileService.Files.IndexOf(uif);
     if (index < 0 || index >= FileService.Files.Count)
     {
       Log.Info("No file selected; cannot repair file");
@@ -501,9 +503,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Subtractive));
   }
 
-  public void HandleRepairAdditivelyClicked()
+  public void HandleRepairAdditivelyClicked(UiFile uif)
   {
-    int index = SelectedIndex;
+    int index = FileService.Files.IndexOf(uif);
     if (index < 0 || index >= FileService.Files.Count)
     {
       Log.Info("No file selected; cannot repair file");
@@ -513,9 +515,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     _ = Task.Run(async () => await RepairAsync(FileService.Files[index], RepairStrategy.Additive));
   }
 
-  public void HandleRepairBackfillClicked()
+  public void HandleRepairBackfillClicked(UiFile uif)
   {
-    int index = SelectedIndex;
+    int index = FileService.Files.IndexOf(uif);
     if (index < 0 || index >= FileService.Files.Count)
     {
       Log.Info("No file selected; cannot repair file");

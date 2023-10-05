@@ -63,7 +63,7 @@
                                           MinWidth="50"/>
               
               <TextBlock Grid.Row="1" Text="Date" FontWeight="Bold"/>
-              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Activity.StartTimeLocal, StringFormat={}{0:F}}" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Activity.StartTimeLocal, StringFormat={}{0:g}}" />
               
               <TextBlock Grid.Row="2" Text="Description" FontWeight="Bold"/>
               <controls:EditableTextBlock Grid.Row="2" Grid.Column="1"
@@ -104,6 +104,7 @@
                   <MenuItem Header="Export"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleExportClicked}"
                           CommandParameter="{Binding}"
+                          IsEnabled="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}"
                           ToolTip.Tip="Export to file"/>
                   
                   <MenuItem Header="Remove"
@@ -114,6 +115,7 @@
                       <TextBlock TextWrapping="Wrap">
                         Remove the selected activity. <LineBreak/>
                         Removes the activity from the list, local cache and database, and remote cache and database (if logged in). <LineBreak/>
+                        Other logged in devices will remove their local copy.
                         Does not affect the activity stored by external services such as Garmin or Strava.
                       </TextBlock>
                     </ToolTip.Tip>

@@ -93,13 +93,13 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       IsAuthenticated = await IsAuthenticatedAsync();
 
       await SyncUserInfo();
-      _ = Task.Run(GetRecentActivities);
+      _ = Task.Run(SyncRecentChanges);
     });
 
     db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
     {
       Authorization = await LoadCachedAuthorization();
-      _ = Task.Run(GetRecentActivities);
+      _ = Task.Run(SyncRecentChanges);
     });
 
     this.ObservableForProperty(x => x.Authorization).Subscribe(_ =>
@@ -131,10 +131,21 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       var activity = change.Model<Model.GarminActivity>();
       log_.LogInformation($"Got GarminActivity notification {{@activity}}", activity);
 
-      _ = Task.Run(async () => await HandleActivityNotification(activity).AnyContext());
+      _ = Task.Run(async () =>
+      {
+        if (change?.Payload?.Data?.Type == global::Supabase.Realtime.Constants.EventType.Delete)
+        {
+          var old = change.OldModel<Model.GarminActivity>();
+
+          await HandleActivityDeleted(old?.Id);
+          return;
+        }
+
+        await HandleActivityAddedOrUpdated(activity).AnyContext();
+      });
     });
 
-    _ = Task.Run(GetRecentActivities);
+    _ = Task.Run(SyncRecentChanges);
   }
 
   private void Subscribe(string tableName, ref RealtimeChannel? channel, Action<PostgresChangesResponse> handleChange)
@@ -160,23 +171,36 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
   }
 
-  private async Task HandleActivityNotification(GarminActivity? activity)
+  private async Task HandleActivityDeleted(string? id)
+  {
+    if (id is null) { return; }
+    DauerActivity? act = await db_.GetActivityAsync(id);
+
+
+    UiFile? uif = fileService_.Files.FirstOrDefault(uif => uif.Activity?.Id == id);
+    if (uif != null) 
+    {
+      fileService_.Files.Remove(uif);
+    }
+
+    await fileService_.DeleteAsync(act);
+  }
+
+  private async Task HandleActivityAddedOrUpdated(GarminActivity? activity)
   {
     if (activity == null) { return; }
 
     DauerActivity toWrite = activity.MapDauerActivity();
 
-    UiFile? uif;
+    UiFile? uif = null;
     bool isNew = false;
 
     // Prevent downloading the same new upload more than once.
     // I've seen as many as 5 rapid notifications from Garmin for the same activity upload.
     // Proceed even if we didn't enter the semaphore, since we prefer duplicate downloads over missing any.
-    bool entered = await downloadSem_.WaitAsync(TimeSpan.FromMinutes(1)).AnyContext();
-
-    try
+    await downloadSem_.RunAtomically(async () =>
     {
-      uif = fileService_.Files.FirstOrDefault(f => f?.Activity?.Id == toWrite.Id);
+      uif = fileService_.Files.FirstOrDefault(f => f?.Activity?.Id == toWrite.Id || f?.Activity?.StartTime == toWrite.StartTime);
       isNew = uif == null;
 
       if (isNew)
@@ -184,14 +208,9 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         uif = new UiFile { Activity = toWrite, };
         fileService_.Add(uif);
       }
-    }
-    finally
-    {
-      if (entered)
-      {
-        downloadSem_.Release();
-      }
-    }
+
+      await Task.CompletedTask;
+    }, nameof(HandleActivityAddedOrUpdated), TimeSpan.FromMinutes(1));
 
     if (isNew && uif != null)
     {
@@ -370,6 +389,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     try
     {
+      act.LastUpdated = DateTime.UtcNow;
       act.BucketUrl = await client_.Storage
         .From("activity-files")
         .Upload(act.File.Bytes, bucketUrl);
@@ -434,28 +454,18 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   }
 
   /// <summary>
-  /// Query for activities we missed while offline
+  /// Query for activity changes we missed while offline: adds, updates, and deletes.
+  /// Sync up to 1 year
   /// </summary>
-  private async Task GetRecentActivities()
+  private async Task SyncRecentChanges()
   {
     if (!db_.Ready) { return; }
 
-    bool entered = await updateSem_.WaitAsync(TimeSpan.Zero).AnyContext();
-
-    if (!entered)
+    // Only run this method one at a time
+    await updateSem_.RunAtomically(async () =>
     {
-      return;
-    }
-
-    AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    DateTime lastSync = settings.LastSynced ?? DateTime.UtcNow - TimeSpan.FromDays(7);
-    settings.LastSynced = DateTime.UtcNow;
-    await db_.InsertOrUpdateAsync(settings);
-
-    try
-    {
+      // Sync up to 1 year
       DateTime before = DateTime.UtcNow;
-        // Get up to last 30 days
       DateTime after = before - TimeSpan.FromDays(365);
 
       List<object> ids = (await fileService_
@@ -464,48 +474,70 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .Cast<object>()
         .ToList();
 
-      // We make two requests to the database:
-      // First, we want only new activities (i.e. whose IDs we don't already know, within the last 30 days)
-      // Then, we want updated activities. (activities we know about but were updated since the last sync)
-      // Row-level security ensures we only get the user's activities.
+      await SyncAddsAndUpdates();
+      await SyncDeletes(before, after, ids);
+    }, nameof(SyncRecentChanges));
+  }
 
-      // Get user's new activities. We label them "possible" because we'll verify each against the DB.
-      var possiblyNewActivities = await client_.Postgrest.Table<Model.GarminActivity>()
-        .Where(a => a.LastUpdated > after && a.LastUpdated < before)
-        .Not("Id", Postgrest.Constants.Operator.In, ids)
-        .Get()
-        .AnyContext();
+  private async Task<DateTime> GetAndBumpLastSyncTime()
+  {
+    AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
+    DateTime lastSync = settings.LastSynced ?? DateTime.UtcNow - TimeSpan.FromDays(7);
+    settings.LastSynced = DateTime.UtcNow;
+    await db_.InsertOrUpdateAsync(settings);
+    return lastSync;
+  }
 
-      ConcurrentDictionary<string, bool> existing = new();
-      await Parallel.ForEachAsync(possiblyNewActivities.Models, async (act, ct) => existing[act.Id] = await fileService_.ActivityExistsAsync(act.Id));
+  private async Task SyncAddsAndUpdates()
+  {
+    // Get activities updated since the last sync.
+    // Row-level security ensures we only get the current user's activities.
+    DateTime lastSync = await GetAndBumpLastSyncTime();
 
-      List<GarminActivity> definitelyNewActivities = possiblyNewActivities.Models
-        .Where(act => !existing[act.Id])
-        .ToList();
-      
-      // Get user's updated activities
-      var updatedActivities = await client_.Postgrest.Table<Model.GarminActivity>()
-        .Where(a => a.LastUpdated > lastSync)
-        .Get()
-        .AnyContext();
+    var activities = await client_.Postgrest.Table<Model.GarminActivity>()
+      .Where(a => a.LastUpdated > lastSync)
+      .Get()
+      .AnyContext();
 
-      List<GarminActivity> activities = definitelyNewActivities
-        .Concat(updatedActivities.Models)
-        .ToList();
-
-      // Redundant defensive filter
-      foreach (var activity in activities)
-      {
-        await HandleActivityNotification(activity).AnyContext();
-      }
-    }
-    catch (Exception e)
+    // Redundant defensive filter
+    foreach (GarminActivity activity in activities.Models)
     {
-      log_.LogError("Exception getting recent GarminActivities: {@e}", e);
+      await HandleActivityAddedOrUpdated(activity).AnyContext();
     }
-    finally
+  }
+
+  private async Task SyncDeletes(DateTime before, DateTime after, List<object> ids)
+  {
+    // All remote activity ids in the given time frame
+    var inTimeSpan = await client_.Postgrest.Table<Model.GarminActivity>()
+      .Where(a => a.LastUpdated > after && a.LastUpdated < before)
+      .Order(a => a.LastUpdated!, Postgrest.Constants.Ordering.Descending)
+      .Select(nameof(GarminActivity.Id))
+      .Get()
+      .AnyContext();
+
+    // All remote activity ids with null timestamps
+    var nullTimestamp = await client_.Postgrest.Table<Model.GarminActivity>()
+      .Filter(nameof(GarminActivity.LastUpdated), Postgrest.Constants.Operator.Equals, null)
+      .Select(nameof(GarminActivity.Id))
+      .Get()
+      .AnyContext();
+
+    // All remote activity ids in the given time frame or with null timestamps
+    List<string> remoteIds = inTimeSpan.Models
+      .Concat(nullTimestamp.Models)
+      .Select(a => a.Id)
+      .ToList();
+
+    // Activity  ids that are in our local DB but not in the remote DB. These are the deleted IDs.
+    List<string> deletedIds = ids
+      .Except(remoteIds)
+      .Cast<string>()
+      .ToList();
+
+    foreach (string deletedId in deletedIds)
     {
-      updateSem_.Release();
+      await HandleActivityDeleted(deletedId);
     }
   }
 
