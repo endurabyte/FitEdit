@@ -35,7 +35,7 @@
       </MenuItem>
     </Menu>
 
-    <ListBox x:Name="FileListBox" Grid.Row="1" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
+    <ListBox x:Name="FileListBox" Grid.Row="1" Background="Transparent" ItemsSource="{Binding FileService.Files}" SelectedIndex="{Binding SelectedIndex}">
 
       <ListBox.Styles>
         <Style Selector="TextBlock">
@@ -109,6 +109,7 @@
                   <MenuItem Header="Remove"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRemoveClicked}"
                           CommandParameter="{Binding}">
+                    
                     <ToolTip.Tip>
                       <TextBlock TextWrapping="Wrap">
                         Remove the selected activity. <LineBreak/>

@@ -258,9 +258,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     return sf;
   }
 
-  public void HandleRemoveClicked()
+  public void HandleRemoveClicked(UiFile uif)
   {
-    int index = SelectedIndex;
+    int index = FileService.Files.IndexOf(uif);
     if (index < 0 || index >= FileService.Files.Count)
     {
       SelectedIndex = 0;
