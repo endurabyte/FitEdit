@@ -119,13 +119,13 @@
                           ToolTip.Tip="Show activity menu">
                 
                   <MenuItem Header="_Load" 
-                            IsVisible="{Binding !IsVisible}"
+                            IsVisible="{Binding !IsLoaded}"
                             IsEnabled="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}"
                             Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).LoadOrUnload}"
                             CommandParameter="{Binding}"
                             ToolTip.Tip="Load the file"/>
                   <MenuItem Header="Unload"
-                            IsVisible="{Binding IsVisible}"
+                            IsVisible="{Binding IsLoaded}"
                             Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).LoadOrUnload}"
                             CommandParameter="{Binding}"
                             ToolTip.Tip="Unload the file"/>
@@ -139,8 +139,14 @@
                   <MenuItem Header="Export"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleExportClicked}"
                           CommandParameter="{Binding}"
-                          IsEnabled="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}"
-                          ToolTip.Tip="Export to file"/>
+                          ToolTip.Tip="Export to file">
+                    <MenuItem.IsEnabled>
+                      <MultiBinding Converter="{x:Static BoolConverters.And}">
+                        <Binding Path="Activity.File" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                        <Binding Path="IsLoaded"/>
+                      </MultiBinding>
+                    </MenuItem.IsEnabled>
+                  </MenuItem>
                   
                   <MenuItem Header="Delete"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleDeleteClicked}"
@@ -159,6 +165,7 @@
                   <MenuItem Header="-"/>
                   
                   <MenuItem Header ="Split by Lap"
+                          IsEnabled="{Binding IsLoaded}"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleSplitByLapsClicked}"
                           CommandParameter="{Binding}">
                     <ToolTip.Tip>
@@ -166,9 +173,10 @@
                         Split the file into multiple files, one for each lap.
                       </TextBlock>
                     </ToolTip.Tip>
+                  
                   </MenuItem>
                   
-                  <MenuItem Header="Repair">
+                  <MenuItem Header="Repair" IsEnabled="{Binding IsLoaded}">
                     <MenuItem Header="Subtractively"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRepairSubtractivelyClicked}"
                           CommandParameter="{Binding}">

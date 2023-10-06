@@ -62,7 +62,7 @@ public class FileService : ReactiveObject, IFileService
     // Make the new file the active one
     await Dispatcher.UIThread.InvokeAsync(() =>
     {
-      if (MainFile != null) { MainFile.IsVisible = false; }
+      if (MainFile != null) { MainFile.IsLoaded = false; }
       MainFile = newFile;
     });
   }

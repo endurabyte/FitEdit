@@ -10,5 +10,5 @@ public static class SelectedFileExtensions
     file.ObservableForProperty(x => x.FitFile).Subscribe(property => handle(property.Sender));
 
   public static IDisposable SubscribeToIsLoaded(this UiFile file, Action<UiFile> handle) =>
-    file.ObservableForProperty(x => x.IsVisible).Subscribe(property => handle(property.Sender));
+    file.ObservableForProperty(x => x.IsLoaded).Subscribe(property => handle(property.Sender));
 }

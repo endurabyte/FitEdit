@@ -148,7 +148,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     // If we already have this file, don't add it again
     if (isVisibleSubs_.ContainsKey(file)) { return; }
 
-    isVisibleSubs_[file] = file.ObservableForProperty(x => x.IsVisible).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
+    isVisibleSubs_[file] = file.ObservableForProperty(x => x.IsLoaded).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
     HandleFileIsVisibleChanged(file);
   }
 
@@ -156,7 +156,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
   private void HandleFileIsVisibleChanged(UiFile file)
   {
-    if (file.IsVisible) { Add(file); }
+    if (file.IsLoaded) { Add(file); }
     else { Remove(file); }
   }
 

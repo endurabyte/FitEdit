@@ -232,14 +232,14 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (sf == null) { return; }
     if (isVisibleSubs_.ContainsKey(sf)) { isVisibleSubs_[sf].Dispose(); }
 
-    isVisibleSubs_[sf] = sf.ObservableForProperty(x => x.IsVisible).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
+    isVisibleSubs_[sf] = sf.ObservableForProperty(x => x.IsLoaded).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
 
     HandleFitFileChanged(sf);
   }
 
   private void HandleFileIsVisibleChanged(UiFile file)
   {
-    if (file.IsVisible) { Add(file); }
+    if (file.IsLoaded) { Add(file); }
     else { Remove(file); }
 
     HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);

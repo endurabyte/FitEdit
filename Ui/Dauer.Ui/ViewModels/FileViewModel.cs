@@ -351,7 +351,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public void LoadOrUnload(UiFile uif)
   {
-    if (!uif.IsVisible)
+    if (!uif.IsLoaded)
     {
       _ = Task.Run(async () => await LoadFile(uif).AnyContext());
       return;
@@ -363,9 +363,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private void UnloadFile(UiFile? uif)
   {
     if (uif == null) { return; }
-    FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsVisible);
+    FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsLoaded);
     uif.Progress = 0;
-    uif.IsVisible = false;
+    uif.IsLoaded = false;
   }
 
   private async Task LoadFile(UiFile? uif)
@@ -380,7 +380,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     {
       Log.Info($"File {uif.Activity.Name} is already loaded");
       uif.Progress = 100;
-      uif.IsVisible = true;
+      uif.IsLoaded = true;
       return;
     }
 
@@ -450,7 +450,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
         uif.FitFile = fit;
-        uif.IsVisible = true;
+        uif.IsLoaded = true;
         FileService.MainFile = null; // Trigger notification
         FileService.MainFile = uif;
       });
@@ -525,7 +525,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private async Task Merge()
   { 
-    List<UiFile> files = FileService.Files.Where(f => f.IsVisible).ToList();
+    List<UiFile> files = FileService.Files.Where(f => f.IsLoaded).ToList();
     if (files.Count < 2) { return; }
     if (files.Any(f => f.FitFile == null)) { return; }
 
@@ -550,7 +550,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (sf == null) { return; }
     
     sf.FitFile = merged;
-    sf.IsVisible = true;
+    sf.IsLoaded = true;
     sf.Progress = 100;
   }
 
@@ -654,12 +654,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     RemoteFilesToDelete.Clear();
   }
 
-  public async Task HandleUploadClicked(LocalActivity? act)
+  public void HandleUploadClicked(LocalActivity? act)
   {
-    if (act is null) { return; }
-
     if (!FitEdit.IsActive) { return; }
-    await UploadLocalActivity(act);
+
+    _ = Task.Run(async () => await UploadLocalActivity(act));
   }
 
   /// <summary>
@@ -668,6 +667,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task UploadLocalActivity(LocalActivity? act)
   {
     if (act is null) { return; }
+
+    // Load the file bytes from disk, without parsing them as a FIT file
+    LocalActivity? tmp = await FileService.ReadAsync(act.Id);
+    if (tmp is null) { return; }
+    act.File = tmp.File;
+
     if (act.File?.Bytes is null) { return; }
     if (act.File.Bytes.Length == 0) { return; }
 
