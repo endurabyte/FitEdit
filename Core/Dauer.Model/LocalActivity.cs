@@ -8,7 +8,7 @@ using Units;
 
 namespace Dauer.Model;
 
-public partial class DauerActivity : ReactiveObject
+public partial class LocalActivity : ReactiveObject
 {
   /// <summary>
   /// NOT Garmin activity ID; our own independent ID
@@ -17,7 +17,7 @@ public partial class DauerActivity : ReactiveObject
 
   [Reactive] public FileReference? File { get; set; }
 
-  public ActivitySource Source { get; set; }
+  [Reactive] public ActivitySource Source { get; set; }
 
   /// <summary>
   /// e.g. Garmin Activity ID
@@ -50,6 +50,15 @@ public partial class DauerActivity : ReactiveObject
   }
 
   public DateTime? LastUpdated { get; set; }
+
+  public LocalActivity()
+  {
+    this.ObservableForProperty(x => x.SourceId).Subscribe(_ =>
+    {
+      (this as IReactiveObject)?.RaisePropertyChanged(nameof(OnlineUrl));
+      (this as IReactiveObject)?.RaisePropertyChanged(nameof(OnlineUrlSetter));
+    });
+  }
 
   private string InferUrl() => Source switch
   {

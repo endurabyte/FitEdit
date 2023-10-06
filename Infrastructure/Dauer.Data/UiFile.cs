@@ -9,7 +9,7 @@ namespace Dauer.Data;
 public class UiFile : ReactiveObject
 {
   [Reactive] public FitFile? FitFile { get; set; }
-  [Reactive] public DauerActivity? Activity { get; set; }
+  [Reactive] public LocalActivity? Activity { get; set; }
   [Reactive] public bool IsVisible { get; set; }
   [Reactive] public double Progress { get; set; }
 

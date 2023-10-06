@@ -3,7 +3,7 @@ using SQLite;
 
 namespace Dauer.Adapters.Sqlite;
 
-public class DauerActivity
+public class LocalActivity
 {
   /// <summary>
   /// NOT Garmin activity ID; our own independent ID

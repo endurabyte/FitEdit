@@ -18,11 +18,11 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   Task<bool> InsertOrUpdateAsync(AppSettings a);
   Task<AppSettings> GetAppSettingsAsync();
 
-  Task<bool> InsertAsync(DauerActivity t);
-  Task<bool> UpdateAsync(DauerActivity t);
-  Task<bool> DeleteAsync(DauerActivity t);
-  Task<DauerActivity> GetActivityAsync(string id);
-  Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
+  Task<bool> InsertAsync(LocalActivity t);
+  Task<bool> UpdateAsync(LocalActivity t);
+  Task<bool> DeleteAsync(LocalActivity t);
+  Task<LocalActivity> GetActivityAsync(string id);
+  Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
   Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
   Task<bool> ActivityExistsAsync(string id);
 

@@ -38,7 +38,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
         typeof(FileReference),
         typeof(MapTile),
         typeof(Authorization),
-        typeof(DauerActivity),
+        typeof(LocalActivity),
         typeof(AppSettings),
       }).AnyContext();
 
@@ -61,7 +61,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
   public async Task DeleteAsync(Model.MapTile t) => await db_?.DeleteAsync(t.MapEntity()).AnyContext();
   public async Task<Model.MapTile> GetMapTileAsync(string id) => (await GetAsync<MapTile>(id).AnyContext())?.MapModel();
 
-  public async Task<bool> InsertAsync(Model.DauerActivity a)
+  public async Task<bool> InsertAsync(Model.LocalActivity a)
   {
     if (a.File != null)
     {
@@ -72,7 +72,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return 1 == await db_?.InsertOrReplaceAsync(a.MapEntity()).AnyContext();
   }
 
-  public async Task<bool> UpdateAsync(Model.DauerActivity a)
+  public async Task<bool> UpdateAsync(Model.LocalActivity a)
   {
     if (a.File != null) 
     {
@@ -102,7 +102,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     }
   }
 
-  public async Task<bool> DeleteAsync(Model.DauerActivity t)
+  public async Task<bool> DeleteAsync(Model.LocalActivity t)
   {
     if (t.File != null)
     {
@@ -113,12 +113,12 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return 1 == await db_?.DeleteAsync(t.MapEntity()).AnyContext();
   }
 
-  public async Task<Model.DauerActivity> GetActivityAsync(string id)
+  public async Task<Model.LocalActivity> GetActivityAsync(string id)
   {
-    var a = await GetAsync<DauerActivity>(id).AnyContext();
+    var a = await GetAsync<LocalActivity>(id).AnyContext();
     if (a == null) { return null; }
 
-    Model.DauerActivity model = a.MapModel();
+    Model.LocalActivity model = a.MapModel();
     model.File = a.FileId != null
       ? await GetFileReferenceAsync(a.FileId).AnyContext()
       : null;
@@ -128,29 +128,29 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
 
   public async Task<bool> ActivityExistsAsync(string id)
   {
-    var act = await db_?.Table<DauerActivity>()
+    var act = await db_?.Table<LocalActivity>()
       .Where(act => act.Id == id)
       .FirstOrDefaultAsync();
 
     return act != null;
   }
 
-  public async Task<List<Model.DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit)
+  public async Task<List<Model.LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit)
   {
     Log.Info($"{nameof(SqliteAdapter)}.{nameof(GetAllActivitiesAsync)}()");
-    List<DauerActivity> activities = await db_?
-      .Table<DauerActivity>()
+    List<LocalActivity> activities = await db_?
+      .Table<LocalActivity>()
       .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
       .OrderByDescending(act => act.StartTime)
       .Take(limit)
       .ToListAsync()
       .AnyContext();
 
-    var models = new List<Model.DauerActivity>(activities.Count);
+    var models = new List<Model.LocalActivity>(activities.Count);
 
     foreach (var a in activities)
     {
-      Model.DauerActivity model = a.MapModel();
+      Model.LocalActivity model = a.MapModel();
       model.File = a.FileId != null
         ? await GetFileReferenceAsync(a.FileId).AnyContext()
         : null;
@@ -160,7 +160,7 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
   }
 
   public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => (await db_?
-    .Table<DauerActivity>()
+    .Table<LocalActivity>()
       .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
       .ToListAsync().AnyContext())?
     .Select(act => act.Id).ToList() ?? new List<string>();

@@ -26,6 +26,6 @@ public class NullSupabaseAdapter : ISupabaseAdapter
   public Task<bool> VerifyOtpAsync(string? username, string token) => Task.FromResult(false);
   public Task<bool> LogoutAsync() => Task.FromResult(false);
 
-  public Task<bool> UpdateAsync(DauerActivity? act) => Task.FromResult(false);
-  public Task<bool> DeleteAsync(DauerActivity? act) => Task.FromResult(false);
+  public Task<bool> UpdateAsync(LocalActivity? act) => Task.FromResult(false);
+  public Task<bool> DeleteAsync(LocalActivity? act) => Task.FromResult(false);
 }

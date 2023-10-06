@@ -13,11 +13,11 @@ public class NullDatabaseAdapter : HasProperties, IDatabaseAdapter
   public Task DeleteAsync(MapTile t) => Task.CompletedTask;
   public Task<MapTile> GetMapTileAsync(string id) => Task.FromResult(new MapTile { Id = id });
 
-  public Task<bool> InsertAsync(DauerActivity t) => Task.FromResult(true);
-  public Task<bool> UpdateAsync(DauerActivity t) => Task.FromResult(true);
-  public Task<bool> DeleteAsync(DauerActivity t) => Task.FromResult(true);
-  public Task<DauerActivity> GetActivityAsync(string id) => Task.FromResult(new DauerActivity { Id = id });
-  public Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => Task.FromResult(new List<DauerActivity>());
+  public Task<bool> InsertAsync(LocalActivity t) => Task.FromResult(true);
+  public Task<bool> UpdateAsync(LocalActivity t) => Task.FromResult(true);
+  public Task<bool> DeleteAsync(LocalActivity t) => Task.FromResult(true);
+  public Task<LocalActivity> GetActivityAsync(string id) => Task.FromResult(new LocalActivity { Id = id });
+  public Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => Task.FromResult(new List<LocalActivity>());
   public Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => Task.FromResult(new List<string>());
   public Task<bool> ActivityExistsAsync(string id) => Task.FromResult(false);
 

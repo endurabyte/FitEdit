@@ -1,4 +1,6 @@
-﻿using Avalonia.Threading;
+﻿using System.Collections.ObjectModel;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
@@ -106,7 +108,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       fileService.MainFile = fileService.Files[i];
     });
 
-    FileService.SubscribeAdds(SubscribeNameAndDescriptionChanges);
+    FileService.SubscribeAdds(SubscribeChanges);
 
     if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
@@ -115,7 +117,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  private void SubscribeNameAndDescriptionChanges(UiFile file)
+  private void SubscribeChanges(UiFile file)
   {
     if (file.Activity is null) { return; }
 
@@ -154,9 +156,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     });
   }
 
-  public async void HandleImportClicked()
+  public async Task HandleImportClicked()
   {
-    Log.Info($"{nameof(HandleImportClicked)} clicked");
+    Log.Info($"{nameof(HandleImportClicked)}");
 
     // On macOS and iOS, the file picker must run on the main thread
     FileReference? file = await storage_.OpenFileAsync();
@@ -199,7 +201,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   /// <summary>
   /// Import a file and associate it with an existing activity.
   /// </summary>
-  public async Task HandleActivityImportClicked(DauerActivity? act)
+  public async Task HandleActivityImportClicked(LocalActivity? act)
   {
     Log.Info($"{nameof(HandleActivityImportClicked)} clicked");
 
@@ -227,7 +229,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     if (act.File is null) { return; }
 
-    await supa_.UpdateAsync(act); // Sets DauerActivity.BucketUrl
+    await supa_.UpdateAsync(act); // Sets LocalActivity.BucketUrl
 
     // TODO Show result
   }
@@ -236,7 +238,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (file == null) { return null; }
 
-    return await Persist(new DauerActivity
+    return await Persist(new LocalActivity
     {
       Name = file.Name,
       Id = file.Id,
@@ -263,7 +265,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     return fit.GetStartTime();
   }
 
-  private async Task<UiFile> Persist(DauerActivity act)
+  private async Task<UiFile> Persist(LocalActivity act)
   { 
     if (act.StartTime == default)
     {
@@ -353,7 +355,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    DauerActivity? act = await FileService.ReadAsync(uif.Activity.Id);
+    LocalActivity? act = await FileService.ReadAsync(uif.Activity.Id);
     FileReference? file = act?.File;
     uif.Activity.File = act?.File;
 
@@ -505,7 +507,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       merged.Append(file.FitFile);
     }
 
-    var activity = new DauerActivity
+    var activity = new LocalActivity
     {
       Id = $"{Guid.NewGuid()}",
       Name = $"Merged {string.Join("-", files.Select(f => f.Activity?.Name).Where(s => !string.IsNullOrEmpty(s)))}"
@@ -581,7 +583,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public async Task HandleGarminUploadClicked() => await browser_.OpenAsync("https://connect.garmin.com/modern/import-data");
   public async Task HandleStravaUploadClicked() => await browser_.OpenAsync("https://www.strava.com/upload/select");
 
-  public async Task HandleViewOnlineClicked(DauerActivity? act)
+  public async Task HandleViewOnlineClicked(LocalActivity? act)
   {
     if (act == null) { return; }
     await browser_.OpenAsync(act.OnlineUrl);
@@ -622,18 +624,18 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FilesToDelete.Clear();
   }
 
-  public async Task HandleUploadClicked(DauerActivity? act)
+  public async Task HandleUploadClicked(LocalActivity? act)
   {
     if (act is null) { return; }
 
     if (!FitEdit.IsActive) { return; }
-    await UploadGarminActivity(act);
+    await UploadLocalActivity(act);
   }
 
   /// <summary>
   /// Upload a file to Garmin. We don't associate it with the activity because that will happen in the Garmin webhook handler.
   /// </summary>
-  private async Task UploadGarminActivity(DauerActivity? act)
+  private async Task UploadLocalActivity(LocalActivity? act)
   {
     if (act is null) { return; }
     if (act.File?.Bytes is null) { return; }
@@ -645,7 +647,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       .UploadActivity(ms, new FileFormat { FormatKey = "fit" })
       .AnyContext();
 
-    if (id < 0) { return; }
+    if (!ok || id < 0) { return; }
 
     act.SourceId = $"{id}";
 

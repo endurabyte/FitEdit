@@ -3,7 +3,7 @@ using Postgrest.Models;
 
 namespace Dauer.Ui.Infra.Supabase.Model;
 
-public class GarminActivity : BaseModel
+public class Activity : BaseModel
 {
   /// <summary>
   /// NOT Garmin activity ID; our own independent ID
@@ -39,8 +39,11 @@ public class GarminActivity : BaseModel
   [Column(nameof(SupabaseUserId))]
   public string? SupabaseUserId { get; set; }
 
-  [Column(nameof(GarminId))]
-  public long GarminId { get; set; }
+  [Column(nameof(Source))]
+  public string? Source { get; set; }
+
+  [Column(nameof(SourceId))]
+  public long SourceId { get; set; }
 
   [Column(nameof(LastUpdated))]
   public DateTime? LastUpdated { get; set; }

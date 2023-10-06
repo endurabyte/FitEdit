@@ -40,7 +40,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private RealtimeChannel? userChannel_;
   private RealtimeChannel? stravaUserChannel_;
   private RealtimeChannel? garminUserChannel_;
-  private RealtimeChannel? garminActivityChannel_;
+  private RealtimeChannel? activityChannel;
 
   private readonly SemaphoreSlim updateSem_ = new(1, 1);
   private readonly SemaphoreSlim downloadSem_ = new(1, 1);
@@ -124,20 +124,20 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   private void SubscribeAllTables()
   {
-    Subscribe("User", ref userChannel_, change => Sync(change.Model<Model.User>()));
-    Subscribe("StravaUser", ref stravaUserChannel_, change => Sync(change.Model<Model.StravaUser>()));
-    Subscribe("GarminUser", ref garminUserChannel_, change => Sync(change.Model<Model.GarminUser>()));
-    Subscribe("GarminActivity", ref garminActivityChannel_, change =>
+    Subscribe(nameof(Model.User), ref userChannel_, change => Sync(change.Model<Model.User>()));
+    Subscribe(nameof(StravaUser), ref stravaUserChannel_, change => Sync(change.Model<Model.StravaUser>()));
+    Subscribe(nameof(GarminUser), ref garminUserChannel_, change => Sync(change.Model<Model.GarminUser>()));
+    Subscribe(nameof(Activity), ref activityChannel, change =>
     {
-      var activity = change.Model<Model.GarminActivity>();
-      log_.LogInformation($"Got GarminActivity notification {{@activity}}", activity);
+      var old = change.OldModel<Activity>();
+      var activity = change.Model<Activity>();
+
+      log_.LogInformation($"Got Activity notification {{@activity}}", activity);
 
       _ = Task.Run(async () =>
       {
         if (change?.Payload?.Data?.Type == global::Supabase.Realtime.Constants.EventType.Delete)
         {
-          var old = change.OldModel<Model.GarminActivity>();
-
           await HandleActivityDeleted(old?.Id);
           return;
         }
@@ -175,7 +175,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private async Task HandleActivityDeleted(string? id)
   {
     if (id is null) { return; }
-    DauerActivity? act = await db_.GetActivityAsync(id);
+    LocalActivity? act = await db_.GetActivityAsync(id);
 
 
     UiFile? uif = fileService_.Files.FirstOrDefault(uif => uif.Activity?.Id == id);
@@ -187,11 +187,11 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     await fileService_.DeleteAsync(act);
   }
 
-  private async Task HandleActivityAddedOrUpdated(GarminActivity? activity)
+  private async Task HandleActivityAddedOrUpdated(Activity? activity)
   {
     if (activity == null) { return; }
 
-    DauerActivity toWrite = activity.MapDauerActivity();
+    LocalActivity toWrite = activity.MapLocalActivity();
 
     UiFile? uif = null;
     bool isNew = false;
@@ -230,7 +230,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   private async Task AddNewActivity(UiFile uiFile, string? bucketUrl)
   {
-    DauerActivity? toWrite = uiFile.Activity;
+    LocalActivity? toWrite = uiFile.Activity;
     if (toWrite is null) { return; }
 
     if (bucketUrl != null)
@@ -248,7 +248,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       {
         // Response is a JSON object containing an error string
         string json = Encoding.ASCII.GetString(bytes);
-        log_.LogError("Could not download GarminActivity: {@json}", json);
+        log_.LogError("Could not download Activity: {@json}", json);
         return;
       }
 
@@ -261,18 +261,19 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     else { log_.LogInformation("Could not create activity {@activity}", toWrite); }
   }
 
-  private async Task UpdateExistingActivity(UiFile? existing, DauerActivity update)
+  private async Task UpdateExistingActivity(UiFile? existing, LocalActivity update)
   {
     if (existing == null) { return; }
     if (existing.Activity == null) { return; }
 
-    DauerActivity? known = existing.Activity;
+    LocalActivity? known = existing.Activity;
 
     // Merge data
     known.Name = update.Name;
     known.Description = update.Description;
     known.StartTime = update.StartTime;
     known.SourceId = update.SourceId;
+    known.Source = update.Source;
 
     bool ok = await fileService_.UpdateAsync(known);
 
@@ -291,6 +292,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   }
 
   public async Task Sync() => await SyncRecentChanges();
+
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default)
   {
     if (client_.Auth.CurrentSession?.AccessToken == null) { return false; }
@@ -379,7 +381,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return true;
   }
 
-  public async Task<bool> UpdateAsync(DauerActivity? act)
+  public async Task<bool> UpdateAsync(LocalActivity? act)
   {
     if (act is null) { return false; }
     if (act.File is null) { return false; }
@@ -396,13 +398,13 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         ? null 
         : await client_.Storage
           .From("activity-files")
-        .Upload(act.File.Bytes, bucketUrl);
+          .Upload(act.File.Bytes, bucketUrl);
 
-    var garminActivity = act.MapGarminActivity();
-    garminActivity.SupabaseUserId = Authorization?.Sub;
+    var activity = act.MapActivity();
+    activity.SupabaseUserId = Authorization?.Sub;
 
-      await client_.Postgrest.Table<Model.GarminActivity>()
-        .Upsert(garminActivity)
+      await client_.Postgrest.Table<Model.Activity>()
+        .Upsert(activity)
         .AnyContext();
     }
     catch (Exception e)
@@ -492,15 +494,13 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     // Get activities updated since the last sync.
     // Row-level security ensures we only get the current user's activities.
-    DateTime lastSync = await GetAndBumpLastSyncTime();
+    var activities = await client_.Postgrest.Table<Model.Activity>()
       .Where(a => a.LastUpdated > LastSync)
-    var activities = await client_.Postgrest.Table<Model.GarminActivity>()
-      .Where(a => a.LastUpdated > lastSync)
       .Get()
       .AnyContext();
 
     // Redundant defensive filter
-    foreach (GarminActivity activity in activities.Models)
+    foreach (Activity activity in activities.Models)
     {
       await HandleActivityAddedOrUpdated(activity).AnyContext();
     }
@@ -514,14 +514,14 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     var inTimeSpan = await client_.Postgrest.Table<Model.Activity>()
       .Where(a => a.LastUpdated > after && a.LastUpdated < before)
       .Order(a => a.LastUpdated!, Postgrest.Constants.Ordering.Descending)
-      .Select(nameof(GarminActivity.Id))
+      .Select(nameof(Activity.Id))
       .Get()
       .AnyContext();
 
     // All remote activity ids with null timestamps
-    var nullTimestamp = await client_.Postgrest.Table<Model.GarminActivity>()
-      .Filter(nameof(GarminActivity.LastUpdated), Postgrest.Constants.Operator.Equals, null)
-      .Select(nameof(GarminActivity.Id))
+    var nullTimestamp = await client_.Postgrest.Table<Model.Activity>()
+      .Filter(nameof(Activity.LastUpdated), Postgrest.Constants.Operator.Equals, null)
+      .Select(nameof(Activity.Id))
       .Get()
       .AnyContext();
 
@@ -547,11 +547,11 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
   }
 
-  public async Task<bool> DeleteAsync(DauerActivity? act)
+  public async Task<bool> DeleteAsync(LocalActivity? act)
   {
     if (act is null) { return false; }
     
-    await client_.Postgrest.Table<Model.GarminActivity>()
+    await client_.Postgrest.Table<Model.Activity>()
       .Filter("Id", Postgrest.Constants.Operator.Equals, act.Id)
       .Delete()
       .AnyContext();

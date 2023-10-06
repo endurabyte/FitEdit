@@ -24,8 +24,8 @@ public class FileService : ReactiveObject, IFileService
   [Reactive] public UiFile? MainFile { get; set; }
   [Reactive] public ObservableCollection<UiFile> Files { get; set; } = new();
 
-  public IObservable<DauerActivity> Deleted => deletedSubject_;
-  private readonly ISubject<DauerActivity> deletedSubject_ = new Subject<DauerActivity>();
+  public IObservable<LocalActivity> Deleted => deletedSubject_;
+  private readonly ISubject<LocalActivity> deletedSubject_ = new Subject<LocalActivity>();
 
   public FileService(IDatabaseAdapter db, ICryptoService crypto)
   {
@@ -47,7 +47,7 @@ public class FileService : ReactiveObject, IFileService
     var newFile = new UiFile
     {
       FitFile = fit,
-      Activity = new DauerActivity(),
+      Activity = new LocalActivity(),
     };
 
     newFile.Activity.Id = $"{Guid.NewGuid()}";
@@ -67,7 +67,7 @@ public class FileService : ReactiveObject, IFileService
     });
   }
 
-  public async Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default)
+  public async Task<bool> CreateAsync(LocalActivity? act, CancellationToken ct = default)
   {
     if (act == null) { return false; }
 
@@ -91,11 +91,11 @@ public class FileService : ReactiveObject, IFileService
     }
   }
 
-  public async Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default)
+  public async Task<LocalActivity?> ReadAsync(string id, CancellationToken ct = default)
   {
     try
     {
-      DauerActivity? act = await db_.GetActivityAsync(id);
+      LocalActivity? act = await db_.GetActivityAsync(id);
       if (act == null) { return null; }
 
       act.File ??= new FileReference(act.Name ?? id, null) { Id = id };
@@ -117,7 +117,7 @@ public class FileService : ReactiveObject, IFileService
     }
   }
 
-  public async Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default)
+  public async Task<bool> UpdateAsync(LocalActivity? act, CancellationToken ct = default)
   {
     if (act == null) { return false; }
 
@@ -144,7 +144,7 @@ public class FileService : ReactiveObject, IFileService
     }
   }
 
-  public async Task<bool> DeleteAsync(DauerActivity? act)
+  public async Task<bool> DeleteAsync(LocalActivity? act)
   {
     if (act == null) { return false; }
 
@@ -166,7 +166,7 @@ public class FileService : ReactiveObject, IFileService
   }
 
   public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => await db_.GetAllActivityIdsAsync(after, before);
-  public async Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => await db_.GetAllActivitiesAsync(after, before, limit);
+  public async Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => await db_.GetAllActivitiesAsync(after, before, limit);
   public async Task<bool> ActivityExistsAsync(string id) => await db_.ActivityExistsAsync(id).AnyContext();
 
   public void Add(UiFile file)
@@ -195,7 +195,7 @@ public class FileService : ReactiveObject, IFileService
     var backfillLimit = TimeSpan.FromDays(365 * 10); // 10 years
     int limit = 25;
 
-    List<DauerActivity> more = new();
+    List<LocalActivity> more = new();
 
     // While no results found, keep looking further into the past until we get a result or hit the limit
     while (more.Count == 0 && backfill < backfillLimit)
@@ -206,7 +206,7 @@ public class FileService : ReactiveObject, IFileService
 
     more.Sort((a1, a2) => a2.StartTime.CompareTo(a1.StartTime));
 
-    foreach (DauerActivity activity in more)
+    foreach (LocalActivity activity in more)
     {
       Add(new UiFile
       {
@@ -236,6 +236,6 @@ public class FileService : ReactiveObject, IFileService
     return true;
   }
 
-  private static string GetSalt(DauerActivity? act) => $"{act?.Id}+$F#6$ugnlsn91=@nq2kHznq";
+  private static string GetSalt(LocalActivity? act) => $"{act?.Id}+$F#6$ugnlsn91=@nq2kHznq";
 }
 

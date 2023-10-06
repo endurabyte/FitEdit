@@ -11,14 +11,14 @@ public class NullFileService : IFileService
   public UiFile? MainFile { get; set; }
   public ObservableCollection<UiFile> Files { get; set; } = new();
 
-  public IObservable<DauerActivity> Deleted => deletedSubject_;
-  private readonly ISubject<DauerActivity> deletedSubject_ = new Subject<DauerActivity>();
+  public IObservable<LocalActivity> Deleted => deletedSubject_;
+  private readonly ISubject<LocalActivity> deletedSubject_ = new Subject<LocalActivity>();
 
   public NullFileService()
   {
     int i = 0;
 
-    var activity = new DauerActivity
+    var activity = new LocalActivity
     {
       Id = $"{Guid.NewGuid()}",
       Name = "Workout with imported, uploaded file",
@@ -36,7 +36,7 @@ public class NullFileService : IFileService
 
     var file = new UiFile
     {
-      Activity = new DauerActivity
+      Activity = new LocalActivity
       {
         Id = $"{Guid.NewGuid()}",
         Name = $"Workout with imported file but not uploaded",
@@ -57,7 +57,7 @@ public class NullFileService : IFileService
   {
     var file = new UiFile
     {
-      Activity = new DauerActivity
+      Activity = new LocalActivity
       {
         Id = $"{Guid.NewGuid()}",
         Name = $"Workout {i}",
@@ -71,12 +71,12 @@ public class NullFileService : IFileService
   }
 
   public Task CreateAsync(FitFile fit) => Task.CompletedTask;
-  public Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);
-  public Task<bool> DeleteAsync(DauerActivity? act) => Task.FromResult(true);
+  public Task<bool> CreateAsync(LocalActivity? act, CancellationToken ct = default) => Task.FromResult(true);
+  public Task<bool> DeleteAsync(LocalActivity? act) => Task.FromResult(true);
   public Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => Task.FromResult(new List<string>());
-  public Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => Task.FromResult(new List<DauerActivity>());
-  public Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default) => Task.FromResult((DauerActivity?)new DauerActivity { Id = id });
-  public Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default) => Task.FromResult(true);
+  public Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => Task.FromResult(new List<LocalActivity>());
+  public Task<LocalActivity?> ReadAsync(string id, CancellationToken ct = default) => Task.FromResult((LocalActivity?)new LocalActivity { Id = id });
+  public Task<bool> UpdateAsync(LocalActivity? act, CancellationToken ct = default) => Task.FromResult(true);
   public Task<bool> ActivityExistsAsync(string id) => Task.FromResult(false);
   public void Add(UiFile file) { }
   public Task LoadMore() => Task.CompletedTask;

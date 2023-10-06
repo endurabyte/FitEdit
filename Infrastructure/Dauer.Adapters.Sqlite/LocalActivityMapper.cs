@@ -1,16 +1,15 @@
 ﻿#nullable enable
 using Units;
+using Dauer.Model.Extensions;
 
 namespace Dauer.Adapters.Sqlite;
 
-public static class DauerActivityMapper
+public static class LocalActivityMapper
 {
-  public static Model.DauerActivity MapModel(this DauerActivity a) => new()
+  public static Model.LocalActivity MapModel(this LocalActivity a) => new()
   {
     Id = a.Id,
-    Source = Enum.TryParse<Model.ActivitySource>(a.Source, out var parsed) 
-      ? parsed 
-      : Model.ActivitySource.Unknown,
+    Source = a.Source?.Map<Model.ActivitySource>() ?? Model.ActivitySource.Unknown,
     SourceId = a.SourceId,
     Name = a.Name,
     Description = a.Description,
@@ -23,7 +22,7 @@ public static class DauerActivityMapper
     FileType = a.FileType,
   };
 
-  public static DauerActivity MapEntity(this Model.DauerActivity a) => new()
+  public static LocalActivity MapEntity(this Model.LocalActivity a) => new()
   {
     Id = a.Id,
     FileId = a.File?.Id,

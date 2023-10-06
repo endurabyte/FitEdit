@@ -1,15 +1,16 @@
 ﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Units;
 
 namespace Dauer.Ui.Infra.Supabase.Model;
 
-public static class GarminActivityMapper
+public static class ActivityMapper
 {
-  public static DauerActivity MapDauerActivity(this GarminActivity a) => new()
+  public static LocalActivity MapLocalActivity(this Activity a) => new()
   {
     Id = a.Id,
-    Source = ActivitySource.GarminConnect,
-    SourceId = a.GarminId <= 0 ? "" : $"{a.GarminId}",
+    Source = a.Source?.Map<ActivitySource>() ?? ActivitySource.Unknown,
+    SourceId = a.SourceId <= 0 ? "" : $"{a.SourceId}",
     Name = a.Name,
     Description = a.Description,
     Type = a.Type,
@@ -23,7 +24,7 @@ public static class GarminActivityMapper
     LastUpdated = a.LastUpdated,
   };
 
-  public static GarminActivity MapGarminActivity(this DauerActivity a) => new()
+  public static Activity MapActivity(this LocalActivity a) => new()
   {
     Id = a.Id,
     Name = a.Name,
@@ -36,7 +37,8 @@ public static class GarminActivityMapper
     Manual = a.Manual,
     FileType = a.FileType,
     BucketUrl = a.BucketUrl,
-    GarminId = int.TryParse(a.SourceId, out int garminId) ? garminId : 0,
+    SourceId = long.TryParse(a.SourceId, out long garminId) ? garminId : 0,
+    Source = $"{a.Source}",
     LastUpdated = a.LastUpdated,
   };
 }

@@ -9,18 +9,18 @@ public interface IFileService
 {
   UiFile? MainFile { get; set; }
   ObservableCollection<UiFile> Files { get; set; }
-  IObservable<DauerActivity> Deleted { get; }
+  IObservable<LocalActivity> Deleted { get; }
 
   /// <summary>
   /// Create a new file and file list entry for the given FIT file
   /// </summary>
   Task CreateAsync(FitFile fit);
-  Task<bool> CreateAsync(DauerActivity? act, CancellationToken ct = default);
-  Task<DauerActivity?> ReadAsync(string id, CancellationToken ct = default);
-  Task<bool> UpdateAsync(DauerActivity? act, CancellationToken ct = default);
-  Task<bool> DeleteAsync(DauerActivity? act);
+  Task<bool> CreateAsync(LocalActivity? act, CancellationToken ct = default);
+  Task<LocalActivity?> ReadAsync(string id, CancellationToken ct = default);
+  Task<bool> UpdateAsync(LocalActivity? act, CancellationToken ct = default);
+  Task<bool> DeleteAsync(LocalActivity? act);
   Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
-  Task<List<DauerActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
+  Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
   Task<bool> ActivityExistsAsync(string id);
 
   void Add(UiFile file);

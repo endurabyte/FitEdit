@@ -38,6 +38,6 @@ public interface ISupabaseAdapter
   Task<bool> VerifyOtpAsync(string? username, string token);
   Task<bool> LogoutAsync();
 
-  Task<bool> UpdateAsync(DauerActivity? act);
-  Task<bool> DeleteAsync(DauerActivity? act);
+  Task<bool> UpdateAsync(LocalActivity? act);
+  Task<bool> DeleteAsync(LocalActivity? act);
 }
