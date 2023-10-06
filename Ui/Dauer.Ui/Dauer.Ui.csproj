@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Assets\folder.svg" />
     <None Remove="Assets\garmin_connect_blue.png" />
     <None Remove="Assets\powered_by_strava.png" />
   </ItemGroup>
@@ -26,6 +27,7 @@
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Svg" Version="$(AvaloniaSvgVersion)" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
     <PackageReference Include="HarfBuzzSharp" Version="2.8.2.5" />

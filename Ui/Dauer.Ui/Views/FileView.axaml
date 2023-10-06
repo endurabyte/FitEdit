@@ -3,13 +3,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Dauer.Ui.Controls"
+             xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              xmlns:views="clr-namespace:Dauer.Ui.Views"
              xmlns:model="clr-namespace:Dauer.Model;assembly=Dauer.Model"
              xmlns:converters="clr-namespace:Dauer.Ui.Converters"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
              x:Class="Dauer.Ui.Views.FileView"
-             x:DataType="vm:FileViewModel">
+             x:DataType="vm:FileViewModel"
+             DragDrop.AllowDrop="true">
+  
   <Design.DataContext>
     <vm:DesignFileViewModel />
   </Design.DataContext>
@@ -257,6 +260,14 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
+  
+    <Border Grid.Row="1" IsVisible="{Binding IsDragActive}" 
+            Background="{StaticResource FitLeadBlack2}"
+            Opacity="50"
+            Margin="50"
+            CornerRadius="20" Padding="20">
+      <Svg Path="/Assets/folder.svg" Width="100"/>
+    </Border>
   </Grid>
 
 </UserControl>

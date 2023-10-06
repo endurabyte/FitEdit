@@ -23,6 +23,9 @@ public interface IFileViewModel
   /// 100 => bottom
   /// </summary>
   double ScrollPercent { get; set; }
+  bool IsDragActive { get; set; }
+
+  void HandleFileDropped(IStorageFile? file);
 }
 
 public class DesignFileViewModel : FileViewModel
@@ -34,12 +37,17 @@ public class DesignFileViewModel : FileViewModel
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
     new NullBrowser(),
-    new DesignLogViewModel()) { }
+    new DesignLogViewModel()) 
+  {
+    IsDragActive = true;
+  }
 }
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
   [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public bool IsDragActive { get; set; }
+  [Reactive] public ObservableCollection<UiFile> FilesToDelete { get; set; } = new();
 
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
@@ -147,6 +155,17 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FileReference? file = await storage_.OpenFileAsync();
 
     _ = Task.Run(async () => await ImportAsync(file));
+  }
+
+  public void HandleFileDropped(IStorageFile? file)
+  {
+    Log.Info($"{nameof(HandleFileDropped)}");
+
+    _ = Task.Run(async () =>
+    {
+      FileReference? fr = await FileReference.FromStorage(file);
+      await ImportAsync(fr);
+    });
   }
 
   private async Task ImportAsync(FileReference? file)

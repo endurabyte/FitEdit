@@ -14,12 +14,8 @@ public abstract class StorageAdapter : IStorageAdapter
     IReadOnlyList<IStorageFile> files = await Provider_.OpenFilePickerAsync(new FilePickerOpenOptions { AllowMultiple = false });
     if (files.Count == 0) return null;
     using Stream stream = await files[0].OpenReadAsync();
-    if (stream == null) return null;
 
-    using var ms = new MemoryStream();
-    await stream.CopyToAsync(ms);
-    byte[] data = ms.ToArray();
-    return new FileReference(files[0].Name, data);
+    return await FileReference.FromStorage(files[0]);
   }
 
   public async Task SaveAsync(FileReference file)
