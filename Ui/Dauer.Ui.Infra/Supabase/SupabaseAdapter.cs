@@ -35,6 +35,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   [Reactive] public bool IsActive { get; private set; }
   [Reactive] public Authorization? Authorization { get; set; }
   [Reactive] public string? GarminCookies { get; private set; }
+  [Reactive] public DateTime LastSync { get; set; }
 
   private RealtimeChannel? userChannel_;
   private RealtimeChannel? stravaUserChannel_;
@@ -390,8 +391,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     try
     {
       act.LastUpdated = DateTime.UtcNow;
-      act.BucketUrl = await client_.Storage
-        .From("activity-files")
+      act.BucketUrl = act.File.Bytes.Length == 0 
+        ? null 
+        : await client_.Storage
+          .From("activity-files")
         .Upload(act.File.Bytes, bucketUrl);
 
     var garminActivity = act.MapGarminActivity();
@@ -476,24 +479,20 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
       await SyncAddsAndUpdates();
       await SyncDeletes(before, after, ids);
-    }, nameof(SyncRecentChanges));
-  }
+      LastSync = DateTime.UtcNow;
 
-  private async Task<DateTime> GetAndBumpLastSyncTime()
-  {
-    AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    DateTime lastSync = settings.LastSynced ?? DateTime.UtcNow - TimeSpan.FromDays(7);
-    settings.LastSynced = DateTime.UtcNow;
-    await db_.InsertOrUpdateAsync(settings);
-    return lastSync;
+    }, nameof(SyncRecentChanges));
   }
 
   private async Task SyncAddsAndUpdates()
   {
+    var settings = await db_.GetAppSettingsAsync();
+    LastSync = settings?.LastSynced ?? default;
+
     // Get activities updated since the last sync.
     // Row-level security ensures we only get the current user's activities.
     DateTime lastSync = await GetAndBumpLastSyncTime();
-
+      .Where(a => a.LastUpdated > LastSync)
     var activities = await client_.Postgrest.Table<Model.GarminActivity>()
       .Where(a => a.LastUpdated > lastSync)
       .Get()
@@ -508,8 +507,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   private async Task SyncDeletes(DateTime before, DateTime after, List<object> ids)
   {
+    if (client_.Auth.CurrentSession == null) { return; }
+
     // All remote activity ids in the given time frame
-    var inTimeSpan = await client_.Postgrest.Table<Model.GarminActivity>()
+    var inTimeSpan = await client_.Postgrest.Table<Model.Activity>()
       .Where(a => a.LastUpdated > after && a.LastUpdated < before)
       .Order(a => a.LastUpdated!, Postgrest.Constants.Ordering.Descending)
       .Select(nameof(GarminActivity.Id))
@@ -535,6 +536,10 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       .Cast<string>()
       .ToList();
 
+    // Zero remote IDs happens when there is no session or auth problem, despite HTTP 200.
+    // User probably did not delete all their activities at once
+    if (remoteIds.Count == 0 && ids.Count > 1) { return; }
+    
     foreach (string deletedId in deletedIds)
     {
       await HandleActivityDeleted(deletedId);

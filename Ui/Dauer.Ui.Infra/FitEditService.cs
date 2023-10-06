@@ -21,6 +21,7 @@ public class FitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool SupportsPayments { get; private set; }
   [Reactive] public string? Username { get; set; }
   [Reactive] public List<GarminCookie> GarminCookies { get; set; } = new();
+  [Reactive] public DateTime LastSync { get; set; }
 
   private readonly ISupabaseAdapter supa_;
   private readonly IWebAuthenticator authenticator_;
@@ -81,6 +82,14 @@ public class FitEditService : ReactiveObject, IFitEditService
         GarminCookies = Json.MapFromJson<List<GarminCookie>>(supa_.GarminCookies ?? "") ?? new List<GarminCookie>();
       });
 
+    supa_
+      .ObservableForProperty(x => x.LastSync)
+      .Subscribe(_ => LastSync = supa_.LastSync);
+
+    this
+      .ObservableForProperty(x => x.LastSync)
+      .Subscribe(_ => supa_.LastSync = this.LastSync);
+
     this
       .ObservableForProperty(x => x.Username)
       .Subscribe(_ =>
@@ -88,6 +97,8 @@ public class FitEditService : ReactiveObject, IFitEditService
         authenticator_.Username = Username;
       });
   }
+
+  public async Task Sync() => await supa_.Sync();
 
   public Task<bool> VerifyOtpAsync(string token) => supa_.VerifyOtpAsync(Username, token);
 

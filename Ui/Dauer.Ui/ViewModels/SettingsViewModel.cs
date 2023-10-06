@@ -165,6 +165,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     {
       await UpdateSettingsAsync(settings => settings.GarminCookies = Garmin.Cookies);
     });
+
+    FitEdit.ObservableForProperty(x => x.LastSync).Subscribe(async _ =>
+    {
+      await UpdateSettingsAsync(settings =>
+      {
+        settings.LastSynced = FitEdit.LastSync;
+      });
+    });
   }
 
   private async Task LoadSettings_()
@@ -426,6 +434,16 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     });
     
     Message = "Signed out of Strava";
+  }
+
+  public void HandleSyncNowClicked() => _ = Task.Run(FitEdit.Sync);
+
+  public async Task HandleResetSyncClicked()
+  {
+    await UpdateSettingsAsync(settings =>
+    {
+      FitEdit.LastSync = default;
+    });
   }
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)

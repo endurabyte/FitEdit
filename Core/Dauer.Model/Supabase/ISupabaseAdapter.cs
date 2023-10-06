@@ -11,6 +11,9 @@ public interface ISupabaseAdapter
   bool IsActive { get; }
   Authorization? Authorization { get; set; }
   string? GarminCookies { get; }
+  DateTime LastSync { get; set; }
+
+  Task Sync();
 
   Task<bool> SignInWithEmailAndPassword(string email, string password, CancellationToken ct = default);
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);

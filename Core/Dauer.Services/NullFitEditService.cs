@@ -17,6 +17,13 @@ public class NullFitEditService : ReactiveObject, IFitEditService
   [Reactive] public bool SupportsPayments { get; set; } = true;
   [Reactive] public string? Username { get; set; } = "fake@fake.com";
   [Reactive] public List<GarminCookie> GarminCookies { get; set; } = new();
+  public DateTime LastSync { get; set; } = DateTime.UtcNow;
+
+  public Task Sync()
+  {
+    LastSync = DateTime.UtcNow;
+    return Task.CompletedTask;
+  }
 
   public Task<bool> AuthenticateAsync(CancellationToken ct = default)
   {

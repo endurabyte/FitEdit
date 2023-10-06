@@ -99,6 +99,21 @@
           <Button Command="{Binding HandleSignUpClicked}" Content="Sign Up" IsVisible="{Binding !FitEdit.IsActive}"/>
         </WrapPanel>
 
+        <WrapPanel Margin="10">
+          <TextBlock VerticalAlignment="Center" Text="Last Sync: "/>
+          <TextBlock VerticalAlignment="Center" Text="{Binding FitEdit.LastSync}"/>
+        </WrapPanel>
+
+        <WrapPanel Margin="50,10,10,10">
+          <Button HorizontalAlignment="Stretch" Command="{Binding HandleSyncNowClicked}" IsVisible="{Binding FitEdit.IsActive}">
+            <StackPanel Orientation="Horizontal">
+              <Svg Path="/Assets/sync.svg" Width="20" Margin="0 0 10 0"/>
+              <TextBlock Text="Sync Now"/>
+            </StackPanel>
+          </Button>
+            <Button HorizontalAlignment="Stretch" Command="{Binding HandleResetSyncClicked}" Content="Reset Sync" IsVisible="{Binding FitEdit.IsActive}"/>
+        </WrapPanel>
+
         <Separator Width="{Binding $parent[StackPanel].Width}"/>
 
         <StackPanel Orientation="Vertical">

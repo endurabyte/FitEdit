@@ -15,7 +15,9 @@ public interface IFitEditService
   bool SupportsPayments { get; }
   string? Username { get; set; }
   List<GarminCookie> GarminCookies { get; }
+  DateTime LastSync { get; set; }
 
+  Task Sync();
   Task<bool> AuthenticateAsync(CancellationToken ct = default);
   Task<bool> LogoutAsync(CancellationToken ct = default);
   Task<bool> IsAuthenticatedAsync(CancellationToken ct = default);
