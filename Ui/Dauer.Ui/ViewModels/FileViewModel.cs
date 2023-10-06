@@ -41,7 +41,9 @@ public class DesignFileViewModel : FileViewModel
     new NullBrowser(),
     new DesignLogViewModel()) 
   {
-    IsDragActive = true;
+    IsDragActive = false;
+    IsConfirmingRemoteDelete = false;
+    IsConfirmingDelete = false;
   }
 }
 
@@ -49,8 +51,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 {
   [Reactive] public int SelectedIndex { get; set; }
   [Reactive] public bool IsDragActive { get; set; }
+  [Reactive] public bool IsConfirmingDelete { get; set; }
   [Reactive] public bool IsConfirmingRemoteDelete { get; set; }
   [Reactive] public ObservableCollection<UiFile> FilesToDelete { get; set; } = new();
+  [Reactive] public ObservableCollection<UiFile> RemoteFilesToDelete { get; set; } = new();
 
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
@@ -113,8 +117,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
     {
-      SubscribeNameAndDescriptionChanges(file);
+      SubscribeChanges(file);
     }
+
+    }
+  }
+  }
   }
 
   private void SubscribeChanges(UiFile file)
@@ -294,18 +302,39 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     return sf;
   }
 
-  public void HandleRemoveClicked(UiFile uif)
+  public void HandleDeleteClicked(UiFile uif)
   {
-    int index = FileService.Files.IndexOf(uif);
-    if (index < 0 || index >= FileService.Files.Count)
+    if (uif == null) { return; }
+
+    IsConfirmingDelete = true;
+    FilesToDelete.Add(uif);
+  }
+
+  public void HandleConfirmDeleteClicked()
+  {
+    IsConfirmingDelete = false;
+
+    foreach (UiFile uif in FilesToDelete)
     {
-      SelectedIndex = 0;
-      Log.Info("No file selected; cannot remove file");
-      return;
+      int index = FileService.Files.IndexOf(uif);
+      if (index < 0 || index >= FileService.Files.Count)
+      {
+        SelectedIndex = 0;
+        Log.Info("No file selected; cannot remove file");
+        return;
+      }
+
+      Remove(index);
+      SelectedIndex = Math.Min(index, FileService.Files.Count);
     }
 
-    Remove(index);
-    SelectedIndex = Math.Min(index, FileService.Files.Count);
+    FilesToDelete.Clear();
+  }
+
+  public void HandleCancelDeleteClicked()
+  {
+    IsConfirmingDelete = false;
+    FilesToDelete.Clear();
   }
 
   private void Remove(int index)
@@ -594,13 +623,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (uif == null) { return; }
 
     IsConfirmingRemoteDelete = true;
-    FilesToDelete.Add(uif);
+    RemoteFilesToDelete.Add(uif);
   }
 
   public async Task HandleConfirmRemoteDeleteClicked()
   {
     IsConfirmingRemoteDelete = false;
-    foreach (UiFile uif in FilesToDelete)
+
+    foreach (UiFile uif in RemoteFilesToDelete)
     {
       if (uif.Activity == null) { return; }
 
@@ -615,13 +645,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       }
     }
 
-    FilesToDelete.Clear();
+    RemoteFilesToDelete.Clear();
   }
 
   public void HandleCancelRemoteDeleteClicked()
   {
     IsConfirmingRemoteDelete = false;
-    FilesToDelete.Clear();
+    RemoteFilesToDelete.Clear();
   }
 
   public async Task HandleUploadClicked(LocalActivity? act)

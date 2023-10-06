@@ -24,6 +24,7 @@
   <UserControl.Resources>
     <ResourceDictionary>
       <converters:ObjectEqualityToBooleanConverter x:Key="ObjectEqualityToBooleanConverter"/>
+      <converters:AnyBooleanTrueToBlurEffectConverter x:Key="AnyBooleanTrueToBlurEffectConverter"/>
       <!--<converters:BooleanToColorConverter x:Key="ConfirmDeleteBooleanToColorConverter" TrueColor="{StaticResource FitRedCrayonBrush}" FalseColor="{x:Static Brushes.Transparent}"/>-->
     </ResourceDictionary>
   </UserControl.Resources>
@@ -50,6 +51,13 @@
              ItemsSource="{Binding FileService.Files}"
              SelectedIndex="{Binding SelectedIndex}">
 
+      <ListBox.Effect>
+        <MultiBinding Converter="{StaticResource AnyBooleanTrueToBlurEffectConverter}">
+          <Binding Path="IsDragActive"/>
+          <Binding Path="IsConfirmingDelete"/>
+          <Binding Path="IsConfirmingRemoteDelete"/>
+        </MultiBinding>
+      </ListBox.Effect>
       <ListBox.Styles>
         <Style Selector="TextBlock">
           <Setter Property="Margin" Value="0 5 5 0"/>
@@ -134,8 +142,8 @@
                           IsEnabled="{Binding Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}"
                           ToolTip.Tip="Export to file"/>
                   
-                  <MenuItem Header="Remove"
-                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleRemoveClicked}"
+                  <MenuItem Header="Delete"
+                          Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleDeleteClicked}"
                           CommandParameter="{Binding}">
                     
                     <ToolTip.Tip>
@@ -278,12 +286,11 @@
             Margin="50"
             CornerRadius="20" Padding="20">
 
-      <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-        <Svg Path="/Assets/bin.svg" Width="100"/>
-        <Label Content="Really delete?" HorizontalAlignment="Center"/>
+      <DockPanel LastChildFill="False">
+        <Svg DockPanel.Dock="Top" Path="/Assets/bin.svg" Width="100"/>
+        <Label DockPanel.Dock="Top" Content="Really delete?" HorizontalAlignment="Center"/>
 
-
-        <ItemsControl Background="Transparent" ItemsSource="{Binding FilesToDelete}" Margin="20">
+        <ItemsControl DockPanel.Dock="Top" Background="Transparent" ItemsSource="{Binding RemoteFilesToDelete}" Margin="20">
 
           <ItemsControl.ItemTemplate>
             <DataTemplate>
@@ -292,7 +299,8 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel HorizontalAlignment="Center">
+        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+          
           <Button Command="{Binding HandleConfirmRemoteDeleteClicked}" Width="100">
             <Svg Path="/Assets/check.svg" />
           </Button>
@@ -300,8 +308,39 @@
             <Svg Path="/Assets/cancel.svg" />
           </Button>
         </WrapPanel>
-      </StackPanel>
+      </DockPanel>
                   
+    </Border>
+    
+    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingDelete}" 
+            Background="{StaticResource FitLeadBlack2}"
+            Opacity="50"
+            Margin="50"
+            CornerRadius="20" Padding="20">
+
+      <DockPanel LastChildFill="False">
+        <Svg DockPanel.Dock="Top" Path="/Assets/bin.svg" Width="100"/>
+        <Label DockPanel.Dock="Top" Content="Really delete?" HorizontalAlignment="Center"/>
+
+        <ItemsControl DockPanel.Dock="Top" Background="Transparent" ItemsSource="{Binding FilesToDelete}" Margin="20">
+
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Label Content="{Binding Activity.Name}" HorizontalAlignment="Center" FontStyle="Italic"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+          <Button Command="{Binding HandleConfirmDeleteClicked}" Width="100">
+            <Svg Path="/Assets/check.svg" />
+          </Button>
+          <Button Command="{Binding HandleCancelDeleteClicked}" Width="100">
+            <Svg Path="/Assets/cancel.svg" />
+          </Button>
+        </WrapPanel>
+      </DockPanel>
+
     </Border>
   </Grid>
 
