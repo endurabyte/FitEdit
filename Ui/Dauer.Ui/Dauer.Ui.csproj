@@ -16,6 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Assets\bin.svg" />
+    <None Remove="Assets\cancel.svg" />
+    <None Remove="Assets\check.svg" />
     <None Remove="Assets\folder.svg" />
     <None Remove="Assets\garmin_connect_blue.png" />
     <None Remove="Assets\powered_by_strava.png" />

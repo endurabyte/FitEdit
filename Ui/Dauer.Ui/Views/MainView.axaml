@@ -17,13 +17,6 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <UserControl.Resources>
-    <ResourceDictionary>
-      <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" TrueColor="{StaticResource FitGreenCrayonBrush}" FalseColor="{StaticResource FitRedCrayonBrush}"/>
-      <converters:BooleanToStringConverter x:Key="BooleanToStringConverter" />
-    </ResourceDictionary>
-  </UserControl.Resources>
-
   <Grid x:Name="MainGrid" RowDefinitions="2*, Auto, *">
 
     <TabControl x:Name="MainTabControl" Grid.Row="0" TabStripPlacement="Top" SelectedIndex="{Binding SelectedTabIndex}">

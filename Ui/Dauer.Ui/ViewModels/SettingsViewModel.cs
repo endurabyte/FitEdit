@@ -117,6 +117,8 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     db_.ObservableForProperty(x => x.Ready).Subscribe(async _ => await LoadSettings_());
     _ = Task.Run(LoadSettings_);
 
+    this.ObservableForProperty(x => x.Message).Subscribe(msg => Log.Info(msg.Value));
+
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
       .Subscribe(_ =>
       {
@@ -144,6 +146,8 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     FitEdit.ObservableForProperty(x => x.GarminCookies)
       .Subscribe(async _ =>
       {
+        Message = "Received new cookies from the FitEdit browser extension.";
+
         GarminSsoId = FitEdit.GarminCookies.FirstOrDefault(c => c.Name == "GARMIN-SSO-CUST-GUID")?.Value ?? null;
         GarminSessionId = FitEdit.GarminCookies.FirstOrDefault(c => c.Name == "SESSIONID")?.Value ?? null;
         Garmin.Config.SsoId = GarminSsoId;
@@ -203,9 +207,9 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     if (emailValidator_.IsValid(username))
     {
       Message = "We sent you an email. " +
-        "\nIf you're a new user, it has a link. " +
-        "\nIf you're a returning user, it has a code and a link. " +
-        "\nEnter the code or open the link on this device within 5 minutes.";
+        "If you're a new user, it has a link. " +
+        "If you're a returning user, it has a code and a link. " +
+        "Enter the code or open the link on this device within 5 minutes.";
     } else if (phoneValidator_.IsValid(username))
     {
       Message = "We sent you a text message with a code. " +

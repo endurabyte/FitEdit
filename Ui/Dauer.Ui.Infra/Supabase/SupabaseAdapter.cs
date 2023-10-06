@@ -290,6 +290,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return await db_.GetAuthorizationAsync("Dauer.Api");
   }
 
+  public async Task Sync() => await SyncRecentChanges();
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default)
   {
     if (client_.Auth.CurrentSession?.AccessToken == null) { return false; }

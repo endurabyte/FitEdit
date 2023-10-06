@@ -13,7 +13,7 @@ public partial class MainView : UserControl
   /// Index of the selected tab in landscape display mode, 
   /// for example on mobile devices in landscape mode or desktops/laptops when the window height < width
   /// </summary>
-  private int landscapeTabIndex;
+  private int landscapeTabIndex_;
 
   public MainView()
   {
@@ -28,8 +28,8 @@ public partial class MainView : UserControl
       // Remember which tab was selected in landscape mode.
       // When we leave portrait mode, we'll jump back to it.
       if (!vm.IsPortrait) 
-      { 
-        landscapeTabIndex = MainTabControl.SelectedIndex; 
+      {
+        landscapeTabIndex_ = MainTabControl.SelectedIndex;
       }
     });
   }
@@ -69,7 +69,7 @@ public partial class MainView : UserControl
     }
 
     // We just left portrait mode. Jump back to last tab that was selected in landscape mode.
-    MainTabControl.SelectedIndex = landscapeTabIndex;
+    MainTabControl.SelectedIndex = landscapeTabIndex_;
 
     foreach (var def in defaultRowDefinitions_)
     {

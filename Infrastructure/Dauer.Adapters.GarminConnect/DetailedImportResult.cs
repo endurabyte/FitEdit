@@ -5,7 +5,9 @@ namespace Dauer.Adapters.GarminConnect;
 public class DetailedImportResult
 {
   [JsonPropertyName("uploadId")]
-  public long? UploadId { get; set; }
+  // In the response JSON, this is a number literal e.g. "uploadId": 1234567 when the uploaded succeded,
+  // and it is an empty string "uploadId": "" when it failed. Gah!
+  public long UploadId { get; set; } 
 
   [JsonPropertyName("uploadUuid")]
   public UploadUuid UploadUuid { get; set; }
