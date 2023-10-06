@@ -18,7 +18,7 @@ $certTmpPath = "$PSScriptRoot/$certTmpPath"
 echo "Created $certTmpPath..."
 
 echo "Publishing..."
-dotnet publish Dauer.Ui.Desktop.csproj --configuration Release --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+dotnet publish Dauer.Ui.Desktop.csproj --configuration $configuration --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
 echo "Packing..."
 dotnet tool install -g csq --prerelease

@@ -6,7 +6,7 @@
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ApplicationId>com.endurabyte.fitedit</ApplicationId>
-    <ApplicationVersion>7</ApplicationVersion>
+    <ApplicationVersion>$(BuildIncrement)</ApplicationVersion>
     <ApplicationDisplayVersion>$(VersionPrefix)</ApplicationDisplayVersion>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <Version>$(VersionPrefix)</Version>

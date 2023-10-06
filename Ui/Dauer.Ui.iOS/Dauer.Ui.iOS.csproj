@@ -28,5 +28,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Dauer.Ui\Dauer.Ui.csproj" />
   </ItemGroup>
-  
+
+  <Target Name="UpdateInfoPlist" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="pwsh Update-InfoPlist.ps1 -versionPrefix $(VersionPrefix) -buildIncrement $(BuildIncrement) -plistPath Info.plist" />
+  </Target>
 </Project>
