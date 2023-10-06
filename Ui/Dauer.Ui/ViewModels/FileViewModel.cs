@@ -145,6 +145,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await FileService.UpdateAsync(file.Activity);
       await supa_.UpdateAsync(file.Activity);
     });
+    
+    file.Activity.ObservableForProperty(x => x.SourceId).Subscribe(async _ =>
+    {
+      await FileService.UpdateAsync(file.Activity);
+      await supa_.UpdateAsync(file.Activity);
+    });
   }
 
   public async void HandleImportClicked()
@@ -580,15 +586,39 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await browser_.OpenAsync(act.OnlineUrl);
   }
 
-  public async Task HandleDeleteOnlineClicked(DauerActivity? act)
+  public void HandleRemoteDeleteClicked(UiFile? uif)
   {
-    if (act == null) { return; }
+    if (uif == null) { return; }
 
-    if (act.Source == ActivitySource.GarminConnect)
+    IsConfirmingDelete = true;
+    FilesToDelete.Add(uif);
+  }
+
+  public async Task HandleConfirmRemoteDeleteClicked()
+  {
+    IsConfirmingDelete = false;
+    foreach (UiFile uif in FilesToDelete)
     {
-      if (!long.TryParse(act.SourceId, out long id)) { return; }
-      await Garmin.DeleteActivity(id);
+      if (uif.Activity == null) { return; }
+
+      if (uif.Activity.Source == ActivitySource.GarminConnect)
+      {
+        if (!long.TryParse(uif.Activity.SourceId, out long id)) { return; }
+        if (await Garmin.DeleteActivity(id))
+        {
+          uif.Activity.Source = ActivitySource.File; // Must be File to be re-uploadable
+          uif.Activity.SourceId = "";
+        }
+      }
     }
+
+    FilesToDelete.Clear();
+  }
+
+  public void HandleCancelRemoteDeleteClicked()
+  {
+    IsConfirmingDelete = false;
+    FilesToDelete.Clear();
   }
 
   public async Task HandleUploadClicked(DauerActivity? act)

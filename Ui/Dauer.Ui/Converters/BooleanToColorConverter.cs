@@ -7,9 +7,9 @@ namespace Dauer.Ui.Converters;
 
 public class BooleanToColorConverter : IValueConverter
 {
-  public SolidColorBrush TrueColor { get; set; } = new SolidColorBrush(Colors.Green);
-  public SolidColorBrush FalseColor { get; set; } = new SolidColorBrush(Colors.Red);
-
+  public ISolidColorBrush TrueColor { get; set; } = new SolidColorBrush(Colors.Green);
+  public ISolidColorBrush FalseColor { get; set; } = new SolidColorBrush(Colors.Red);
+  
   public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
   {
     true => TrueColor,
