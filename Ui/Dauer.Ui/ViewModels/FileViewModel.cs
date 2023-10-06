@@ -47,6 +47,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 {
   [Reactive] public int SelectedIndex { get; set; }
   [Reactive] public bool IsDragActive { get; set; }
+  [Reactive] public bool IsConfirmingRemoteDelete { get; set; }
   [Reactive] public ObservableCollection<UiFile> FilesToDelete { get; set; } = new();
 
   /// <summary>
@@ -590,13 +591,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (uif == null) { return; }
 
-    IsConfirmingDelete = true;
+    IsConfirmingRemoteDelete = true;
     FilesToDelete.Add(uif);
   }
 
   public async Task HandleConfirmRemoteDeleteClicked()
   {
-    IsConfirmingDelete = false;
+    IsConfirmingRemoteDelete = false;
     foreach (UiFile uif in FilesToDelete)
     {
       if (uif.Activity == null) { return; }
@@ -617,7 +618,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public void HandleCancelRemoteDeleteClicked()
   {
-    IsConfirmingDelete = false;
+    IsConfirmingRemoteDelete = false;
     FilesToDelete.Clear();
   }
 
