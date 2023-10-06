@@ -9,7 +9,7 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <VersionPrefix>2.2.61</VersionPrefix>
+    <VersionPrefix>2.2.62</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     <Product>FitEdit</Product>
     <Copyright>EnduraByte LLC 2023</Copyright>
@@ -17,6 +17,7 @@
 
   <PropertyGroup>
     <AvaloniaVersion>11.0.4</AvaloniaVersion>
+    <AvaloniaSvgVersion>11.0.0.2</AvaloniaSvgVersion>
     <OxyPlotVersion>2.1.2-av11.0.0</OxyPlotVersion>
     <MapsuiVersion>4.0.0-173-g0ea83d675</MapsuiVersion>
   </PropertyGroup>
