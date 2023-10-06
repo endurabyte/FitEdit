@@ -119,10 +119,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     {
       SubscribeChanges(file);
     }
-
-    }
-  }
-  }
   }
 
   private void SubscribeChanges(UiFile file)
