@@ -6,6 +6,7 @@
              xmlns:views="clr-namespace:Dauer.Ui.Views"
              xmlns:controls="using:Dauer.Ui.Controls"
              xmlns:converters="using:Dauer.Ui.Converters"
+             xmlns:svg="clr-namespace:Avalonia.Svg;assembly=Avalonia.Svg"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="1400"
              x:Class="Dauer.Ui.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
@@ -95,7 +96,12 @@
               <Binding Path="FitEdit.SupportsPayments"/>
             </MultiBinding>
           </WrapPanel.IsVisible>
-          <Button Command="{Binding HandleManagePaymentsClicked}" Content="Manage Payments" IsVisible="{Binding FitEdit.IsActive}"/>
+          <Button Command="{Binding HandleManagePaymentsClicked}" IsVisible="{Binding FitEdit.IsActive}">
+            <StackPanel Orientation="Horizontal">
+              <Svg Path="/Assets/card.svg" Width="20" Margin="0 0 10 0"/>
+              <TextBlock Text="Manage Payments"/>
+            </StackPanel>
+          </Button>
           <Button Command="{Binding HandleSignUpClicked}" Content="Sign Up" IsVisible="{Binding !FitEdit.IsActive}"/>
         </WrapPanel>
 
