@@ -20,6 +20,7 @@ public class FileService : ReactiveObject, IFileService
 {
   private readonly IDatabaseAdapter db_;
   private readonly ICryptoService crypto_;
+  private readonly string storageRoot_;
 
   [Reactive] public UiFile? MainFile { get; set; }
   [Reactive] public ObservableCollection<UiFile> Files { get; set; } = new();
@@ -27,10 +28,14 @@ public class FileService : ReactiveObject, IFileService
   public IObservable<LocalActivity> Deleted => deletedSubject_;
   private readonly ISubject<LocalActivity> deletedSubject_ = new Subject<LocalActivity>();
 
-  public FileService(IDatabaseAdapter db, ICryptoService crypto)
+  public string PathFor(LocalActivity act) => Path.Combine(storageRoot_, "Files", $"{act.File!.Id}", act.File.Name);
+
+  public FileService(IDatabaseAdapter db, ICryptoService crypto, string storageRoot)
   {
     db_ = db;
     crypto_ = crypto;
+    storageRoot_ = storageRoot;
+
     db.PropertyChanged += (o, e) =>
     {
       if (!db.Ready) { return; }
@@ -76,11 +81,11 @@ public class FileService : ReactiveObject, IFileService
       if (!await db_.InsertAsync(act)) { return false; }
 
       if (act.File == null) { return true; }
-      if (!CreateParentDir(act.File.Path)) { return false; }
+      if (!CreateParentDir(PathFor(act))) { return false; }
 
       byte[]? encrypted = crypto_.Encrypt(GetSalt(act), act.File.Bytes);
       if (encrypted == null) { return false; }
-      await File.WriteAllBytesAsync(act.File.Path, encrypted, ct).AnyContext();
+      await File.WriteAllBytesAsync(PathFor(act), encrypted, ct).AnyContext();
 
       return true;
     }
@@ -99,13 +104,13 @@ public class FileService : ReactiveObject, IFileService
       if (act == null) { return null; }
 
       act.File ??= new FileReference(act.Name ?? id, null) { Id = id };
-      byte[]? encrypted = await File.ReadAllBytesAsync(act.File.Path, ct).AnyContext();
+      byte[]? encrypted = await File.ReadAllBytesAsync(PathFor(act), ct).AnyContext();
       act.File.Bytes = crypto_.Decrypt(GetSalt(act), encrypted) ?? Array.Empty<byte>();
 
       if (act.File.Bytes.Length == 0)
       {
         act.File = null;
-        Log.Error($"Fit file {act.File?.Path} was empty");
+        Log.Error($"Fit file {PathFor(act)} was empty");
       }
 
       return act;
@@ -130,11 +135,11 @@ public class FileService : ReactiveObject, IFileService
 
       if (act.File == null) { return true; }
       if (act.File.Bytes.Length == 0) { return true; }
-      if (!CreateParentDir(act.File.Path)) { return false; }
+      if (!CreateParentDir(PathFor(act))) { return false; }
 
       byte[]? encrypted = crypto_.Encrypt(GetSalt(act), act.File.Bytes);
       if (encrypted == null) { return false; }
-      await File.WriteAllBytesAsync(act.File.Path, encrypted, ct).AnyContext();
+      await File.WriteAllBytesAsync(PathFor(act), encrypted, ct).AnyContext();
       return true;
     }
     catch (Exception e)
@@ -155,7 +160,7 @@ public class FileService : ReactiveObject, IFileService
 
       if (act.File == null) { return ok; }
 
-      DeleteParentDir(act.File.Path);
+      DeleteParentDir(PathFor(act));
       return true;
     }
     catch (Exception e)

@@ -10,9 +10,6 @@ public class FileReference
   public string Name { get; set; }
   public byte[] Bytes { get; set; } = Array.Empty<byte>();
 
-  public string Path => System.IO.Path.Combine(
-    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "Files", $"{Id}", Name);
-
   public FileReference(string name, byte[]? bytes)
   {
     bool nameIsGuid = Guid.TryParse(name, out _);
@@ -31,6 +28,5 @@ public class FileReference
     await stream.CopyToAsync(ms);
     byte[] data = ms.ToArray();
     return new FileReference(file.Name, data);
-
   }
 }

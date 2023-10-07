@@ -6,6 +6,20 @@ namespace Dauer.Ui.Infra;
 
 public static class ConfigurationRoot
 {
+  public static string DataDir => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data");
+
+  private const string exampleAppSettings = @"{
+  // Uncomment and set this path to change where FitEdit storages its data
+  // This can be useful if you want to use a file sync service 
+  // e.g. DropBox, Google Drive, OneDrive, etc.
+  //""StorageRoot"": ""C:/Users/<User>/FitEdit""
+}";
+
+  static ConfigurationRoot()
+  {
+    _ = Task.Run(WriteExampleAppSettings);
+  }
+
   public static ICompositionRoot Bootstrap(CompositionRoot root)
   {
     string os = RuntimeInformation.OSDescription;
@@ -21,16 +35,17 @@ public static class ConfigurationRoot
 
     // Load configuration
     IConfiguration config = new ConfigurationBuilder()
-     .SetBasePath(AppContext.BaseDirectory) // exe directory
-     .AddJsonFile("appsettings.json", true)
      .AddJsonStream(stream!)
+     .SetBasePath(DataDir)
+     .AddJsonFile("appsettings.json", true)
      .AddJsonFile($"appsettings.{os}.json", true)
      .AddEnvironmentVariables()
      .Build();
 
+    string storageRoot = config.GetValue<string>("StorageRoot") ?? DataDir;
+
     // On Android and iOS, load appsettings from this assembly instead of file
-    string logDir = Path.Combine(
-      Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "Logs");
+    string logDir = Path.Combine(storageRoot, "Logs");
 
     // Substitute {LogDir} with log directory
     foreach (int i in Enumerable.Range(0, 10))
@@ -46,4 +61,19 @@ public static class ConfigurationRoot
     root.Config = config;
     return root;
   }
+
+  private static async Task WriteExampleAppSettings()
+  {
+    string path = Path.Combine(DataDir, "appsettings.json");
+
+    try
+    {
+      if (File.Exists(path)) { return; }
+      await File.WriteAllTextAsync(path, exampleAppSettings);
+    }
+    catch (Exception)
+    {
+    }
+  }
 }
+

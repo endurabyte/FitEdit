@@ -92,6 +92,7 @@ public class DauerModule : Autofac.Module
     string? projectId = config_?.GetValue<string>("Api:ProjectId");
     string? anonApiKey = config_?.GetValue<string>("Api:AnonKey");
     string? cryptoPassword = config_?.GetValue<string>("Crypto:Password");
+    string? storageRoot = config_?.GetValue<string>("StorageRoot") ?? ConfigurationRoot.DataDir;
 
     builder.RegisterType<SupabaseAdapter>().As<ISupabaseAdapter>()
       .WithParameter("url", $"https://{projectId}.supabase.co")
@@ -111,8 +112,7 @@ public class DauerModule : Autofac.Module
     builder.RegisterInstance(Window_).As<IWindowAdapter>();
     builder.RegisterInstance(Storage_).As<IStorageAdapter>();
 
-    string dbPath = Path.Combine(
-      Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "db", "fitedit.sqlite3");
+    string dbPath = Path.Combine(storageRoot, "db", "fitedit.sqlite3");
 
     Directory.CreateDirectory(Directory.GetParent(dbPath)!.FullName);
 
@@ -121,6 +121,7 @@ public class DauerModule : Autofac.Module
       .SingleInstance();
 
     builder.RegisterType<FileService>().As<IFileService>()
+      .WithParameter("storageRoot", storageRoot)
       .SingleInstance();
 
     base.Load(builder);
