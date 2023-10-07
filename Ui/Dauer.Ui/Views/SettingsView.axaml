@@ -111,13 +111,17 @@
         </WrapPanel>
 
         <WrapPanel Margin="50,10,10,10">
-          <Button HorizontalAlignment="Stretch" Command="{Binding HandleSyncNowClicked}" IsVisible="{Binding FitEdit.IsActive}">
+          <Button HorizontalAlignment="Stretch" Command="{Binding HandleSyncNowClicked}" 
+                  ToolTip.Tip="Perform an incremental sync. This will pull all files modified after 'Last Sync'."
+                  IsVisible="{Binding FitEdit.IsActive}">
             <StackPanel Orientation="Horizontal">
               <Svg Path="/Assets/sync.svg" Width="20" Margin="0 0 10 0"/>
               <TextBlock Text="Sync Now"/>
             </StackPanel>
           </Button>
-            <Button HorizontalAlignment="Stretch" Command="{Binding HandleResetSyncClicked}" Content="Reset Sync" IsVisible="{Binding FitEdit.IsActive}"/>
+          <Button HorizontalAlignment="Stretch" Command="{Binding HandleResetSyncClicked}" Content="Full Sync" 
+                  ToolTip.Tip="Perform a full sync. This will pull all files, not just those modified after 'Last Sync'. I can take a while."
+                  IsVisible="{Binding FitEdit.IsActive}"/>
         </WrapPanel>
 
         <Separator Width="{Binding $parent[StackPanel].Width}"/>

@@ -442,12 +442,10 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   public void HandleSyncNowClicked() => _ = Task.Run(FitEdit.Sync);
 
-  public async Task HandleResetSyncClicked()
+  public void HandleFullSyncClicked()
   {
-    await UpdateSettingsAsync(settings =>
-    {
-      FitEdit.LastSync = default;
-    });
+    FitEdit.LastSync = default;
+    _ = Task.Run(FitEdit.Sync);
   }
 
   private async Task UpdateSettingsAsync(Action<AppSettings> action)

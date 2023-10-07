@@ -94,13 +94,13 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       IsAuthenticated = await IsAuthenticatedAsync();
 
       await SyncUserInfo();
-      _ = Task.Run(SyncRecentChanges);
+      _ = Task.Run(SyncRecent);
     });
 
     db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
     {
       Authorization = await LoadCachedAuthorization();
-      _ = Task.Run(SyncRecentChanges);
+      _ = Task.Run(SyncRecent);
     });
 
     this.ObservableForProperty(x => x.Authorization).Subscribe(_ =>
@@ -146,7 +146,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       });
     });
 
-    _ = Task.Run(SyncRecentChanges);
+    _ = Task.Run(SyncRecent);
   }
 
   private void Subscribe(string tableName, ref RealtimeChannel? channel, Action<PostgresChangesResponse> handleChange)
@@ -291,7 +291,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return await db_.GetAuthorizationAsync("Dauer.Api");
   }
 
-  public async Task Sync() => await SyncRecentChanges();
+  public async Task Sync() => await SyncRecent();
 
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default)
   {
@@ -314,6 +314,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     //await client_.Auth.ResetPasswordForEmail(email);
     Session? session = await client_.Auth.SignInWithPassword(email, password);
 
+    _ = Task.Run(SyncFull);
     bool ok = session?.AccessToken != null;
     return ok;
   }
@@ -359,6 +360,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
       Authorization = AuthorizationFactory.Create(session?.AccessToken, session?.RefreshToken);
 
+      _ = Task.Run(SyncFull);
       return !string.IsNullOrEmpty(session?.AccessToken);
     }
     catch (Exception e)
@@ -459,11 +461,17 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return true;
   }
 
+  private async Task SyncFull()
+  {
+    LastSync = default; // Get everything in the DB not just recent changes
+    await SyncRecent();
+  }
+
   /// <summary>
   /// Query for activity changes we missed while offline: adds, updates, and deletes.
   /// Sync up to 1 year
   /// </summary>
-  private async Task SyncRecentChanges()
+  private async Task SyncRecent()
   {
     if (!db_.Ready) { return; }
 
@@ -484,7 +492,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       await SyncDeletes(before, after, ids);
       LastSync = DateTime.UtcNow;
 
-    }, nameof(SyncRecentChanges));
+    }, nameof(SyncRecent));
   }
 
   private async Task SyncAddsAndUpdates()
