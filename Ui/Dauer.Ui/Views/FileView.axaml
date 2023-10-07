@@ -139,14 +139,7 @@
                   <MenuItem Header="Export"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleExportClicked}"
                           CommandParameter="{Binding}"
-                          ToolTip.Tip="Export to file">
-                    <MenuItem.IsEnabled>
-                      <MultiBinding Converter="{x:Static BoolConverters.And}">
-                        <Binding Path="Activity.File" Converter="{x:Static ObjectConverters.IsNotNull}"/>
-                        <Binding Path="IsLoaded"/>
-                      </MultiBinding>
-                    </MenuItem.IsEnabled>
-                  </MenuItem>
+                          ToolTip.Tip="Export to file"/>
                   
                   <MenuItem Header="Delete"
                           Command="{Binding $parent[UserControl].((vm:FileViewModel)DataContext).HandleDeleteClicked}"

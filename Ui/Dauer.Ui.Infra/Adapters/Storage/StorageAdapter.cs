@@ -21,7 +21,10 @@ public abstract class StorageAdapter : IStorageAdapter
   public async Task SaveAsync(FileReference file)
   {
     if (Provider_ == null) return;
-    using IStorageFile? sf = await Provider_.SaveFilePickerAsync(new FilePickerSaveOptions { });
+    using IStorageFile? sf = await Provider_.SaveFilePickerAsync(new FilePickerSaveOptions 
+    { 
+      SuggestedFileName = file.Name
+    });
     if (sf == null) return;
     using Stream stream = await sf.OpenWriteAsync();
     await stream.WriteAsync(file.Bytes.AsMemory(0, file.Bytes.Length));

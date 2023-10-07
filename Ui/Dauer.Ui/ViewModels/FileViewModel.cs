@@ -478,19 +478,28 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (file == null) { return; }
     if (file.Activity == null) { return; }
     if (file.Activity.File == null) { return; }
-    if (file.FitFile == null) { return; }
 
-    Log.Info($"Exporting {file.Activity.Name}...");
+    if (file.FitFile != null) 
+    { 
+      file.Activity.File.Bytes = file.FitFile.GetBytes();
+    }
+    else
+    {
+      // Load the file bytes from disk, without parsing them as a FIT file
+      LocalActivity? tmp = await FileService.ReadAsync(file.Activity.Id);
+      if (tmp is null) { return; }
+      if (tmp.File is null) { return; }
+      file.Activity.File.Bytes = tmp.File.Bytes;
+    }
+
+    Log.Info($"Exporting \"{file.Activity.Name}\"...");
 
     try
     {
-      byte[] bytes = file.FitFile.GetBytes();
-      file.Activity.File.Bytes = bytes;
-
-      string name = Path.GetFileNameWithoutExtension(file.Activity.File.Name);
+      string? name = Path.GetFileNameWithoutExtension(file.Activity.Name) ?? "FitEdit Export";
       string extension = Path.GetExtension(file.Activity.File.Name);
       // On macOS and iOS, the file save dialog must run on the main thread
-      await storage_.SaveAsync(new FileReference($"{name}_edit.{extension}", bytes));
+      await storage_.SaveAsync(new FileReference($"{name}{extension}", file.Activity.File.Bytes));
     }
     catch (Exception e)
     {
