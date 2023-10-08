@@ -105,13 +105,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     log_ = log;
     browser_ = browser;
 
-    this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
-    {
-      int i = property.Value;
-      if (i < 0 || i >= fileService.Files.Count) { return; }
-      fileService.MainFile = fileService.Files[i];
-    });
-
     FileService.SubscribeAdds(SubscribeChanges);
 
     if (fileService.Files == null) { return; }
@@ -359,9 +352,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private void UnloadFile(UiFile? uif)
   {
     if (uif == null) { return; }
-    FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsLoaded);
     uif.Progress = 0;
     uif.IsLoaded = false;
+    FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsLoaded);
   }
 
   private async Task LoadFile(UiFile? uif)
@@ -377,6 +370,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       Log.Info($"File {uif.Activity.Name} is already loaded");
       uif.Progress = 100;
       uif.IsLoaded = true;
+
+      await Dispatcher.UIThread.InvokeAsync(() =>
+      {
+        FileService.MainFile = uif;
+      });
       return;
     }
 
@@ -441,13 +439,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       }
 
       fit.ForwardfillEvents();
+      uif.FitFile = fit;
+      uif.IsLoaded = true;
 
       // Do on the main thread because there are subscribers which update the UI
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
-        uif.FitFile = fit;
-        uif.IsLoaded = true;
-        FileService.MainFile = null; // Trigger notification
         FileService.MainFile = uif;
       });
 

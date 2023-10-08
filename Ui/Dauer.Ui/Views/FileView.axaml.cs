@@ -3,7 +3,6 @@ using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Dauer.Model;
 using Dauer.Ui.ViewModels;
-using ReactiveUI;
 
 namespace Dauer.Ui.Views;
 
@@ -12,11 +11,7 @@ public partial class FileView : UserControl
   public FileView()
   {
     InitializeComponent();
-    FileListBox.ObservableForProperty(x => x.Scroll).Subscribe(_ =>
-    {
-      if (FileListBox.Scroll is not ScrollViewer sv) { return; }
-      sv.ScrollChanged += HandleScrollChanged;
-    });
+    FileScrollViewer.ScrollChanged += HandleScrollChanged;
 
     AddHandler(DragDrop.DragEnterEvent, HandleDragEnter);
     AddHandler(DragDrop.DragLeaveEvent, HandleDragLeave);
