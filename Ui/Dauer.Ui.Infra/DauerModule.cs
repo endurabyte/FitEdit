@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Autofac;
+using Autofac.Core;
 using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Adapters.GarminConnect;
 using Dauer.Adapters.Sqlite;
@@ -106,6 +107,8 @@ public class DauerModule : Autofac.Module
     builder.RegisterType<CryptoService>().As<ICryptoService>()
       .WithParameter("password", cryptoPassword ?? "")
       .SingleInstance();
+    builder.RegisterType<NullCryptoService>()
+      .Named<ICryptoService>("NullCrypto");
     builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>().SingleInstance();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();
@@ -120,9 +123,20 @@ public class DauerModule : Autofac.Module
       .WithParameter("dbPath", dbPath)
       .SingleInstance();
 
-    builder.RegisterType<FileService>().As<IFileService>()
-      .WithParameter("storageRoot", storageRoot)
-      .SingleInstance();
+    {
+      bool encryptFiles = false;
+      var fileService = builder.RegisterType<FileService>().As<IFileService>()
+        .WithParameter("storageRoot", storageRoot);
+
+      if (!encryptFiles)
+      {
+        fileService.WithParameter(new ResolvedParameter(
+          (pi, ctx) => pi.ParameterType == typeof(ICryptoService),
+          (pi, ctx) => ctx.ResolveNamed<ICryptoService>("NullCrypto")));
+      }
+
+      fileService.SingleInstance();
+    }
 
     base.Load(builder);
   }
