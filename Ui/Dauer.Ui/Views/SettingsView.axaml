@@ -119,8 +119,8 @@
               <TextBlock Text="Sync Now"/>
             </StackPanel>
           </Button>
-          <Button HorizontalAlignment="Stretch" Command="{Binding HandleResetSyncClicked}" Content="Full Sync" 
-                  ToolTip.Tip="Perform a full sync. This will pull all files, not just those modified after 'Last Sync'. I can take a while."
+          <Button HorizontalAlignment="Stretch" Command="{Binding HandleFullSyncClicked}" Content="Full Sync" 
+                  ToolTip.Tip="Perform a full sync. This will pull all files, not just those modified after 'Last Sync'. It can take a while."
                   IsVisible="{Binding FitEdit.IsActive}"/>
         </WrapPanel>
 

@@ -11,7 +11,7 @@ namespace Dauer.Ui.ViewModels;
 public interface IMainViewModel
 {
   IMapViewModel Map { get; }
-  bool IsPortrait { get; set; }
+  bool IsCompact { get; }
 }
 
 public class DesignMainViewModel : MainViewModel
@@ -25,7 +25,8 @@ public class DesignMainViewModel : MainViewModel
     new DesignFileViewModel(),
     new DesignLogViewModel(),
     new DesignSettingsViewModel(),
-    new NullFitEditService()
+    new NullFitEditService(),
+    isCompact: false
   )
   { 
   }
@@ -49,9 +50,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
 
   [Reactive] public int SelectedTabIndex { get; set; }
 
-  // We presume a portrait display because Android and iOS don't
-  // call window_.Resized at startup but Windows does
-  [Reactive] public bool IsPortrait { get; set; } = true; 
+  [Reactive] public bool IsCompact { get; set; }
 
   private readonly IWindowAdapter window_;
 
@@ -64,7 +63,8 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IFileViewModel file,
     ILogViewModel logVm,
     ISettingsViewModel settings,
-    IFitEditService fitEdit
+    IFitEditService fitEdit,
+    bool isCompact
   )
   {
     window_ = window;
@@ -76,6 +76,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     LogVm = logVm;
     Settings = settings;
     FitEdit = fitEdit;
+    IsCompact = isCompact;
 
     GetVersion();
 
@@ -84,8 +85,13 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     {
       double width = tup.Item1;
       double height = tup.Item2;
-      IsPortrait = width < height;
       Log.Info($"Window resized to {width} {height}");
+
+      // If we were told at construction to be compact, always remain compact.
+      // We're probably on a mobile device.
+      if (isCompact) { return; } 
+
+      IsCompact = width < height;
     });
   }
 

@@ -44,11 +44,11 @@
 
         <views:SettingsView DataContext="{Binding Settings}"/>
       </TabItem>
-      <TabItem x:Name="PlotTab" FontSize="12" Header="Chart" IsVisible="{Binding IsPortrait}">
+      <TabItem x:Name="PlotTab" FontSize="12" Header="Chart" IsVisible="{Binding IsCompact}">
         <views:PlotView DataContext="{Binding Plot}"/>
       </TabItem>
 
-      <TabItem x:Name="MapTab" FontSize="12" Header="Map" IsVisible="{Binding IsPortrait}">
+      <TabItem x:Name="MapTab" FontSize="12" Header="Map" IsVisible="{Binding IsCompact}">
         <views:MapView DataContext="{Binding Map}"/>
       </TabItem>
     </TabControl>

@@ -27,14 +27,17 @@ public partial class App : Application
   {
     if (Root is null) { return; }
 
+    bool isDesktop = ApplicationLifetime.IsDesktop(out var desktop);
+    bool isMobile = ApplicationLifetime.IsMobile(out var mobile);
+
     Root.RegisterModule(new DauerModule(ApplicationLifetime, Root.Config));
-    Root.RegisterModule(new UiModule());
+    Root.RegisterModule(new UiModule(isMobile));
 
     object? dataContext = Root
       .Build()
       .Get<IMainViewModel>();
 
-    if (ApplicationLifetime.IsDesktop(out var desktop))
+    if (isDesktop)
     {
       desktop!.MainWindow = new MainWindow
       {
@@ -42,7 +45,7 @@ public partial class App : Application
       };
     }
 
-    else if (ApplicationLifetime.IsMobile(out var mobile))
+    else if (isMobile)
     {
       mobile!.MainView = new MainView
       {

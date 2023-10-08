@@ -27,7 +27,7 @@ public partial class MainView : UserControl
 
       // Remember which tab was selected in landscape mode.
       // When we leave portrait mode, we'll jump back to it.
-      if (!vm.IsPortrait) 
+      if (!vm.IsCompact)
       {
         landscapeTabIndex_ = MainTabControl.SelectedIndex;
       }
@@ -36,15 +36,12 @@ public partial class MainView : UserControl
 
   private void HandleDataContextChanged(object? sender, EventArgs e)
   {
-    if (DataContext is not IMainViewModel vm)
-    {
-      return;
-    }
+    if (DataContext is not IMainViewModel vm) { return; }
 
     // Show the map if it has coordinates, else hide it.
     vm.Map.ObservableForProperty(x => x.HasCoordinates).Subscribe(async x =>
     {
-      if (vm.IsPortrait) { return; }
+      if (vm.IsCompact) { return; }
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
         var value = x.Value ? GridLength.Star : new GridLength(0);
@@ -52,7 +49,7 @@ public partial class MainView : UserControl
       });
     });
 
-    vm.ObservableForProperty(x => x.IsPortrait).Subscribe(_ => RespondToDisplaySize(vm));
+    vm.ObservableForProperty(x => x.IsCompact).Subscribe(_ => RespondToDisplaySize(vm));
     RespondToDisplaySize(vm);
   }
 
@@ -60,15 +57,25 @@ public partial class MainView : UserControl
   {
     MainGrid.RowDefinitions.Clear();
 
-    if (vm.IsPortrait)
+    if (vm.IsCompact)
     {
-      MainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
-      MainGrid.Children.Remove(GridSplitter);
-      MainGrid.Children.Remove(ChartGrid);
+      HideChartAndMap();
       return;
     }
 
     // We just left portrait mode. Jump back to last tab that was selected in landscape mode.
+    ShowChartAndMap();
+  }
+
+  private void HideChartAndMap()
+  {
+    MainGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+    MainGrid.Children.Remove(GridSplitter);
+    MainGrid.Children.Remove(ChartGrid);
+  }
+
+  private void ShowChartAndMap()
+  {
     MainTabControl.SelectedIndex = landscapeTabIndex_;
 
     foreach (var def in defaultRowDefinitions_)
