@@ -21,7 +21,7 @@ public interface IFileService
   Task<bool> DeleteAsync(LocalActivity? act);
   Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
   Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
-  Task<bool> ActivityExistsAsync(string id);
+  Task<LocalActivity?> GetByIdOrStartTimeAsync(string id, DateTime startTime);
 
   void Add(UiFile file);
   Task LoadMore();

@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
+﻿using System.Text;
 using Dauer.Data;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -42,8 +41,8 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private RealtimeChannel? garminUserChannel_;
   private RealtimeChannel? activityChannel;
 
+  private readonly SemaphoreSlim syncSem_ = new(1, 1);
   private readonly SemaphoreSlim updateSem_ = new(1, 1);
-  private readonly SemaphoreSlim downloadSem_ = new(1, 1);
 
   public SupabaseAdapter(
     ILogger<SupabaseAdapter> log,
@@ -99,6 +98,9 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
     {
+      var settings = await db_.GetAppSettingsAsync();
+      LastSync = settings.LastSynced ?? default;
+
       Authorization = await LoadCachedAuthorization();
       _ = Task.Run(SyncRecent);
     });
@@ -192,34 +194,27 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     if (activity == null) { return; }
 
     LocalActivity toWrite = activity.MapLocalActivity();
-
-    UiFile? uif = null;
-    bool isNew = false;
+    bool exists = false;
+    var uif = new UiFile();
 
     // Prevent downloading the same new upload more than once.
     // I've seen as many as 5 rapid notifications from Garmin for the same activity upload.
     // Proceed even if we didn't enter the semaphore, since we prefer duplicate downloads over missing any.
-    await downloadSem_.RunAtomically(async () =>
+    await updateSem_.RunAtomically(async () =>
     {
-      uif = fileService_.Files.FirstOrDefault(f => f?.Activity?.Id == toWrite.Id || f?.Activity?.StartTime == toWrite.StartTime);
-      isNew = uif == null;
-
-      if (isNew)
-      {
-        uif = new UiFile { Activity = toWrite, };
-        fileService_.Add(uif);
-      }
-
-      await Task.CompletedTask;
+      LocalActivity? la = await fileService_.GetByIdOrStartTimeAsync(toWrite.Id, toWrite.StartTime);
+      exists = la != null;
+      uif.Activity = exists ? la : toWrite;
     }, nameof(HandleActivityAddedOrUpdated), TimeSpan.FromMinutes(1));
 
-    if (isNew && uif != null)
+    if (exists)
+    {
+      await UpdateExistingActivity(uif, toWrite).AnyContext();
+    }
+    else
     {
       await AddNewActivity(uif, activity?.BucketUrl).AnyContext();
-      return;
     }
-
-    await UpdateExistingActivity(uif, toWrite).AnyContext();
   }
 
   /// <summary>
@@ -256,6 +251,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
 
     bool ok = await fileService_.CreateAsync(toWrite);
+    fileService_.Add(uiFile);
 
     if (ok) { log_.LogInformation("Created activity {@activity}", toWrite); }
     else { log_.LogInformation("Could not create activity {@activity}", toWrite); }
@@ -476,7 +472,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     if (!db_.Ready) { return; }
 
     // Only run this method one at a time
-    await updateSem_.RunAtomically(async () =>
+    await syncSem_.RunAtomically(async () =>
     {
       // Sync up to 1 year
       DateTime before = DateTime.UtcNow;
@@ -488,22 +484,19 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .Cast<object>()
         .ToList();
 
-      await SyncAddsAndUpdates();
+      await SyncAddsAndUpdates(LastSync);
       await SyncDeletes(before, after, ids);
       LastSync = DateTime.UtcNow;
 
     }, nameof(SyncRecent));
   }
 
-  private async Task SyncAddsAndUpdates()
+  private async Task SyncAddsAndUpdates(DateTime lastSync)
   {
-    var settings = await db_.GetAppSettingsAsync();
-    LastSync = settings?.LastSynced ?? default;
-
     // Get activities updated since the last sync.
     // Row-level security ensures we only get the current user's activities.
     var activities = await client_.Postgrest.Table<Model.Activity>()
-      .Where(a => a.LastUpdated > LastSync)
+      .Where(a => a.LastUpdated > lastSync)
       .Get()
       .AnyContext();
 

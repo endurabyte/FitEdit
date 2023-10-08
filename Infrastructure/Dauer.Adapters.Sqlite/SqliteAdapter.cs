@@ -126,13 +126,19 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     return model;
   }
 
-  public async Task<bool> ActivityExistsAsync(string id)
+  public async Task<Model.LocalActivity> GetByIdOrStartTimeAsync(string id, DateTime startTime)
   {
-    var act = await db_?.Table<LocalActivity>()
-      .Where(act => act.Id == id)
+    var a = await GetAsync<LocalActivity>(id).AnyContext();
+    a ??= await db_?.Table<LocalActivity>()
+      .Where(act => act.StartTime == startTime)
       .FirstOrDefaultAsync();
 
-    return act != null;
+    Model.LocalActivity model = a.MapModel();
+    model.File = a.FileId != null
+      ? await GetFileReferenceAsync(a.FileId).AnyContext()
+      : null;
+
+    return model;
   }
 
   public async Task<List<Model.LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit)

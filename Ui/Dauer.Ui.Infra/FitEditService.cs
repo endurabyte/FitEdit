@@ -88,7 +88,7 @@ public class FitEditService : ReactiveObject, IFitEditService
 
     this
       .ObservableForProperty(x => x.LastSync)
-      .Subscribe(_ => supa_.LastSync = this.LastSync);
+      .Subscribe(_ => supa_.LastSync = LastSync);
 
     this
       .ObservableForProperty(x => x.Username)

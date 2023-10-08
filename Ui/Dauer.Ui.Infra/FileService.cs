@@ -103,7 +103,7 @@ public class FileService : ReactiveObject, IFileService
       LocalActivity? act = await db_.GetActivityAsync(id);
       if (act == null) { return null; }
 
-      act.File ??= new FileReference(act.Name ?? id, null) { Id = id };
+      act.File ??= new FileReference(id, null) { Id = id };
       byte[]? encrypted = await File.ReadAllBytesAsync(PathFor(act), ct).AnyContext();
       act.File.Bytes = crypto_.Decrypt(GetSalt(act), encrypted) ?? Array.Empty<byte>();
 
@@ -172,7 +172,7 @@ public class FileService : ReactiveObject, IFileService
 
   public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => await db_.GetAllActivityIdsAsync(after, before);
   public async Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => await db_.GetAllActivitiesAsync(after, before, limit);
-  public async Task<bool> ActivityExistsAsync(string id) => await db_.ActivityExistsAsync(id).AnyContext();
+  public async Task<LocalActivity?> GetByIdOrStartTimeAsync(string id, DateTime startTime) => await db_.GetByIdOrStartTimeAsync(id, startTime).AnyContext();
 
   public void Add(UiFile file)
   {

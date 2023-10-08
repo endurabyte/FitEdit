@@ -19,7 +19,7 @@ public class NullDatabaseAdapter : HasProperties, IDatabaseAdapter
   public Task<LocalActivity> GetActivityAsync(string id) => Task.FromResult(new LocalActivity { Id = id });
   public Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit) => Task.FromResult(new List<LocalActivity>());
   public Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => Task.FromResult(new List<string>());
-  public Task<bool> ActivityExistsAsync(string id) => Task.FromResult(false);
+  public Task<LocalActivity> GetByIdOrStartTimeAsync(string id, DateTime startTime) => Task.FromResult(new LocalActivity());
 
   public Task<bool> DeleteAsync(FileReference t) => Task.FromResult(true);
   public Task<bool> InsertAsync(FileReference t) => Task.FromResult(true);
