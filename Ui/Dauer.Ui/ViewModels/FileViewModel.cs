@@ -504,7 +504,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public void HandleSplitByLapsClicked() => _ = Task.Run(() => SplitByLap(FileService.MainFile));
+  public void HandleSplitByLapsClicked(UiFile? file) => _ = Task.Run(() => SplitByLap(file));
 
   private async Task SplitByLap(UiFile? file)
   {
@@ -513,11 +513,13 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     List<FitFile> fits = file.FitFile.SplitByLap();
 
+    int i = 0;
     foreach (FitFile fit in fits)
     {
+      i++;
       await Persist(new FileReference
       (
-        $"Repaired {file.Activity?.Name}",
+        $"{file.Activity?.Name} - Lap {i} of {fits.Count}",
         fit.GetBytes()
       ));
     }
