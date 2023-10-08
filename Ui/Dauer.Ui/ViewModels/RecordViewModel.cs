@@ -261,9 +261,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void HandleMainFileChanged(UiFile? file)
   {
-    if (file == null) { return; }
-    if (file.FitFile == null) { return; }
-
     selectedIndexSub_?.Dispose();
     selectedCountSub_?.Dispose();
     foreach (var sub in messageSubs_)
@@ -273,8 +270,10 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     messageSubs_.Clear();
 
     InitHexData();
-    PreserveCurrentTab(async () => await Show(file.FitFile));
+    PreserveCurrentTab(async () => await Show(file?.FitFile));
 
+    if (file == null) { return; }
+    
     selectedIndexSub_ = file.ObservableForProperty(x => x.SelectedIndex).Subscribe(e => HandleSelectedIndexChanged(e.Value));
     selectedCountSub_ = file.ObservableForProperty(x => x.SelectionCount).Subscribe(e => HandleSelectionCountChanged(e.Value));
   }
@@ -308,7 +307,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
   }
 
-  private async Task Show(FitFile ff)
+  private async Task Show(FitFile? ff)
   {
     // Remeber which groups were expanded
     var expandedGroups = AllData_
@@ -326,21 +325,24 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     AllData_.Clear();
     ShownData.Clear();
 
-    foreach (var kvp in ff.MessagesByDefinition)
+    if (ff != null)
     {
-      DataGridWrapper group = await CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
-      group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
-      if (group.DataGrid != null)
+      foreach (var kvp in ff.MessagesByDefinition)
       {
-        group.DataGrid.CellEditEnding += HandleCellEditEnding;
-        group.DataGrid.SelectionChanged += HandleDataGridSelectionChanged;
-        group.DataGrid.CurrentCellChanged += HandleCurrentCellChanged;
-      }
+        DataGridWrapper group = await CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
+        group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
+        if (group.DataGrid != null)
+        {
+          group.DataGrid.CellEditEnding += HandleCellEditEnding;
+          group.DataGrid.SelectionChanged += HandleDataGridSelectionChanged;
+          group.DataGrid.CurrentCellChanged += HandleCurrentCellChanged;
+        }
 
-      AllData_.Add(group);
-      if (group.IsVisible)
-      {
-        ShownData.Add(group);
+        AllData_.Add(group);
+        if (group.IsVisible)
+        {
+          ShownData.Add(group);
+        }
       }
     }
 
