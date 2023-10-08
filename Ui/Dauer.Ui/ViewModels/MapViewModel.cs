@@ -64,6 +64,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private readonly GeometryFeature breadcrumbFeature_ = new();
 
   /// <summary>
+  /// Key: File ID, Value: layer index
+  /// </summary>
+  private readonly Dictionary<string, int> traceIndices_ = new();
+
+  /// <summary>
   /// Key: File ID, Value: layer
   /// </summary>
   private readonly Dictionary<string, ILayer> traces_ = new();
@@ -76,14 +81,14 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
 
-  private readonly Dictionary<UiFile, IDisposable> isVisibleSubs_ = new();
+  private readonly Dictionary<UiFile, IDisposable> isLoadedSubs_ = new();
 
   private int canvasLayerIndex_ = 0; 
   private int tileLayerIndex_ = 1; 
-  private int traceLayerIndex_ = 2; 
-  private int selectionLayerIndex_ = 3; 
-  private int editLayerIndex_ = 4; 
-  private int breadcrumbLayerIndex_ = 5; 
+  private int traceLayerIndex_ = 2; // Index of the first GPS trace. There is one for each loaded file.
+  private int SelectionLayerIndex_ => traceLayerIndex_ + 1;
+  private int EditLayerIndex_ => SelectionLayerIndex_ + 1;
+  private int BreadcrumbLayerIndex_ => EditLayerIndex_ + 1;
   private string selectionTraceId_ = "selection-trace";
   private string editTraceId_ = "edit-trace";
 
@@ -117,6 +122,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     fileService.SubscribeAdds(HandleFileAdded);
     fileService.SubscribeRemoves(HandleFileRemoved);
     fileService.ObservableForProperty(x => x.MainFile).Subscribe(HandleMainFileChanged);
+    foreach (var file in fileService.Files.ToList()) // create copy since items may be added while iterating
+    {
+      HandleFileAdded(file);
+    }
     this.ObservableForProperty(x => x.Map).Subscribe(e => HandleMapControlChanged());
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => HandleSelectedIndexChanged(prop.Value));
     this.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => ShowSelection());
@@ -126,7 +135,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private void HandleEditingChanged()
   {
     traces_.Remove(editTraceId_);
-    layers_.Remove(editLayerIndex_);
+    layers_.Remove(EditLayerIndex_);
     HandleLayersChanged();
 
     if (!Editing)
@@ -139,11 +148,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (sf.Activity == null) { return; }
     if (sf.FitFile == null) { return; }
 
-    ILayer? layer = Add(sf.FitFile, "GPS Editor", editLayerIndex_, FitColor.LimeCrayon, editable: true);
+    ILayer? layer = Add(sf.FitFile, "GPS Editor", EditLayerIndex_, FitColor.LimeCrayon, editable: true);
 
     if (layer == null) { return; }
     traces_[editTraceId_] = layer;
-    layers_[editLayerIndex_] = layer;
+    layers_[EditLayerIndex_] = layer;
 
     HandleLayersChanged();
   }
@@ -157,8 +166,6 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
 
     Editing = false;
-
-    Add(property.Value);
   }
 
   private void HandleMapControlChanged()
@@ -171,7 +178,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     
     layers_[canvasLayerIndex_] = LayerFactory.CreateCanvas();
     layers_[tileLayerIndex_] = LayerFactory.CreateTileLayer(tileSource_);
-    layers_[breadcrumbLayerIndex_] = BreadcrumbLayer_;
+    layers_[BreadcrumbLayerIndex_] = BreadcrumbLayer_;
 
     HandleLayersChanged();
 
@@ -205,7 +212,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   {
     if (traces_.TryGetValue(selectionTraceId_, out ILayer? value))
     {
-      layers_.Remove(selectionLayerIndex_);
+      layers_.Remove(SelectionLayerIndex_);
       traces_.Remove(selectionTraceId_);
       HandleLayersChanged();
     }
@@ -216,11 +223,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (SelectionCount < 2) { return; } // Need at least 2 points selected to draw a line between them
     if (SelectedIndex + SelectionCount >= file.Records.Count) { return; }
 
-    ILayer? layer = Add(file, "Selection", selectionLayerIndex_, FitColor.RedCrayon, editable: false, lineWidth: 6, index: SelectedIndex, count: SelectionCount);
+    ILayer? layer = Add(file, "Selection", SelectionLayerIndex_, FitColor.RedCrayon, editable: false, lineWidth: 6, index: SelectedIndex, count: SelectionCount);
 
     if (layer == null) { return; }
     traces_[selectionTraceId_] = layer;
-    layers_[selectionLayerIndex_] = layer;
+    layers_[SelectionLayerIndex_] = layer;
 
     HandleLayersChanged();
   }
@@ -230,22 +237,20 @@ public class MapViewModel : ViewModelBase, IMapViewModel
   private void Add(UiFile? sf)
   { 
     if (sf == null) { return; }
-    if (isVisibleSubs_.ContainsKey(sf)) { isVisibleSubs_[sf].Dispose(); }
+    if (isLoadedSubs_.ContainsKey(sf)) { isLoadedSubs_[sf].Dispose(); }
 
-    isVisibleSubs_[sf] = sf.ObservableForProperty(x => x.IsLoaded).Subscribe(e => HandleFileIsVisibleChanged(e.Sender));
-
-    HandleFitFileChanged(sf);
+    isLoadedSubs_[sf] = sf.ObservableForProperty(x => x.IsLoaded).Subscribe(e => HandleFileIsLoadedChanged(e.Sender));
   }
 
-  private void HandleFileIsVisibleChanged(UiFile file)
+  private void HandleFileIsLoadedChanged(UiFile file)
   {
-    if (file.IsLoaded) { Add(file); }
+    if (file.IsLoaded) { TryShow(file); }
     else { Remove(file); }
 
     HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
-  private void HandleFitFileChanged(UiFile uif)
+  private void TryShow(UiFile uif)
   {
     if (Map?.Map == null)
     {
@@ -263,11 +268,13 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     // Handle file loaded
     if (sf.FitFile != null)
     {
-      ILayer? layer = Add(sf.FitFile, "GPS Trace", traceLayerIndex_, FitColor.LimeCrayon);
+      int index = traceLayerIndex_ + traces_.Count;
+      ILayer? layer = Add(sf.FitFile, "GPS Trace", index, FitColor.LimeCrayon);
 
       if (layer == null) { return; }
+      traceIndices_[sf.Activity.Id] = index;
       traces_[sf.Activity.Id] = layer;
-      layers_[traceLayerIndex_] = layer;
+      layers_[index] = layer;
 
       HandleLayersChanged();
     }
@@ -287,13 +294,14 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (sf == null) { return; }
     if (sf.Activity == null) { return; }
 
-    if (!traces_.TryGetValue(sf.Activity.Id, out ILayer? trace))
+    if (traceIndices_.TryGetValue(sf.Activity.Id, out int index))
     {
-      return;
+      layers_.Remove(index);
     }
 
+    traceIndices_.Remove(sf.Activity.Id);
     traces_.Remove(sf.Activity.Id);
-    layers_.Remove(traceLayerIndex_);
+
     HandleLayersChanged();
   }
 
