@@ -43,6 +43,9 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
       }).AnyContext();
 
       db_ = db;
+
+      await MigrateDataAsync();
+
       Log.Info($"{nameof(SqliteAdapter)} ready. sqlite provider is {raw.GetNativeLibraryName()}");
       Ready = true;
     }
@@ -50,6 +53,38 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
     {
       Log.Error(e);
     }
+  }
+
+  /// <summary>
+  /// Migrate <see cref="LocalActivity.StartTime"/> to <see cref="LocalActivity.StartTimeUnix"/>
+  /// </summary>
+  private async Task MigrateDataAsync()
+  {
+    await CreateIndex_LocalActivity_StartTimeUnix().AnyContext();
+    await CreateIndex_LocalActivity_SourceId().AnyContext();
+
+    List<LocalActivity> activities = await db_?.Table<LocalActivity>()
+      .Where(a => a.StartTimeUnix == null)
+      .ToListAsync()
+      .AnyContext();
+
+    foreach (var activity in activities)
+    {
+      activity.StartTimeUnix = activity.StartTime.GetUnixTimestamp();
+      await db_?.UpdateAsync(activity).AnyContext();
+    }
+  }
+
+  private async Task CreateIndex_LocalActivity_StartTimeUnix()
+  {
+    string query = "CREATE INDEX IF NOT EXISTS Idx_LocalActivity_StartTimeUnix ON LocalActivity(StartTimeUnix);";
+    await db_?.ExecuteAsync(query).AnyContext();
+  }
+
+  private async Task CreateIndex_LocalActivity_SourceId()
+  {
+    string query = "CREATE INDEX IF NOT EXISTS Idx_LocalActivity_SourceId ON LocalActivity(SourceId);";
+    await db_?.ExecuteAsync(query).AnyContext();
   }
 
   public async Task<bool> InsertAsync(Model.Authorization t) => 1 == await db_?.InsertOrReplaceAsync(t.MapEntity()).AnyContext();
@@ -128,10 +163,9 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
 
   public async Task<Model.LocalActivity> GetByIdOrStartTimeAsync(string id, DateTime startTime)
   {
-    var a = await GetAsync<LocalActivity>(id).AnyContext();
-    a ??= await db_?.Table<LocalActivity>()
-      .Where(act => act.StartTime == startTime)
-      .FirstOrDefaultAsync();
+    LocalActivity a = await GetByPropertyOrStartTimeAsync(id, nameof(LocalActivity.Id), startTime);
+
+    if (a == null) { return null; }
 
     Model.LocalActivity model = a.MapModel();
     model.File = a.FileId != null
@@ -139,6 +173,40 @@ public class SqliteAdapter : HasProperties, IDatabaseAdapter
       : null;
 
     return model;
+  }
+
+  public async Task<Model.LocalActivity> GetBySourceIdOrStartTimeAsync(string sourceId, DateTime startTime)
+  {
+    LocalActivity a = await GetByPropertyOrStartTimeAsync(sourceId, nameof(LocalActivity.SourceId), startTime);
+
+    if (a == null) { return null; }
+
+    Model.LocalActivity model = a.MapModel();
+    model.File = a.FileId != null
+      ? await GetFileReferenceAsync(a.FileId).AnyContext()
+      : null;
+
+    return model;
+  }
+
+  private async Task<LocalActivity> GetByPropertyOrStartTimeAsync<T>(T property, string propertyName, DateTime startTime, TimeSpan? margin = default)
+  {
+    margin ??= TimeSpan.FromSeconds(2);
+    long marginS = (long)margin.Value.TotalSeconds;
+    long startTimeUnix = startTime.GetUnixTimestamp();
+
+    long lowerBound = startTimeUnix - marginS;
+    long upperBound = startTimeUnix + marginS;
+
+    string query = $@"
+SELECT * FROM {nameof(LocalActivity)}
+WHERE {propertyName} = ? OR (StartTime BETWEEN {lowerBound} AND {upperBound})
+LIMIT 1";
+
+    List<LocalActivity> res = await db_?.QueryAsync<LocalActivity>(query, property).AnyContext();
+    LocalActivity la = res.FirstOrDefault();
+
+    return la;
   }
 
   public async Task<List<Model.LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit)

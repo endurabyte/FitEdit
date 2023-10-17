@@ -21,7 +21,18 @@ public interface IFileService
   Task<bool> DeleteAsync(LocalActivity? act);
   Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
   Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
+
+  /// <summary>
+  /// Find existing activities on <see cref="LocalActivity.Id"/> or fall back to start time e.g. <see cref="LocalActivity.StartTime"/>. 
+  /// The match on start time is fuzzy, e.g. +- 2 seconds.
+  /// </summary>
   Task<LocalActivity?> GetByIdOrStartTimeAsync(string id, DateTime startTime);
+
+  /// <summary>
+  /// Find existing activities on <see cref="LocalActivity.SourceId"/> e.g. Garmin Activity ID or fall back to start time e.g. <see cref="LocalActivity.StartTime"/>. 
+  /// The match on start time is fuzzy, e.g. +- 2 seconds.
+  /// </summary>
+  Task<LocalActivity?> GetBySourceIdOrStartTimeAsync(string sourceId, DateTime startTime);
 
   void Add(UiFile file);
   Task LoadMore();

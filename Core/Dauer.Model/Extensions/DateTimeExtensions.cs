@@ -17,5 +17,5 @@ public static class DateTimeExtensions
   /// </summary>
   /// <param name="date">The date.</param>
   /// <returns></returns>
-  public static int GetUnixTimestamp(this DateTime date) => (int)date.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+  public static long GetUnixTimestamp(this DateTime date) => (int)date.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
 }

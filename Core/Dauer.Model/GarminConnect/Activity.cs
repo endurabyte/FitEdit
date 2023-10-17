@@ -35,43 +35,38 @@ public class Activity
   public string Description { get; set; }
 
   /// <summary>
-  /// Gets or sets the user profile identifier.
+  /// Format: yyyy-MM-dd HH:mm:ss
+  /// Example: 2023-09-05 23:36:03
   /// </summary>
-  /// <value>
-  /// The user profile identifier.
-  /// </value>
-  [JsonPropertyName("userProfileId")]
-  public long UserProfileId { get; set; }
+  [JsonPropertyName("startTimeGMT")]
+  public string StartTime { get; set; }
+
+  [JsonPropertyName("beginTimestamp")]
+  public long? BeginTimestamp { get; set; }
+  
+  [JsonPropertyName("distance")]
+  public double? Distance { get; set; }
+
+  [JsonPropertyName("duration")]
+  public double? Duration { get; set; }
 
   /// <summary>
-  /// Gets or sets a value indicating whether this instance is multi sport parent.
+  /// Gets or sets the owner user profile identifier.
   /// </summary>
   /// <value>
-  ///   <c>true</c> if this instance is multi sport parent; otherwise, <c>false</c>.
+  /// The owner user profile identifier.
   /// </value>
-  [JsonPropertyName("isMultiSportParent")]
-  public bool IsMultiSportParent { get; set; }
+  [JsonPropertyName("ownerId")]
+  public long OwnerId { get; set; }
 
   /// <summary>
   /// Gets or sets the type of the activity.
-  /// </summary>
-  /// <value>
-  /// The type of the activity.
-  /// </value>
-  [JsonPropertyName("activityTypeDTO")]
-  public ActivityType ActivityType { get; set; }
-
-  /// <summary>
-  /// Gets or sets the type of the activity.
-  /// Overloaded JsonPropertyName for the same property - "activityTypeDTO".
   /// </summary>
   /// <value>
   /// The type of the activity.
   /// </value>
   [JsonPropertyName("activityType")]
-#pragma warning disable IDE0051 // Remove unused private members
-  private ActivityType ActivityTypeInternal_ { set => ActivityType = value; }
-#pragma warning restore IDE0051 // Remove unused private members
+  public ActivityType ActivityType { get; set; }
 
   /// <summary>
   /// Gets or sets the type of the event.
@@ -79,51 +74,6 @@ public class Activity
   /// <value>
   /// The type of the event.
   /// </value>
-  [JsonPropertyName("eventTypeDTO")]
+  [JsonPropertyName("eventType")]
   public ActivityType EventType { get; set; }
-
-  /// <summary>
-  /// Gets or sets the access control rule.
-  /// </summary>
-  /// <value>
-  /// The access control rule.
-  /// </value>
-  [JsonPropertyName("accessControlRuleDTO")]
-  public AccessControlRule AccessControlRule { get; set; }
-
-  /// <summary>
-  /// Gets or sets the time zone unit.
-  /// </summary>
-  /// <value>
-  /// The time zone unit.
-  /// </value>
-  [JsonPropertyName("timeZoneUnitDTO")]
-  public TimeZoneUnit TimeZoneUnit { get; set; }
-
-  /// <summary>
-  /// Gets or sets the metadata.
-  /// </summary>
-  /// <value>
-  /// The metadata.
-  /// </value>
-  [JsonPropertyName("metadataDTO")]
-  public Metadata Metadata { get; set; }
-
-  /// <summary>
-  /// Gets or sets the summary.
-  /// </summary>
-  /// <value>
-  /// The summary.
-  /// </value>
-  [JsonPropertyName("summaryDTO")]
-  public Summary Summary { get; set; }
-
-  /// <summary>
-  /// Gets or sets the name of the location.
-  /// </summary>
-  /// <value>
-  /// The name of the location.
-  /// </value>
-  [JsonPropertyName("locationName")]
-  public string LocationName { get; set; }
 }

@@ -25,6 +25,7 @@ public interface IDatabaseAdapter : INotifyPropertyChanged
   Task<List<LocalActivity>> GetAllActivitiesAsync(DateTime? after, DateTime? before, int limit);
   Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before);
   Task<LocalActivity> GetByIdOrStartTimeAsync(string id, DateTime startTime);
+  Task<LocalActivity> GetBySourceIdOrStartTimeAsync(string sourceId, DateTime startTime);
 
   Task<bool> DeleteAsync(FileReference t);
   Task<bool> InsertAsync(FileReference t);

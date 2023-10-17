@@ -28,6 +28,10 @@ public class LocalActivity
   public string? Type { get; set; }
   public string? DeviceName { get; set; }
   public DateTime StartTime { get; set; }
+  /// <summary>
+  /// Unix timestamp e.g. seconds since 1970-1-1
+  /// </summary>
+  public long? StartTimeUnix { get; set; }
   public long Duration { get; set; }
   public double Distance { get; set; }
   public bool Manual { get; set; }

@@ -78,6 +78,7 @@ public class NullFileService : IFileService
   public Task<LocalActivity?> ReadAsync(string id, CancellationToken ct = default) => Task.FromResult((LocalActivity?)new LocalActivity { Id = id });
   public Task<bool> UpdateAsync(LocalActivity? act, CancellationToken ct = default) => Task.FromResult(true);
   public Task<LocalActivity?> GetByIdOrStartTimeAsync(string id, DateTime startTime) => Task.FromResult(new LocalActivity())!;
+  public Task<LocalActivity?> GetBySourceIdOrStartTimeAsync(string sourceId, DateTime startTime) => Task.FromResult(new LocalActivity())!;
   public void Add(UiFile file) { }
   public Task LoadMore() => Task.CompletedTask;
 }

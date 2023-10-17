@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Dauer.Adapters.GarminConnect;
 using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
@@ -13,6 +14,7 @@ using Dauer.Ui.Extensions;
 using Dauer.Ui.Model.Supabase;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Units;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -259,7 +261,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await reader.ReadOneAsync(ms, decoder, 100);
     }
 
-    return fit.GetStartTime();
+    return fit?.GetStartTime() ?? default;
   }
 
   private async Task<UiFile> Persist(LocalActivity act)
@@ -278,7 +280,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       return new UiFile { Activity = act };
     });
-
 
     await Dispatcher.UIThread.InvokeAsync(() =>
     {
@@ -693,5 +694,20 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await supa_.UpdateAsync(act);
 
     // TODO Show result
+  }
+
+  public void HandleSyncFromGarminClicked() => _ = Task.Run(SyncFromGarminAsync);
+
+  private async Task SyncFromGarminAsync()
+  {
+    List<Activity> activities = await Garmin.GetAllActivitiesAsync();
+    List<(Activity, string, string, DateTime)> ts = activities
+      .Select(a => (a, $"{a.ActivityId}", a.ActivityName, a.GetStartTime()))
+      .ToList();
+
+    IEnumerable<Activity> filtered = await FileService.FilterExistingAsync(ts);
+    List<(long, LocalActivity)> mapped = filtered.Select(ActivityMapper.MapLocalActivity).ToList();
+
+    await Garmin.DownloadAsync(mapped, Persist);
   }
 }

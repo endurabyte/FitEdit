@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -25,11 +24,12 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   private const string URL_UPLOAD = CONNECT_URL + "/upload-service/upload";
   private const string URL_ACTIVITY_BASE = CONNECT_URL + "/activity-service/activity";
 
-  private const string UrlActivityTypes = "https://connect.garmin.com/proxy/activity-service/activity/activityTypes";
-  private const string UrlEventTypes = "https://connect.garmin.com/proxy/activity-service/activity/eventTypes";
-  private const string UrlActivitiesBase = "https://connect.garmin.com/proxy/activitylist-service/activities/search/activities";
-  private const string UrlActivityDownloadFile = "https://connect.garmin.com/modern/proxy/download-service/export/{0}/activity/{1}";
-  private const string UrlActivityDownloadDefaultFile = "https://connect.garmin.com/modern/proxy/download-service/files/activity/{0}";
+  private const string UrlFitnessStats = "https://connect.garmin.com/fitnessstats-service/activity";
+  private const string UrlActivityTypes = "https://connect.garmin.com/activity-service/activity/activityTypes";
+  private const string UrlEventTypes = "https://connect.garmin.com/activity-service/activity/eventTypes";
+  private const string UrlActivitiesBase = "https://connect.garmin.com/activitylist-service/activities/search/activities";
+  private const string UrlActivityDownloadFile = "https://connect.garmin.com/download-service/export/{0}/activity/{1}";
+  private const string UrlActivityDownloadDefaultFile = "https://connect.garmin.com/download-service/files/activity/{0}";
 
   private const ActivityFileType DefaultFile = ActivityFileType.Fit;
 
@@ -490,10 +490,8 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// </summary>
   /// <param name="activityId">The activity identifier.</param>
   /// <param name="fileFormat">The file format.</param>
-  /// <returns>
-  /// Stream
   /// </returns>
-  public async Task<Stream> DownloadActivityFile(long activityId, ActivityFileType fileFormat)
+  public async Task<byte[]> DownloadActivityFile(long activityId, ActivityFileType fileFormat)
   {
     using HttpClient client = await GetAuthenticatedClient();
 
@@ -501,11 +499,11 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
         ? string.Format(UrlActivityDownloadDefaultFile, activityId)
         : string.Format(UrlActivityDownloadFile, fileFormat.ToString().ToLower(), activityId);
 
-    Stream streamCopy = new MemoryStream();
     var res = await client.GetAsync(url);
 
-    await (await res.Content.ReadAsStreamAsync()).CopyToAsync(streamCopy);
-    return streamCopy;
+    return res.StatusCode == HttpStatusCode.OK 
+      ? await res.Content.ReadAsByteArrayAsync() 
+      : Array.Empty<byte>();
   }
 
   public async Task<(bool Success, long ActivityId)> UploadActivity(string fileName, FileFormat fileFormat)
@@ -599,6 +597,20 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     }
 
     return true;
+  }
+
+  public async Task<List<GarminFitnessStats>> GetFitnessStats()
+  {
+    return await ExecuteUrlGetRequest<List<GarminFitnessStats>>($"{UrlFitnessStats}" +
+         $"?aggregation=lifetime"
+       + $"&groupByParentActivityType=false"
+       + $"&groupByEventType=false"
+       + $"&startDate={new DateTime(1970, 1, 1):yyyy-MM-dd}"
+       + $"&endDate={DateTime.Today:yyyy-MM-dd}"
+       + $"&metric=duration"
+       + $"&metric=distance"
+       + $"&metric=movingDuration",
+      "Error while getting fitness stats");
   }
 
   /// <inheritdoc />
@@ -808,7 +820,8 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     var data = await res.Content.ReadAsStringAsync();
     if (!res.IsSuccessStatusCode)
     {
-      throw new Exception($"{errorMessage}: {data}");
+      log_.LogError($"{errorMessage}: {data} (HTTP {res.StatusCode})");
+      return null;
     }
 
     return DeserializeData<T>(data);

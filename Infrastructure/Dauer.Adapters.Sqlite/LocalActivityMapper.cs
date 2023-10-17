@@ -33,6 +33,7 @@ public static class LocalActivityMapper
     Type = a.Type,
     DeviceName = a.DeviceName,
     StartTime = a.StartTime,
+    StartTimeUnix = a.StartTime.GetUnixTimestamp(),
     Duration = a.Duration,
     Distance = a.Distance.Meters(),
     Manual = a.Manual,

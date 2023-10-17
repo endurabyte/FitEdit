@@ -35,7 +35,7 @@ public interface IGarminConnectClient
   /// <param name="activityId">The activity identifier.</param>
   /// <param name="fileFormat">The file format.</param>
   /// <returns>Stream</returns>
-  Task<Stream> DownloadActivityFile(long activityId, ActivityFileType fileFormat);
+  Task<byte[]> DownloadActivityFile(long activityId, ActivityFileType fileFormat);
 
   /// <summary>
   /// Loads the activities.
@@ -58,6 +58,8 @@ public interface IGarminConnectClient
   /// </summary>
   /// <returns>List of activities</returns>
   Task<List<ActivityType>> LoadActivityTypes();
+
+  Task<List<GarminFitnessStats>> GetFitnessStats();
 
   /// <summary>
   /// Sets the activity description.
