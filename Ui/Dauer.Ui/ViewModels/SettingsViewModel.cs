@@ -325,13 +325,21 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     {
       if (GarminSsoId == null || GarminSessionId == null) { return; }
 
-      Garmin.Config.SsoId = GarminSsoId;
-      Garmin.Config.SessionId = GarminSessionId;
+      const int ntries = 5;
+      foreach (int i in Enumerable.Range(0, ntries))
+      {
+        Garmin.Config.SsoId = GarminSsoId;
+        Garmin.Config.SessionId = GarminSessionId;
 
-      Garmin.Config.Username = null;
-      Garmin.Config.Password = null;
-      Garmin.Cookies = new();
-      signedIn = await Garmin.IsAuthenticatedAsync();
+        Garmin.Config.Username = null;
+        Garmin.Config.Password = null;
+        Garmin.Cookies = new();
+
+        signedIn = await Garmin.IsAuthenticatedAsync();
+        if (signedIn) { break; }
+
+        await Task.Delay(2000);
+      }
     }
     else
     {
