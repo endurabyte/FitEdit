@@ -2,6 +2,7 @@
 using DynamicData.Binding;
 using System.Collections.Specialized;
 using Dauer.Data;
+using ReactiveUI;
 
 namespace Dauer.Ui.Extensions;
 
@@ -16,7 +17,7 @@ public static class FileServiceExtensions
        foreach (var file in x.EventArgs.NewItems.OfType<UiFile>())
        {
          handle(file);
-         file.SubscribeToFitFile(handle);
+         file.ObservableForProperty(x => x.FitFile).Subscribe(property => handle(property.Sender));
        }
      });
 
