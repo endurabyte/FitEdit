@@ -179,12 +179,16 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     if (id is null) { return; }
     LocalActivity? act = await db_.GetActivityAsync(id);
 
-
-    UiFile? uif = fileService_.Files.FirstOrDefault(uif => uif.Activity?.Id == id);
-    if (uif != null) 
+    await updateSem_.RunAtomically(async () =>
     {
-      fileService_.Files.Remove(uif);
-    }
+      UiFile? uif = fileService_.Files.FirstOrDefault(uif => uif.Activity?.Id == id);
+      if (uif != null)
+      {
+        fileService_.Files.Remove(uif);
+      }
+
+      await Task.CompletedTask;
+    }, nameof(HandleActivityDeleted), TimeSpan.FromMinutes(1));
 
     await fileService_.DeleteAsync(act);
   }
