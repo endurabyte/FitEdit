@@ -599,19 +599,25 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return true;
   }
 
-  public async Task<List<GarminFitnessStats>> GetFitnessStats()
-  {
-    return await ExecuteUrlGetRequest<List<GarminFitnessStats>>($"{UrlFitnessStats}" +
+  public async Task<GarminFitnessStats> GetLifetimeFitnessStats() =>
+    (await ExecuteUrlGetRequest<List<GarminFitnessStats>>($"{UrlFitnessStats}" +
          $"?aggregation=lifetime"
-       + $"&groupByParentActivityType=false"
-       + $"&groupByEventType=false"
        + $"&startDate={new DateTime(1970, 1, 1):yyyy-MM-dd}"
        + $"&endDate={DateTime.Today:yyyy-MM-dd}"
        + $"&metric=duration"
        + $"&metric=distance"
        + $"&metric=movingDuration",
-      "Error while getting fitness stats");
-  }
+      "Error while getting lifetime fitness stats"))?.FirstOrDefault();
+
+  public async Task<List<GarminFitnessStats>> GetYearyFitnessStats() => 
+    await ExecuteUrlGetRequest<List<GarminFitnessStats>>($"{UrlFitnessStats}" +
+         $"?aggregation=yearly"
+       + $"&startDate={new DateTime(1970, 1, 1):yyyy-MM-dd}"
+       + $"&endDate={DateTime.Today:yyyy-MM-dd}"
+       + $"&metric=duration"
+       + $"&metric=distance"
+       + $"&metric=movingDuration",
+      "Error while getting yearly fitness stats");
 
   /// <inheritdoc />
   /// <summary>
@@ -772,31 +778,14 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return await ExecuteUrlGetRequest<Activity>(url, "Error while getting activity");
   }
 
-  /// <summary>
-  /// Creates the activities URL.
-  /// </summary>
-  /// <param name="limit">The limit.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="date">The date.</param>
-  /// <returns></returns>
-  private static string CreateActivitiesUrl(int limit, int start, DateTime date)
+  private static string CreateActivitiesUrl(int limit, int start, DateTime after, DateTime before)
   {
-    return $"{UrlActivitiesBase}?limit={limit}&start={start}&_={date.GetUnixTimestamp()}";
+    return $"{UrlActivitiesBase}?limit={limit}&start={start}&startDate={after:yyyy-MM-dd}&endDate={before:yyyy-MM-dd}";
   }
 
-  /// <inheritdoc />
-  /// <summary>
-  /// Loads the activities.
-  /// </summary>
-  /// <param name="limit">The limit.</param>
-  /// <param name="start">The start.</param>
-  /// <param name="from">From.</param>
-  /// <returns>
-  /// List of activities
-  /// </returns>
-  public async Task<List<Activity>> LoadActivities(int limit, int start, DateTime from)
+  public async Task<List<Activity>> LoadActivities(int limit, int start, DateTime after, DateTime before)
   {
-    var url = CreateActivitiesUrl(limit, start, from);
+    var url = CreateActivitiesUrl(limit, start, after, before);
 
     return await ExecuteUrlGetRequest<List<Activity>>(url, "Error while getting activities");
   }
