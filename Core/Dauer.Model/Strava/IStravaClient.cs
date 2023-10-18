@@ -4,12 +4,6 @@ using ReactiveUI.Fody.Helpers;
 
 namespace Dauer.Model.Strava;
 
-public class StravaConfig
-{
-  public string? Username { get; set; }
-  public string? Password { get; set; }
-}
-
 public interface IStravaClient
 {
   StravaConfig Config { get; set; }
@@ -28,12 +22,14 @@ public interface IStravaClient
   /// <returns>Tuple of Cookies and HTTP handler</returns>
   Task<bool> AuthenticateAsync();
 
-  Task<bool> LogoutAsync();
-
   /// <summary>
   /// Return true if the SESSIONID cookie is present and a request to Garmin Connect succeeds
   /// </summary>
   Task<bool> IsAuthenticatedAsync();
+
+  Task<bool> LogoutAsync();
+
+  Task<List<StravaActivity>> ListAllActivitiesAsync(CancellationToken ct = default);
 }
 
 public class NullStravaClient : ReactiveObject, IStravaClient
@@ -68,4 +64,5 @@ public class NullStravaClient : ReactiveObject, IStravaClient
   }
 
   public Task<bool> IsAuthenticatedAsync() => Task.FromResult(IsSignedIn);
+  public Task<List<StravaActivity>> ListAllActivitiesAsync(CancellationToken ct = default) => Task.FromResult(new List<StravaActivity>());
 }

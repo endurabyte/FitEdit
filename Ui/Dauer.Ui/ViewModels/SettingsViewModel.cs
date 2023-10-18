@@ -170,12 +170,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       await UpdateSettingsAsync(settings => settings.GarminCookies = Garmin.Cookies);
     });
 
+    strava.ObservableForProperty(x => x.Cookies).Subscribe(async _ =>
+    {
+      await UpdateSettingsAsync(settings => settings.StravaCookies = Strava.Cookies);
+    });
+
     FitEdit.ObservableForProperty(x => x.LastSync).Subscribe(async _ =>
     {
-      await UpdateSettingsAsync(settings =>
-      {
-        settings.LastSynced = FitEdit.LastSync;
-      });
+      await UpdateSettingsAsync(settings => settings.LastSynced = FitEdit.LastSync);
     });
   }
 

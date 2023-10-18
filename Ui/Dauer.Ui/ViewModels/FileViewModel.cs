@@ -8,6 +8,7 @@ using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
 using Dauer.Model.Storage;
+using Dauer.Model.Strava;
 using Dauer.Model.Web;
 using Dauer.Services;
 using Dauer.Ui.Extensions;
@@ -38,6 +39,7 @@ public class DesignFileViewModel : FileViewModel
     new NullFileService(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
+    new NullStravaClient(),
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
     new NullBrowser(),
@@ -84,6 +86,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IFileService FileService { get; }
   public IFitEditService FitEdit { get; }
   public IGarminConnectClient Garmin { get; }
+  public IStravaClient Strava { get; }
+
   private readonly IStorageAdapter storage_;
   private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
@@ -93,6 +97,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     IFileService fileService,
     IFitEditService fitEdit,
     IGarminConnectClient garmin,
+    IStravaClient strava,
     IStorageAdapter storage,
     ISupabaseAdapter supa,
     IBrowser browser,
@@ -102,6 +107,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FileService = fileService;
     FitEdit = fitEdit;
     Garmin = garmin;
+    Strava = strava;
     supa_ = supa;
     storage_ = storage;
     log_ = log;
@@ -709,5 +715,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     List<(long, LocalActivity)> mapped = filtered.Select(ActivityMapper.MapLocalActivity).ToList();
 
     await Garmin.DownloadAsync(mapped, Persist);
+  }
+  
+  public void HandleSyncFromStravaClicked() => _ = Task.Run(SyncFromStravaAsync);
+
+  private async Task SyncFromStravaAsync()
+  {
+    List<StravaActivity> acts = await Strava.ListAllActivitiesAsync();
   }
 }

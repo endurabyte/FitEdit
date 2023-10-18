@@ -17,4 +17,13 @@ public static class EnumerableExtensions
     var results = await Task.WhenAll(source.Select(async x => (x, await predicate(x))));
     return results.Where(x => x.Item2).Select(x => x.x);
   }
+
+  public static IDictionary<TKey, TValue> AddRange<TKey, TValue>(this IDictionary<TKey, TValue> collection, IEnumerable<(TKey key, TValue value)> source)
+  {
+    foreach (var item in source)
+    {
+      collection[item.key] = item.value;
+    }
+    return collection;
+  }
 }

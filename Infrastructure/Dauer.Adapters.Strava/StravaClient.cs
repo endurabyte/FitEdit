@@ -1,11 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Text.RegularExpressions;
-using Avalonia.Markup.Xaml.MarkupExtensions;
 using Dauer.Model;
+using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Model.Strava;
 using Microsoft.Extensions.Logging;
@@ -42,7 +40,10 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     AuthenticateProgress = 0 / nsteps * 100;
     IsSignedIn = false;
 
-    (string? csrfToken, string? csrfParam) = await GetCsrfTokenAsync();
+    // Use the about page because it's small and doesn't redirect based on if the client is logged in or not.
+    string url = $"{BASE_URL}/about";
+
+    (string? csrfToken, string? csrfParam) = await GetCsrfTokenAsync(url);
     AuthenticateProgress = 1 / nsteps * 100;
 
     CookieContainer cookies = GetCachedCookies();
@@ -109,13 +110,62 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     return Task.FromResult(true);
   }
 
-  private async Task<(string?, string?)> GetCsrfTokenAsync()
+  public async Task<List<StravaActivity>> ListAllActivitiesAsync(CancellationToken ct = default)
+  {
+    HttpClient client = GetAuthenticatedClient();
+
+    client.DefaultRequestHeaders.Add("Accept", "text/javascript");
+    client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
+
+    const int perPage = 20; // capped to 20 by server
+    int? total = null;
+    var activities = new ConcurrentDictionary<long, StravaActivity>();
+
+    // Get first page so we have a count
+    async Task fetchPageAsync(int page, CancellationToken ct = default)
+    {
+      string url = $"{BASE_URL}/athlete/training_activities"
+         + $"?keywords="
+         + $"&activity_type="
+         + $"&workout_type="
+         + $"&commute="
+         + $"&private_activities="
+         + $"&trainer="
+         + $"&gear="
+         + $"&search_session_id={Guid.NewGuid()}"
+         + $"&new_activity_only=false"
+         + $"&page={page}" // Optional on first page
+         + $"&per_page={perPage}"; // Optional on first page
+
+      HttpResponseMessage resp = await client.GetAsync(url, ct);
+      string json = await resp.Content.ReadAsStringAsync(ct);
+
+      StravaTrainingActivitiesResponse? stravaResponse = Json.MapFromJson<StravaTrainingActivitiesResponse>(json);
+      activities.AddRange(stravaResponse?.Models.Select(m => (m.Id, m)));
+
+      total ??= stravaResponse?.Total ?? -1;
+    };
+
+    await fetchPageAsync(1, ct);
+    total ??= 0;
+    IEnumerable<int> range = Enumerable.Range(2, total.Value / perPage + 1);
+
+    // Get remaining pages in parallel
+    await Parallel.ForEachAsync(range, async (page, ct) =>
+    {
+      await fetchPageAsync(page, ct);
+      log_.LogInformation($"Got {activities.Count} of {total} Strava activities ({(double)activities.Count/total * 100:#.#}%)");
+    });
+
+    return activities.Values.OrderByDescending(a => a.Id).ToList();
+  }
+
+  private async Task<(string?, string?)> GetCsrfTokenAsync(string url)
   {
     CookieContainer cookies = GetCachedCookies();
     HttpClient client = GetUnauthenticatedClient(cookies, allowAutoRedirect: false);
 
-    // Use the about page because it's small and doesn't redirect based on if the client is logged in or not.
-    HttpResponseMessage resp = await client.GetAsync($"{BASE_URL}/about");
+    HttpResponseMessage resp = await client.GetAsync(url);
 
     string html = await resp.Content.ReadAsStringAsync();
     string? csrfToken = GetCsrfTokenRegex().GetSingleValue(html, 2, 1);
@@ -126,7 +176,6 @@ public partial class StravaClient : ReactiveObject, IStravaClient
       log_.LogError("Could not find Garmin Connect CSRF token in HTML response {@data}", html);
     }
 
-    Cookies = cookies.MapModel();
     return (csrfToken, csrfParam);
   }
 

@@ -38,6 +38,8 @@
         <MenuItem Command="{Binding HandleStravaUploadClicked}" Header="Strava Upload Page" ToolTip.Tip="Open the Strava file upload page"/>
         <MenuItem Command="{Binding HandleSyncFromGarminClicked}" Header="Sync from Garmin" ToolTip.Tip="Download all activities from Garmin." 
                   IsEnabled="{Binding Garmin.IsSignedIn}"/>
+        <MenuItem Command="{Binding HandleSyncFromStravaClicked}" Header="Sync from Strava" ToolTip.Tip="Download all activities from Strava." 
+                  IsEnabled="{Binding Strava.IsSignedIn}"/>
         <MenuItem Command="{Binding HandleMergeClicked}" Header="Merge">
           <ToolTip.Tip>
             <TextBlock TextWrapping="Wrap">
