@@ -99,7 +99,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     db_.ObservableForProperty(x => x.Ready, skipInitial: false).Subscribe(async change =>
     {
       var settings = await db_.GetAppSettingsAsync();
-      LastSync = settings.LastSynced ?? default;
+      LastSync = settings?.LastSynced ?? default;
 
       Authorization = await LoadCachedAuthorization();
       _ = Task.Run(SyncRecent);

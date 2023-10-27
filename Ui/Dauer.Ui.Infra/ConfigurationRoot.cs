@@ -30,6 +30,8 @@ public static class ConfigurationRoot
       _ => "Linux",
     };
 
+    Directory.CreateDirectory(DataDir);
+
     var a = Assembly.GetExecutingAssembly();
     using var stream = a.GetManifestResourceStream("Dauer.Ui.Infra.appsettings.json");
 
