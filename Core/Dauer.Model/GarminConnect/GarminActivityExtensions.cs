@@ -2,7 +2,7 @@
 
 namespace Dauer.Model.GarminConnect;
 
-public static class ActivityExtensions
+public static class GarminActivityExtensions
 {
   public static DateTime GetStartTime(this GarminActivity act)
   {
