@@ -37,14 +37,14 @@ public interface IGarminConnectClient
   /// <returns>Stream</returns>
   Task<byte[]> DownloadActivityFile(long activityId, ActivityFileType fileFormat);
 
-  Task<List<Activity>> LoadActivities(int limit, int start, DateTime after, DateTime before);
+  Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before);
 
   /// <summary>
   /// Loads the activity.
   /// </summary>
   /// <param name="activityId">The activity identifier.</param>
   /// <returns>Activity</returns>
-  Task<Activity> LoadActivity(long activityId);
+  Task<GarminActivity> LoadActivity(long activityId);
 
   /// <summary>
   /// Loads the activity types.

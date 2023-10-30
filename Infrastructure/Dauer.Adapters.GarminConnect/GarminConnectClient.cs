@@ -771,11 +771,11 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <returns>
   /// Activity
   /// </returns>
-  public async Task<Activity> LoadActivity(long activityId)
+  public async Task<GarminActivity> LoadActivity(long activityId)
   {
     var url = $"{URL_ACTIVITY_BASE}/{activityId}";
 
-    return await ExecuteUrlGetRequest<Activity>(url, "Error while getting activity");
+    return await ExecuteUrlGetRequest<GarminActivity>(url, "Error while getting activity");
   }
 
   private static string CreateActivitiesUrl(int limit, int start, DateTime after, DateTime before)
@@ -783,11 +783,11 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return $"{UrlActivitiesBase}?limit={limit}&start={start}&startDate={after:yyyy-MM-dd}&endDate={before:yyyy-MM-dd}";
   }
 
-  public async Task<List<Activity>> LoadActivities(int limit, int start, DateTime after, DateTime before)
+  public async Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before)
   {
     var url = CreateActivitiesUrl(limit, start, after, before);
 
-    return await ExecuteUrlGetRequest<List<Activity>>(url, "Error while getting activities");
+    return await ExecuteUrlGetRequest<List<GarminActivity>>(url, "Error while getting activities");
   }
 
   private static T DeserializeData<T>(string data) where T : class

@@ -5,7 +5,7 @@ namespace Dauer.Model.GarminConnect;
 /// <summary>
 /// Activity
 /// </summary>
-public class Activity
+public class GarminActivity
 {
   /// <summary>
   /// Gets or sets the activity identifier.

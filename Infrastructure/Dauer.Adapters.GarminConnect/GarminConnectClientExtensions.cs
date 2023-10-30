@@ -15,7 +15,7 @@ public static class GarminConnectClientExtensions
   /// <para/>
   /// Does not include the FIT files. That must be downloaded separately.
   /// </summary>
-  public static async Task<List<Activity>> GetAllActivitiesAsync(this IGarminConnectClient garmin)
+  public static async Task<List<GarminActivity>> GetAllActivitiesAsync(this IGarminConnectClient garmin)
   {
     // Get total count of activities to download, and get the year of the earliest activity e.g.
     // It will be Jan 1 e.g. 2015-01-01 even though my earliest activity is 2015-03-21.
@@ -36,16 +36,16 @@ public static class GarminConnectClientExtensions
     Log.Info($"Listing {totalStr} activities on Garmin...");
 
     //IDictionary<long, Activity> all = await garmin.ListSerially(earliestYear, total);
-    IDictionary<long, Activity> all = await garmin.ListInParallel(earliestYear, total);
-    List<Activity> result = all.Values.OrderByDescending(act => act.GetStartTime()).ToList();
+    IDictionary<long, GarminActivity> all = await garmin.ListInParallel(earliestYear, total);
+    List<GarminActivity> result = all.Values.OrderByDescending(act => act.GetStartTime()).ToList();
     Log.Info($"Found {result.Count} Garmin activities going back to {result.LastOrDefault()?.GetStartTime()} ");
 
     return result;
   }
 
-  private static async Task<IDictionary<long, Activity>> ListInParallel(this IGarminConnectClient garmin, DateTime earliestYear, long total, int chunkSize = 500)
+  private static async Task<IDictionary<long, GarminActivity>> ListInParallel(this IGarminConnectClient garmin, DateTime earliestYear, long total, int chunkSize = 500)
   {
-    ConcurrentDictionary<long, Activity> all = new();
+    ConcurrentDictionary<long, GarminActivity> all = new();
 
     List<(DateTime after, DateTime before)> ranges = GetRanges(earliestYear, DateTime.Today);
 
@@ -53,7 +53,7 @@ public static class GarminConnectClientExtensions
     await Parallel.ForEachAsync(ranges, async (range, ct) =>
     {
       int chunk = 0;
-      List<Activity> some;
+      List<GarminActivity> some;
 
       do
       {
@@ -108,9 +108,9 @@ public static class GarminConnectClientExtensions
       .ToList();
   }
 
-  private static async Task<IDictionary<long, Activity>> ListSerially(this IGarminConnectClient garmin, DateTime earliestYear, long total, int chunkSize = 500)
+  private static async Task<IDictionary<long, GarminActivity>> ListSerially(this IGarminConnectClient garmin, DateTime earliestYear, long total, int chunkSize = 500)
   { 
-    Dictionary<long, Activity> all = new();
+    Dictionary<long, GarminActivity> all = new();
 
     int chunk = 0;
 
@@ -119,7 +119,7 @@ public static class GarminConnectClientExtensions
 
     while (before > earliestYear)
     {
-      List<Activity> some = await garmin.LoadActivities(chunkSize, chunk * chunkSize, after, before);
+      List<GarminActivity> some = await garmin.LoadActivities(chunkSize, chunk * chunkSize, after, before);
       all.AddRange(some.Select(a => (a.ActivityId, a)));
       chunk++;
 
@@ -137,7 +137,7 @@ public static class GarminConnectClientExtensions
     return all;
   }
 
-  private static void TellProgress(long total, IDictionary<long, Activity> all)
+  private static void TellProgress(long total, IDictionary<long, GarminActivity> all)
   {
     if (total > 0)
     {

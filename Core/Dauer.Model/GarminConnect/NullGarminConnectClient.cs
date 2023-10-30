@@ -42,8 +42,8 @@ public class NullGarminConnectClient : ReactiveObject, IGarminConnectClient
 
   public Task<bool> IsAuthenticatedAsync() => Task.FromResult(IsSignedIn);
   public Task<byte[]> DownloadActivityFile(long activityId, ActivityFileType fileFormat) => Task.FromResult(Array.Empty<byte>());
-  public Task<List<Activity>> LoadActivities(int limit, int start, DateTime after, DateTime before) => Task.FromResult(new List<Activity>());
-  public Task<Activity> LoadActivity(long activityId) => Task.FromResult(new Activity());
+  public Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before) => Task.FromResult(new List<GarminActivity>());
+  public Task<GarminActivity> LoadActivity(long activityId) => Task.FromResult(new GarminActivity());
   public Task<List<ActivityType>> LoadActivityTypes() => Task.FromResult(new List<ActivityType>());
   public Task<GarminFitnessStats> GetLifetimeFitnessStats() => Task.FromResult(new GarminFitnessStats());
   public Task<List<GarminFitnessStats>> GetYearyFitnessStats() => Task.FromResult(new List<GarminFitnessStats>());

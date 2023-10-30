@@ -37,7 +37,7 @@ public static class FileServiceExtensions
      });
 
   /// <summary>
-  /// Return only activities which do not already exist in the DB. Also return activities which exist but do not have FIT file.
+  /// Return only activities which do not already exist in the DB. Also return activities which exist but do not have a FIT file.
   /// </summary>
   public static async Task<List<T>> FilterExistingAsync<T>(this IFileService fileService, List<(T t, string sourceId, string name, DateTime startTime)> ts)
   {

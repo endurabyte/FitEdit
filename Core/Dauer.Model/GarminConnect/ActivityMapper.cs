@@ -4,7 +4,7 @@ namespace Dauer.Model.GarminConnect;
 
 public static class ActivityMapper
 {
-  public static (long ActivityId, LocalActivity la) MapLocalActivity(Activity act)
+  public static (long ActivityId, LocalActivity la) MapLocalActivity(GarminActivity act)
   {
     string id = $"{Guid.NewGuid()}";
     string sourceId = $"{act.ActivityId}";
