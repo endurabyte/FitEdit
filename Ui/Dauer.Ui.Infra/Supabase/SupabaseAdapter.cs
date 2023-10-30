@@ -503,6 +503,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     int i = 0;
     int limit = 1000;
 
+    // Supabase limits each query to 1000. Paginate by 1000.
     while (true)
     {
       // Get activities updated since the last sync.

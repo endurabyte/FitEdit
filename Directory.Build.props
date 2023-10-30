@@ -9,8 +9,8 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <VersionPrefix>3.1.1</VersionPrefix>
-    <BuildIncrement>12</BuildIncrement>
+    <VersionPrefix>3.1.2</VersionPrefix>
+    <BuildIncrement>13</BuildIncrement>
     <VersionSuffix></VersionSuffix>
     <Product>FitEdit</Product>
     <Copyright>EnduraByte LLC 2023</Copyright>
