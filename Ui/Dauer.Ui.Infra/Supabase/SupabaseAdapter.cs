@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Specialized;
+using System.Text;
 using Dauer.Data;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -497,17 +498,30 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
   private async Task SyncAddsAndUpdates(DateTime lastSync)
   {
-    // Get activities updated since the last sync.
-    // Row-level security ensures we only get the current user's activities.
-    var activities = await client_.Postgrest.Table<Model.Activity>()
-      .Where(a => a.LastUpdated > lastSync)
-      .Get()
-      .AnyContext();
+    long lastSyncUnixTimestamp = lastSync.GetUnixTimestamp();
 
-    // Redundant defensive filter
-    foreach (Activity activity in activities.Models)
+    int i = 0;
+    int limit = 1000;
+
+    while (true)
     {
-      await HandleActivityAddedOrUpdated(activity).AnyContext();
+      // Get activities updated since the last sync.
+      // Row-level security ensures we only get the current user's activities.
+      var activities = await client_.Postgrest.Table<Model.Activity>()
+        .Where(a => a.StartTime > lastSyncUnixTimestamp)
+        .Order(a => a.StartTime, Postgrest.Constants.Ordering.Descending)
+        .Range(i * limit, (i+1) * limit - 1)
+        .Get()
+        .AnyContext();
+      i++;
+
+      if (!activities.Models.Any()) { break; }
+
+      // Redundant defensive filter
+      foreach (Activity activity in activities.Models)
+      {
+        await HandleActivityAddedOrUpdated(activity).AnyContext();
+      }
     }
   }
 
