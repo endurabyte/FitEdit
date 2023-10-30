@@ -204,7 +204,7 @@ public class FileService : ReactiveObject, IFileService
     List<LocalActivity> more = new();
 
     // While no results found, keep looking further into the past until we get a result or hit the limit
-    while (more.Count == 0 && backfill < backfillLimit)
+    while (more.Count < limit && backfill < backfillLimit)
     {
       more = await GetAllActivitiesAsync(oldest - backfill, oldest, limit);
       backfill *= 2;
