@@ -2,7 +2,7 @@
 
 namespace Dauer.Model.GarminConnect;
 
-public static class ActivityMapper
+public static class GarminActivityMapper
 {
   public static (long ActivityId, LocalActivity la) MapLocalActivity(GarminActivity act)
   {

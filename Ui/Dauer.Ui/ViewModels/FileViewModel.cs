@@ -707,12 +707,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task SyncFromGarminAsync()
   {
     List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync();
-    List<(GarminActivity, string, string, DateTime)> ts = activities
+    List<(GarminActivity, string, string, DateTime)> byTimestamp = activities
       .Select(a => (a, $"{a.ActivityId}", a.ActivityName, a.GetStartTime()))
       .ToList();
 
-    IEnumerable<GarminActivity> filtered = await FileService.FilterExistingAsync(ts);
-    List<(long, LocalActivity)> mapped = filtered.Select(ActivityMapper.MapLocalActivity).ToList();
+    IEnumerable<GarminActivity> filtered = await FileService.FilterExistingAsync(byTimestamp);
+    List<(long, LocalActivity)> mapped = filtered.Select(GarminActivityMapper.MapLocalActivity).ToList();
 
     await Garmin.DownloadAsync(mapped, Persist);
   }
