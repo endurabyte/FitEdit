@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 using Dauer.Model;
@@ -117,11 +118,11 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     client.DefaultRequestHeaders.Add("Accept", "text/javascript");
     client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
 
-    const int perPage = 20; // capped to 20 by server
+    const int perPage = 20; // capped by server: sending a greater value still returns 20.
     int? total = null;
     var activities = new ConcurrentDictionary<long, StravaActivity>();
 
-    // Get first page so we have a count
+    // Get first page so we have a total
     async Task fetchPageAsync(int page, CancellationToken ct = default)
     {
       string url = $"{BASE_URL}/athlete/training_activities"
@@ -158,6 +159,97 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     });
 
     return activities.Values.OrderByDescending(a => a.Id).ToList();
+  }
+
+  public async Task<byte[]> DownloadActivityFileAsync(long id, CancellationToken ct = default)
+  {
+    string url = $"https://www.strava.com/activities/{id}/export_original";
+
+    HttpClient client = GetAuthenticatedClient();
+    HttpResponseMessage resp = await client.GetAsync(url, ct);
+
+    byte[] bytes = await resp.Content.ReadAsByteArrayAsync(ct);
+    return bytes;
+  }
+
+  public async Task<(bool Success, long ActivityId)> UploadActivityAsync(Stream stream)
+  {
+    string url = $"https://www.strava.com/upload/files";
+    string aboutUrl = $"{BASE_URL}/about";
+    (string? csrfToken, _) = await GetCsrfTokenAsync(aboutUrl);
+
+    var form = new MultipartFormDataContent($"---------------------------");
+
+    using var methodContent = new StringContent("post");
+    using var authenticityTokenContent = new StringContent(csrfToken ?? "");
+    using var content = new StreamContent(stream);
+
+    methodContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+    {
+      Name = "_method"
+    };
+
+    authenticityTokenContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+    {
+      Name = "authenticity_token"
+    };
+
+    content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+    {
+      Name = "files[]",
+      FileName = Path.GetFileName("fitedit-upload.fit"),
+      Size = stream.Length,
+    };
+    content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
+    form.Add(methodContent);
+    form.Add(authenticityTokenContent);
+    form.Add(content);
+
+    HttpClient client = GetAuthenticatedClient();
+    HttpResponseMessage resp = await client.PostAsync(url, form);
+    StravaUploadResponse? response = await resp.Content.MapFromJson<StravaUploadResponse>();
+
+    // Poll for upload status
+    while (true) 
+    {
+      StravaUploadStatus? status = response?.FirstOrDefault();
+
+      if (status == null) { return (false, -1); }
+      log_.LogInformation("Strava upload progress: {id} {workflow} {progress}", status.Id, status.Workflow, status.Progress);
+      if (status?.Workflow == "error") 
+      {
+        log_.LogError("Error uploading to Strava. {error}", status?.Error);
+        return (false, -1); 
+      }
+      if (status?.Workflow == "uploaded") { return (true, status?.Activity?.Id ?? -1); }
+
+      await Task.Delay(2000);
+      response = await GetUploadStatus(status?.Id ?? 0);
+    }
+  }
+
+  public async Task<bool> DeleteActivityAsync(long id)
+  {
+    string url = $"https://www.strava.com/athlete/training_activities/{id}";
+    string aboutUrl = $"{BASE_URL}/about";
+    (string? csrfToken, _) = await GetCsrfTokenAsync(aboutUrl);
+
+    HttpClient client = GetAuthenticatedClient();
+    client.DefaultRequestHeaders.Add("Accept", "text/javascript");
+    client.DefaultRequestHeaders.Add("X-Requested-With", "XMLHttpRequest");
+    client.DefaultRequestHeaders.Add("X-CSRF-Token", csrfToken);
+
+    HttpResponseMessage resp = await client.DeleteAsync(url);
+    return resp.StatusCode == HttpStatusCode.OK;
+  }
+
+  private async Task<StravaUploadResponse?> GetUploadStatus(long id)
+  {
+    string url = $"https://www.strava.com/upload/progress.json?ids[]={id}";
+    HttpClient client = GetAuthenticatedClient();
+    HttpResponseMessage resp = await client.GetAsync(url);
+    return await resp.Content.MapFromJson<StravaUploadResponse>();
   }
 
   private async Task<(string?, string?)> GetCsrfTokenAsync(string url)

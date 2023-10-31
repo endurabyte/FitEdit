@@ -30,6 +30,9 @@ public interface IStravaClient
   Task<bool> LogoutAsync();
 
   Task<List<StravaActivity>> ListAllActivitiesAsync(CancellationToken ct = default);
+  Task<byte[]> DownloadActivityFileAsync(long id, CancellationToken ct = default);
+  Task<(bool Success, long ActivityId)> UploadActivityAsync(Stream stream);
+  Task<bool> DeleteActivityAsync(long id);
 }
 
 public class NullStravaClient : ReactiveObject, IStravaClient
@@ -65,4 +68,7 @@ public class NullStravaClient : ReactiveObject, IStravaClient
 
   public Task<bool> IsAuthenticatedAsync() => Task.FromResult(IsSignedIn);
   public Task<List<StravaActivity>> ListAllActivitiesAsync(CancellationToken ct = default) => Task.FromResult(new List<StravaActivity>());
+  public Task<byte[]> DownloadActivityFileAsync(long id, CancellationToken ct = default) => Task.FromResult(Array.Empty<byte>());
+  public Task<(bool Success, long ActivityId)> UploadActivityAsync(Stream stream) => Task.FromResult((false, -1L));
+  public Task<bool> DeleteActivityAsync(long id) => Task.FromResult(false);
 }

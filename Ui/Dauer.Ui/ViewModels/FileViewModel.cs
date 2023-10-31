@@ -2,6 +2,7 @@
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Dauer.Adapters.GarminConnect;
+using Dauer.Adapters.Strava;
 using Dauer.Data;
 using Dauer.Data.Fit;
 using Dauer.Model;
@@ -620,8 +621,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     ));
   }
 
-  public async Task HandleGarminUploadClicked() => await browser_.OpenAsync("https://connect.garmin.com/modern/import-data");
-  public async Task HandleStravaUploadClicked() => await browser_.OpenAsync("https://www.strava.com/upload/select");
+  public async Task HandleOpenGarminUploadPageClicked() => await browser_.OpenAsync("https://connect.garmin.com/modern/import-data");
+  public async Task HandleOpenStravaUploadPageClicked() => await browser_.OpenAsync("https://www.strava.com/upload/select");
 
   public async Task HandleViewOnlineClicked(LocalActivity? act)
   {
@@ -644,15 +645,20 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     foreach (UiFile uif in RemoteFilesToDelete)
     {
       if (uif.Activity == null) { return; }
+      if (!long.TryParse(uif.Activity.SourceId, out long id)) { return; }
 
-      if (uif.Activity.Source == ActivitySource.GarminConnect)
+      bool ok = uif.Activity.Source switch
       {
-        if (!long.TryParse(uif.Activity.SourceId, out long id)) { return; }
-        if (await Garmin.DeleteActivity(id))
-        {
-          uif.Activity.Source = ActivitySource.File; // Must be File to be re-uploadable
-          uif.Activity.SourceId = "";
-        }
+        ActivitySource.GarminConnect => await Garmin.DeleteActivity(id).AnyContext(),
+        ActivitySource.Strava => await Strava.DeleteActivityAsync(id).AnyContext(),
+        _ => false,
+      };
+
+      if (ok)
+      {
+        uif.Activity.Source = ActivitySource.File; // Must be File to be re-uploadable
+        uif.Activity.SourceId = "";
+        await supa_.UpdateAsync(uif.Activity);
       }
     }
 
@@ -665,17 +671,17 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     RemoteFilesToDelete.Clear();
   }
 
-  public void HandleUploadClicked(LocalActivity? act)
+  public void HandleGarminUploadClicked(LocalActivity? act)
   {
     if (!FitEdit.IsActive) { return; }
 
-    _ = Task.Run(async () => await UploadLocalActivity(act));
+    _ = Task.Run(async () => await UploadGarminActivity(act));
   }
 
   /// <summary>
   /// Upload a file to Garmin. We don't associate it with the activity because that will happen in the Garmin webhook handler.
   /// </summary>
-  private async Task UploadLocalActivity(LocalActivity? act)
+  private async Task UploadGarminActivity(LocalActivity? act)
   {
     if (act is null) { return; }
 
@@ -687,19 +693,49 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (act.File?.Bytes is null) { return; }
     if (act.File.Bytes.Length == 0) { return; }
 
-    var ms = new MemoryStream(act.File.Bytes);
+    using var ms = new MemoryStream(act.File.Bytes);
 
     (bool ok, long id) = await Garmin
       .UploadActivity(ms, new FileFormat { FormatKey = "fit" })
       .AnyContext();
 
+    // Save the new Garmin activity ID
     if (!ok || id < 0) { return; }
-
+    act.Source = ActivitySource.GarminConnect;
     act.SourceId = $"{id}";
 
-    await supa_.UpdateAsync(act);
-
     // TODO Show result
+  }
+
+  public void HandleStravaUploadClicked(LocalActivity? act)
+  {
+    if (!FitEdit.IsActive) { return; }
+
+    _ = Task.Run(async () => await UploadStravaActivity(act));
+  }
+
+  private async Task UploadStravaActivity(LocalActivity? act)
+  {
+    if (act is null) { return; }
+
+    // Load the file bytes from disk, without parsing them as a FIT file
+    LocalActivity? tmp = await FileService.ReadAsync(act.Id);
+    if (tmp is null) { return; }
+    act.File = tmp.File;
+
+    if (act.File?.Bytes is null) { return; }
+    if (act.File.Bytes.Length == 0) { return; }
+
+    using var ms = new MemoryStream(act.File.Bytes);
+
+    (bool ok, long id) = await Strava
+      .UploadActivityAsync(ms)
+      .AnyContext();
+
+    // Save the new Strava activity ID
+    if (!ok || id < 0) { return; }
+    act.Source = ActivitySource.Strava;
+    act.SourceId = $"{id}";
   }
 
   public void HandleSyncFromGarminClicked() => _ = Task.Run(SyncFromGarminAsync);
@@ -714,13 +750,21 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     IEnumerable<GarminActivity> filtered = await FileService.FilterExistingAsync(byTimestamp);
     List<(long, LocalActivity)> mapped = filtered.Select(GarminActivityMapper.MapLocalActivity).ToList();
 
-    await Garmin.DownloadAsync(mapped, Persist);
+    await Garmin.DownloadInParallelAsync(mapped, Persist);
   }
   
   public void HandleSyncFromStravaClicked() => _ = Task.Run(SyncFromStravaAsync);
 
   private async Task SyncFromStravaAsync()
   {
-    List<StravaActivity> acts = await Strava.ListAllActivitiesAsync();
+    List<StravaActivity> activities = await Strava.ListAllActivitiesAsync();
+    List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
+      .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
+      .ToList();
+
+    IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(byTimestamp);
+    List<(long id, LocalActivity activity)> mapped = filtered.Select(StravaActivityMapper.MapLocalActivity).ToList();
+
+    await Strava.DownloadInParallelAsync(mapped, Persist);
   }
 }

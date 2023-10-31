@@ -5,6 +5,8 @@ namespace Dauer.Model.Data;
 
 public static class Json
 {
+  public static async Task<T?> MapFromJson<T>(this HttpContent content) => (await content.ReadAsStringAsync()).MapFromJson<T>();
+
   public static T? MapFromJson<T>(this string json)
   {
     try

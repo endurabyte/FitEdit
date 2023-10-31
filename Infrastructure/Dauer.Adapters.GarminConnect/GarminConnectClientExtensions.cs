@@ -150,9 +150,10 @@ public static class GarminConnectClientExtensions
   }
 
   /// <summary>
-  /// Download the given FIT files. Rate limit so we don't get blocked.
+  /// Download the given FIT files in parallel. Rate limit so we don't get blocked.
+  /// For each file, call the given function to persist (save) the file.
   /// </summary>
-  public static async Task DownloadAsync(this IGarminConnectClient garmin, List<(long, LocalActivity)> mapped, Func<LocalActivity, Task> persist)
+  public static async Task DownloadInParallelAsync(this IGarminConnectClient garmin, List<(long, LocalActivity)> mapped, Func<LocalActivity, Task> persist)
   {
     var workInterval = TimeSpan.FromSeconds(10);
     var restInterval = TimeSpan.FromSeconds(10);
