@@ -28,7 +28,8 @@
       <!--<converters:BooleanToColorConverter x:Key="ConfirmDeleteBooleanToColorConverter" TrueColor="{StaticResource FitRedCrayonBrush}" FalseColor="{x:Static Brushes.Transparent}"/>-->
     </ResourceDictionary>
   </UserControl.Resources>
-  <Grid RowDefinitions="Auto, *">
+
+  <Grid RowDefinitions="*">
     
     <Menu HorizontalAlignment="Right" Margin="0 0 0 20">
       <MenuItem Header="⋮" FontSize="24"
@@ -51,9 +52,9 @@
       </MenuItem>
     </Menu>
 
-    <ScrollViewer x:Name="FileScrollViewer" Grid.Row="1">
+    <ScrollViewer x:Name="FileScrollViewer" Grid.Row="0">
 
-      <ItemsControl Grid.Row="1" Background="Transparent"
+      <ItemsControl Background="Transparent"
                ItemsSource="{Binding FileService.Files}">
 
         <ItemsControl.Effect>
@@ -295,7 +296,7 @@
       </ItemsControl>
     </ScrollViewer>
   
-    <Border Grid.Row="1" IsVisible="{Binding IsDragActive}" 
+    <Border Grid.Row="0" IsVisible="{Binding IsDragActive}" 
             Background="{StaticResource FitLeadBlack2}"
             Opacity="50"
             Margin="50"
@@ -303,18 +304,19 @@
       <Svg Path="/Assets/folder.svg" Width="100"/>
     </Border>
     
-    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingRemoteDelete}" 
+    <Border Grid.Row="0" IsVisible="{Binding IsConfirmingRemoteDelete}" 
             Background="{StaticResource FitLeadBlack2}"
             Opacity="50"
             Margin="50"
             CornerRadius="20" Padding="20">
 
-      <DockPanel LastChildFill="False">
-        <Svg DockPanel.Dock="Top" Path="/Assets/bin.svg" Width="100"/>
-        <Label DockPanel.Dock="Top" Content="Really delete?" HorizontalAlignment="Center"/>
+      <WrapPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Svg Path="/Assets/bin.svg" Width="100"/>
+        <Label Content="Really delete?" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-        <ItemsControl DockPanel.Dock="Top" Background="Transparent" ItemsSource="{Binding RemoteFilesToDelete}" Margin="20">
-
+        <ItemsControl Background="Transparent" ItemsSource="{Binding RemoteFilesToDelete}" Margin="20"
+                      HorizontalAlignment="Center" VerticalAlignment="Center">
+          
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Label Content="{Binding Activity.Name}" HorizontalAlignment="Center" FontStyle="Italic"/>
@@ -322,8 +324,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center">
-          
+        <WrapPanel HorizontalAlignment="Center">
           <Button Command="{Binding HandleConfirmRemoteDeleteClicked}" Width="100">
             <Svg Path="/Assets/check.svg" />
           </Button>
@@ -331,22 +332,23 @@
             <Svg Path="/Assets/cancel.svg" />
           </Button>
         </WrapPanel>
-      </DockPanel>
+      </WrapPanel>
                   
     </Border>
     
-    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingDelete}" 
+    <Border Grid.Row="0" IsVisible="{Binding IsConfirmingDelete}" 
             Background="{StaticResource FitLeadBlack2}"
             Opacity="50"
             Margin="50"
             CornerRadius="20" Padding="20">
 
-      <DockPanel LastChildFill="False">
-        <Svg DockPanel.Dock="Top" Path="/Assets/bin.svg" Width="100"/>
-        <Label DockPanel.Dock="Top" Content="Really delete?" HorizontalAlignment="Center"/>
+      <WrapPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Svg Path="/Assets/bin.svg" Width="100"/>
+        <Label Content="Really delete?" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-        <ItemsControl DockPanel.Dock="Top" Background="Transparent" ItemsSource="{Binding FilesToDelete}" Margin="20">
-
+        <ItemsControl Background="Transparent" ItemsSource="{Binding FilesToDelete}" Margin="20" 
+                      HorizontalAlignment="Center" VerticalAlignment="Center">
+          
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Label Content="{Binding Activity.Name}" HorizontalAlignment="Center" FontStyle="Italic"/>
@@ -354,7 +356,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Center">
+        <WrapPanel HorizontalAlignment="Center">
           <Button Command="{Binding HandleConfirmDeleteClicked}" Width="100">
             <Svg Path="/Assets/check.svg" />
           </Button>
@@ -362,7 +364,7 @@
             <Svg Path="/Assets/cancel.svg" />
           </Button>
         </WrapPanel>
-      </DockPanel>
+      </WrapPanel>
 
     </Border>
   </Grid>
