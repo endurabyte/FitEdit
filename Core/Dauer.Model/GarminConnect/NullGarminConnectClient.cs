@@ -42,11 +42,11 @@ public class NullGarminConnectClient : ReactiveObject, IGarminConnectClient
 
   public Task<bool> IsAuthenticatedAsync() => Task.FromResult(IsSignedIn);
   public Task<byte[]> DownloadActivityFile(long activityId, ActivityFileType fileFormat) => Task.FromResult(Array.Empty<byte>());
-  public Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before) => Task.FromResult(new List<GarminActivity>());
+  public Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before, CancellationToken ct = default) => Task.FromResult(new List<GarminActivity>());
   public Task<GarminActivity> LoadActivity(long activityId) => Task.FromResult(new GarminActivity());
   public Task<List<ActivityType>> LoadActivityTypes() => Task.FromResult(new List<ActivityType>());
-  public Task<GarminFitnessStats> GetLifetimeFitnessStats() => Task.FromResult(new GarminFitnessStats());
-  public Task<List<GarminFitnessStats>> GetYearyFitnessStats() => Task.FromResult(new List<GarminFitnessStats>());
+  public Task<GarminFitnessStats> GetLifetimeFitnessStats(CancellationToken ct = default) => Task.FromResult(new GarminFitnessStats());
+  public Task<List<GarminFitnessStats>> GetYearyFitnessStats(CancellationToken ct = default) => Task.FromResult(new List<GarminFitnessStats>());
   public Task<bool> SetActivityDescription(long activityId, string description) => Task.FromResult(true);
   public Task<bool> SetActivityName(long activityId, string activityName) => Task.FromResult(true);
   public Task<bool> SetActivityType(long activityId, ActivityType activityType) => Task.FromResult(true);

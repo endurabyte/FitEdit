@@ -39,12 +39,14 @@ public static class FileServiceExtensions
   /// <summary>
   /// Return only activities which do not already exist in the DB. Also return activities which exist but do not have a FIT file.
   /// </summary>
-  public static async Task<List<T>> FilterExistingAsync<T>(this IFileService fileService, List<(T t, string sourceId, string name, DateTime startTime)> ts)
+  public static async Task<List<T>> FilterExistingAsync<T>(this IFileService fileService, UserTask task, List<(T t, string sourceId, string name, DateTime startTime)> ts)
   {
     var allExisting = new ConcurrentDictionary<string, LocalActivity>();
 
+    int i = 0;
+
     // Get existing activites from DB
-    await Parallel.ForEachAsync(ts, async (tup, ct) =>
+    await Parallel.ForEachAsync(ts, task.CancellationToken, async (tup, ct) =>
     {
       string sourceId = tup.sourceId;
       string name = tup.name;
@@ -57,8 +59,11 @@ public static class FileServiceExtensions
       }
 
       LocalActivity? existing = await fileService.GetBySourceIdOrStartTimeAsync(sourceId, startTime);
-      if (existing == null) { return; } // New activity
 
+      Interlocked.Increment(ref i);
+      task.Status = $"Scanning local database ({i} of {ts.Count}) ({(double)i/ts.Count*100:#.#}%)";
+
+      if (existing == null) { return; } // New activity
       allExisting[sourceId] = existing;
     });
 

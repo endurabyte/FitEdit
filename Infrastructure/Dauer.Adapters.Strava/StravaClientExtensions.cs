@@ -9,14 +9,15 @@ public static class StravaClientExtensions
   /// Download the given FIT files in parallel. Rate limit so we don't get blocked.
   /// For each file, call the given function to persist (save) the file.
   /// </summary>
-  public static async Task DownloadInParallelAsync(this IStravaClient strava, List<(long, LocalActivity)> mapped, Func<LocalActivity, Task> persist)
+  public static async Task DownloadInParallelAsync(this IStravaClient strava, UserTask task, List<(long, LocalActivity)> mapped, Func<LocalActivity, Task> persist)
   {
     var workInterval = TimeSpan.FromSeconds(10);
     var restInterval = TimeSpan.FromSeconds(10);
     var start = DateTime.UtcNow;
 
-    Log.Info($"Downloading {mapped.Count} activities...");
+    task.Status = $"Downloading {mapped.Count} activities...";
 
+    int i = 0;
     await Parallel.ForEachAsync(mapped, async ((long id, LocalActivity la) tup, CancellationToken ct) =>
     {
       if (DateTime.UtcNow - start > workInterval)
@@ -26,7 +27,8 @@ public static class StravaClientExtensions
       }
 
       byte[] bytes = await strava.DownloadActivityFileAsync(tup.id, ct);
-      Log.Info($"Downloaded {bytes.Length} bytes for activity \"{tup.la.Name}\" ({tup.id})");
+      Interlocked.Increment(ref i);
+      task.Status = $"{(double)i / mapped.Count * 100:#.#}% ({i} of {mapped.Count}) - Downloaded activity \"{tup.la.Name}\" ({tup.id})";
 
       tup.la.File = new FileReference("strava-export.fit", bytes);
       //await persist(tup.la);

@@ -90,7 +90,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return client;
   }
 
-  private async Task<HttpClient> GetAuthenticatedClient(CookieContainer cookies = null, bool withAuthToken = true)
+  private async Task<HttpClient> GetAuthenticatedClient(CookieContainer cookies = null, bool withAuthToken = true, CancellationToken ct = default)
   {
     cookies ??= GetCachedCookies(null);
 
@@ -135,7 +135,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     client.DefaultRequestHeaders.Add("DNT", "1");
 
     // Sets some cloudflare cookies
-    HttpResponseMessage init = await client.GetAsync("https://connect.garmin.com");
+    HttpResponseMessage init = await client.GetAsync("https://connect.garmin.com", ct);
     Cookies = cookies.MapModel();
 
     if (!withAuthToken)
@@ -150,13 +150,16 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     {
       if (Config?.Token.RefreshTokenExpiresAt > DateTime.UtcNow)
       {
-        var refreshResp = await client.PostAsync("https://connect.garmin.com/services/auth/token/refresh",
+        var refreshResp = await client.PostAsync(
+          "https://connect.garmin.com/services/auth/token/refresh",
           new StringContent(JsonSerializer.Serialize(new
           {
             refresh_token = Config?.Token?.RefreshToken
-          }), new MediaTypeHeaderValue("application/json")));
+          }), new MediaTypeHeaderValue("application/json")), 
+          ct
+        );
 
-        Config.Token = Json.MapFromJson<GarminAccessToken>(await refreshResp.Content.ReadAsStringAsync());
+        Config.Token = Json.MapFromJson<GarminAccessToken>(await refreshResp.Content.ReadAsStringAsync(ct));
 
         // Also updates JWT_FGP cookie
         Cookies = cookies.MapModel();
@@ -438,7 +441,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <summary>
   /// Exchange SESSIONID for oauth token
   /// </summary>
-  private async Task<GarminAccessToken> ExchangeForToken(HttpClient client)
+  private async Task<GarminAccessToken> ExchangeForToken(HttpClient client, CancellationToken ct = default)
   {
     string url = $"{CONNECT_URL}/modern/di-oauth/exchange";
 
@@ -446,14 +449,14 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     {
       // Add some jitter; the endpoint seems sensitive to being called too quickly
       await Task.Delay(500);
-      HttpResponseMessage res = await client.PostAsync(url, null);
+      HttpResponseMessage res = await client.PostAsync(url, null, ct);
 
       if (!res.IsSuccessStatusCode)
       {
         return null;
       }
 
-      var token = await res.Content.ReadFromJsonAsync<GarminAccessToken>();
+      var token = await res.Content.ReadFromJsonAsync<GarminAccessToken>(cancellationToken: ct);
       token.ExpiresAt = DateTime.UtcNow + TimeSpan.FromSeconds(token.ExpiresIn);
       token.RefreshTokenExpiresAt = DateTime.UtcNow + TimeSpan.FromSeconds(token.RefreshTokenExpiresIn);
 
@@ -599,7 +602,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return true;
   }
 
-  public async Task<GarminFitnessStats> GetLifetimeFitnessStats() =>
+  public async Task<GarminFitnessStats> GetLifetimeFitnessStats(CancellationToken ct = default) =>
     (await ExecuteUrlGetRequest<List<GarminFitnessStats>>($"{UrlFitnessStats}" +
          $"?aggregation=lifetime"
        + $"&startDate={new DateTime(1970, 1, 1):yyyy-MM-dd}"
@@ -607,9 +610,9 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
        + $"&metric=duration"
        + $"&metric=distance"
        + $"&metric=movingDuration",
-      "Error while getting lifetime fitness stats"))?.FirstOrDefault();
+      "Error while getting lifetime fitness stats", ct))?.FirstOrDefault();
 
-  public async Task<List<GarminFitnessStats>> GetYearyFitnessStats() => 
+  public async Task<List<GarminFitnessStats>> GetYearyFitnessStats(CancellationToken ct = default) => 
     await ExecuteUrlGetRequest<List<GarminFitnessStats>>($"{UrlFitnessStats}" +
          $"?aggregation=yearly"
        + $"&startDate={new DateTime(1970, 1, 1):yyyy-MM-dd}"
@@ -617,7 +620,7 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
        + $"&metric=duration"
        + $"&metric=distance"
        + $"&metric=movingDuration",
-      "Error while getting yearly fitness stats");
+      "Error while getting yearly fitness stats", ct);
 
   /// <inheritdoc />
   /// <summary>
@@ -783,11 +786,11 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
     return $"{UrlActivitiesBase}?limit={limit}&start={start}&startDate={after:yyyy-MM-dd}&endDate={before:yyyy-MM-dd}";
   }
 
-  public async Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before)
+  public async Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before, CancellationToken ct = default)
   {
     var url = CreateActivitiesUrl(limit, start, after, before);
 
-    return await ExecuteUrlGetRequest<List<GarminActivity>>(url, "Error while getting activities");
+    return await ExecuteUrlGetRequest<List<GarminActivity>>(url, "Error while getting activities", ct);
   }
 
   private static T DeserializeData<T>(string data) where T : class
@@ -802,11 +805,11 @@ public partial class GarminConnectClient : ReactiveObject, IGarminConnectClient
   /// <param name="url">The URL.</param>
   /// <param name="errorMessage">The error message.</param>
   /// <returns></returns>
-  private async Task<T> ExecuteUrlGetRequest<T>(string url, string errorMessage) where T : class
+  private async Task<T> ExecuteUrlGetRequest<T>(string url, string errorMessage, CancellationToken ct = default) where T : class
   {
-    using HttpClient client = await GetAuthenticatedClient();
-    var res = await client.GetAsync(url);
-    var data = await res.Content.ReadAsStringAsync();
+    using HttpClient client = await GetAuthenticatedClient(ct: ct);
+    var res = await client.GetAsync(url, ct);
+    var data = await res.Content.ReadAsStringAsync(ct);
     if (!res.IsSuccessStatusCode)
     {
       log_.LogError($"{errorMessage}: {data} (HTTP {res.StatusCode})");

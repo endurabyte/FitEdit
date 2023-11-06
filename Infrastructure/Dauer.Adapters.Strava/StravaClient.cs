@@ -111,7 +111,7 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     return Task.FromResult(true);
   }
 
-  public async Task<List<StravaActivity>> ListAllActivitiesAsync(CancellationToken ct = default)
+  public async Task<List<StravaActivity>> ListAllActivitiesAsync(UserTask task, CancellationToken ct = default)
   {
     HttpClient client = GetAuthenticatedClient();
 
@@ -121,6 +121,8 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     const int perPage = 20; // capped by server: sending a greater value still returns 20.
     int? total = null;
     var activities = new ConcurrentDictionary<long, StravaActivity>();
+
+    bool tooMany = false;
 
     // Get first page so we have a total
     async Task fetchPageAsync(int page, CancellationToken ct = default)
@@ -141,6 +143,14 @@ public partial class StravaClient : ReactiveObject, IStravaClient
       HttpResponseMessage resp = await client.GetAsync(url, ct);
       string json = await resp.Content.ReadAsStringAsync(ct);
 
+      if (resp.StatusCode == HttpStatusCode.TooManyRequests)
+      {
+        tooMany = true;
+        task.Cancel();
+        task.Status = "Strava says we've made too many requests. Try again later.";
+        return;
+      }
+
       StravaTrainingActivitiesResponse? stravaResponse = Json.MapFromJson<StravaTrainingActivitiesResponse>(json);
       activities.AddRange(stravaResponse?.Models.Select(m => (m.Id, m)));
 
@@ -154,8 +164,9 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     // Get remaining pages in parallel
     await Parallel.ForEachAsync(range, async (page, ct) =>
     {
+      if (tooMany) { return; }
       await fetchPageAsync(page, ct);
-      log_.LogInformation($"Got {activities.Count} of {total} Strava activities ({(double)activities.Count/total * 100:#.#}%)");
+      task.Status = $"Got {activities.Count} of {total} Strava activities ({(double)activities.Count/total * 100:#.#}%)";
     });
 
     return activities.Values.OrderByDescending(a => a.Id).ToList();

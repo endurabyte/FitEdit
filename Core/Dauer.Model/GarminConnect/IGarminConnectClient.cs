@@ -37,7 +37,7 @@ public interface IGarminConnectClient
   /// <returns>Stream</returns>
   Task<byte[]> DownloadActivityFile(long activityId, ActivityFileType fileFormat);
 
-  Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before);
+  Task<List<GarminActivity>> LoadActivities(int limit, int start, DateTime after, DateTime before, CancellationToken ct = default);
 
   /// <summary>
   /// Loads the activity.
@@ -52,8 +52,8 @@ public interface IGarminConnectClient
   /// <returns>List of activities</returns>
   Task<List<ActivityType>> LoadActivityTypes();
 
-  Task<GarminFitnessStats> GetLifetimeFitnessStats();
-  Task<List<GarminFitnessStats>> GetYearyFitnessStats();
+  Task<GarminFitnessStats> GetLifetimeFitnessStats(CancellationToken ct = default);
+  Task<List<GarminFitnessStats>> GetYearyFitnessStats(CancellationToken ct = default);
 
   /// <summary>
   /// Sets the activity description.

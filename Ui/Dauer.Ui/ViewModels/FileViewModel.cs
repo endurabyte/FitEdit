@@ -13,6 +13,7 @@ using Dauer.Model.Strava;
 using Dauer.Model.Web;
 using Dauer.Services;
 using Dauer.Ui.Extensions;
+using Dauer.Ui.Infra;
 using Dauer.Ui.Model.Supabase;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
@@ -37,6 +38,7 @@ public interface IFileViewModel
 public class DesignFileViewModel : FileViewModel
 {
   public DesignFileViewModel() : base(
+    new NullTaskService(),
     new NullFileService(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
@@ -47,7 +49,8 @@ public class DesignFileViewModel : FileViewModel
     new DesignLogViewModel(),
     new FileDeleteViewModel(new NullFileService(), new NullSupabaseAdapter(), new NullLogger<FileDeleteViewModel>()),
     new FileRemoteDeleteViewModel(new NullGarminConnectClient(), new NullStravaClient(), new NullSupabaseAdapter(), new NullLogger<FileRemoteDeleteViewModel>()),
-    new DragViewModel()
+    new DragViewModel(),
+    new DesignTaskViewModel()
   ) 
   {
     IsDragActive = false;
@@ -62,6 +65,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   [Reactive] public FileDeleteViewModel FileDeleteViewModel { get; set; }
   [Reactive] public FileRemoteDeleteViewModel FileRemoteDeleteViewModel { get; set; }
   [Reactive] public ViewModelBase DragViewModel { get; set; }
+  [Reactive] public ViewModelBase TaskViewModel { get; set; }
 
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
@@ -91,12 +95,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IGarminConnectClient Garmin { get; }
   public IStravaClient Strava { get; }
 
+  private readonly ITaskService tasks_;
   private readonly IStorageAdapter storage_;
   private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
 
   public FileViewModel(
+    ITaskService tasks,
     IFileService fileService,
     IFitEditService fitEdit,
     IGarminConnectClient garmin,
@@ -107,9 +113,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     ILogViewModel log,
     FileDeleteViewModel fileDeleteViewModel,
     FileRemoteDeleteViewModel fileRemoteDeleteViewModel,
-    DragViewModel dragViewModel
+    DragViewModel dragViewModel,
+    TaskViewModel taskViewModel
   )
   {
+    tasks_ = tasks;
     FileService = fileService;
     FitEdit = fitEdit;
     Garmin = garmin;
@@ -122,6 +130,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FileDeleteViewModel = fileDeleteViewModel;
     FileRemoteDeleteViewModel = fileRemoteDeleteViewModel;
     DragViewModel = dragViewModel;
+    TaskViewModel = taskViewModel;
 
     FileService.SubscribeAdds(SubscribeChanges);
 
@@ -678,29 +687,61 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private async Task SyncFromGarminAsync()
   {
-    List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync();
+    var task = new UserTask { Name = "Syncing from Garmin..." };
+    tasks_.Tasks.Add(task);
+
+    List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync(task);
+
+    if (task.IsCanceled) { return; }
+
     List<(GarminActivity, string, string, DateTime)> byTimestamp = activities
       .Select(a => (a, $"{a.ActivityId}", a.ActivityName, a.GetStartTime()))
       .ToList();
 
-    IEnumerable<GarminActivity> filtered = await FileService.FilterExistingAsync(byTimestamp);
+    IEnumerable<GarminActivity> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
     List<(long, LocalActivity)> mapped = filtered.Select(GarminActivityMapper.MapLocalActivity).ToList();
 
-    await Garmin.DownloadInParallelAsync(mapped, Persist);
+    if (task.IsCanceled) { return; }
+
+    await Garmin.DownloadInParallelAsync(task, mapped, Persist);
+
+    task.Status = mapped.Count switch
+    {
+      0 => "No new activities from Garmin",
+      1 => $"Downloaded 1 new activity from Garmin",
+      _ => $"Downloaded {mapped.Count} new activities from Garmin",
+    };
+
+    task.IsComplete = true;
   }
   
   public void HandleSyncFromStravaClicked() => _ = Task.Run(SyncFromStravaAsync);
 
   private async Task SyncFromStravaAsync()
   {
-    List<StravaActivity> activities = await Strava.ListAllActivitiesAsync();
+    var task = new UserTask { Name = "Syncing from Strava..." };
+    tasks_.Tasks.Add(task);
+
+    List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
+
+    if (task.IsCanceled) { return; }
+
     List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
       .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
       .ToList();
 
-    IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(byTimestamp);
+    IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
     List<(long id, LocalActivity activity)> mapped = filtered.Select(StravaActivityMapper.MapLocalActivity).ToList();
 
-    await Strava.DownloadInParallelAsync(mapped, Persist);
+    if (task.IsCanceled) { return; }
+
+    await Strava.DownloadInParallelAsync(task, mapped, Persist);
+
+    task.Status = mapped.Count switch
+    {
+      0 => "No new activities from Strava",
+      1 => $"Downloaded 1 new activity from Strava",
+      _ => $"Downloaded {mapped.Count} new activities from Strava",
+    };
   }
 }
