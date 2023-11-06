@@ -29,7 +29,7 @@
     </ResourceDictionary>
   </UserControl.Resources>
 
-  <Grid RowDefinitions="*">
+  <Grid RowDefinitions="Auto, *">
     
     <Menu HorizontalAlignment="Right" Margin="0 0 0 20">
       <MenuItem Header="⋮" FontSize="24"
@@ -52,7 +52,7 @@
       </MenuItem>
     </Menu>
 
-    <ScrollViewer x:Name="FileScrollViewer" Grid.Row="0">
+    <ScrollViewer x:Name="FileScrollViewer" Grid.Row="1">
 
       <ItemsControl Background="Transparent"
                ItemsSource="{Binding FileService.Files}">
@@ -296,7 +296,7 @@
       </ItemsControl>
     </ScrollViewer>
   
-    <Border Grid.Row="0" IsVisible="{Binding IsDragActive}" 
+    <Border Grid.Row="1" IsVisible="{Binding IsDragActive}" 
             Background="{StaticResource FitLeadBlack2}"
             Opacity="50"
             Margin="50"
@@ -304,7 +304,7 @@
       <Svg Path="/Assets/folder.svg" Width="100"/>
     </Border>
     
-    <Border Grid.Row="0" IsVisible="{Binding IsConfirmingRemoteDelete}" 
+    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingRemoteDelete}" 
             Background="{StaticResource FitLeadBlack2}"
             Opacity="50"
             Margin="50"
@@ -336,7 +336,7 @@
                   
     </Border>
     
-    <Border Grid.Row="0" IsVisible="{Binding IsConfirmingDelete}" 
+    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingDelete}" 
             Background="{StaticResource FitLeadBlack2}"
             Opacity="50"
             Margin="50"
