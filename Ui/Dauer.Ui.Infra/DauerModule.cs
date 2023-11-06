@@ -109,6 +109,7 @@ public class DauerModule : Autofac.Module
       .SingleInstance();
     builder.RegisterType<NullCryptoService>()
       .Named<ICryptoService>("NullCrypto");
+    builder.RegisterType<TaskService>().As<ITaskService>().SingleInstance();
     builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>().SingleInstance();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();

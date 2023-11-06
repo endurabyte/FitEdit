@@ -31,7 +31,7 @@ public static class StravaClientExtensions
       task.Status = $"{(double)i / mapped.Count * 100:#.#}% ({i} of {mapped.Count}) - Downloaded activity \"{tup.la.Name}\" ({tup.id})";
 
       tup.la.File = new FileReference("strava-export.fit", bytes);
-      //await persist(tup.la);
+      await persist(tup.la);
     });
   }
 }
