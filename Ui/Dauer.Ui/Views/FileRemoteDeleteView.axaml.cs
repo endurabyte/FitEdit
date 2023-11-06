@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace Dauer.Ui.Views;
 
-public partial class DragModalView : UserControl
+public partial class FileRemoteDeleteView : UserControl
 {
-  public DragModalView()
+  public FileRemoteDeleteView()
   {
     InitializeComponent();
   }

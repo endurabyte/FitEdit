@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="Dauer.Ui.Views.DragModalView">
+             x:Class="Dauer.Ui.Views.DragView">
   <Border Background="{StaticResource FitLeadBlack2}"
           Opacity="50"
           Margin="50"

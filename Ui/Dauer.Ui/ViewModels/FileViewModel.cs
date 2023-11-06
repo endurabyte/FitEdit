@@ -14,6 +14,7 @@ using Dauer.Model.Web;
 using Dauer.Services;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Model.Supabase;
+using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -43,23 +44,24 @@ public class DesignFileViewModel : FileViewModel
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
     new NullBrowser(),
-    new DesignLogViewModel()) 
+    new DesignLogViewModel(),
+    new FileDeleteViewModel(new NullFileService(), new NullSupabaseAdapter(), new NullLogger<FileDeleteViewModel>()),
+    new FileRemoteDeleteViewModel(new NullGarminConnectClient(), new NullStravaClient(), new NullSupabaseAdapter(), new NullLogger<FileRemoteDeleteViewModel>()),
+    new DragViewModel()
+  ) 
   {
     IsDragActive = false;
-    IsConfirmingRemoteDelete = false;
-    IsConfirmingDelete = false;
   }
 }
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
   [Reactive] public int SelectedIndex { get; set; }
-  public bool IsDragActive { set => DragModalViewModel.IsVisible = value; }
-  [Reactive] public bool IsConfirmingDelete { get; set; }
-  [Reactive] public bool IsConfirmingRemoteDelete { get; set; }
-  [Reactive] public ObservableCollection<UiFile> FilesToDelete { get; set; } = new();
+  public bool IsDragActive { set => DragViewModel.IsVisible = value; }
   [Reactive] public ObservableCollection<UiFile> RemoteFilesToDelete { get; set; } = new();
-  [Reactive] public ViewModelBase DragModalViewModel { get; set; } = new DragModalViewModel();
+  [Reactive] public FileDeleteViewModel FileDeleteViewModel { get; set; }
+  [Reactive] public FileRemoteDeleteViewModel FileRemoteDeleteViewModel { get; set; }
+  [Reactive] public ViewModelBase DragViewModel { get; set; }
 
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
@@ -102,7 +104,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     IStorageAdapter storage,
     ISupabaseAdapter supa,
     IBrowser browser,
-    ILogViewModel log
+    ILogViewModel log,
+    FileDeleteViewModel fileDeleteViewModel,
+    FileRemoteDeleteViewModel fileRemoteDeleteViewModel,
+    DragViewModel dragViewModel
   )
   {
     FileService = fileService;
@@ -113,6 +118,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     storage_ = storage;
     log_ = log;
     browser_ = browser;
+
+    FileDeleteViewModel = fileDeleteViewModel;
+    FileRemoteDeleteViewModel = fileRemoteDeleteViewModel;
+    DragViewModel = dragViewModel;
 
     FileService.SubscribeAdds(SubscribeChanges);
 
@@ -299,40 +308,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     return sf;
   }
 
-  public void HandleDeleteClicked(UiFile uif)
-  {
-    if (uif == null) { return; }
-
-    IsConfirmingDelete = true;
-    FilesToDelete.Add(uif);
-  }
-
-  public void HandleConfirmDeleteClicked()
-  {
-    IsConfirmingDelete = false;
-
-    foreach (UiFile uif in FilesToDelete)
-    {
-      int index = FileService.Files.IndexOf(uif);
-      if (index < 0 || index >= FileService.Files.Count)
-      {
-        SelectedIndex = 0;
-        Log.Info("No file selected; cannot remove file");
-        return;
-      }
-
-      Remove(index);
-      SelectedIndex = Math.Min(index, FileService.Files.Count);
-    }
-
-    FilesToDelete.Clear();
-  }
-
-  public void HandleCancelDeleteClicked()
-  {
-    IsConfirmingDelete = false;
-    FilesToDelete.Clear();
-  }
+  public void HandleDeleteClicked(UiFile uif) => FileDeleteViewModel.BeginDelete(uif);
+  public void HandleRemoteDeleteClicked(UiFile uif) => FileRemoteDeleteViewModel.BeginDelete(uif);
 
   private void Remove(int index)
   {
@@ -628,47 +605,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   {
     if (act == null) { return; }
     await browser_.OpenAsync(act.OnlineUrl);
-  }
-
-  public void HandleRemoteDeleteClicked(UiFile? uif)
-  {
-    if (uif == null) { return; }
-
-    IsConfirmingRemoteDelete = true;
-    RemoteFilesToDelete.Add(uif);
-  }
-
-  public async Task HandleConfirmRemoteDeleteClicked()
-  {
-    IsConfirmingRemoteDelete = false;
-
-    foreach (UiFile uif in RemoteFilesToDelete)
-    {
-      if (uif.Activity == null) { return; }
-      if (!long.TryParse(uif.Activity.SourceId, out long id)) { return; }
-
-      bool ok = uif.Activity.Source switch
-      {
-        ActivitySource.GarminConnect => await Garmin.DeleteActivity(id).AnyContext(),
-        ActivitySource.Strava => await Strava.DeleteActivityAsync(id).AnyContext(),
-        _ => false,
-      };
-
-      if (ok)
-      {
-        uif.Activity.Source = ActivitySource.File; // Must be File to be re-uploadable
-        uif.Activity.SourceId = "";
-        await supa_.UpdateAsync(uif.Activity);
-      }
-    }
-
-    RemoteFilesToDelete.Clear();
-  }
-
-  public void HandleCancelRemoteDeleteClicked()
-  {
-    IsConfirmingRemoteDelete = false;
-    RemoteFilesToDelete.Clear();
   }
 
   public void HandleGarminUploadClicked(LocalActivity? act)

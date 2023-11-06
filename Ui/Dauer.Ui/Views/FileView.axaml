@@ -59,9 +59,9 @@
 
         <ItemsControl.Effect>
           <MultiBinding Converter="{StaticResource AnyBooleanTrueToBlurEffectConverter}">
-            <Binding Path="DragModalViewModel.IsVisible"/>
-            <Binding Path="IsConfirmingDelete"/>
-            <Binding Path="IsConfirmingRemoteDelete"/>
+            <Binding Path="FileDeleteViewModel.IsVisible"/>
+            <Binding Path="FileRemoteDeleteViewModel.IsVisible"/>
+            <Binding Path="DragViewModel.IsVisible"/>
           </MultiBinding>
         </ItemsControl.Effect>
 
@@ -296,71 +296,10 @@
       </ItemsControl>
     </ScrollViewer>
   
-    <ContentControl Grid.Row="1" Content="{Binding DragModalViewModel}" IsVisible="{Binding DragModalViewModel.IsVisible}"/>
+    <ContentControl Grid.Row="1" Content="{Binding FileDeleteViewModel}" IsVisible="{Binding FileDeleteViewModel.IsVisible}"/>
+    <ContentControl Grid.Row="1" Content="{Binding FileRemoteDeleteViewModel}" IsVisible="{Binding FileRemoteDeleteViewModel.IsVisible}"/>
+    <ContentControl Grid.Row="1" Content="{Binding DragViewModel}" IsVisible="{Binding DragViewModel.IsVisible}"/>
     
-    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingRemoteDelete}" 
-            Background="{StaticResource FitLeadBlack2}"
-            Opacity="50"
-            Margin="50"
-            CornerRadius="20" Padding="20">
-
-      <WrapPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Svg Path="/Assets/bin.svg" Width="100"/>
-        <Label Content="Really delete?" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-        <ItemsControl Background="Transparent" ItemsSource="{Binding RemoteFilesToDelete}" Margin="20"
-                      HorizontalAlignment="Center" VerticalAlignment="Center">
-          
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Label Content="{Binding Activity.Name}" HorizontalAlignment="Center" FontStyle="Italic"/>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <WrapPanel HorizontalAlignment="Center">
-          <Button Command="{Binding HandleConfirmRemoteDeleteClicked}" Width="100">
-            <Svg Path="/Assets/check.svg" />
-          </Button>
-          <Button Command="{Binding HandleCancelRemoteDeleteClicked}" Width="100">
-            <Svg Path="/Assets/cancel.svg" />
-          </Button>
-        </WrapPanel>
-      </WrapPanel>
-                  
-    </Border>
-    
-    <Border Grid.Row="1" IsVisible="{Binding IsConfirmingDelete}" 
-            Background="{StaticResource FitLeadBlack2}"
-            Opacity="50"
-            Margin="50"
-            CornerRadius="20" Padding="20">
-
-      <WrapPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <Svg Path="/Assets/bin.svg" Width="100"/>
-        <Label Content="Really delete?" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-        <ItemsControl Background="Transparent" ItemsSource="{Binding FilesToDelete}" Margin="20" 
-                      HorizontalAlignment="Center" VerticalAlignment="Center">
-          
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Label Content="{Binding Activity.Name}" HorizontalAlignment="Center" FontStyle="Italic"/>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-
-        <WrapPanel HorizontalAlignment="Center">
-          <Button Command="{Binding HandleConfirmDeleteClicked}" Width="100">
-            <Svg Path="/Assets/check.svg" />
-          </Button>
-          <Button Command="{Binding HandleCancelDeleteClicked}" Width="100">
-            <Svg Path="/Assets/cancel.svg" />
-          </Button>
-        </WrapPanel>
-      </WrapPanel>
-
-    </Border>
   </Grid>
 
 </UserControl>
