@@ -16,7 +16,6 @@ using Dauer.Ui.Extensions;
 using Dauer.Ui.Model.Supabase;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Units;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -29,7 +28,7 @@ public interface IFileViewModel
   /// 100 => bottom
   /// </summary>
   double ScrollPercent { get; set; }
-  bool IsDragActive { get; set; }
+  bool IsDragActive { set; }
 
   void HandleFileDropped(IStorageFile? file);
 }
@@ -55,11 +54,12 @@ public class DesignFileViewModel : FileViewModel
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
   [Reactive] public int SelectedIndex { get; set; }
-  [Reactive] public bool IsDragActive { get; set; }
+  public bool IsDragActive { set => DragModalViewModel.IsVisible = value; }
   [Reactive] public bool IsConfirmingDelete { get; set; }
   [Reactive] public bool IsConfirmingRemoteDelete { get; set; }
   [Reactive] public ObservableCollection<UiFile> FilesToDelete { get; set; } = new();
   [Reactive] public ObservableCollection<UiFile> RemoteFilesToDelete { get; set; } = new();
+  [Reactive] public ViewModelBase DragModalViewModel { get; set; } = new DragModalViewModel();
 
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
