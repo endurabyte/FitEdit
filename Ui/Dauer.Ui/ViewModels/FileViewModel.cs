@@ -750,6 +750,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       task.IsComplete = true;
     };
-    task.NeedsConfirm = true;
+    task.IsConfirmed = true;
   }
 }
