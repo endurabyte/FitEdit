@@ -10,6 +10,9 @@ public class UserTask : ReactiveObject
   [Reactive] public int Progress { get; set; }
   [Reactive] public bool IsComplete { get; set; }
   [Reactive] public bool IsCanceled { get; set; }
+  [Reactive] public bool IsDismissed { get; set; }
+  [Reactive] public bool IsConfirmed { get; set; }
+  public Action NextAction { get; set; }
 
   public CancellationToken CancellationToken => cts_.Token;
 
@@ -28,6 +31,17 @@ public class UserTask : ReactiveObject
     cts_.Cancel();
     IsCanceled = true;
     IsComplete = true;
+  }
+
+  public void Dismiss()
+  {
+    IsDismissed = true;
+  }
+
+  public void Confirm()
+  {
+    IsConfirmed = false;
+    _ = Task.Run(() => NextAction());
   }
 }
 

@@ -35,14 +35,17 @@ public class TaskViewModel : ViewModelBase
       {
         task.ObservableForProperty(x => x.IsCanceled).Subscribe(async _ => 
         {
-          await Task.Delay(5_000);
+          await Task.Delay(10_000);
+          Remove(task);
+        });
+
+        task.ObservableForProperty(x => x.IsDismissed).Subscribe(_ =>
+        {
           Remove(task);
         });
       }
     });
   }
-
-  public void HandleDismissClicked(UserTask task) => Remove(task);
 
   private void Remove(UserTask task) => TaskService.Remove(task);
 }

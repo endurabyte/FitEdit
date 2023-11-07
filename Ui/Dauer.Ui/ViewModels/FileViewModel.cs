@@ -59,9 +59,9 @@ public class DesignFileViewModel : FileViewModel
 
 public class FileViewModel : ViewModelBase, IFileViewModel
 {
-  [Reactive] public int SelectedIndex { get; set; }
+  [Reactive] public UiFile? SelectedFile { get; set; }
+
   public bool IsDragActive { set => DragViewModel.IsVisible = value; }
-  [Reactive] public ObservableCollection<UiFile> RemoteFilesToDelete { get; set; } = new();
   [Reactive] public FileDeleteViewModel FileDeleteViewModel { get; set; }
   [Reactive] public FileRemoteDeleteViewModel FileRemoteDeleteViewModel { get; set; }
   [Reactive] public ViewModelBase DragViewModel { get; set; }
@@ -717,33 +717,39 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   
   public void HandleSyncFromStravaClicked() => _ = Task.Run(SyncFromStravaAsync);
 
-  private async Task SyncFromStravaAsync()
+  private void SyncFromStravaAsync()
   {
     var task = new UserTask { Name = "Syncing from Strava..." };
     tasks_.Add(task);
+    task.Status = "Continue?";
 
-    List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
-
-    if (task.IsCanceled) { return; }
-
-    List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
-      .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
-      .ToList();
-
-    IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
-    List<(long id, LocalActivity activity)> mapped = filtered.Select(StravaActivityMapper.MapLocalActivity).ToList();
-
-    if (task.IsCanceled) { return; }
-
-    await Strava.DownloadInParallelAsync(task, mapped, Persist);
-
-    task.Status = mapped.Count switch
+    task.NextAction = async () =>
     {
-      0 => "No new activities from Strava",
-      1 => $"Downloaded 1 new activity from Strava",
-      _ => $"Downloaded {mapped.Count} new activities from Strava",
-    };
+      task.Status = "Getting list of activities from Strava";
+      List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
 
-    task.IsComplete = true;
+      if (task.IsCanceled) { return; }
+
+      List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
+        .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
+        .ToList();
+
+      IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
+      List<(long id, LocalActivity activity)> mapped = filtered.Select(StravaActivityMapper.MapLocalActivity).ToList();
+
+      if (task.IsCanceled) { return; }
+
+      await Strava.DownloadInParallelAsync(task, mapped, Persist);
+
+      task.Status = mapped.Count switch
+      {
+        0 => "No new activities from Strava",
+        1 => $"Downloaded 1 new activity from Strava",
+        _ => $"Downloaded {mapped.Count} new activities from Strava",
+      };
+
+      task.IsComplete = true;
+    };
+    task.NeedsConfirm = true;
   }
 }

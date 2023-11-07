@@ -39,29 +39,40 @@
               <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontWeight="Bold"/>
               <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Status}"/>
               
-              <Menu Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+              <WrapPanel Grid.Row="1" Grid.Column="1" Width="150" Orientation="Vertical">
+                <Button 
+                      Width="150"
+                      IsVisible="{Binding IsConfirmed}"
+                      Command="{Binding Confirm}"
+                      CommandParameter="{Binding}"
+                      Content="Continue"/>
+                <Button 
+                      Width="150"
+                      Command="{Binding Cancel}"
+                      CommandParameter="{Binding}"
+                      Content="Cancel">
 
-                <MenuItem Header="⋮" FontSize="24"
-                          ToolTip.Tip="Show task menu">
-
-                  <MenuItem Header="_Cancel"
-                            IsEnabled="{Binding !IsComplete}"
-                            Command="{Binding Cancel}"
-                            ToolTip.Tip="Cancel the task"/>
-                </MenuItem>
-
-              </Menu>
-
-              <Button Grid.Row="1" Grid.Column="1" Width="150"
-                    IsVisible="{Binding !IsComplete}"
-                    Command="{Binding Cancel}"
-                    CommandParameter="{Binding}"
-                    Content="Cancel"/>
-              <Button Grid.Row="1" Grid.Column="1" Width="150"
-                    IsVisible="{Binding IsComplete}"
-                    Command="{Binding $parent[UserControl].((vm:TaskViewModel)DataContext).HandleDismissClicked}"
-                    CommandParameter="{Binding}"
-                    Content="Dismiss"/>
+                  <Button.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="!IsComplete"/>
+                      <Binding Path="!IsConfirmed"/>
+                    </MultiBinding>
+                  </Button.IsVisible>
+                </Button>
+                <Button
+                      Width="150"
+                      Command="{Binding Dismiss}"
+                      CommandParameter="{Binding}"
+                      Content="Dismiss">
+                  
+                  <Button.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                      <Binding Path="IsComplete"/>
+                      <Binding Path="IsConfirmed"/>
+                    </MultiBinding>
+                  </Button.IsVisible>
+                </Button>
+              </WrapPanel>
             </Grid>
 
           </Border>
