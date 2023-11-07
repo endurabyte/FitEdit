@@ -179,16 +179,20 @@ public class FileService : ReactiveObject, IFileService
   {
     if (file is null) { return; }
 
-    // Find the first activity that is newer. They are sorted newest to oldest; preserve that
-    UiFile? firstNewer = Files.Reverse().FirstOrDefault(f => f.Activity?.StartTime > file.Activity?.StartTime);
-    int idx = firstNewer == null ? 0 : Files.IndexOf(firstNewer) + 1;
-    Files.Insert(idx, file);
+    lock (Files)
+    {
+      // Find the first activity that is newer. They are sorted newest to oldest; preserve that
+      UiFile? firstNewer = Files.Reverse().FirstOrDefault(f => f?.Activity?.StartTime > file.Activity?.StartTime);
+      int idx = firstNewer == null ? 0 : Files.IndexOf(firstNewer) + 1;
+
+      Files.Insert(idx, file);
+    }
   }
 
   public async Task LoadMore()
   {
     DateTime oldest = Files
-      .Select(f => f.Activity?.StartTime ?? DateTime.UtcNow)
+      .Select(f => f?.Activity?.StartTime ?? DateTime.UtcNow)
       .OrderBy(d => d)
       .FirstOrDefault();
 

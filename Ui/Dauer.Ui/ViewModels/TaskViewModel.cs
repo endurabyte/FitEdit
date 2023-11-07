@@ -44,5 +44,5 @@ public class TaskViewModel : ViewModelBase
 
   public void HandleDismissClicked(UserTask task) => Remove(task);
 
-  private void Remove(UserTask task) => TaskService.Tasks.Remove(task);
+  private void Remove(UserTask task) => TaskService.Remove(task);
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.Text;
+using Avalonia.Threading;
 using Dauer.Data;
 using Dauer.Model;
 using Dauer.Model.Data;
@@ -27,6 +28,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private readonly IDatabaseAdapter db_;
   private readonly IPhoneValidator phoneValidator_;
   private readonly IEmailValidator emailValidator_;
+  private readonly ITaskService tasks_;
 
   [Reactive] public bool IsConnected { get; private set; }
   [Reactive] public bool IsAuthenticated { get; private set; }
@@ -51,6 +53,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     IDatabaseAdapter db,
     IPhoneValidator phoneValidator,
     IEmailValidator emailValidator,
+    ITaskService tasks,
     string url,
     string key)
   {
@@ -59,6 +62,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     db_ = db;
     phoneValidator_ = phoneValidator;
     emailValidator_ = emailValidator;
+    tasks_ = tasks;
     var persistence = new SessionPersistence(db);
 
     client_ = new global::Supabase.Client(url, key, new SupabaseOptions
@@ -500,10 +504,15 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   {
     long lastSyncUnixTimestamp = lastSync.GetUnixTimestamp();
 
-    int i = 0;
-    int limit = 1000;
+    int page = 0;
 
     // Supabase limits each query to 1000. Paginate by 1000.
+    int limit = 1000;
+
+    var allActivities = new List<Activity>();
+    var task = new UserTask { Name = "Syncing from Server..." };
+    tasks_.Tasks.Add(task);
+
     while (true)
     {
       // Get activities updated since the last sync.
@@ -511,18 +520,39 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       var activities = await client_.Postgrest.Table<Model.Activity>()
         .Where(a => a.StartTime > lastSyncUnixTimestamp)
         .Order(a => a.StartTime, Postgrest.Constants.Ordering.Descending)
-        .Range(i * limit, (i+1) * limit - 1)
+        .Range(page * limit, (page + 1) * limit - 1)
         .Get()
         .AnyContext();
-      i++;
+      page++;
+      task.Status = $"Querying for activities. Found {allActivities.Count}";
 
       if (!activities.Models.Any()) { break; }
+      allActivities.AddRange(activities.Models);
+    }
 
-      // Redundant defensive filter
-      foreach (Activity activity in activities.Models)
+    int i = 0;
+    // Redundant defensive filter
+    await Parallel.ForEachAsync(allActivities, async (activity, ct) =>
+    {
+      Dispatcher.UIThread.Invoke(() =>
       {
-        await HandleActivityAddedOrUpdated(activity).AnyContext();
-      }
+        task.Status = $"{(double)i / allActivities.Count * 100:#.#}% ({i} of {allActivities.Count}) Syncing '{activity.Name}'";
+      });
+
+      Interlocked.Increment(ref i);
+      await HandleActivityAddedOrUpdated(activity).AnyContext();
+    });
+
+    task.Status = i switch
+    {
+      0 => $"Already in sync!",
+      _ => $"Synced {i} activities",
+    };
+
+    task.IsComplete = true;
+    if (i == 0)
+    {
+      task.IsCanceled = true; // Notification will auto-dismiss
     }
   }
 

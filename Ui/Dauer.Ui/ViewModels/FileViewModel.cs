@@ -688,7 +688,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task SyncFromGarminAsync()
   {
     var task = new UserTask { Name = "Syncing from Garmin..." };
-    tasks_.Tasks.Add(task);
+    tasks_.Add(task);
 
     List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync(task);
 
@@ -720,7 +720,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private async Task SyncFromStravaAsync()
   {
     var task = new UserTask { Name = "Syncing from Strava..." };
-    tasks_.Tasks.Add(task);
+    tasks_.Add(task);
 
     List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
 

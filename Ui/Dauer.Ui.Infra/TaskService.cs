@@ -6,7 +6,10 @@ namespace Dauer.Ui.Infra;
 
 public interface ITaskService
 {
-  ObservableCollection<UserTask> Tasks { get; } 
+  ObservableCollection<UserTask> Tasks { get; }
+
+  void Add(UserTask task);
+  void Remove(UserTask task);
 }
 
 public class NullTaskService : ITaskService
@@ -22,10 +25,16 @@ public class NullTaskService : ITaskService
       Progress = 67,
     });
   }
+
+  public void Add(UserTask task) => Tasks.Add(task);
+  public void Remove(UserTask task) => Tasks.Remove(task);
 }
 
 public class TaskService : ITaskService
 {
   [Reactive] public ObservableCollection<UserTask> Tasks { get; set; } = new();
+
+  public void Add(UserTask task) => Tasks.Add(task);
+  public void Remove(UserTask task) => Tasks.Remove(task);
 }
 
