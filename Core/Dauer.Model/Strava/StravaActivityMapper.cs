@@ -14,7 +14,7 @@ public static class StravaActivityMapper
     var la = new LocalActivity
     {
       Id = id,
-      Source = ActivitySource.GarminConnect,
+      Source = ActivitySource.Strava,
       SourceId = sourceId,
       Name = act.Name,
       Description = act.Description,
