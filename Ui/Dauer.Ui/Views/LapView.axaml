@@ -31,7 +31,7 @@
 
   <StackPanel>
 
-    <Border CornerRadius="4" Padding="4" Background="{StaticResource FitLeadBlack2}">
+    <Border CornerRadius="20" Padding="10" Margin="10" Background="{StaticResource FitLeadBlack2}">
       <StackPanel Orientation="Vertical">
 
         <Label Content="Lap Speeds" Margin="5"/>
@@ -91,7 +91,7 @@
 
     <Separator/>
 
-    <Border CornerRadius="4" Padding="4" Background="{StaticResource FitLeadBlack2}">
+    <Border CornerRadius="20" Padding="10" Margin="10" Background="{StaticResource FitLeadBlack2}">
       <StackPanel Orientation="Vertical">
         <Label Content="Lap Distances" Margin="5"/>
 
