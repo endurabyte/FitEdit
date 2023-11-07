@@ -11,7 +11,6 @@ public partial class FileView : UserControl
   public FileView()
   {
     InitializeComponent();
-    FileScrollViewer.ScrollChanged += HandleScrollChanged;
 
     AddHandler(DragDrop.DragEnterEvent, HandleDragEnter);
     AddHandler(DragDrop.DragLeaveEvent, HandleDragLeave);
