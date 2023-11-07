@@ -743,5 +743,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       1 => $"Downloaded 1 new activity from Strava",
       _ => $"Downloaded {mapped.Count} new activities from Strava",
     };
+
+    task.IsComplete = true;
   }
 }
