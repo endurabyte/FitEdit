@@ -49,7 +49,7 @@ public class DesignSettingsViewModel : SettingsViewModel
 
   public override async Task HandleGarminLoginClicked()
   {
-    await Garmin.AuthenticateAsync();
+     await Garmin.IsAuthenticatedAsync();
   }
 
   public override async Task HandleGarminLogoutClicked()
@@ -75,10 +75,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   public IStravaClient Strava { get; }
 
   [Reactive] public string Otp { get; set; } = "";
-  [Reactive] public string? GarminUsername { get; set; }
-  [Reactive] public string? GarminPassword { get; set; }
 
-  [Reactive] public bool GarminManualLogin { get; set; }
   [Reactive] public string? GarminSsoId { get; set; }
   [Reactive] public string? GarminSessionId { get; set; }
 
@@ -161,7 +158,6 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
           Domain = c.Domain ?? ""
         });
 
-        GarminManualLogin = GarminSsoId != null && GarminSessionId != null;
         await LoginWithGarminAsync();
       });
 
@@ -186,12 +182,9 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     if (!db_.Ready) { return; }
 
     AppSettings? settings = await db_.GetAppSettingsAsync().AnyContext() ?? new AppSettings();
-    GarminUsername = settings.GarminUsername;
-    GarminPassword = settings.GarminPassword;
     GarminSsoId = settings.GarminSsoId;
     GarminSessionId = settings.GarminSessionId;
     Garmin.Cookies = settings.GarminCookies;
-    GarminManualLogin = GarminSsoId != null && GarminSessionId != null;
 
     StravaUsername = settings.StravaUsername;
     StravaPassword = settings.StravaPassword;
@@ -321,40 +314,24 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
   public async Task LoginWithGarminAsync()
   {
-    bool signedIn = false; 
+    bool signedIn = false;
 
-    if (GarminManualLogin)
+    if (GarminSsoId == null || GarminSessionId == null) { return; }
+
+    const int ntries = 5;
+    foreach (int i in Enumerable.Range(0, ntries))
     {
-      if (GarminSsoId == null || GarminSessionId == null) { return; }
+      Garmin.Config.SsoId = GarminSsoId;
+      Garmin.Config.SessionId = GarminSessionId;
 
-      const int ntries = 5;
-      foreach (int i in Enumerable.Range(0, ntries))
-      {
-        Garmin.Config.SsoId = GarminSsoId;
-        Garmin.Config.SessionId = GarminSessionId;
-
-        Garmin.Config.Username = null;
-        Garmin.Config.Password = null;
-        Garmin.Cookies = new();
-
-        signedIn = await Garmin.IsAuthenticatedAsync();
-        if (signedIn) { break; }
-
-        await Task.Delay(2000);
-      }
-    }
-    else
-    {
-      if (GarminUsername == null || GarminPassword == null) { return; }
-
-      Garmin.Config.SsoId = null;
-      Garmin.Config.SessionId = null;
-      Garmin.Config.JwtId = null;
-
-      Garmin.Config.Username = GarminUsername;
-      Garmin.Config.Password = GarminPassword;
+      Garmin.Config.Username = null;
+      Garmin.Config.Password = null;
       Garmin.Cookies = new();
-      signedIn = await Garmin.AuthenticateAsync();
+
+      signedIn = await Garmin.IsAuthenticatedAsync();
+      if (signedIn) { break; }
+
+      await Task.Delay(2000);
     }
 
     Message = signedIn ? "Signed in to Garmin" : "There was a problem signing in to Garmin";
@@ -379,8 +356,6 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   {
     await Garmin.LogoutAsync();
 
-    GarminUsername = null;
-    GarminPassword = null;
     GarminSsoId = null;
     GarminSessionId = null;
 
@@ -397,6 +372,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   }
 
   public async Task HandleTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/integration-signin-terms.html");
+  public async Task HandleGarminLoginTellMeMoreClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/garmin-signin.html");
 
   public virtual async Task HandleStravaLoginClicked() => await LoginWithStravaAsync();
 

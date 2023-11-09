@@ -10,18 +10,6 @@ public interface IGarminConnectClient
   bool IsSignedIn { get;  }
   Dictionary<string, Cookie>? Cookies { get; set; }
 
-  /// <summary>
-  /// Progress 0-100 of the last call to <see cref="AuthenticateAsync"/>
-  /// 100 shall not be a programmatic indicator of completion; for that, use the return value of <see cref="AuthenticateAsync"/>
-  /// </summary>
-  double AuthenticateProgress { get; }
-
-  /// <summary>
-  /// Authenticates this instance.
-  /// </summary>
-  /// <returns>Tuple of Cookies and HTTP handler</returns>
-  Task<bool> AuthenticateAsync();
-
   Task<bool> LogoutAsync();
 
   /// <summary>

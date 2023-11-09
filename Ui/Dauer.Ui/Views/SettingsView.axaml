@@ -184,21 +184,26 @@
                   </WrapPanel.IsVisible>
                 
                   <StackPanel Orientation="Vertical">
-                    <CheckBox Content="Manual Login" IsChecked="{Binding GarminManualLogin}" VerticalAlignment="Bottom"/>
-                    <StackPanel Orientation="Vertical" IsVisible="{Binding !GarminManualLogin}">
-                      <TextBlock Text="Username:" Width="200" />
-                      <TextBox Text="{Binding GarminUsername, Mode=TwoWay}"
-                               VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-                      <TextBlock Text="Password:" Width="200" />
-                      <TextBox Classes="revealPasswordButton"
-                               PasswordChar="•"
-                               Text="{Binding GarminPassword, Mode=TwoWay}"
-                               VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Vertical" IsVisible="{Binding GarminManualLogin}">
-                      <TextBlock Text="SSO ID:" Width="200" />
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                      Signing in to Garmin Connect lets FitEdit update your activities, such as title and descriptions, upload new activities, and delete existing activities. <LineBreak/>
+                      <LineBreak/>
+                      
+                      To sign in to Garmin Connect, enter the cookie values below.
+                    </TextBlock>
+                    
+                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
+                      To let FitEdit manage Garmin login automatically, please install the web browser extension.
+                    </TextBlock>
+                    
+                    <Button Margin="0,0,0,20"
+                      Command="{Binding HandleGarminLoginTellMeMoreClicked}"
+                      Classes="hyperlink"
+                      Content="Learn more"/>
+                    
+                    <StackPanel Orientation="Vertical">
+                      <TextBlock Text="SSO ID:" Width="200" HorizontalAlignment="Left"/>
                       <TextBox Text="{Binding GarminSsoId, Mode=TwoWay}" VerticalAlignment="Center" Margin="10" MinWidth="240"/>
-                      <TextBlock Text="Session ID:" Width="200" />
+                      <TextBlock Text="Session ID:" Width="200" HorizontalAlignment="Left"/>
                       <TextBox Text="{Binding GarminSessionId, Mode=TwoWay}" VerticalAlignment="Center" Margin="10" MinWidth="240"/>
                     </StackPanel>
                   </StackPanel>
@@ -206,11 +211,7 @@
 
                 <WrapPanel Margin="50,10,10,10">
                   <StackPanel Orientation="Vertical">
-                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,20" MaxWidth="400">
-                      Signing in to Garmin Connect lets FitEdit at your request to update your activities, such as title and descriptions, upload new activities, and delete existing activities.
-                    </TextBlock>
                     <Button Command="{Binding HandleGarminLoginClicked}" Content="Sign in to Garmin" IsEnabled="{Binding FitEdit.IsAuthenticated}" IsVisible="{Binding !Garmin.IsSignedIn}"/>
-                    <ProgressBar Width="240" Minimum="0" Maximum="100" Value="{Binding Garmin.AuthenticateProgress}" ShowProgressText="true" IsVisible="{Binding !Garmin.IsSignedIn}"/>
                     <Button Command="{Binding HandleGarminLogoutClicked}" Content="Sign out from Garmin" IsVisible="{Binding Garmin.IsSignedIn}"/>
                   </StackPanel>
                 </WrapPanel>
