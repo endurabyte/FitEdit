@@ -371,7 +371,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     Message = "Signed out of Garmin";
   }
 
-  public async Task HandleTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/integration-signin-terms.html");
+  public async Task HandleTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/user-agent-terms.html");
   public async Task HandleGarminLoginTellMeMoreClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/garmin-signin.html");
 
   public virtual async Task HandleStravaLoginClicked() => await LoginWithStravaAsync();
