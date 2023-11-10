@@ -1,5 +1,4 @@
-﻿using System.Collections.Specialized;
-using System.Text;
+﻿using System.Text;
 using Avalonia.Threading;
 using Dauer.Data;
 using Dauer.Model;
@@ -296,7 +295,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     return await db_.GetAuthorizationAsync("Dauer.Api");
   }
 
-  public async Task Sync() => await SyncRecent();
+  public async Task Sync() => await SyncRecent(userRequested: true);
 
   public async Task<bool> IsAuthenticatedAsync(CancellationToken ct = default)
   {
@@ -476,7 +475,9 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   /// Query for activity changes we missed while offline: adds, updates, and deletes.
   /// Sync up to 1 year
   /// </summary>
-  private async Task SyncRecent()
+  private async Task SyncRecent() => await SyncRecent(userRequested: false).AnyContext();
+
+  private async Task SyncRecent(bool userRequested)
   {
     if (!db_.Ready) { return; }
 
@@ -493,14 +494,19 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .Cast<object>()
         .ToList();
 
-      await SyncAddsAndUpdates(LastSync);
+      // Sync a bit more into the past than LastSync.
+      TimeSpan duration = TimeSpan.FromDays(7);
+      DateTime lastSync = LastSync <= DateTime.MinValue + duration 
+        ? LastSync 
+        : LastSync - duration;
+      await SyncAddsAndUpdates(lastSync, userRequested);
       await SyncDeletes(before, after, ids);
       LastSync = DateTime.UtcNow;
 
     }, nameof(SyncRecent));
   }
 
-  private async Task SyncAddsAndUpdates(DateTime lastSync)
+  private async Task SyncAddsAndUpdates(DateTime lastSync, bool userRequested)
   {
     long lastSyncUnixTimestamp = lastSync.GetUnixTimestamp();
 
@@ -511,7 +517,11 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
 
     var allActivities = new List<Activity>();
     var task = new UserTask { Name = "Syncing from Server..." };
-    tasks_.Tasks.Add(task);
+
+    if (userRequested)
+    {
+      tasks_.Add(task);
+    }
 
     while (true)
     {
@@ -546,10 +556,12 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     task.Status = i switch
     {
       0 => $"Already in sync!",
+      1 => $"Synced 1 activity",
       _ => $"Synced {i} activities",
     };
 
     task.IsComplete = true;
+
     if (i == 0)
     {
       task.IsCanceled = true; // Notification will auto-dismiss
