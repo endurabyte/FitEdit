@@ -26,6 +26,7 @@ public class DesignMainViewModel : MainViewModel
     new DesignLogViewModel(),
     new DesignSettingsViewModel(),
     new NullFitEditService(),
+    new DesignTaskViewModel(),
     isCompact: false
   )
   { 
@@ -43,13 +44,14 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public ISettingsViewModel Settings { get; }
   public IFitEditService FitEdit { get; set; }
 
+  [Reactive] public ViewModelBase TaskViewModel { get; set; }
+
   private string? AppTitle_ => $"FitEdit | Training Data Editor | Version {Version} {Titlebar.Instance.Message}";
   [Reactive] public string? AppTitle { get; set; }
 
   public string? Version { get; set; }
 
   [Reactive] public int SelectedTabIndex { get; set; }
-
   [Reactive] public bool IsCompact { get; set; }
 
   private readonly IWindowAdapter window_;
@@ -64,6 +66,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     ILogViewModel logVm,
     ISettingsViewModel settings,
     IFitEditService fitEdit,
+    TaskViewModel taskViewModel,
     bool isCompact
   )
   {
@@ -76,6 +79,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     LogVm = logVm;
     Settings = settings;
     FitEdit = fitEdit;
+    TaskViewModel = taskViewModel;
     IsCompact = isCompact;
 
     GetVersion();

@@ -49,8 +49,7 @@ public class DesignFileViewModel : FileViewModel
     new DesignLogViewModel(),
     new FileDeleteViewModel(new NullFileService(), new NullSupabaseAdapter(), new NullLogger<FileDeleteViewModel>()),
     new FileRemoteDeleteViewModel(new NullGarminConnectClient(), new NullStravaClient(), new NullSupabaseAdapter(), new NullLogger<FileRemoteDeleteViewModel>()),
-    new DragViewModel(),
-    new DesignTaskViewModel()
+    new DragViewModel()
   ) 
   {
     IsDragActive = false;
@@ -65,7 +64,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   [Reactive] public FileDeleteViewModel FileDeleteViewModel { get; set; }
   [Reactive] public FileRemoteDeleteViewModel FileRemoteDeleteViewModel { get; set; }
   [Reactive] public ViewModelBase DragViewModel { get; set; }
-  [Reactive] public ViewModelBase TaskViewModel { get; set; }
 
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
@@ -113,8 +111,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     ILogViewModel log,
     FileDeleteViewModel fileDeleteViewModel,
     FileRemoteDeleteViewModel fileRemoteDeleteViewModel,
-    DragViewModel dragViewModel,
-    TaskViewModel taskViewModel
+    DragViewModel dragViewModel
   )
   {
     tasks_ = tasks;
@@ -130,7 +127,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FileDeleteViewModel = fileDeleteViewModel;
     FileRemoteDeleteViewModel = fileRemoteDeleteViewModel;
     DragViewModel = dragViewModel;
-    TaskViewModel = taskViewModel;
 
     FileService.SubscribeAdds(SubscribeChanges);
 

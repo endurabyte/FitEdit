@@ -59,9 +59,4 @@
     <Compile Remove="Views\FakeMapView.axaml.cs" />
     <AvaloniaXaml Remove="Views\FakeMapView.axaml" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Controls\PieProgressIndicator.axaml.cs">
-      <DependentUpon>PieProgressIndicator.axaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

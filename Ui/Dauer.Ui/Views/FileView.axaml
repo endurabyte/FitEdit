@@ -231,7 +231,6 @@
           <Binding Path="FileDeleteViewModel.IsVisible"/>
           <Binding Path="FileRemoteDeleteViewModel.IsVisible"/>
           <Binding Path="DragViewModel.IsVisible"/>
-          <Binding Path="TaskViewModel.IsVisible"/>
         </MultiBinding>
       </ListBox.Effect>
 
@@ -299,7 +298,6 @@
       </ListBox.ItemTemplate>
     </ListBox>
 
-    <ContentControl Grid.Row="1" Content="{Binding TaskViewModel}" IsVisible="{Binding TaskViewModel.IsVisible}"/>
     <ContentControl Grid.Row="1" Content="{Binding FileDeleteViewModel}" IsVisible="{Binding FileDeleteViewModel.IsVisible}"/>
     <ContentControl Grid.Row="1" Content="{Binding FileRemoteDeleteViewModel}" IsVisible="{Binding FileRemoteDeleteViewModel.IsVisible}"/>
     <ContentControl Grid.Row="1" Content="{Binding DragViewModel}" IsVisible="{Binding DragViewModel.IsVisible}"/>
