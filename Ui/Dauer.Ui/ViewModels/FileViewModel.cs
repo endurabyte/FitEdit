@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Dauer.Adapters.GarminConnect;
 using Dauer.Adapters.Strava;
@@ -15,6 +14,8 @@ using Dauer.Services;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Model.Supabase;
+using LibMtpSharp;
+using MediaDevices;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -134,6 +135,101 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     foreach (var file in fileService.Files)
     {
       SubscribeChanges(file);
+    }
+
+    _ = Task.Run(() =>
+    {
+      if (OperatingSystem.IsWindows())
+      {
+        ReadMtpDevicesWindows();
+      }
+      else
+      {
+        ReadMtpDevices();
+      }
+    });
+  }
+
+  // On Windows, WDM has a permanent connection to MTP devices so we can't connect.
+  // We use a library which uses WDM to interact with MTP devices
+  private static void ReadMtpDevicesWindows()
+  {
+    if (!OperatingSystem.IsWindows() || !OperatingSystem.IsWindowsVersionAtLeast(7)) { return; }
+
+#pragma warning disable CA1416 // Validate platform compatibility. We already validated.
+    List<MediaDevice> devices = MediaDevice.GetDevices().Where(d => d.Manufacturer.ToLower() == "garmin").ToList();
+
+    string targetDir = $"C:/Users/doug/AppData/Local/FitEdit-Data/MTP";
+    Directory.CreateDirectory(targetDir);
+
+    foreach (MediaDevice device in devices)
+    {
+      device.Connect();
+      if (!device.IsConnected) { continue; }
+
+      MediaDirectoryInfo activityDir = device.GetDirectoryInfo("\\Internal storage/GARMIN/Activity");
+      IEnumerable<MediaFileInfo> fitFiles = activityDir.EnumerateFiles("*.fit");
+
+      //string[] files = device.GetFiles(@"\\Internal storage/GARMIN/Activity");
+      //foreach (string file in files)
+      //{
+      //  using var fs = new FileStream($"{targetDir}/{Path.GetFileName(file)}", FileMode.Create);
+      //  device.DownloadFile(file, fs);
+      //}
+
+      IEnumerable<MediaFileInfo> files = fitFiles.Where(f => f.LastWriteTime > DateTime.UtcNow - TimeSpan.FromDays(7));
+      foreach (var file in files)
+      {
+        using var fs = new FileStream($"{targetDir}/{file.Name}", FileMode.Create);
+        device.DownloadFile(file.FullName, fs);
+      }
+    }
+
+#pragma warning restore CA1416 
+  }
+
+  private static void ReadMtpDevices()
+  {
+    const ushort GARMIN = 0x091e;
+    var deviceList = new RawDeviceList();
+    var garminDevices = deviceList.Where(d => d.DeviceEntry.VendorId == GARMIN).ToList();
+    foreach (LibMtpSharp.Structs.RawDevice rawDevice in garminDevices)
+    {
+      LibMtpSharp.Structs.RawDevice rd = rawDevice;
+      using var device = new OpenedMtpDevice(ref rd, false);
+
+      if (device == null) { continue; }
+
+      Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
+      Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
+      IEnumerable<LibMtpSharp.Structs.DeviceStorageStruct> storages = device.GetStorages();
+
+      foreach (var storage in storages)
+      {
+        IEnumerable<LibMtpSharp.Structs.FolderStruct> folders = device.GetFolderList(storage.Id);
+
+        foreach (var folder in folders)
+        {
+          IEnumerable<LibMtpSharp.Structs.FileStruct> files = device.GetFolderContent(folder.StorageId, folder.FolderId);
+
+          foreach (LibMtpSharp.Structs.FileStruct file in files)
+          {
+            Console.WriteLine($"Found file {file.FileName}");
+
+            device.GetFile(file.ItemId, "C:/Users/doug/AppData/Local/FitEdit-Data/MTP", progress =>
+            {
+              Console.WriteLine($"{file.FileName} progress: {progress}");
+              return true;
+            });
+          }
+        }
+      }
+      var list = device.GetFiles(progress =>
+      {
+        Console.WriteLine($"List files progress: {progress}");
+        return true;
+      });
+
     }
   }
 
