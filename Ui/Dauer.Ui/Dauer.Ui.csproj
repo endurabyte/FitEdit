@@ -34,7 +34,8 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
     <PackageReference Include="HarfBuzzSharp" Version="2.8.2.5" />
-    <PackageReference Include="LibMtpSharp" Version="0.1.3" />
+    <PackageReference Include="LibMtpSharp" Version="0.1.5" />
+    <PackageReference Include="LibMtpSharp.Native.MacOS.WithDependencies" Version="1.1.21-beta" />
     <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="MediaDevices" Version="1.10.0" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />

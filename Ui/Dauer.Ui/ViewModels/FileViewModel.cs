@@ -196,40 +196,47 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     foreach (LibMtpSharp.Structs.RawDevice rawDevice in garminDevices)
     {
       LibMtpSharp.Structs.RawDevice rd = rawDevice;
-      using var device = new OpenedMtpDevice(ref rd, false);
+      using var device = new OpenedMtpDevice(ref rd, cached: true); // TODO catch OpenedDeviceException
 
       if (device == null) { continue; }
 
       Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
       Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
+      
       IEnumerable<LibMtpSharp.Structs.DeviceStorageStruct> storages = device.GetStorages();
 
       foreach (var storage in storages)
       {
         IEnumerable<LibMtpSharp.Structs.FolderStruct> folders = device.GetFolderList(storage.Id);
+        var activityFolder = folders.FirstOrDefault(folder => folder.Name == "Activity");
 
-        foreach (var folder in folders)
-        {
-          IEnumerable<LibMtpSharp.Structs.FileStruct> files = device.GetFolderContent(folder.StorageId, folder.FolderId);
+        if (activityFolder.FolderId <= 0) { continue; }
 
-          foreach (LibMtpSharp.Structs.FileStruct file in files)
+        List<LibMtpSharp.Structs.FileStruct> files = device
+          .GetFiles(progress =>
           {
-            Console.WriteLine($"Found file {file.FileName}");
+            Log.Info($"List files progress: {progress * 100:##.#}%");
+            return true;
+          })
+          .Where(file => file.ParentId == activityFolder.FolderId)
+          .Where(file => file.FileName.EndsWith(".fit"))
+          .Where(file => DateTime.UnixEpoch + TimeSpan.FromSeconds(file.ModificationDate) > DateTime.UtcNow - TimeSpan.FromDays(7))
+          .ToList();
+      
+	      string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "MTP");
+        Directory.CreateDirectory(dir);
 
-            device.GetFile(file.ItemId, "C:/Users/doug/AppData/Local/FitEdit-Data/MTP", progress =>
-            {
-              Console.WriteLine($"{file.FileName} progress: {progress}");
-              return true;
-            });
-          }
+        foreach (LibMtpSharp.Structs.FileStruct file in files)
+        {
+          Console.WriteLine($"Found file {file.FileName}");
+
+          device.GetFile(file.ItemId, $"{dir}/{file.FileName}", progress =>
+          {
+            Log.Info($"Download progress {file.FileName} {progress * 100:##.#}%");
+            return false;
+          });
         }
       }
-      var list = device.GetFiles(progress =>
-      {
-        Console.WriteLine($"List files progress: {progress}");
-        return true;
-      });
-
     }
   }
 
