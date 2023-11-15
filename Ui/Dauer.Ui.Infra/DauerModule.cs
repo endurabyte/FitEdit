@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Core;
 using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Adapters.GarminConnect;
+using Dauer.Adapters.Mtp;
 using Dauer.Adapters.Sqlite;
 using Dauer.Adapters.Strava;
 using Dauer.Data;
@@ -10,6 +11,7 @@ using Dauer.Model;
 using Dauer.Model.Clients;
 using Dauer.Model.Data;
 using Dauer.Model.GarminConnect;
+using Dauer.Model.Mtp;
 using Dauer.Model.Storage;
 using Dauer.Model.Strava;
 using Dauer.Services;
@@ -109,6 +111,7 @@ public class DauerModule : Autofac.Module
       .SingleInstance();
     builder.RegisterType<NullCryptoService>()
       .Named<ICryptoService>("NullCrypto");
+    builder.RegisterType<MtpAdapter>().As<IMtpAdapter>().SingleInstance();
     builder.RegisterType<TaskService>().As<ITaskService>().SingleInstance();
     builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>().SingleInstance();

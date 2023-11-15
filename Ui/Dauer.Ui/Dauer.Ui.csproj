@@ -34,10 +34,7 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
     <PackageReference Include="HarfBuzzSharp" Version="2.8.2.5" />
-    <PackageReference Include="LibMtpSharp" Version="0.1.5" />
-    <PackageReference Include="nmtp" Version="0.3.7" />
     <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
-    <PackageReference Include="MediaDevices" Version="1.10.0" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
     <PackageReference Include="SkiaSharp" Version="2.88.6" />

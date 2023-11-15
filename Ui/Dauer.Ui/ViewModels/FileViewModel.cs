@@ -14,11 +14,10 @@ using Dauer.Services;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Model.Supabase;
-using Nmtp;
-using MediaDevices;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using Dauer.Model.Mtp;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -47,6 +46,7 @@ public class DesignFileViewModel : FileViewModel
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
     new NullBrowser(),
+    new NullMtpAdapter(),
     new DesignLogViewModel(),
     new FileDeleteViewModel(new NullFileService(), new NullSupabaseAdapter(), new NullLogger<FileDeleteViewModel>()),
     new FileRemoteDeleteViewModel(new NullGarminConnectClient(), new NullStravaClient(), new NullSupabaseAdapter(), new NullLogger<FileRemoteDeleteViewModel>()),
@@ -99,6 +99,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private readonly ISupabaseAdapter supa_;
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
+  private readonly IMtpAdapter mtp_;
 
   public FileViewModel(
     ITaskService tasks,
@@ -109,6 +110,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     IStorageAdapter storage,
     ISupabaseAdapter supa,
     IBrowser browser,
+    IMtpAdapter mtp,
     ILogViewModel log,
     FileDeleteViewModel fileDeleteViewModel,
     FileRemoteDeleteViewModel fileRemoteDeleteViewModel,
@@ -124,7 +126,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     storage_ = storage;
     log_ = log;
     browser_ = browser;
-
+    mtp_ = mtp;
     FileDeleteViewModel = fileDeleteViewModel;
     FileRemoteDeleteViewModel = fileRemoteDeleteViewModel;
     DragViewModel = dragViewModel;
@@ -137,107 +139,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       SubscribeChanges(file);
     }
 
-    _ = Task.Run(() =>
-    {
-      if (OperatingSystem.IsWindows())
-      {
-        ReadMtpDevicesWindows();
-      }
-      else
-      {
-        ReadMtpDevices();
-      }
-    });
-  }
-
-  // On Windows, WDM has a permanent connection to MTP devices so we can't connect.
-  // We use a library which uses WDM to interact with MTP devices
-  private static void ReadMtpDevicesWindows()
-  {
-    if (!OperatingSystem.IsWindows() || !OperatingSystem.IsWindowsVersionAtLeast(7)) { return; }
-
-#pragma warning disable CA1416 // Validate platform compatibility. We already validated.
-    List<MediaDevice> devices = MediaDevice.GetDevices().Where(d => d.Manufacturer.ToLower() == "garmin").ToList();
-
-    string targetDir = $"C:/Users/doug/AppData/Local/FitEdit-Data/MTP";
-    Directory.CreateDirectory(targetDir);
-
-    foreach (MediaDevice device in devices)
-    {
-      device.Connect();
-      if (!device.IsConnected) { continue; }
-
-      MediaDirectoryInfo activityDir = device.GetDirectoryInfo("\\Internal storage/GARMIN/Activity");
-      IEnumerable<MediaFileInfo> fitFiles = activityDir.EnumerateFiles("*.fit");
-
-      //string[] files = device.GetFiles(@"\\Internal storage/GARMIN/Activity");
-      //foreach (string file in files)
-      //{
-      //  using var fs = new FileStream($"{targetDir}/{Path.GetFileName(file)}", FileMode.Create);
-      //  device.DownloadFile(file, fs);
-      //}
-
-      IEnumerable<MediaFileInfo> files = fitFiles.Where(f => f.LastWriteTime > DateTime.UtcNow - TimeSpan.FromDays(7));
-      foreach (var file in files)
-      {
-        using var fs = new FileStream($"{targetDir}/{file.Name}", FileMode.Create);
-        device.DownloadFile(file.FullName, fs);
-      }
-    }
-
-#pragma warning restore CA1416 
-  }
-
-  private static void ReadMtpDevices()
-  {
-    const ushort GARMIN = 0x091e;
-    var deviceList = new RawDeviceList();
-    var garminDevices = deviceList.Where(d => d.DeviceEntry.VendorId == GARMIN).ToList();
-    foreach (RawDevice rawDevice in garminDevices)
-    {
-      RawDevice rd = rawDevice;
-      using var device = new Device(ref rd, cached: true); // TODO catch OpenedDeviceException
-
-      if (device == null) { continue; }
-
-      Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
-      Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
-      
-      IEnumerable<Nmtp.DeviceStorage> storages = device.GetStorages();
-
-      foreach (var storage in storages)
-      {
-        IEnumerable<Nmtp.Folder> folders = device.GetFolderList(storage.Id);
-        var activityFolder = folders.FirstOrDefault(folder => folder.Name == "Activity");
-
-        if (activityFolder.FolderId <= 0) { continue; }
-
-        List<Nmtp.File> files = device
-          .GetFiles(progress =>
-          {
-            Log.Info($"List files progress: {progress * 100:##.#}%");
-            return true;
-          })
-          .Where(file => file.ParentId == activityFolder.FolderId)
-          .Where(file => file.FileName.EndsWith(".fit"))
-          .Where(file => DateTime.UnixEpoch + TimeSpan.FromSeconds(file.ModificationDate) > DateTime.UtcNow - TimeSpan.FromDays(7))
-          .ToList();
-      
-	      string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "MTP");
-        Directory.CreateDirectory(dir);
-
-        foreach (Nmtp.File file in files)
-        {
-          Console.WriteLine($"Found file {file.FileName}");
-
-          device.GetFile(file.ItemId, $"{dir}/{file.FileName}", progress =>
-          {
-            Log.Info($"Download progress {file.FileName} {progress * 100:##.#}%");
-            return false;
-          });
-        }
-      }
-    }
   }
 
   private void SubscribeChanges(UiFile file)
