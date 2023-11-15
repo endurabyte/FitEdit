@@ -193,26 +193,26 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     const ushort GARMIN = 0x091e;
     var deviceList = new RawDeviceList();
     var garminDevices = deviceList.Where(d => d.DeviceEntry.VendorId == GARMIN).ToList();
-    foreach (Nmtp.Structs.RawDevice rawDevice in garminDevices)
+    foreach (RawDevice rawDevice in garminDevices)
     {
-      Nmtp.Structs.RawDevice rd = rawDevice;
-      using var device = new OpenedMtpDevice(ref rd, cached: true); // TODO catch OpenedDeviceException
+      RawDevice rd = rawDevice;
+      using var device = new Device(ref rd, cached: true); // TODO catch OpenedDeviceException
 
       if (device == null) { continue; }
 
       Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
       Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
       
-      IEnumerable<Nmtp.Structs.DeviceStorageStruct> storages = device.GetStorages();
+      IEnumerable<Nmtp.DeviceStorage> storages = device.GetStorages();
 
       foreach (var storage in storages)
       {
-        IEnumerable<Nmtp.Structs.FolderStruct> folders = device.GetFolderList(storage.Id);
+        IEnumerable<Nmtp.Folder> folders = device.GetFolderList(storage.Id);
         var activityFolder = folders.FirstOrDefault(folder => folder.Name == "Activity");
 
         if (activityFolder.FolderId <= 0) { continue; }
 
-        List<Nmtp.Structs.FileStruct> files = device
+        List<Nmtp.File> files = device
           .GetFiles(progress =>
           {
             Log.Info($"List files progress: {progress * 100:##.#}%");
@@ -226,7 +226,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 	      string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "MTP");
         Directory.CreateDirectory(dir);
 
-        foreach (Nmtp.Structs.FileStruct file in files)
+        foreach (Nmtp.File file in files)
         {
           Console.WriteLine($"Found file {file.FileName}");
 
