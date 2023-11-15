@@ -11,11 +11,11 @@ public class MtpAdapter : IMtpAdapter
   { 
     _ = Task.Run(() =>
     {
-      //if (OperatingSystem.IsWindows())
-      //{
-      //  ReadMtpDevicesWindows();
-      //}
-      //else
+      if (OperatingSystem.IsWindows())
+      {
+        ReadMtpDevicesWindows();
+      }
+      else
       {
         ReadMtpDevices();
       }
@@ -65,10 +65,9 @@ public class MtpAdapter : IMtpAdapter
 
   private static void ReadMtpDevices()
   {
-    //const ushort GARMIN = 0x091e;
+    const ushort GARMIN = 0x091e;
     var deviceList = new RawDeviceList();
-    //var garminDevices = deviceList.Where(d => d.DeviceEntry.VendorId == GARMIN).ToList();
-    var garminDevices = deviceList.ToList();
+    var garminDevices = deviceList.Where(d => d.DeviceEntry.VendorId == GARMIN).ToList();
     foreach (RawDevice rawDevice in garminDevices)
     {
       using var device = new Device();
