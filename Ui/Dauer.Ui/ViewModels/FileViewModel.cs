@@ -14,7 +14,7 @@ using Dauer.Services;
 using Dauer.Ui.Extensions;
 using Dauer.Ui.Infra;
 using Dauer.Ui.Model.Supabase;
-using LibMtpSharp;
+using Nmtp;
 using MediaDevices;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
@@ -193,9 +193,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     const ushort GARMIN = 0x091e;
     var deviceList = new RawDeviceList();
     var garminDevices = deviceList.Where(d => d.DeviceEntry.VendorId == GARMIN).ToList();
-    foreach (LibMtpSharp.Structs.RawDevice rawDevice in garminDevices)
+    foreach (Nmtp.Structs.RawDevice rawDevice in garminDevices)
     {
-      LibMtpSharp.Structs.RawDevice rd = rawDevice;
+      Nmtp.Structs.RawDevice rd = rawDevice;
       using var device = new OpenedMtpDevice(ref rd, cached: true); // TODO catch OpenedDeviceException
 
       if (device == null) { continue; }
@@ -203,16 +203,16 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
       Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
       
-      IEnumerable<LibMtpSharp.Structs.DeviceStorageStruct> storages = device.GetStorages();
+      IEnumerable<Nmtp.Structs.DeviceStorageStruct> storages = device.GetStorages();
 
       foreach (var storage in storages)
       {
-        IEnumerable<LibMtpSharp.Structs.FolderStruct> folders = device.GetFolderList(storage.Id);
+        IEnumerable<Nmtp.Structs.FolderStruct> folders = device.GetFolderList(storage.Id);
         var activityFolder = folders.FirstOrDefault(folder => folder.Name == "Activity");
 
         if (activityFolder.FolderId <= 0) { continue; }
 
-        List<LibMtpSharp.Structs.FileStruct> files = device
+        List<Nmtp.Structs.FileStruct> files = device
           .GetFiles(progress =>
           {
             Log.Info($"List files progress: {progress * 100:##.#}%");
@@ -226,7 +226,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 	      string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "MTP");
         Directory.CreateDirectory(dir);
 
-        foreach (LibMtpSharp.Structs.FileStruct file in files)
+        foreach (Nmtp.Structs.FileStruct file in files)
         {
           Console.WriteLine($"Found file {file.FileName}");
 
