@@ -1,5 +1,5 @@
-﻿using System.Reactive.Subjects;
-using Dauer.Model;
+﻿using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Services;
 using Dauer.Model.Storage;
 using Nmtp;
@@ -21,10 +21,8 @@ public class LibUsbMtpAdapter : IMtpAdapter
 
   private static List<Device> GetGarminDevices(RawDeviceList deviceList)
   {
-    const ushort GARMIN = 0x091e;
-
     return deviceList
-      .Where(d => d.DeviceEntry.VendorId == GARMIN)
+      .Where(d => UsbVendor.IsSupported(d.DeviceEntry.VendorId))
       .Select((RawDevice rd) =>
       {
         var device = new Device();
@@ -39,24 +37,53 @@ public class LibUsbMtpAdapter : IMtpAdapter
   {
     events_ = events;
 
-    events_.Subscribe<Usb.Events.UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
-    _ = Task.Run(Scan);
+    events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
+    Scan();
   }
 
-  private void HandleUsbDeviceAdded(Usb.Events.UsbDevice e)
+  private void HandleUsbDeviceAdded(UsbDevice e)
   {
     // Linux notifies of every usb device on app startup.
     // macOS only reports the vendor ID.
     // So we filter by vendor ID.
     if (!UsbVendor.IsSupported(e.VendorID)) { return; }
 
-    _ = Task.Run(Scan);
+    Scan();
   }
 
-  public void Scan()
+  private readonly ManualResetEvent scanning_ = new(false);
+  private readonly SemaphoreSlim scanSem_ = new(1, 1);
+
+  public void Scan() => 
+    _ = Task.Run(async () =>
+		   await scanSem_.RunAtomically(async () =>
+		     await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(LibUsbMtpAdapter)}.{nameof(PollForDevices)}"));
+
+  /// <summary>
+  /// Try a few times to connect. 
+  /// On macOS, the the MTP system is not yet ready when the USB system notifies us of a new device.  
+  /// </summary>
+  private async Task PollForDevices(TimeSpan timeout)
   {
-    using var deviceList = new RawDeviceList();
-    var devices = GetGarminDevices(deviceList);
+    var start = DateTime.UtcNow;
+
+    while (DateTime.UtcNow  - start < timeout)
+    {
+      using var deviceList = new RawDeviceList();
+      List<Device> devices = GetGarminDevices(deviceList);
+
+      if (devices.Any())
+      {
+        Scan(devices);
+        break;
+      }
+
+      await Task.Delay(1000);
+    }
+  }
+
+  public void Scan(List<Device> devices)
+  {
     foreach (Device device in devices)
     {
       Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
