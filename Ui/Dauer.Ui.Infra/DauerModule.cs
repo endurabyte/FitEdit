@@ -112,7 +112,9 @@ public class DauerModule : Autofac.Module
     builder.RegisterType<NullCryptoService>()
       .Named<ICryptoService>("NullCrypto");
 
-    builder.RegisterType(OperatingSystem.IsWindows() ? typeof(WdmMtpAdapter) : typeof(LibUsbMtpAdapter))
+    builder.RegisterType(OperatingSystem.IsWindows() && OperatingSystem.IsWindowsVersionAtLeast(7)
+        ? typeof(WmdmMtpAdapter) 
+        : typeof(LibUsbMtpAdapter))
       .As<IMtpAdapter>().SingleInstance();
     builder.RegisterType<TaskService>().As<ITaskService>().SingleInstance();
     builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();
