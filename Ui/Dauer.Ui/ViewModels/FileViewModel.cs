@@ -17,7 +17,7 @@ using Dauer.Ui.Model.Supabase;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Dauer.Model.Mtp;
+using Dauer.Model.Services;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -38,6 +38,7 @@ public interface IFileViewModel
 public class DesignFileViewModel : FileViewModel
 {
   public DesignFileViewModel() : base(
+    new EventService(),
     new NullTaskService(),
     new NullFileService(),
     new NullFitEditService(),
@@ -45,8 +46,9 @@ public class DesignFileViewModel : FileViewModel
     new NullStravaClient(),
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
-    new NullBrowser(),
     new NullMtpAdapter(),
+    new NullUsbEventAdapter(),
+    new NullBrowser(),
     new DesignLogViewModel(),
     new FileDeleteViewModel(new NullFileService(), new NullSupabaseAdapter(), new NullLogger<FileDeleteViewModel>()),
     new FileRemoteDeleteViewModel(new NullGarminConnectClient(), new NullStravaClient(), new NullSupabaseAdapter(), new NullLogger<FileRemoteDeleteViewModel>()),
@@ -95,13 +97,16 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IStravaClient Strava { get; }
 
   private readonly ITaskService tasks_;
+  private readonly IEventService events_;
   private readonly IStorageAdapter storage_;
   private readonly ISupabaseAdapter supa_;
+  private readonly IMtpAdapter mtp_;
+  private readonly IUsbEventAdapter usb_;
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
-  private readonly IMtpAdapter mtp_;
 
   public FileViewModel(
+    IEventService events,
     ITaskService tasks,
     IFileService fileService,
     IFitEditService fitEdit,
@@ -109,8 +114,9 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     IStravaClient strava,
     IStorageAdapter storage,
     ISupabaseAdapter supa,
-    IBrowser browser,
     IMtpAdapter mtp,
+    IUsbEventAdapter usb,
+    IBrowser browser,
     ILogViewModel log,
     FileDeleteViewModel fileDeleteViewModel,
     FileRemoteDeleteViewModel fileRemoteDeleteViewModel,
@@ -123,24 +129,17 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     Garmin = garmin;
     Strava = strava;
     supa_ = supa;
+    mtp_ = mtp;
+    usb_ = usb;
     storage_ = storage;
     log_ = log;
+    events_ = events;
     browser_ = browser;
-    mtp_ = mtp;
     FileDeleteViewModel = fileDeleteViewModel;
     FileRemoteDeleteViewModel = fileRemoteDeleteViewModel;
     DragViewModel = dragViewModel;
 
     FileService.SubscribeAdds(SubscribeChanges);
-    mtp.ActivityFound.Subscribe(act =>
-    {
-      var ut = new UserTask
-      {
-        Name = $"Found file {act.Name}",
-      };
-      tasks_.Add(ut);
-      ut.Cancel(); // Auto-dismiss
-    });
 
     if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
@@ -148,6 +147,18 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       SubscribeChanges(file);
     }
 
+    events_.Subscribe<string>(EventKey.MtpDeviceAdded, deviceName => NotifyUser($"Found device {deviceName}"));
+    events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity => NotifyUser($"Found activity {activity.Name}"));
+  }
+
+  private void NotifyUser(string message)
+  {
+    var ut = new UserTask
+    {
+      Name = message,
+    };
+    tasks_.Add(ut);
+    ut.Cancel(); // Auto-dismiss
   }
 
   private void SubscribeChanges(UiFile file)

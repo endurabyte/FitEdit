@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Subjects;
 using Dauer.Model;
-using Dauer.Model.Mtp;
+using Dauer.Model.Services;
+using Dauer.Model.Storage;
 using MediaDevices;
 using Usb.Events;
 
@@ -17,19 +18,23 @@ public class WmdmMtpAdapter : IMtpAdapter
 {
 #pragma warning disable CA1416 // Validate platform compatibility. We already validated at injection.
 
-  public IObservable<LocalActivity> ActivityFound => activityFound_;
-  private readonly ISubject<LocalActivity> activityFound_ = new Subject<LocalActivity>();
-  private readonly IUsbEventAdapter usbEvents_;
+  private readonly IEventService events_;
 
   private static List<MediaDevice> GarminDevices_ => MediaDevice.GetDevices()
     .Where(d => d.Manufacturer.ToLower() == "garmin")
+    .Select(d => 
+    {
+      d.Connect(); 
+      return d; 
+    })
+    .Where(d => d.IsConnected)
     .ToList();
 
-  public WmdmMtpAdapter(IUsbEventAdapter usbEvents)
+  public WmdmMtpAdapter(IEventService events)
   {
-    usbEvents_ = usbEvents;
-    usbEvents_.UsbDeviceAdded.Subscribe(e => HandleUsbDeviceAdded((UsbDevice)e));
+    events_ = events;
 
+    events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
     _ = Task.Run(Scan);
   }
 
@@ -42,8 +47,9 @@ public class WmdmMtpAdapter : IMtpAdapter
   {
     foreach (MediaDevice device in GarminDevices_)
     {
-      device.Connect();
-      if (!device.IsConnected) { continue; }
+      Log.Info($"Found Garmin device {device.FriendlyName ?? "(unknown)"}");
+      Log.Info($"Found device serial # {device.SerialNumber ?? "unknown"}");
+      events_.Publish(EventKey.MtpDeviceAdded, device.FriendlyName);
 
       GetFiles(device);
     }
@@ -77,7 +83,7 @@ public class WmdmMtpAdapter : IMtpAdapter
           LastUpdated = DateTime.UtcNow,
         };
 
-        activityFound_.OnNext(act);
+        events_.Publish(EventKey.MtpActivityFound, act);
         return act;
       })
       .ToList();

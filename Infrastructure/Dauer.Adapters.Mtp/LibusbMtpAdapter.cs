@@ -1,6 +1,7 @@
 ﻿using System.Reactive.Subjects;
 using Dauer.Model;
-using Dauer.Model.Mtp;
+using Dauer.Model.Services;
+using Dauer.Model.Storage;
 using Nmtp;
 using Usb.Events;
 
@@ -16,9 +17,7 @@ namespace Dauer.Adapters.Mtp;
 /// </summary>
 public class LibUsbMtpAdapter : IMtpAdapter
 {
-  public IObservable<LocalActivity> ActivityFound => activityFound_;
-  private readonly ISubject<LocalActivity> activityFound_ = new Subject<LocalActivity>();
-  private readonly IUsbEventAdapter usbEvents_;
+  private readonly IEventService events_;
 
   private static List<Device> GarminDevices_
   {
@@ -41,11 +40,11 @@ public class LibUsbMtpAdapter : IMtpAdapter
     }
   }
 
-  public LibUsbMtpAdapter(IUsbEventAdapter usbEvents)
+  public LibUsbMtpAdapter(IEventService events)
   {
-    usbEvents_ = usbEvents;
-    usbEvents_.UsbDeviceAdded.Subscribe(e => HandleUsbDeviceAdded((UsbDevice)e));
+    events_ = events;
 
+    events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
     _ = Task.Run(Scan);
   }
 
@@ -60,6 +59,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
     {
       Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
       Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
+      events_.Publish(EventKey.MtpDeviceAdded, device.GetModelName());
 
       GetFiles(device);
     }
@@ -114,7 +114,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
             LastUpdated = DateTime.UtcNow,
           };
 
-          activityFound_.OnNext(act);
+          events_.Publish(EventKey.MtpActivityFound, act);
           return act;
         })
         .ToList();

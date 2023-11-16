@@ -146,7 +146,7 @@ public partial class StravaClient : ReactiveObject, IStravaClient
       if (resp.StatusCode == HttpStatusCode.TooManyRequests)
       {
         tooMany = true;
-        task.Cancel();
+        task.Cancel(); // Auto-dismiss
         task.Status = "Strava says we've made too many requests. Try again later.";
         return;
       }
