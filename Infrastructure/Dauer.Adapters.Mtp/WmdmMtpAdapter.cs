@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Dauer.Model;
+using Dauer.Model.Extensions;
 using Dauer.Model.Services;
 using Dauer.Model.Storage;
 using MediaDevices;
@@ -18,16 +19,7 @@ public class WmdmMtpAdapter : IMtpAdapter
 #pragma warning disable CA1416 // Validate platform compatibility. We already validated at injection.
 
   private readonly IEventService events_;
-
-  private static List<MediaDevice> GarminDevices_ => MediaDevice.GetDevices()
-    .Where(d => d.Manufacturer.ToLower() == "garmin")
-    .Select(d =>
-    {
-      d.Connect();
-      return d;
-    })
-    .Where(d => d.IsConnected)
-    .ToList();
+  private readonly SemaphoreSlim scanSem_ = new(1, 1);
 
   public WmdmMtpAdapter(IEventService events)
   {
@@ -37,6 +29,30 @@ public class WmdmMtpAdapter : IMtpAdapter
     _ = Task.Run(Scan);
   }
 
+  public void Scan() => 
+    _ = Task.Run(async () =>
+		   await scanSem_.RunAtomically(async () =>
+		     await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(WmdmMtpAdapter)}.{nameof(PollForDevices)}"));
+
+  private async Task PollForDevices(TimeSpan timeout)
+  {
+    await Fauxlly.RepeatAsync(() =>
+    {
+      List<MediaDevice> devices = GetSupportedDevices();
+
+      if (!devices.Any())
+      {
+        return false;
+      }
+
+      foreach (MediaDevice device in devices)
+      {
+        HandleMtpDeviceAdded(device);
+      }
+      return true;
+    }, timeout);
+  }
+
   private void HandleUsbDeviceAdded(Usb.Events.UsbDevice e)
   {
     if (!UsbVendor.IsSupported(e.VendorID)) { return; }
@@ -44,17 +60,24 @@ public class WmdmMtpAdapter : IMtpAdapter
     _ = Task.Run(Scan);
   }
 
-  public void Scan()
+  private void HandleMtpDeviceAdded(MediaDevice device)
   {
-    foreach (MediaDevice device in GarminDevices_)
-    {
-      Log.Info($"Found Garmin device {device.FriendlyName ?? "(unknown)"}");
-      Log.Info($"Found device serial # {device.SerialNumber ?? "unknown"}");
-      events_.Publish(EventKey.MtpDeviceAdded, device.FriendlyName);
+    Log.Info($"Found MTP device {device.FriendlyName ?? "(unknown)"}");
+    Log.Info($"Found device serial # {device.SerialNumber ?? "unknown"}");
+    events_.Publish(EventKey.MtpDeviceAdded, device.FriendlyName);
 
-      GetFiles(device);
-    }
+    GetFiles(device);
   }
+
+  private static List<MediaDevice> GetSupportedDevices() => MediaDevice.GetDevices()
+    .Where(d => d.Manufacturer.ToLower() == "garmin")
+    .Select(d =>
+    {
+      d.Connect();
+      return d;
+    })
+    .Where(d => d.IsConnected)
+    .ToList();
 
   private void GetFiles(MediaDevice device)
   {

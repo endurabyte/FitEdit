@@ -18,20 +18,7 @@ namespace Dauer.Adapters.Mtp;
 public class LibUsbMtpAdapter : IMtpAdapter
 {
   private readonly IEventService events_;
-
-  private static List<Device> GetGarminDevices(RawDeviceList deviceList)
-  {
-    return deviceList
-      .Where(d => UsbVendor.IsSupported(d.DeviceEntry.VendorId))
-      .Select((RawDevice rd) =>
-      {
-        var device = new Device();
-        return (device, isOpen: device.TryOpen(ref rd, cached: true));
-      })
-      .Where(pair => pair.isOpen)
-      .Select(pair => pair.device)
-      .ToList();
-  }
+  private readonly SemaphoreSlim scanSem_ = new(1, 1);
 
   public LibUsbMtpAdapter(IEventService events)
   {
@@ -40,19 +27,6 @@ public class LibUsbMtpAdapter : IMtpAdapter
     events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
     Scan();
   }
-
-  private void HandleUsbDeviceAdded(UsbDevice e)
-  {
-    // Linux notifies of every usb device on app startup.
-    // macOS only reports the vendor ID.
-    // So we filter by vendor ID.
-    if (!UsbVendor.IsSupported(e.VendorID)) { return; }
-
-    Scan();
-  }
-
-  private readonly ManualResetEvent scanning_ = new(false);
-  private readonly SemaphoreSlim scanSem_ = new(1, 1);
 
   public void Scan() => 
     _ = Task.Run(async () =>
@@ -65,34 +39,56 @@ public class LibUsbMtpAdapter : IMtpAdapter
   /// </summary>
   private async Task PollForDevices(TimeSpan timeout)
   {
-    var start = DateTime.UtcNow;
-
-    while (DateTime.UtcNow  - start < timeout)
+    await Fauxlly.RepeatAsync(() =>
     {
       using var deviceList = new RawDeviceList();
-      List<Device> devices = GetGarminDevices(deviceList);
+      List<Device> devices = GetSupportedDevices(deviceList);
 
-      if (devices.Any())
+      if (!devices.Any())
       {
-        HandleDeviceAdded(devices);
-        break;
+        return false;
       }
 
-      await Task.Delay(1000);
-    }
+      foreach (Device device in devices)
+      {
+        HandleMtpDeviceAdded(device);
+      }
+      return true;
+    }, timeout);
   }
 
-  private void HandleDeviceAdded(List<Device> devices)
+  private void HandleUsbDeviceAdded(UsbDevice e)
   {
-    foreach (Device device in devices)
-    {
-      Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
-      Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
-      events_.Publish(EventKey.MtpDeviceAdded, device.GetModelName());
+    // Linux notifies of every usb device on app startup.
+    // macOS only reports the vendor ID.
+    // So we filter by vendor ID.
+    if (!UsbVendor.IsSupported(e.VendorID)) { return; }
 
-      GetFiles(device);
-      device.Dispose();
-    }
+    Scan();
+  }
+
+  private void HandleMtpDeviceAdded(Device device)
+  {
+    Log.Info($"Found MTP device {device.GetModelName() ?? "(unknown)"}");
+    Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
+    events_.Publish(EventKey.MtpDeviceAdded, device.GetModelName());
+
+    GetFiles(device);
+    device.Dispose();
+  }
+
+  private static List<Device> GetSupportedDevices(RawDeviceList deviceList)
+  {
+    return deviceList
+      .Where(d => UsbVendor.IsSupported(d.DeviceEntry.VendorId))
+      .Select((RawDevice rd) =>
+      {
+        var device = new Device();
+        return (device, isOpen: device.TryOpen(ref rd, cached: true));
+      })
+      .Where(pair => pair.isOpen)
+      .Select(pair => pair.device)
+      .ToList();
   }
 
   private void GetFiles(Device device)
