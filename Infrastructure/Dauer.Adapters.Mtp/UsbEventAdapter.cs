@@ -22,5 +22,5 @@ public class UsbEventAdapter : IUsbEventAdapter
     watcher_.Dispose();
   }
 
-  private void HandleUsbDeviceAdded(object? sender, UsbDevice e) => events_.Publish(EventKey.UsbDeviceAdded, e);
+  private void HandleUsbDeviceAdded(object? sender, Usb.Events.UsbDevice e) => events_.Publish(EventKey.UsbDeviceAdded, e);
 }

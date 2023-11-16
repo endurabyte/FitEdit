@@ -1,9 +1,8 @@
-﻿using System.Reactive.Subjects;
+﻿using System.Data;
 using Dauer.Model;
 using Dauer.Model.Services;
 using Dauer.Model.Storage;
 using MediaDevices;
-using Usb.Events;
 
 namespace Dauer.Adapters.Mtp;
 
@@ -22,10 +21,10 @@ public class WmdmMtpAdapter : IMtpAdapter
 
   private static List<MediaDevice> GarminDevices_ => MediaDevice.GetDevices()
     .Where(d => d.Manufacturer.ToLower() == "garmin")
-    .Select(d => 
+    .Select(d =>
     {
-      d.Connect(); 
-      return d; 
+      d.Connect();
+      return d;
     })
     .Where(d => d.IsConnected)
     .ToList();
@@ -34,16 +33,14 @@ public class WmdmMtpAdapter : IMtpAdapter
   {
     events_ = events;
 
-    events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
+    events_.Subscribe<Usb.Events.UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
     _ = Task.Run(Scan);
   }
 
-  private void HandleUsbDeviceAdded(UsbDevice e)
+  private void HandleUsbDeviceAdded(Usb.Events.UsbDevice e)
   {
-    if (!e.VendorID.ToLower().Contains("091e"))
-    {
-      return;
-    }
+    if (!UsbVendor.IsSupported(e.VendorID)) { return; }
+
     _ = Task.Run(Scan);
   }
 

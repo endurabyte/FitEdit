@@ -39,17 +39,17 @@ public class LibUsbMtpAdapter : IMtpAdapter
   {
     events_ = events;
 
-    events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
+    events_.Subscribe<Usb.Events.UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
     _ = Task.Run(Scan);
   }
 
-  private void HandleUsbDeviceAdded(UsbDevice e)
+  private void HandleUsbDeviceAdded(Usb.Events.UsbDevice e)
   {
-    // At app startup on Linux we get notified of every usb device
-    if (!e.VendorID.ToLower().Contains("091e"))
-    {
-      return;
-    }
+    // Linux notifies of every usb device on app startup.
+    // macOS only reports the vendor ID.
+    // So we filter by vendor ID.
+    if (!UsbVendor.IsSupported(e.VendorID)) { return; }
+
     _ = Task.Run(Scan);
   }
 
