@@ -19,25 +19,20 @@ public class LibUsbMtpAdapter : IMtpAdapter
 {
   private readonly IEventService events_;
 
-  private static List<Device> GarminDevices_
+  private static List<Device> GetGarminDevices(RawDeviceList deviceList)
   {
-    get
-    {
-      const ushort GARMIN = 0x091e;
+    const ushort GARMIN = 0x091e;
 
-      var deviceList = new RawDeviceList();
-
-      return deviceList
-        .Where(d => d.DeviceEntry.VendorId == GARMIN)
-        .Select((RawDevice rd) =>
-        {
-          using var device = new Device();
-          return (device, isOpen: device.TryOpen(ref rd, cached: true));
-        })
-        .Where(pair => pair.isOpen)
-        .Select(pair => pair.device)
-        .ToList();
-    }
+    return deviceList
+      .Where(d => d.DeviceEntry.VendorId == GARMIN)
+      .Select((RawDevice rd) =>
+      {
+        var device = new Device();
+        return (device, isOpen: device.TryOpen(ref rd, cached: true));
+      })
+      .Where(pair => pair.isOpen)
+      .Select(pair => pair.device)
+      .ToList();
   }
 
   public LibUsbMtpAdapter(IEventService events)
@@ -50,18 +45,25 @@ public class LibUsbMtpAdapter : IMtpAdapter
 
   private void HandleUsbDeviceAdded(UsbDevice e)
   {
+    if (!e.VendorDescription.ToLower().Contains("garmin"))
+    {
+      return;
+    }
     _ = Task.Run(Scan);
   }
 
   public void Scan()
   {
-    foreach (Device device in GarminDevices_)
+    using var deviceList = new RawDeviceList();
+    var devices = GetGarminDevices(deviceList);
+    foreach (Device device in devices)
     {
       Log.Info($"Found Garmin device {device.GetModelName() ?? "(unknown)"}");
       Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
       events_.Publish(EventKey.MtpDeviceAdded, device.GetModelName());
 
       GetFiles(device);
+      device.Dispose();
     }
   }
 

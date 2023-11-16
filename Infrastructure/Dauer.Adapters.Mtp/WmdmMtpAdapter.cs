@@ -40,6 +40,10 @@ public class WmdmMtpAdapter : IMtpAdapter
 
   private void HandleUsbDeviceAdded(UsbDevice e)
   {
+    if (!e.VendorDescription.ToLower().Contains("garmin"))
+    {
+      return;
+    }
     _ = Task.Run(Scan);
   }
 
