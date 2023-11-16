@@ -49,7 +49,7 @@ public class WmdmMtpAdapter : IMtpAdapter
     }
   }
 
-  private static void GetFiles(MediaDevice device)
+  private void GetFiles(MediaDevice device)
   {
     MediaDirectoryInfo activityDir = device.GetDirectoryInfo("\\Internal storage/GARMIN/Activity");
     IEnumerable<MediaFileInfo> fitFiles = activityDir.EnumerateFiles("*.fit");
@@ -58,7 +58,31 @@ public class WmdmMtpAdapter : IMtpAdapter
       .Where(f => f.LastWriteTime > DateTime.UtcNow - TimeSpan.FromDays(7))
       .ToList();
 
-    foreach (var file in files)
+    List<LocalActivity> activities = files
+      .Select((MediaFileInfo file) =>
+      {
+        using var ms = new MemoryStream();
+        device.DownloadFile(file.FullName, ms);
+
+        return (file, bytes: ms.ToArray());
+      })
+      .Select(tup =>
+      {
+        var act = new LocalActivity
+        {
+          Id = $"{Guid.NewGuid()}",
+          File = new FileReference(tup.file.Name, tup.bytes),
+          Name = tup.file.Name,
+          Source = ActivitySource.Device,
+          LastUpdated = DateTime.UtcNow,
+        };
+
+        activityFound_.OnNext(act);
+        return act;
+      })
+      .ToList();
+
+    foreach (MediaFileInfo file in files)
     {
       using var fs = new MemoryStream();
       device.DownloadFile(file.FullName, fs);

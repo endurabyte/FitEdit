@@ -1,4 +1,5 @@
-﻿using Dauer.Model;
+﻿using System.Reactive.Subjects;
+using Dauer.Model;
 using Dauer.Model.Mtp;
 using Nmtp;
 using Usb.Events;
@@ -15,6 +16,8 @@ namespace Dauer.Adapters.Mtp;
 /// </summary>
 public class LibUsbMtpAdapter : IMtpAdapter
 {
+  public IObservable<LocalActivity> ActivityFound => activityFound_;
+  private readonly ISubject<LocalActivity> activityFound_ = new Subject<LocalActivity>();
   private readonly IUsbEventAdapter usbEvents_;
 
   private static List<Device> GarminDevices_
@@ -62,7 +65,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
     }
   }
 
-  private static void GetFiles(Device device)
+  private void GetFiles(Device device)
   {
     IEnumerable<Nmtp.DeviceStorage> storages = device.GetStorages();
 
@@ -87,17 +90,34 @@ public class LibUsbMtpAdapter : IMtpAdapter
       string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "MTP");
       Directory.CreateDirectory(dir);
 
-      foreach (Nmtp.File file in files)
-      {
-        Console.WriteLine($"Found file {file.FileName}");
-
-        using var fs = new FileStream($"{dir}/{file.FileName}", FileMode.Create);
-        device.GetFile(file.ItemId, progress =>
+      List<LocalActivity> activities = files
+        .Select((Nmtp.File file) =>
         {
-          Log.Info($"Download progress {file.FileName} {progress * 100:##.#}%");
-          return false;
-        }, fs);
-      }
+          using var ms = new MemoryStream();
+          bool ok = device.GetFile(file.ItemId, progress =>
+          {
+            Log.Info($"Download progress {file.FileName} {progress * 100:##.#}%");
+            return false; // false => continue, true => cancel
+          }, ms);
+
+          return (file, bytes: ms.ToArray(), ok);
+        })
+        .Where(tup => tup.ok)
+        .Select(tup =>
+        {
+          var act = new LocalActivity
+          {
+            Id = $"{Guid.NewGuid()}",
+            File = new FileReference(tup.file.FileName, tup.bytes),
+            Name = tup.file.FileName,
+            Source = ActivitySource.Device,
+            LastUpdated = DateTime.UtcNow,
+          };
+
+          activityFound_.OnNext(act);
+          return act;
+        })
+        .ToList();
     }
   }
 }

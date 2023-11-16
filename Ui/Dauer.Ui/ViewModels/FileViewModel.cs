@@ -132,6 +132,15 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     DragViewModel = dragViewModel;
 
     FileService.SubscribeAdds(SubscribeChanges);
+    mtp.ActivityFound.Subscribe(act =>
+    {
+      var ut = new UserTask
+      {
+        Name = $"Found file {act.Name}",
+      };
+      tasks_.Add(ut);
+      ut.Cancel(); // Auto-dismiss
+    });
 
     if (fileService.Files == null) { return; }
     foreach (var file in fileService.Files)
