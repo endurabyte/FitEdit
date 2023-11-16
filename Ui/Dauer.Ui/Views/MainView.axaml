@@ -24,8 +24,6 @@
   </UserControl.Resources>
   
   <Grid>
-    <ContentControl Content="{Binding TaskViewModel}" IsVisible="{Binding TaskViewModel.IsVisible}"/>
-
     <Grid x:Name="MainGrid" RowDefinitions="2*, Auto, *">
 
       <Grid.Effect>
@@ -75,6 +73,8 @@
         <views:MapView Grid.Column="2" DataContext="{Binding Map}" />
       </Grid>
     </Grid>
+
+    <ContentControl Content="{Binding TaskViewModel}" IsVisible="{Binding TaskViewModel.IsVisible}"/>
 
   </Grid>
 
