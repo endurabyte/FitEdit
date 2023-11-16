@@ -74,7 +74,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
 
       if (devices.Any())
       {
-        Scan(devices);
+        HandleDeviceAdded(devices);
         break;
       }
 
@@ -82,7 +82,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
     }
   }
 
-  public void Scan(List<Device> devices)
+  private void HandleDeviceAdded(List<Device> devices)
   {
     foreach (Device device in devices)
     {
