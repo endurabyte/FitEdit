@@ -45,7 +45,8 @@ public class LibUsbMtpAdapter : IMtpAdapter
 
   private void HandleUsbDeviceAdded(UsbDevice e)
   {
-    if (!e.VendorDescription.ToLower().Contains("garmin"))
+    // At app startup on Linux we get notified of every usb device
+    if (!e.VendorID.ToLower().Contains("091e"))
     {
       return;
     }
