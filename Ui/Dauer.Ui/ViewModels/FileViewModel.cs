@@ -152,6 +152,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         "Download files?", 
         () => mtp_.GetFiles(dev)));
     events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity => NotifyUser($"Found activity {activity.Name}"));
+
+    _ = Task.Run(mtp_.Scan);
   }
 
   private void NotifyUser(string name, string? actionPrompt = null, Action? next = null)

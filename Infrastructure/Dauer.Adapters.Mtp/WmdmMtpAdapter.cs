@@ -21,14 +21,13 @@ public class WmdmMtpAdapter : IMtpAdapter
   private readonly IEventService events_;
 
   private readonly SemaphoreSlim scanSem_ = new(1, 1);
-  private readonly Dictionary<string, MediaDevice> devices_ = new();
+  private readonly Dictionary<string, (MediaDevice device, DateTime addedAt)> devices_ = new();
 
   public WmdmMtpAdapter(IEventService events)
   {
     events_ = events;
 
     events_.Subscribe<Usb.Events.UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
-    _ = Task.Run(Scan);
   }
 
   public void Scan() =>
@@ -38,8 +37,8 @@ public class WmdmMtpAdapter : IMtpAdapter
 
   public void GetFiles(PortableDevice dev)
   {
-    if (!devices_.TryGetValue(dev.Id, out MediaDevice? device)) { return; }
-    GetFiles(device);
+    if (!devices_.TryGetValue(dev.Id, out (MediaDevice device, DateTime addedAt) pair)) { return; }
+    GetFiles(pair.device);
   }
 
   private async Task PollForDevices(TimeSpan timeout)
@@ -68,10 +67,21 @@ public class WmdmMtpAdapter : IMtpAdapter
     _ = Task.Run(Scan);
   }
 
+  /// <summary>
+  /// WMDM sometimes raises duplicate add notifications.
+  /// Return true if the device of the given id was added recently.
+  /// </summary>
+  private bool Debounce(string id) => devices_.TryGetValue(id, out var pair) 
+    && DateTime.UtcNow - pair.addedAt < TimeSpan.FromSeconds(15);
+
   private void HandleMtpDeviceAdded(MediaDevice device)
   {
     PortableDevice dev = new(device.FriendlyName, device.SerialNumber);
-    devices_[dev.Id] = device;
+
+    // Added too recently
+    if (Debounce(dev.Id)) { return; }
+
+    devices_[dev.Id] = (device, DateTime.UtcNow);
     events_.Publish(EventKey.MtpDeviceAdded, dev);
   }
 

@@ -27,7 +27,6 @@ public class LibUsbMtpAdapter : IMtpAdapter
     events_ = events;
 
     events_.Subscribe<UsbDevice>(EventKey.UsbDeviceAdded, HandleUsbDeviceAdded);
-    Scan();
   }
 
   public void Scan() =>
@@ -39,7 +38,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
   {
     if (!devices_.TryGetValue(dev.Id, out Device? device)) { return; }
     GetFiles(device);
-    //device.Dispose(); // TODO dispose at the right time. USB unplug?
+    //device.Dispose(); // TODO dispose at the right time, e.g. when unplugged
   }
 
   /// <summary>
