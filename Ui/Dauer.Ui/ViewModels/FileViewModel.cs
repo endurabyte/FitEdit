@@ -161,11 +161,23 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     var ut = new UserTask
     {
       Name = name,
-      Status = actionPrompt,
-      NextAction = next,
     };
     tasks_.Add(ut);
-    ut.Cancel(); // Auto-dismiss
+
+    if (next == null)
+    {
+      ut.Cancel(); // Auto-dismiss
+      return;
+    }
+
+    ut.IsConfirmed = true;
+    ut.Status = actionPrompt;
+    ut.NextAction = () =>
+    {
+      ut.Dismiss();
+      next();
+      ut.IsComplete = true;
+    };
   }
 
   private void SubscribeChanges(UiFile file)

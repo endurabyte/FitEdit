@@ -79,6 +79,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
   private void HandleMtpDeviceAdded(Device device)
   {
     PortableDevice dev = new(device.GetModelName() ?? "(unknown)", device.GetSerialNumber() ?? "(unknown)");
+    devices_[dev.Id] = device;
     events_.Publish(EventKey.MtpDeviceAdded, dev);
   }
 
@@ -117,9 +118,6 @@ public class LibUsbMtpAdapter : IMtpAdapter
         .Where(file => file.FileName.EndsWith(".fit"))
         .Where(file => DateTime.UnixEpoch + TimeSpan.FromSeconds(file.ModificationDate) > DateTime.UtcNow - TimeSpan.FromDays(7))
         .ToList();
-
-      string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FitEdit-Data", "MTP");
-      Directory.CreateDirectory(dir);
 
       List<LocalActivity> activities = files
         .Select((Nmtp.File file) =>

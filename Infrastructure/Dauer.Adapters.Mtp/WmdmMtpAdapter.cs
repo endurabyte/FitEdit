@@ -71,6 +71,7 @@ public class WmdmMtpAdapter : IMtpAdapter
   private void HandleMtpDeviceAdded(MediaDevice device)
   {
     PortableDevice dev = new(device.FriendlyName, device.SerialNumber);
+    devices_[dev.Id] = device;
     events_.Publish(EventKey.MtpDeviceAdded, dev);
   }
 
