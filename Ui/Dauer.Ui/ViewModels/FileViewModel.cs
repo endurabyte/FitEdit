@@ -7,6 +7,7 @@ using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
+using Dauer.Model.Services;
 using Dauer.Model.Storage;
 using Dauer.Model.Strava;
 using Dauer.Model.Web;
@@ -17,7 +18,6 @@ using Dauer.Ui.Model.Supabase;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using Dauer.Model.Services;
 
 namespace Dauer.Ui.ViewModels;
 
@@ -37,16 +37,18 @@ public interface IFileViewModel
 
 public class DesignFileViewModel : FileViewModel
 {
+  private static readonly IEventService events_ = new EventService();
+
   public DesignFileViewModel() : base(
-    new EventService(),
-    new NullTaskService(),
+    events_,
+    new DesignTaskService(),
     new NullFileService(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
     new NullStravaClient(),
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
-    new NullMtpAdapter(),
+    new NullMtpAdapter(events_),
     new NullUsbEventAdapter(),
     new NullBrowser(),
     new DesignLogViewModel(),
@@ -150,46 +152,48 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser(
         $"Found device {dev.Name} (# {dev.Id})", 
         "Download files?",
-        () =>
-        {
-          UserTask? ut = null;
-          List<LocalActivity> activities = new();
-          using var sub = events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity =>
-          {
-            activities.Add(activity);
-
-            if (ut == null)
-            {
-              ut = NotifyUser($"Found an activity");
-            }
-            else
-            {
-              ut.Name = $"Found {activities.Count} activities";
-            }
-
-            ut.Status = string.Join("\n", activities.Select(a => a.Name));
-          });
-
-          mtp_.GetFiles(dev);
-
-          if (ut == null) { return; }
-          ut.IsConfirmed = false;
-          ut.Name = $"Import {activities.Count} activities from {dev.Name}?";
-          ut.NextAction = async () =>
-          {
-            foreach (LocalActivity activity in activities)
-            {
-              await Persist(activity);
-            }
-            ut.Name = $"✓ Imported {activities.Count} activities";
-            ut.IsComplete = true;
-          };
-        }));
+        () => DownloadActivities(dev)));
 
     _ = Task.Run(mtp_.Scan);
   }
 
-  private UserTask NotifyUser(string name, string? actionPrompt = null, Action? next = null)
+  private void DownloadActivities(PortableDevice dev)
+  {
+    UserTask ut = NotifyUser($"Searching for activities");
+    var vm = new DeviceFileImportViewModel();
+    Dispatcher.UIThread.Invoke(() => ut.Content = new DeviceFileImportView() { DataContext = vm });
+
+    using IDisposable sub = events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound,
+      activity => vm.HandleActivityFound(activity, ut));
+
+    mtp_.GetFiles(dev);
+
+    if (!vm.Activities.Any())
+    {
+      ut.Name = "No activities found";
+      return;
+    }
+
+    ut.IsConfirmed = false;
+    ut.Name = $"Import activities from '{dev.Name}'?";
+    ut.NextAction = async () =>
+    {
+      foreach (LocalActivity activity in vm.SelectedActivities)
+      {
+        await Persist(activity);
+      }
+
+      ut.Name = vm.SelectedActivities.Count switch
+      {
+        1 => $"✓ Imported 1 activity",
+        _ => $"✓ Imported {vm.SelectedActivities.Count} activities",
+      };
+      vm.Activities.Clear();
+      ut.IsComplete = true;
+    };
+  }
+
+  private UserTask NotifyUser(string name, string? actionPrompt = null, Action? next = null, bool autoDismiss = false)
   {
     Log.Info(name);
 
@@ -199,10 +203,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     };
     tasks_.Add(ut);
 
+    if (autoDismiss)
+    {
+      ut.Cancel();
+    }
+
     // If the notification has no action
     if (next == null)
     {
-      ut.Cancel(); // Auto-dismiss
       return ut;
     }
 

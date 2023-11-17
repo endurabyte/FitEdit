@@ -121,6 +121,7 @@ public class DauerModule : Autofac.Module
     };
     builder.RegisterType(mtpAdapter).As<IMtpAdapter>().SingleInstance();
     builder.RegisterType<UsbEventWatcher>().As<IUsbEventWatcher>().SingleInstance();
+    builder.RegisterType<UsbEventAdapter>().As<IUsbEventAdapter>().SingleInstance();
     builder.RegisterType<TaskService>().As<ITaskService>().SingleInstance();
     builder.RegisterType<EventService>().As<IEventService>().SingleInstance();
     builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();

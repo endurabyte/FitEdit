@@ -1,15 +1,12 @@
-﻿using System.Collections.Specialized;
-using Dauer.Model;
-using Dauer.Ui.Infra;
+﻿using Dauer.Ui.Infra;
 using DynamicData.Binding;
-using ReactiveUI;
 
 namespace Dauer.Ui.ViewModels;
 
 public class DesignTaskViewModel : TaskViewModel
 {
   public DesignTaskViewModel() : base(
-    new NullTaskService()
+    new DesignTaskService()
   )
   {
   }
@@ -27,25 +24,6 @@ public class TaskViewModel : ViewModelBase
     taskService.Tasks.ObserveCollectionChanges().Subscribe(x =>
     {
       IsVisible = taskService.Tasks.Count > 0;
-
-      if (x.EventArgs.Action != NotifyCollectionChangedAction.Add) { return; }
-      if (x?.EventArgs?.NewItems == null) { return; }
-
-      foreach (UserTask task in x.EventArgs.NewItems.OfType<UserTask>())
-      {
-        task.ObservableForProperty(x => x.IsCanceled).Subscribe(async _ => 
-        {
-          await Task.Delay(10_000);
-          Remove(task);
-        });
-
-        task.ObservableForProperty(x => x.IsDismissed).Subscribe(_ =>
-        {
-          Remove(task);
-        });
-      }
     });
   }
-
-  private void Remove(UserTask task) => TaskService.Remove(task);
 }

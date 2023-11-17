@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using Dauer.Model.Services;
+
 namespace Dauer.Model.Storage;
 
 public interface IMtpAdapter
@@ -10,6 +12,25 @@ public interface IMtpAdapter
 
 public class NullMtpAdapter : IMtpAdapter
 {
-  public void Scan() { }
-  public void GetFiles(PortableDevice dev) { }
+  private readonly IEventService events_;
+
+  public NullMtpAdapter(IEventService events)
+  {
+    events_ = events;
+  }
+
+  public async void Scan() 
+  {
+    await Task.Delay(1000);
+    events_.Publish(EventKey.MtpDeviceAdded, new PortableDevice("Fake Device", "123456-789"));
+  }
+
+  public void GetFiles(PortableDevice dev) 
+  {
+    events_.Publish(EventKey.MtpActivityFound, new LocalActivity
+    {
+      Id = $"{Guid.NewGuid()}",
+      Name = "Fake activity"
+    });
+  }
 }
