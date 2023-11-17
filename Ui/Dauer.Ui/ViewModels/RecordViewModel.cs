@@ -8,7 +8,6 @@ using Avalonia.Data;
 using Avalonia.Layout;
 using Dauer.Data;
 using Dauer.Data.Fit;
-using Dauer.Model.Data;
 using Dauer.Model.Extensions;
 using Dauer.Ui.Converters;
 using Dauer.Ui.Model;
@@ -307,7 +306,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
   }
 
-  private async Task Show(FitFile? ff)
+  protected async Task Show(FitFile? ff)
   {
     // Remeber which groups were expanded
     var expandedGroups = AllData_

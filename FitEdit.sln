@@ -76,6 +76,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.GarminConnec
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.Strava", "Infrastructure\Dauer.Adapters.Strava\Dauer.Adapters.Strava.csproj", "{C2016AC1-02FC-4663-B487-FC9DBE550F30}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dauer.Adapters.Mtp", "Infrastructure\Dauer.Adapters.Mtp\Dauer.Adapters.Mtp.csproj", "{B686BA37-6E25-4570-BFA3-5738B5E2E22D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -178,6 +180,10 @@ Global
 		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2016AC1-02FC-4663-B487-FC9DBE550F30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -207,6 +213,7 @@ Global
 		{FFBA1B00-F007-466C-81EB-36E291BD72C8} = {97C9CF2E-86B0-465F-9F7A-39A0B36133B8}
 		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 		{C2016AC1-02FC-4663-B487-FC9DBE550F30} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
+		{B686BA37-6E25-4570-BFA3-5738B5E2E22D} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}

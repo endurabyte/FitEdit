@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+             x:Class="Dauer.Ui.DeviceFileImportView"
+             x:DataType="vm:DeviceFileImportViewModel">
+
+  <Design.DataContext>
+    <vm:DesignDeviceFileImportViewModel />
+  </Design.DataContext>
+  
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <ListBox 
+    ItemsSource="{Binding Activities}"
+    SelectedItems="{Binding SelectedActivities}"
+    SelectionMode="Multiple,Toggle"
+    CornerRadius="20"
+    MaxHeight="400"
+    Background="{StaticResource FitLeadBlackBrush}">
+    
+    <ListBox.ItemTemplate>
+      <DataTemplate>
+          <Border Background="{StaticResource SystemAccentColorDark2}" CornerRadius="20" Padding="10" Margin="10">
+            <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" FontStyle="Italic" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+          </Border>
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+  </ListBox>
+</UserControl>

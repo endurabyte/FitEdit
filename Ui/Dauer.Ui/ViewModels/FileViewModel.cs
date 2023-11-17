@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Avalonia.Platform.Storage;
+﻿using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Dauer.Adapters.GarminConnect;
 using Dauer.Adapters.Strava;
@@ -8,6 +7,7 @@ using Dauer.Data.Fit;
 using Dauer.Model;
 using Dauer.Model.Extensions;
 using Dauer.Model.GarminConnect;
+using Dauer.Model.Services;
 using Dauer.Model.Storage;
 using Dauer.Model.Strava;
 using Dauer.Model.Web;
@@ -37,14 +37,19 @@ public interface IFileViewModel
 
 public class DesignFileViewModel : FileViewModel
 {
+  private static readonly IEventService events_ = new EventService();
+
   public DesignFileViewModel() : base(
-    new NullTaskService(),
+    events_,
+    new DesignTaskService(),
     new NullFileService(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
     new NullStravaClient(),
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
+    new NullMtpAdapter(events_),
+    new NullUsbEventAdapter(),
     new NullBrowser(),
     new DesignLogViewModel(),
     new FileDeleteViewModel(new NullFileService(), new NullSupabaseAdapter(), new NullLogger<FileDeleteViewModel>()),
@@ -94,12 +99,16 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IStravaClient Strava { get; }
 
   private readonly ITaskService tasks_;
+  private readonly IEventService events_;
   private readonly IStorageAdapter storage_;
   private readonly ISupabaseAdapter supa_;
+  private readonly IMtpAdapter mtp_;
+  private readonly IUsbEventAdapter usb_;
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
 
   public FileViewModel(
+    IEventService events,
     ITaskService tasks,
     IFileService fileService,
     IFitEditService fitEdit,
@@ -107,6 +116,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     IStravaClient strava,
     IStorageAdapter storage,
     ISupabaseAdapter supa,
+    IMtpAdapter mtp,
+    IUsbEventAdapter usb,
     IBrowser browser,
     ILogViewModel log,
     FileDeleteViewModel fileDeleteViewModel,
@@ -120,10 +131,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     Garmin = garmin;
     Strava = strava;
     supa_ = supa;
+    mtp_ = mtp;
+    usb_ = usb;
     storage_ = storage;
     log_ = log;
+    events_ = events;
     browser_ = browser;
-
     FileDeleteViewModel = fileDeleteViewModel;
     FileRemoteDeleteViewModel = fileRemoteDeleteViewModel;
     DragViewModel = dragViewModel;
@@ -135,6 +148,83 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     {
       SubscribeChanges(file);
     }
+
+    events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser(
+        $"Found device {dev.Name} (# {dev.Id})", 
+        "Download files?",
+        () => DownloadActivities(dev)));
+
+    _ = Task.Run(mtp_.Scan);
+  }
+
+  private void DownloadActivities(PortableDevice dev)
+  {
+    UserTask ut = NotifyUser($"Searching for activities");
+    var vm = new DeviceFileImportViewModel();
+    Dispatcher.UIThread.Invoke(() => ut.Content = new DeviceFileImportView() { DataContext = vm });
+
+    using IDisposable sub = events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound,
+      activity => vm.HandleActivityFound(activity, ut));
+
+    mtp_.GetFiles(dev);
+
+    if (!vm.Activities.Any())
+    {
+      ut.Name = "No activities found";
+      return;
+    }
+
+    ut.IsConfirmed = false;
+    ut.Name = $"Import activities from '{dev.Name}'?";
+    ut.NextAction = async () =>
+    {
+      foreach (LocalActivity activity in vm.SelectedActivities)
+      {
+        await Persist(activity);
+      }
+
+      ut.Name = vm.SelectedActivities.Count switch
+      {
+        1 => $"✓ Imported 1 activity",
+        _ => $"✓ Imported {vm.SelectedActivities.Count} activities",
+      };
+      vm.Activities.Clear();
+      ut.IsComplete = true;
+    };
+  }
+
+  private UserTask NotifyUser(string name, string? actionPrompt = null, Action? next = null, bool autoDismiss = false)
+  {
+    Log.Info(name);
+
+    var ut = new UserTask
+    {
+      Name = name,
+    };
+    tasks_.Add(ut);
+
+    if (autoDismiss)
+    {
+      ut.Cancel();
+    }
+
+    // If the notification has no action
+    if (next == null)
+    {
+      return ut;
+    }
+
+    // Prompt the user to confirm the action
+    ut.IsConfirmed = false;
+    ut.Status = actionPrompt;
+    ut.NextAction = () =>
+    {
+      // Dismiss the notification when the action starts
+      ut.Dismiss();
+      next();
+    };
+
+    return ut;
   }
 
   private void SubscribeChanges(UiFile file)
@@ -719,6 +809,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     tasks_.Add(task);
     task.Status = "Continue?";
 
+    task.IsConfirmed = false;
     task.NextAction = async () =>
     {
       task.Status = "Getting list of activities from Strava";
@@ -746,6 +837,5 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       task.IsComplete = true;
     };
-    task.IsConfirmed = true;
   }
 }

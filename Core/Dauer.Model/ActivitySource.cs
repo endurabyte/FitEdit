@@ -8,4 +8,5 @@ public enum ActivitySource
   File,
   GarminConnect,
   Strava,
+  Device
 }

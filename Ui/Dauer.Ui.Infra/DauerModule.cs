@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Core;
 using Avalonia.Controls.ApplicationLifetimes;
 using Dauer.Adapters.GarminConnect;
+using Dauer.Adapters.Mtp;
 using Dauer.Adapters.Sqlite;
 using Dauer.Adapters.Strava;
 using Dauer.Data;
@@ -10,6 +11,7 @@ using Dauer.Model;
 using Dauer.Model.Clients;
 using Dauer.Model.Data;
 using Dauer.Model.GarminConnect;
+using Dauer.Model.Services;
 using Dauer.Model.Storage;
 using Dauer.Model.Strava;
 using Dauer.Services;
@@ -20,6 +22,7 @@ using Dauer.Ui.Infra.Supabase;
 using Dauer.Ui.Model;
 using Dauer.Ui.Model.Supabase;
 using Microsoft.Extensions.Configuration;
+using Usb.Events;
 
 namespace Dauer.Ui.Infra;
 
@@ -109,7 +112,18 @@ public class DauerModule : Autofac.Module
       .SingleInstance();
     builder.RegisterType<NullCryptoService>()
       .Named<ICryptoService>("NullCrypto");
+
+    Type mtpAdapter = 0 switch
+    {
+      _ when OperatingSystem.IsWindows() && OperatingSystem.IsWindowsVersionAtLeast(7) => typeof(WmdmMtpAdapter),
+      _ when OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() => typeof(LibUsbMtpAdapter),
+      _ => typeof(NullMtpAdapter),
+    };
+    builder.RegisterType(mtpAdapter).As<IMtpAdapter>().SingleInstance();
+    builder.RegisterType<UsbEventWatcher>().As<IUsbEventWatcher>().SingleInstance();
+    builder.RegisterType<UsbEventAdapter>().As<IUsbEventAdapter>().SingleInstance();
     builder.RegisterType<TaskService>().As<ITaskService>().SingleInstance();
+    builder.RegisterType<EventService>().As<IEventService>().SingleInstance();
     builder.RegisterType<StravaClient>().As<IStravaClient>().SingleInstance();
     builder.RegisterType<GarminConnectClient>().As<IGarminConnectClient>().SingleInstance();
     builder.RegisterType<SupabaseWebAuthenticator>().As<IWebAuthenticator>().SingleInstance();

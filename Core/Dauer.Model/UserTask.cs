@@ -11,7 +11,9 @@ public class UserTask : ReactiveObject
   [Reactive] public bool IsComplete { get; set; }
   [Reactive] public bool IsCanceled { get; set; }
   [Reactive] public bool IsDismissed { get; set; }
-  [Reactive] public bool IsConfirmed { get; set; }
+  [Reactive] public bool IsConfirmed { get; set; } = true;
+  [Reactive] public object Content { get; set; }
+
   public Action NextAction { get; set; }
 
   public CancellationToken CancellationToken => cts_.Token;
@@ -36,12 +38,13 @@ public class UserTask : ReactiveObject
   public void Dismiss()
   {
     IsDismissed = true;
+    Status = "Dismissed";
   }
 
   public void Confirm()
   {
-    IsConfirmed = false;
-    _ = Task.Run(() => NextAction());
+    IsConfirmed = true;
+    _ = Task.Run(() => NextAction?.Invoke());
   }
 }
 

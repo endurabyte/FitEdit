@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400"
              x:Class="Dauer.Ui.Views.TaskView"
              x:DataType="vm:TaskViewModel">
 
@@ -34,15 +35,16 @@
         <DataTemplate>
           <Border Background="{StaticResource SystemAccentColorDark1}" CornerRadius="20" Padding="10" Margin="10">
 
-            <Grid RowDefinitions="*, *" ColumnDefinitions="*, Auto">
-
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}" FontWeight="Bold"/>
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding Status}"/>
+            <DockPanel LastChildFill="False">
               
-              <WrapPanel Grid.Row="1" Grid.Column="1" Width="150" Orientation="Vertical">
+              <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" FontWeight="Bold"/>
+              <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" TextWrapping="Wrap"/>
+              <ContentControl DockPanel.Dock="Top" Content="{Binding Content}"/>
+              
+              <WrapPanel DockPanel.Dock="Top" Width="150" Orientation="Vertical">
                 <Button 
                       Width="150"
-                      IsVisible="{Binding IsConfirmed}"
+                      IsVisible="{Binding !IsConfirmed}"
                       Command="{Binding Confirm}"
                       CommandParameter="{Binding}"
                       Content="Continue"/>
@@ -55,7 +57,7 @@
                   <Button.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                       <Binding Path="!IsComplete"/>
-                      <Binding Path="!IsConfirmed"/>
+                      <Binding Path="IsConfirmed"/>
                     </MultiBinding>
                   </Button.IsVisible>
                 </Button>
@@ -68,12 +70,12 @@
                   <Button.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                       <Binding Path="IsComplete"/>
-                      <Binding Path="IsConfirmed"/>
+                      <Binding Path="!IsConfirmed"/>
                     </MultiBinding>
                   </Button.IsVisible>
                 </Button>
               </WrapPanel>
-            </Grid>
+            </DockPanel>
 
           </Border>
         </DataTemplate>
