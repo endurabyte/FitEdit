@@ -147,17 +147,22 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       SubscribeChanges(file);
     }
 
-    events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser($"Found device {dev.Name} (# {dev.Id})"));
+    events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser(
+        $"Found device {dev.Name} (# {dev.Id})", 
+        "Download files?", 
+        () => mtp_.GetFiles(dev)));
     events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity => NotifyUser($"Found activity {activity.Name}"));
   }
 
-  private void NotifyUser(string message)
+  private void NotifyUser(string name, string? actionPrompt = null, Action? next = null)
   {
-    Log.Info(message);
+    Log.Info(name);
 
     var ut = new UserTask
     {
-      Name = message,
+      Name = name,
+      Status = actionPrompt,
+      NextAction = next,
     };
     tasks_.Add(ut);
     ut.Cancel(); // Auto-dismiss
