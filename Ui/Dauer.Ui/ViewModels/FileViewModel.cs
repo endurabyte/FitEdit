@@ -149,14 +149,47 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser(
         $"Found device {dev.Name} (# {dev.Id})", 
-        "Download files?", 
-        () => mtp_.GetFiles(dev)));
-    events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity => NotifyUser($"Found activity {activity.Name}"));
+        "Download files?",
+        () =>
+        {
+          UserTask? ut = null;
+          List<LocalActivity> activities = new();
+          using var sub = events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity =>
+          {
+            activities.Add(activity);
+
+            if (ut == null)
+            {
+              ut = NotifyUser($"Found an activity");
+            }
+            else
+            {
+              ut.Name = $"Found {activities.Count} activities";
+            }
+
+            ut.Status = string.Join("\n", activities.Select(a => a.Name));
+          });
+
+          mtp_.GetFiles(dev);
+
+          if (ut == null) { return; }
+          ut.IsConfirmed = false;
+          ut.Name = $"Import {activities.Count} activities from {dev.Name}?";
+          ut.NextAction = async () =>
+          {
+            foreach (LocalActivity activity in activities)
+            {
+              await Persist(activity);
+            }
+            ut.Name = $"✓ Imported {activities.Count} activities";
+            ut.IsComplete = true;
+          };
+        }));
 
     _ = Task.Run(mtp_.Scan);
   }
 
-  private void NotifyUser(string name, string? actionPrompt = null, Action? next = null)
+  private UserTask NotifyUser(string name, string? actionPrompt = null, Action? next = null)
   {
     Log.Info(name);
 
@@ -170,7 +203,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (next == null)
     {
       ut.Cancel(); // Auto-dismiss
-      return;
+      return ut;
     }
 
     // Prompt the user to confirm the action
@@ -182,6 +215,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       ut.Dismiss();
       next();
     };
+
+    return ut;
   }
 
   private void SubscribeChanges(UiFile file)
