@@ -166,19 +166,21 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     };
     tasks_.Add(ut);
 
+    // If the notification has no action
     if (next == null)
     {
       ut.Cancel(); // Auto-dismiss
       return;
     }
 
-    ut.IsConfirmed = true;
+    // Prompt the user to confirm the action
+    ut.IsConfirmed = false;
     ut.Status = actionPrompt;
     ut.NextAction = () =>
     {
+      // Dismiss the notification when the action starts
       ut.Dismiss();
       next();
-      ut.IsComplete = true;
     };
   }
 
@@ -764,6 +766,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     tasks_.Add(task);
     task.Status = "Continue?";
 
+    task.IsConfirmed = false;
     task.NextAction = async () =>
     {
       task.Status = "Getting list of activities from Strava";
@@ -791,6 +794,5 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       task.IsComplete = true;
     };
-    task.IsConfirmed = true;
   }
 }

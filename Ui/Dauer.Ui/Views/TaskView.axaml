@@ -42,7 +42,7 @@
               <WrapPanel Grid.Row="1" Grid.Column="1" Width="150" Orientation="Vertical">
                 <Button 
                       Width="150"
-                      IsVisible="{Binding IsConfirmed}"
+                      IsVisible="{Binding !IsConfirmed}"
                       Command="{Binding Confirm}"
                       CommandParameter="{Binding}"
                       Content="Continue"/>
@@ -55,7 +55,7 @@
                   <Button.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.And}">
                       <Binding Path="!IsComplete"/>
-                      <Binding Path="!IsConfirmed"/>
+                      <Binding Path="IsConfirmed"/>
                     </MultiBinding>
                   </Button.IsVisible>
                 </Button>
@@ -68,7 +68,7 @@
                   <Button.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
                       <Binding Path="IsComplete"/>
-                      <Binding Path="IsConfirmed"/>
+                      <Binding Path="!IsConfirmed"/>
                     </MultiBinding>
                   </Button.IsVisible>
                 </Button>
