@@ -147,12 +147,14 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       SubscribeChanges(file);
     }
 
-    events_.Subscribe<string>(EventKey.MtpDeviceAdded, deviceName => NotifyUser($"Found device {deviceName}"));
+    events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser($"Found device {dev.Name} (# {dev.Id})"));
     events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound, activity => NotifyUser($"Found activity {activity.Name}"));
   }
 
   private void NotifyUser(string message)
   {
+    Log.Info(message);
+
     var ut = new UserTask
     {
       Name = message,

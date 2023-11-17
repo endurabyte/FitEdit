@@ -1,9 +1,9 @@
 ﻿namespace Dauer.Model;
 
 /// <summary>
-/// faux Polly. Rhymes with "lowly"
+/// faux Polly. 
 /// </summary>
-public static class Fauxlly
+public static class Folly
 {
   /// <summary>
   /// Keep calling the given callback while it returns true.

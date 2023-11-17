@@ -18,7 +18,9 @@ namespace Dauer.Adapters.Mtp;
 public class LibUsbMtpAdapter : IMtpAdapter
 {
   private readonly IEventService events_;
+
   private readonly SemaphoreSlim scanSem_ = new(1, 1);
+  private readonly Dictionary<string, Device> devices_ = new();
 
   public LibUsbMtpAdapter(IEventService events)
   {
@@ -28,10 +30,17 @@ public class LibUsbMtpAdapter : IMtpAdapter
     Scan();
   }
 
-  public void Scan() => 
+  public void Scan() =>
     _ = Task.Run(async () =>
-		   await scanSem_.RunAtomically(async () =>
-		     await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(LibUsbMtpAdapter)}.{nameof(PollForDevices)}"));
+       await scanSem_.RunAtomically(async () =>
+         await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(LibUsbMtpAdapter)}.{nameof(PollForDevices)}"));
+
+  public void GetFiles(PortableDevice dev)
+  {
+    if (!devices_.TryGetValue(dev.Id, out Device? device)) { return; }
+    GetFiles(device);
+    //device.Dispose(); // TODO dispose at the right time. USB unplug?
+  }
 
   /// <summary>
   /// Try a few times to connect. 
@@ -39,7 +48,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
   /// </summary>
   private async Task PollForDevices(TimeSpan timeout)
   {
-    await Fauxlly.RepeatAsync(() =>
+    await Folly.RepeatAsync(() =>
     {
       using var deviceList = new RawDeviceList();
       List<Device> devices = GetSupportedDevices(deviceList);
@@ -69,12 +78,8 @@ public class LibUsbMtpAdapter : IMtpAdapter
 
   private void HandleMtpDeviceAdded(Device device)
   {
-    Log.Info($"Found MTP device {device.GetModelName() ?? "(unknown)"}");
-    Log.Info($"Found device serial # {device.GetSerialNumber() ?? "unknown"}");
-    events_.Publish(EventKey.MtpDeviceAdded, device.GetModelName());
-
-    GetFiles(device);
-    device.Dispose();
+    PortableDevice dev = new(device.GetModelName() ?? "(unknown)", device.GetSerialNumber() ?? "(unknown)");
+    events_.Publish(EventKey.MtpDeviceAdded, dev);
   }
 
   private static List<Device> GetSupportedDevices(RawDeviceList deviceList)

@@ -19,7 +19,9 @@ public class WmdmMtpAdapter : IMtpAdapter
 #pragma warning disable CA1416 // Validate platform compatibility. We already validated at injection.
 
   private readonly IEventService events_;
+
   private readonly SemaphoreSlim scanSem_ = new(1, 1);
+  private readonly Dictionary<string, MediaDevice> devices_ = new();
 
   public WmdmMtpAdapter(IEventService events)
   {
@@ -29,14 +31,20 @@ public class WmdmMtpAdapter : IMtpAdapter
     _ = Task.Run(Scan);
   }
 
-  public void Scan() => 
+  public void Scan() =>
     _ = Task.Run(async () =>
-		   await scanSem_.RunAtomically(async () =>
-		     await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(WmdmMtpAdapter)}.{nameof(PollForDevices)}"));
+       await scanSem_.RunAtomically(async () =>
+         await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(WmdmMtpAdapter)}.{nameof(PollForDevices)}"));
+
+  public void GetFiles(PortableDevice dev)
+  {
+    if (!devices_.TryGetValue(dev.Id, out MediaDevice? device)) { return; }
+    GetFiles(device);
+  }
 
   private async Task PollForDevices(TimeSpan timeout)
   {
-    await Fauxlly.RepeatAsync(() =>
+    await Folly.RepeatAsync(() =>
     {
       List<MediaDevice> devices = GetSupportedDevices();
 
@@ -62,11 +70,8 @@ public class WmdmMtpAdapter : IMtpAdapter
 
   private void HandleMtpDeviceAdded(MediaDevice device)
   {
-    Log.Info($"Found MTP device {device.FriendlyName ?? "(unknown)"}");
-    Log.Info($"Found device serial # {device.SerialNumber ?? "unknown"}");
-    events_.Publish(EventKey.MtpDeviceAdded, device.FriendlyName);
-
-    GetFiles(device);
+    PortableDevice dev = new(device.FriendlyName, device.SerialNumber);
+    events_.Publish(EventKey.MtpDeviceAdded, dev);
   }
 
   private static List<MediaDevice> GetSupportedDevices() => MediaDevice.GetDevices()
