@@ -7,7 +7,7 @@ namespace Dauer.Model.Storage;
 public interface IMtpAdapter
 {
   void Scan();
-  void GetFiles(PortableDevice dev);
+  void GetFiles(PortableDevice dev, TimeSpan howFarBack = default);
 }
 
 public class NullMtpAdapter : IMtpAdapter
@@ -25,7 +25,7 @@ public class NullMtpAdapter : IMtpAdapter
     events_.Publish(EventKey.MtpDeviceAdded, new PortableDevice("Fake Device", "123456-789"));
   }
 
-  public void GetFiles(PortableDevice dev) 
+  public void GetFiles(PortableDevice dev, TimeSpan howFarBack = default) 
   {
     events_.Publish(EventKey.MtpActivityFound, new LocalActivity
     {

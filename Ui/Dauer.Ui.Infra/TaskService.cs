@@ -21,14 +21,14 @@ public class DesignTaskService : TaskService
   {
     Tasks.Add(new UserTask
     {
-      Name = "A notification",
+      Header = "A notification",
       Status = "This notification has a pretty long text section so that we can verify that long messages look OK on all platforms.\nWhat do you think?",
       Progress = 67,
     });
 
     var ut = new UserTask
     {
-      Name = "Another notification",
+      Header = "Another notification",
       Status = "Please click continue",
       IsConfirmed = false
     };

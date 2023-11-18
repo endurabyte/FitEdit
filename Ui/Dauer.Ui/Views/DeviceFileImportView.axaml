@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converters="using:Dauer.Ui.Converters"
              xmlns:vm="clr-namespace:Dauer.Ui.ViewModels"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
              x:Class="Dauer.Ui.DeviceFileImportView"
@@ -15,20 +16,59 @@
     <StyleInclude Source="../Styles.axaml"/>
   </UserControl.Styles>
 
-  <ListBox 
-    ItemsSource="{Binding Activities}"
-    SelectedItems="{Binding SelectedActivities}"
-    SelectionMode="Multiple,Toggle"
-    CornerRadius="20"
-    MaxHeight="400"
-    Background="{StaticResource FitLeadBlackBrush}">
-    
-    <ListBox.ItemTemplate>
-      <DataTemplate>
-          <Border Background="{StaticResource SystemAccentColorDark2}" CornerRadius="20" Padding="10" Margin="10">
-            <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" FontStyle="Italic" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <converters:BooleanToColorConverter x:Key="BorderBooleanToColorConverter" TrueColor="{StaticResource FitTanCrayonBrush}" FalseColor="{StaticResource FitLicoriceBlackBrush}"/>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <DockPanel>
+    <ListBox
+      DockPanel.Dock="Top"
+      ItemsSource="{Binding Activities}"
+      IsVisible="{Binding !ImportComplete}"
+      SelectedItems="{Binding SelectedActivities}"
+      SelectionMode="Multiple,Toggle"
+      CornerRadius="20"
+      MaxHeight="400"
+      Background="Transparent">
+
+      <ListBox.Styles>
+        <Style Selector="ListBoxItem">
+          <Style Selector="^:selected">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+              <Setter Property="Background" Value="Transparent" />
+            </Style>
+          </Style>
+        </Style>
+      </ListBox.Styles>
+
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Border Background="{Binding IsSelected, RelativeSource={RelativeSource FindAncestor, AncestorType=ListBoxItem}, Converter={StaticResource BorderBooleanToColorConverter}}" CornerRadius="20" Padding="10">
+            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
           </Border>
         </DataTemplate>
-    </ListBox.ItemTemplate>
-  </ListBox>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    
+    <TextBlock DockPanel.Dock="Top" Text="{Binding Message}" IsVisible="{Binding !ImportComplete}" FontStyle="Italic" HorizontalAlignment="Center"/>
+    <WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal">
+    <Button Width="150" 
+            IsVisible="{Binding !ImportComplete}"
+            Content="Find more" 
+            Command="{Binding SearchForFiles}" 
+            HorizontalAlignment="Center" />
+    <Button Width="150" 
+            IsEnabled="{Binding SelectedActivities.Count > 0}"
+            IsVisible="{Binding !ImportComplete}"
+            Content="Import Selected" 
+            Command="{Binding ImportFiles}" 
+            HorizontalAlignment="Center" />
+    <Button Width="150" 
+            Content="Dismiss" 
+            Command="{Binding Dismiss}" 
+            HorizontalAlignment="Center" />
+    </WrapPanel>
+  </DockPanel>
 </UserControl>

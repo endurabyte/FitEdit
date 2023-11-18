@@ -35,10 +35,10 @@ public class WmdmMtpAdapter : IMtpAdapter
        await scanSem_.RunAtomically(async () =>
          await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(WmdmMtpAdapter)}.{nameof(PollForDevices)}"));
 
-  public void GetFiles(PortableDevice dev)
+  public void GetFiles(PortableDevice dev, TimeSpan howFarBack = default) 
   {
     if (!devices_.TryGetValue(dev.Id, out (MediaDevice device, DateTime addedAt) pair)) { return; }
-    GetFiles(pair.device);
+    GetFiles(pair.device, howFarBack);
   }
 
   private async Task PollForDevices(TimeSpan timeout)
@@ -95,13 +95,14 @@ public class WmdmMtpAdapter : IMtpAdapter
     .Where(d => d.IsConnected)
     .ToList();
 
-  private void GetFiles(MediaDevice device)
+  private void GetFiles(MediaDevice device, TimeSpan howFarBack)
   {
     MediaDirectoryInfo activityDir = device.GetDirectoryInfo("\\Internal storage/GARMIN/Activity");
     IEnumerable<MediaFileInfo> fitFiles = activityDir.EnumerateFiles("*.fit");
 
     List<MediaFileInfo> files = fitFiles
-      .Where(f => f.LastWriteTime > DateTime.UtcNow - TimeSpan.FromDays(7))
+      .Where(f => f.LastWriteTime > DateTime.UtcNow - howFarBack)
+      .OrderByDescending(f => f.LastWriteTime)
       .ToList();
 
     List<LocalActivity> activities = files

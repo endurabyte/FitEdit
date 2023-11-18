@@ -37,11 +37,11 @@
 
             <DockPanel LastChildFill="False">
               
-              <TextBlock DockPanel.Dock="Top" Text="{Binding Name}" FontWeight="Bold"/>
+              <TextBlock DockPanel.Dock="Top" Text="{Binding Header}" FontWeight="Bold"/>
               <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" TextWrapping="Wrap"/>
               <ContentControl DockPanel.Dock="Top" Content="{Binding Content}"/>
               
-              <WrapPanel DockPanel.Dock="Top" Width="150" Orientation="Vertical">
+              <WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button 
                       Width="150"
                       IsVisible="{Binding !IsConfirmed}"
@@ -56,6 +56,7 @@
 
                   <Button.IsVisible>
                     <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="CanCancel"/>
                       <Binding Path="!IsComplete"/>
                       <Binding Path="IsConfirmed"/>
                     </MultiBinding>

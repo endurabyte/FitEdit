@@ -150,32 +150,23 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
 
     events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => NotifyUser(
-        $"Found device {dev.Name} (# {dev.Id})", 
-        "Download files?",
-        () => DownloadActivities(dev)));
+        $"Found device {dev.Name} ({dev.Id})", 
+        "Search for activities?",
+        () => DownloadActivitiesAsync(dev)));
 
     _ = Task.Run(mtp_.Scan);
   }
 
-  private void DownloadActivities(PortableDevice dev)
+  private void DownloadActivitiesAsync(PortableDevice dev)
   {
-    UserTask ut = NotifyUser($"Searching for activities");
-    var vm = new DeviceFileImportViewModel();
+    UserTask ut = NotifyUser($"Searching '{dev.Name}' for activities...");
+    ut.CanCancel = false;
+
+    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, ut);
     Dispatcher.UIThread.Invoke(() => ut.Content = new DeviceFileImportView() { DataContext = vm });
 
-    using IDisposable sub = events_.Subscribe<LocalActivity>(EventKey.MtpActivityFound,
-      activity => vm.HandleActivityFound(activity, ut));
+    ut.Header = $"Importing activities from '{dev.Name}'";
 
-    mtp_.GetFiles(dev);
-
-    if (!vm.Activities.Any())
-    {
-      ut.Name = "No activities found";
-      return;
-    }
-
-    ut.IsConfirmed = false;
-    ut.Name = $"Import activities from '{dev.Name}'?";
     ut.NextAction = async () =>
     {
       foreach (LocalActivity activity in vm.SelectedActivities)
@@ -183,23 +174,25 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         await Persist(activity);
       }
 
-      ut.Name = vm.SelectedActivities.Count switch
+      ut.Status = vm.SelectedActivities.Count switch
       {
         1 => $"✓ Imported 1 activity",
         _ => $"✓ Imported {vm.SelectedActivities.Count} activities",
       };
       vm.Activities.Clear();
-      ut.IsComplete = true;
     };
+
+    _ = Task.Run(vm.SearchForFiles);
   }
 
-  private UserTask NotifyUser(string name, string? actionPrompt = null, Action? next = null, bool autoDismiss = false)
+  private UserTask NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false)
   {
-    Log.Info(name);
+    Log.Info(header);
 
     var ut = new UserTask
     {
-      Name = name,
+      Header = header,
+      Status = status,
     };
     tasks_.Add(ut);
 
@@ -216,7 +209,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     // Prompt the user to confirm the action
     ut.IsConfirmed = false;
-    ut.Status = actionPrompt;
     ut.NextAction = () =>
     {
       // Dismiss the notification when the action starts
@@ -773,7 +765,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private async Task SyncFromGarminAsync()
   {
-    var task = new UserTask { Name = "Syncing from Garmin..." };
+    var task = new UserTask { Header = "Syncing from Garmin..." };
     tasks_.Add(task);
 
     List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync(task);
@@ -805,37 +797,43 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private void SyncFromStravaAsync()
   {
-    var task = new UserTask { Name = "Syncing from Strava..." };
+    var task = new UserTask { Header = "Syncing from Strava..." };
     tasks_.Add(task);
     task.Status = "Continue?";
 
     task.IsConfirmed = false;
     task.NextAction = async () =>
     {
-      task.Status = "Getting list of activities from Strava";
-      List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
-
-      if (task.IsCanceled) { return; }
-
-      List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
-        .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
-        .ToList();
-
-      IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
-      List<(long id, LocalActivity activity)> mapped = filtered.Select(StravaActivityMapper.MapLocalActivity).ToList();
-
-      if (task.IsCanceled) { return; }
-
-      await Strava.DownloadInParallelAsync(task, mapped, Persist);
-
-      task.Status = mapped.Count switch
+      try
       {
-        0 => "No new activities from Strava",
-        1 => $"Downloaded 1 new activity from Strava",
-        _ => $"Downloaded {mapped.Count} new activities from Strava",
-      };
+        task.Status = "Getting list of activities from Strava";
+        List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
 
-      task.IsComplete = true;
+        if (task.IsCanceled) { return; }
+
+        List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
+          .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
+          .ToList();
+
+        IEnumerable<StravaActivity> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
+        List<(long id, LocalActivity activity)> mapped = filtered.Select(StravaActivityMapper.MapLocalActivity).ToList();
+
+        if (task.IsCanceled) { return; }
+
+        await Strava.DownloadInParallelAsync(task, mapped, Persist);
+
+        task.Status = mapped.Count switch
+        {
+          0 => "No new activities from Strava",
+          1 => $"Downloaded 1 new activity from Strava",
+          _ => $"Downloaded {mapped.Count} new activities from Strava",
+        };
+
+        task.IsComplete = true;
+      }
+      catch (TaskCanceledException)
+      {
+      }
     };
   }
 }

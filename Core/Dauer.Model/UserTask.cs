@@ -5,11 +5,12 @@ namespace Dauer.Model;
 
 public class UserTask : ReactiveObject
 {
-  [Reactive] public string Name { get; set; }
+  [Reactive] public string Header { get; set; }
   [Reactive] public string Status { get; set; }
   [Reactive] public int Progress { get; set; }
   [Reactive] public bool IsComplete { get; set; }
   [Reactive] public bool IsCanceled { get; set; }
+  [Reactive] public bool CanCancel { get; set; } = true;
   [Reactive] public bool IsDismissed { get; set; }
   [Reactive] public bool IsConfirmed { get; set; } = true;
   [Reactive] public object Content { get; set; }
@@ -24,13 +25,15 @@ public class UserTask : ReactiveObject
   {
     this.ObservableForProperty(x => x.Status).Subscribe(_ =>
     {
-      Log.Info($"Task '{Name}' status: '{Status}'");
+      Log.Info($"Task '{Header}' status: '{Status}'");
     });
   }
 
   public void Cancel()
   {
     cts_.Cancel();
+    Header = $"(Canceled) {Header}";
+    Status = $"(Canceled) {Status}";
     IsCanceled = true;
     IsComplete = true;
   }

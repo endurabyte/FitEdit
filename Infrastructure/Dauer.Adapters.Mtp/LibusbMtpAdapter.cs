@@ -34,10 +34,10 @@ public class LibUsbMtpAdapter : IMtpAdapter
        await scanSem_.RunAtomically(async () =>
          await PollForDevices(TimeSpan.FromSeconds(30)), $"{nameof(LibUsbMtpAdapter)}.{nameof(PollForDevices)}"));
 
-  public void GetFiles(PortableDevice dev)
+  public void GetFiles(PortableDevice dev, TimeSpan howFarBack)
   {
     if (!devices_.TryGetValue(dev.Id, out Device? device)) { return; }
-    GetFiles(device);
+    GetFiles(device, howFarBack);
     //device.Dispose(); // TODO dispose at the right time, e.g. when unplugged
   }
 
@@ -96,7 +96,7 @@ public class LibUsbMtpAdapter : IMtpAdapter
       .ToList();
   }
 
-  private void GetFiles(Device device)
+  private void GetFiles(Device device, TimeSpan howFarBack)
   {
     IEnumerable<Nmtp.DeviceStorage> storages = device.GetStorages();
 
@@ -115,7 +115,8 @@ public class LibUsbMtpAdapter : IMtpAdapter
         })
         .Where(file => file.ParentId == activityFolder.FolderId)
         .Where(file => file.FileName.EndsWith(".fit"))
-        .Where(file => DateTime.UnixEpoch + TimeSpan.FromSeconds(file.ModificationDate) > DateTime.UtcNow - TimeSpan.FromDays(7))
+        .Where(file => DateTime.UnixEpoch + TimeSpan.FromSeconds(file.ModificationDate) > DateTime.UtcNow - howFarBack)
+        .OrderByDescending(f => f.ModificationDate)
         .ToList();
 
       List<LocalActivity> activities = files

@@ -516,7 +516,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     int limit = 1000;
 
     var allActivities = new List<Activity>();
-    var task = new UserTask { Name = "Syncing from Server..." };
+    var task = new UserTask { Header = "Syncing from Server..." };
 
     if (userRequested)
     {
