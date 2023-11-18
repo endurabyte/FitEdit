@@ -10,11 +10,11 @@ public interface IMtpAdapter
   void GetFiles(PortableDevice dev, TimeSpan howFarBack = default);
 }
 
-public class NullMtpAdapter : IMtpAdapter
+public class FakeMtpAdapter
 {
   private readonly IEventService events_;
 
-  public NullMtpAdapter(IEventService events)
+  public FakeMtpAdapter(IEventService events)
   {
     events_ = events;
   }
@@ -25,12 +25,27 @@ public class NullMtpAdapter : IMtpAdapter
     events_.Publish(EventKey.MtpDeviceAdded, new PortableDevice("Fake Device", "123456-789"));
   }
 
-  public void GetFiles(PortableDevice dev, TimeSpan howFarBack = default) 
+  public void GetFiles(PortableDevice _, TimeSpan __) 
   {
     events_.Publish(EventKey.MtpActivityFound, new LocalActivity
     {
       Id = $"{Guid.NewGuid()}",
       Name = "Fake activity"
     });
+  }
+}
+
+public class NullMtpAdapter : IMtpAdapter
+{
+  public NullMtpAdapter()
+  {
+  }
+
+  public void Scan() 
+  {
+  }
+
+  public void GetFiles(PortableDevice dev, TimeSpan howFarBack = default) 
+  {
   }
 }

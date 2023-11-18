@@ -118,6 +118,7 @@ public class DauerModule : Autofac.Module
       _ when OperatingSystem.IsWindows() && OperatingSystem.IsWindowsVersionAtLeast(7) => typeof(WmdmMtpAdapter),
       _ when OperatingSystem.IsLinux() || OperatingSystem.IsMacOS() => typeof(LibUsbMtpAdapter),
       _ => typeof(NullMtpAdapter),
+      //_ => typeof(FakeMtpAdapter), // For debugging
     };
     builder.RegisterType(mtpAdapter).As<IMtpAdapter>().SingleInstance();
     builder.RegisterType<UsbEventWatcher>().As<IUsbEventWatcher>().SingleInstance();
