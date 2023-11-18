@@ -48,7 +48,7 @@ public class DesignFileViewModel : FileViewModel
     new NullStravaClient(),
     new NullStorageAdapter(),
     new NullSupabaseAdapter(),
-    new NullMtpAdapter(events_),
+    new NullMtpAdapter(),
     new NullUsbEventAdapter(),
     new NullBrowser(),
     new DesignLogViewModel(),
