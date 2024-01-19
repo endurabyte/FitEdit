@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\FitEdit.Model\FitEdit.Model.csproj" />
+    <ProjectReference Include="..\..\Core\FitEdit.Services\FitEdit.Services.csproj" />
+    <ProjectReference Include="..\FitEdit.Data\FitEdit.Data.csproj" />
+  </ItemGroup>
+
+</Project>

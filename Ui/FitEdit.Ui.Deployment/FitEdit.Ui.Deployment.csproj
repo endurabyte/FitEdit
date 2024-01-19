@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <!-- true: Deploy to AWS S3 bucket -->
+    <Exec Condition="'$(FITEDIT_PLATFORM)' == 'WINDOWS'" Command="pwsh ../FitEdit.Ui.Desktop/create-release-win.ps1 $(Version) true" />
+    <Exec Condition="'$(FITEDIT_PLATFORM)' == 'LINUX'" Command="pwsh ../FitEdit.Ui.Desktop/create-release-linux.ps1 $(Version) true" />
+    <Exec Condition="'$(FITEDIT_PLATFORM)' == 'MACOS'"  Command="pwsh ../FitEdit.Ui.Desktop/create-release-osx.ps1 $(Version) true" />
+  </Target>
+  
+</Project>

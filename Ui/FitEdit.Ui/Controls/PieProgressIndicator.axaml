@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:FitEdit.Ui.Controls"
+             x:DataType="controls:PieProgressIndicator"
+             x:Class="FitEdit.Ui.Controls.PieProgressIndicator">
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <Viewbox>
+    <Grid>
+      <Ellipse Name="PART_Ellipse" 
+               Fill="{StaticResource FitLicoriceBlack}"/>
+
+      <Path Name="PART_ProgressArc"
+            Fill="{StaticResource FitLimeCrayon}" />
+    </Grid>
+  </Viewbox>
+</UserControl>

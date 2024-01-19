@@ -1,0 +1,6 @@
+[submodule "units"]
+	path = units
+	url = https://github.com/slater1/units
+[submodule "Units"]
+	path = Units
+	url = https://github.com/slater1/units

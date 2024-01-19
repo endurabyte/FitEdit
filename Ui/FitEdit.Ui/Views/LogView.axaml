@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
+             xmlns:views="clr-namespace:FitEdit.Ui.Views"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="FitEdit.Ui.Views.LogView"
+             x:DataType="vm:LogViewModel">
+  <Design.DataContext>
+    <vm:DesignLogViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <ListBox ItemsSource="{Binding LogEntries}" FontSize="6"/>
+</UserControl>

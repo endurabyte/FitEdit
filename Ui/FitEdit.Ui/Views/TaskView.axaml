@@ -1,0 +1,87 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400"
+             x:Class="FitEdit.Ui.Views.TaskView"
+             x:DataType="vm:TaskViewModel">
+
+  <Design.DataContext>
+    <vm:DesignTaskViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+
+    <ItemsControl Background="Transparent" ItemsSource="{Binding TaskService.Tasks}">
+
+      <ItemsControl.Styles>
+        <Style Selector="TextBlock">
+          <Setter Property="Margin" Value="0 5 5 0"/>
+        </Style>
+      </ItemsControl.Styles>
+
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <StackPanel Orientation="Vertical"/>
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+
+      <ItemsControl.ItemTemplate>
+        <DataTemplate>
+          <Border Background="{StaticResource SystemAccentColorDark1}" CornerRadius="20" Padding="10" Margin="10">
+
+            <DockPanel LastChildFill="False">
+              
+              <TextBlock DockPanel.Dock="Top" Text="{Binding Header}" FontWeight="Bold" TextWrapping="Wrap"/>
+              <TextBlock DockPanel.Dock="Top" Text="{Binding Status}" TextWrapping="Wrap"/>
+              <ContentControl DockPanel.Dock="Top" Content="{Binding Content}"/>
+              
+              <WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button 
+                      Width="150"
+                      IsVisible="{Binding !IsConfirmed}"
+                      Command="{Binding Confirm}"
+                      CommandParameter="{Binding}"
+                      Content="Continue"/>
+                <Button 
+                      Width="150"
+                      Command="{Binding Cancel}"
+                      CommandParameter="{Binding}"
+                      Content="Cancel">
+
+                  <Button.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                      <Binding Path="CanCancel"/>
+                      <Binding Path="!IsComplete"/>
+                      <Binding Path="IsConfirmed"/>
+                    </MultiBinding>
+                  </Button.IsVisible>
+                </Button>
+                <Button
+                      Width="150"
+                      Command="{Binding Dismiss}"
+                      CommandParameter="{Binding}"
+                      Content="Dismiss">
+                  
+                  <Button.IsVisible>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                      <Binding Path="IsComplete"/>
+                      <Binding Path="!IsConfirmed"/>
+                    </MultiBinding>
+                  </Button.IsVisible>
+                </Button>
+              </WrapPanel>
+            </DockPanel>
+
+          </Border>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </ScrollViewer>
+
+</UserControl>

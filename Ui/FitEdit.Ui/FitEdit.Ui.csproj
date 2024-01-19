@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <UseMapsui>true</UseMapsui>
+    <DefineConstants Condition="$(UseMapsui) == true">USE_MAPSUI</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="db\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\bin.svg" />
+    <None Remove="Assets\cancel.svg" />
+    <None Remove="Assets\check.svg" />
+    <None Remove="Assets\folder.svg" />
+    <None Remove="Assets\garmin_connect_blue.png" />
+    <None Remove="Assets\powered_by_strava.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="7.0.1" />
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Svg" Version="$(AvaloniaSvgVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="HarfBuzzSharp" Version="2.8.2.5" />
+    <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
+    <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
+    <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\FitEdit.Model\FitEdit.Model.csproj" />
+    <ProjectReference Include="..\..\Core\FitEdit.Services\FitEdit.Services.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Fit\FitEdit.Adapters.Fit.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Data\FitEdit.Data.csproj" />
+    <ProjectReference Include="..\..\units\Units\Units.csproj" />
+    <ProjectReference Include="..\FitEdit.Ui.Infra\FitEdit.Ui.Infra.csproj" />
+    <ProjectReference Include="..\FitEdit.Ui.Model\FitEdit.Ui.Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(UseMapsui) != true">
+    <Compile Remove="Mapsui\**" />
+    <Compile Remove="Views\MapView.axaml.cs" />
+    <AvaloniaXaml Remove="Views\MapView.axaml" />
+  </ItemGroup>
+  <ItemGroup Condition="$(UseMapsui) == true">
+    <Compile Remove="Views\FakeMapView.axaml.cs" />
+    <AvaloniaXaml Remove="Views\FakeMapView.axaml" />
+  </ItemGroup>
+</Project>

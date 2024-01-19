@@ -1,0 +1,8 @@
+*.exe
+*.zip
+*.pkg
+*.nupkg
+*.app
+*.deb
+*.rpm
+*.tar.gz

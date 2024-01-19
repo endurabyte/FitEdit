@@ -1,0 +1,27 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:FitEdit.Ui"
+             xmlns:oxythemes="clr-namespace:OxyPlot.Avalonia.Themes;assembly=OxyPlot.Avalonia"
+             x:Class="FitEdit.Ui.App"
+             RequestedThemeVariant="Dark">
+  <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+  <Application.DataTemplates>
+    <local:ViewLocator/>
+  </Application.DataTemplates>
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <StyleInclude Source="./Styles.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+      <FontFamily x:Key="FiraCode">avares://FitEdit.Ui/Assets/Fonts/FiraCode-Regular.ttf#</FontFamily>
+    </ResourceDictionary>
+  </Application.Resources>
+  
+  <Application.Styles>
+    <FluentTheme DensityStyle="Normal" />
+    <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+    <oxythemes:Default />
+  </Application.Styles>
+</Application>

@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
+             xmlns:views="clr-namespace:FitEdit.Ui.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="FitEdit.Ui.Views.RecordView"
+             x:DataType="vm:RecordViewModel">
+
+  <Design.DataContext>
+    <vm:DesignRecordViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/> 
+  </UserControl.Styles>
+  
+  <Grid RowDefinitions="Auto, *, 5" ColumnDefinitions="3*, Auto">
+
+    <Expander Grid.Row="0" Grid.Column="0" Header="Filters">
+      <WrapPanel Orientation="Horizontal">
+        <CheckBox Content="Hide unused columns" IsChecked="{Binding HideUnusedFields}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Hide columns that have no data. For example, lat/lon for treadmill runs.
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+
+        <CheckBox Content="Hide unnamed columns" IsChecked="{Binding HideUnnamedFields}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Hide columns named like "Field #"
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+        <CheckBox Content="Hide unnamed tabs" IsChecked="{Binding HideUnnamedMessages}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Hide tabs like "Message #"
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+        <CheckBox Content="Pretty data" IsChecked="{Binding PrettifyFields}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Convert raw data to a more cosmetic format. Examples: <LineBreak/>
+              - Convert numbers like ActivityType "1" to "Running" <LineBreak/>
+              - Convert timestamps like 945518320 to "12/17/2019 11:58:40". The format depends on your region.<LineBreak/>
+              - Convert lat/lon like 427200580 to 35.80753896385431
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+        <CheckBox Content="Hex view" IsChecked="{Binding ShowHexData}" Margin="0,0,20,0">
+          <ToolTip.Tip>
+            <TextBlock TextWrapping="Wrap">
+              Show hex data for the selected row <LineBreak/>
+              See https://developer.garmin.com/fit/protocol/ for the FIT protocol specification
+            </TextBlock>
+          </ToolTip.Tip>
+        </CheckBox>
+      </WrapPanel>
+    </Expander>
+
+    <TabControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ShownData}" SelectedIndex="{Binding TabIndex}">
+      <TabControl.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding Name}" FontSize="12"/>
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+      <TabControl.ContentTemplate>
+        <DataTemplate DataType="vm:DataGridWrapper">
+          <ContentControl Content="{Binding DataGrid}"/>
+        </DataTemplate>
+      </TabControl.ContentTemplate>
+    </TabControl>
+
+    <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" RowDefinitions="Auto, *" ColumnDefinitions="5, *" 
+          IsVisible="{Binding ShowHexData}">
+      <Separator Classes="vertical" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"/>
+      <Label Grid.Row="0" Grid.Column="1" Content="Hex View" Margin="0 0 20 0" Foreground="{StaticResource SystemAccentColor}"/>
+      <ScrollViewer Name="HexScrollViewer" Grid.Row="1" Grid.Column="1">
+        <SelectableTextBlock Text="{Binding HexData}"
+                             Width="200"
+                             TextWrapping="Wrap"
+                             FontFamily="{StaticResource FiraCode}"
+                             SelectionStart="{Binding HexDataSelectionStart}"
+                             SelectionEnd="{Binding HexDataSelectionEnd}"/>
+      </ScrollViewer>
+    </Grid>
+
+  </Grid>
+
+</UserControl>

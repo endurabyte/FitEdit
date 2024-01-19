@@ -1,0 +1,1 @@
+See the Garmin FIT SDK. https://developer.garmin.com/fit/overview/

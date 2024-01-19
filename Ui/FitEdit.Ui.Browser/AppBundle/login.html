@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Login</title>
+  <style>
+    body {
+      background-color: #262626;
+      color: #7981FE;
+      font-family: Arial, sans-serif;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 10px;
+    }
+
+    input[type=text], input[type=password] {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    input[type=submit] {
+      background-color: #262626;
+      color: #7981FE;
+      border: 2px solid #7981FE;
+      border-radius: 5px;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      transition-duration: 0.4s;
+      cursor: pointer;
+    }
+
+      input[type=submit]:hover {
+        background-color: #363636;
+        color: #7981FE;
+      }
+
+      input[type=submit]:active {
+        background-color: #7981FE;
+        color: #262626;
+      }
+
+      input[type=submit]:disabled {
+        background-color: #363636;
+        color: #000000;
+      }
+  </style>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
+      // Prevent the form from submitting
+      event.preventDefault();
+
+      // Disable the login button and change its text
+      var loginBtn = document.getElementById('loginBtn');
+      loginBtn.disabled = true;
+      loginBtn.value = "Logging in...";
+
+      // Get the username and password
+      var username = document.getElementById('username').value;
+      var password = document.getElementById('password').value;
+
+      // Log the values
+      console.log('Username: ' + username + ', Password: ' + password);
+      window.opener.postMessage('login:success', 'https://localhost:5001'); // TODO replace with real domain
+    });
+  </script>
+</head>
+
+<body class="purple">
+  <form id="loginForm">
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username"><br>
+    <label for="password">Password:</label><br>
+    <input type="password" id="password" name="password"><br>
+    <input type="submit" value="Login" id="loginBtn">
+  </form>
+</body>
+</html>

@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\FitEdit.Model\FitEdit.Model.csproj" />
+    <ProjectReference Include="..\FitEdit.Adapters.Fit\FitEdit.Adapters.Fit.csproj" />
+  </ItemGroup>
+
+</Project>

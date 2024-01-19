@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
+             xmlns:views="clr-namespace:FitEdit.Ui.Views"
+             xmlns:controls="using:FitEdit.Ui.Controls"
+             xmlns:converters="using:FitEdit.Ui.Converters"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+             x:Class="FitEdit.Ui.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <vm:DesignMainViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <converters:AnyBooleanTrueToBlurEffectConverter x:Key="AnyBooleanTrueToBlurEffectConverter"/>
+    </ResourceDictionary>
+  </UserControl.Resources>
+  
+  <Grid>
+    <Grid x:Name="MainGrid" RowDefinitions="2*, Auto, *">
+
+      <Grid.Effect>
+        <MultiBinding Converter="{StaticResource AnyBooleanTrueToBlurEffectConverter}">
+          <Binding Path="TaskViewModel.IsVisible"/>
+        </MultiBinding>
+      </Grid.Effect>
+
+      <TabControl x:Name="MainTabControl" Grid.Row="0" TabStripPlacement="Top" SelectedIndex="{Binding SelectedTabIndex}">
+        <TabItem Header="File" FontSize="12">
+          <views:FileView DataContext="{Binding File}"/>
+        </TabItem>
+        <TabItem Header="Laps" FontSize="12">
+          <views:LapView DataContext="{Binding Laps}"/>
+        </TabItem>
+        <TabItem Header="Data" FontSize="12">
+          <views:RecordView DataContext="{Binding Records}"/>
+        </TabItem>
+        <TabItem FontSize="12">
+          <TabItem.Header>
+            <controls:AlertTabHeader Text="Settings">
+              <controls:AlertTabHeader.IsAlertOn>
+                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                  <Binding Path="!FitEdit.IsAuthenticated"/>
+                  <Binding Path="!FitEdit.IsAuthenticatedWithGarmin"/>
+                  <Binding Path="!FitEdit.IsActive"/>
+                </MultiBinding>
+              </controls:AlertTabHeader.IsAlertOn>
+            </controls:AlertTabHeader>
+          </TabItem.Header>
+
+          <views:SettingsView DataContext="{Binding Settings}"/>
+        </TabItem>
+        <TabItem x:Name="PlotTab" FontSize="12" Header="Chart" IsVisible="{Binding IsCompact}">
+          <views:PlotView DataContext="{Binding Plot}"/>
+        </TabItem>
+
+        <TabItem x:Name="MapTab" FontSize="12" Header="Map" IsVisible="{Binding IsCompact}">
+          <views:MapView DataContext="{Binding Map}"/>
+        </TabItem>
+      </TabControl>
+
+      <GridSplitter Grid.Row="1" x:Name="GridSplitter" Background="{StaticResource SystemAccentColor}" ResizeDirection="Rows"/>
+      <Grid Grid.Row="2" x:Name="ChartGrid" ColumnDefinitions="*, Auto, *">
+        <views:PlotView Grid.Column="0" DataContext="{Binding Plot}"/>
+        <GridSplitter Grid.Column="1" Background="{StaticResource SystemAccentColor}" ResizeDirection="Columns"/>
+        <views:MapView Grid.Column="2" DataContext="{Binding Map}" />
+      </Grid>
+    </Grid>
+
+    <ContentControl Content="{Binding TaskViewModel}" IsVisible="{Binding TaskViewModel.IsVisible}"/>
+
+  </Grid>
+
+</UserControl>

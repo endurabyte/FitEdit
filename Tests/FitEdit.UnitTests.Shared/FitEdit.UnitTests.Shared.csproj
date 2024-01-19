@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Data\FitEdit.Data.csproj" />
+  </ItemGroup>
+
+</Project>

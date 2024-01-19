@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0-ios</TargetFramework>
+    <SupportedOSPlatformVersion>10.0</SupportedOSPlatformVersion>
+    <ProvisioningType>manual</ProvisioningType>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
+    <!-- Temporary workaround for Avalonia GL interface broken in net7.0 (runtime attempts to JIT) -->
+    <UseInterpreter>True</UseInterpreter>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- These properties need to be set in order to run on a real iDevice -->
+    <!--<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>-->
+    <CodesignKey>Apple Distribution: Carl Slater (D89E59Y3DZ)</CodesignKey>
+    <CodesignProvision>FitEdit</CodesignProvision>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Essentials" Version="1.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\FitEdit.Ui\FitEdit.Ui.csproj" />
+  </ItemGroup>
+
+  <Target Name="UpdateInfoPlist" BeforeTargets="Compile" Condition="'$(Configuration)' == 'Release'">
+    <Exec Command="pwsh Update-InfoPlist.ps1 -versionPrefix $(VersionPrefix) -buildIncrement $(BuildIncrement) -plistPath Info.plist" />
+  </Target>
+</Project>

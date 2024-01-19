@@ -1,0 +1,15 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ui="clr-namespace:FitEdit.Ui"
+        xmlns:views="clr-namespace:FitEdit.Ui.Views"
+        xmlns:vm="using:FitEdit.Ui.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="FitEdit.Ui.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/logo.ico"
+        Title="{Binding AppTitle}">
+
+  <views:MainView />
+</Window>

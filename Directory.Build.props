@@ -1,0 +1,25 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Configurations>Debug;Release</Configurations>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+
+    <VersionPrefix>4.1.4</VersionPrefix>
+    <BuildIncrement>28</BuildIncrement>
+    <VersionSuffix></VersionSuffix>
+    <Product>FitEdit</Product>
+    <Copyright>EnduraByte LLC 2023</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AvaloniaVersion>11.0.4</AvaloniaVersion>
+    <AvaloniaSvgVersion>11.0.0.2</AvaloniaSvgVersion>
+    <OxyPlotVersion>2.1.2-av11.0.0</OxyPlotVersion>
+    <MapsuiVersion>4.0.0-173-g0ea83d675</MapsuiVersion>
+  </PropertyGroup>
+</Project>

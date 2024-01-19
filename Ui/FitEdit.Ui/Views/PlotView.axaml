@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
+             xmlns:views="clr-namespace:FitEdit.Ui.Views"
+             xmlns:oxy="clr-namespace:OxyPlot.Avalonia;assembly=OxyPlot.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="FitEdit.Ui.Views.PlotView"
+             x:DataType="vm:PlotViewModel">
+
+  <Design.DataContext>
+    <vm:DesignPlotViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <StyleInclude Source="../Styles.axaml"/>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*, Auto">
+
+    <oxy:PlotView Grid.Row="0" x:Name="OxyPlotView" Model="{Binding Plot}" Controller="{Binding PlotController}" >
+      <oxy:PlotView.DefaultTrackerTemplate>
+        <ControlTemplate>
+          <oxy:TrackerControl Position="{Binding TrackerPosition, Mode=TwoWay}" Background="Transparent" BorderBrush="Gray">
+            <oxy:TrackerControl.Content>
+              <TextBlock Text="{Binding}" Margin="7" Foreground="White" />
+            </oxy:TrackerControl.Content>
+          </oxy:TrackerControl>
+        </ControlTemplate>
+      </oxy:PlotView.DefaultTrackerTemplate>
+    </oxy:PlotView>
+
+    <!--<Button HorizontalAlignment="Left"
+            VerticalAlignment="Bottom"
+            Command="{Binding HandleResetPlotClicked}">
+      Reset Plot
+    </Button>-->
+
+    <Slider Grid.Row="1" Value="{Binding SliderValue}" Minimum="0" Maximum="{Binding SliderMax}"/>
+
+  </Grid>
+</UserControl>

@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="appsettings.json" />
+    <None Remove="appsettings.Linux.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="appsettings.Linux.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="7.0.1" />
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Essentials" Version="1.0.0" />
+    <PackageReference Include="IdentityModel" Version="6.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="7.0.0" />
+    <PackageReference Include="supabase-csharp" Version="0.15.0" />
+    <PackageReference Include="gotrue-csharp" Version="4.2.6" />
+    <PackageReference Include="ReactiveUI.Fody" Version="19.2.1" />
+    <PackageReference Include="Serilog" Version="3.0.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="7.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
+    <PackageReference Include="System.Reactive" Version="6.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\FitEdit.Model\FitEdit.Model.csproj" />
+    <ProjectReference Include="..\..\Core\FitEdit.Services\FitEdit.Services.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Fit\FitEdit.Adapters.Fit.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.GarminConnect\FitEdit.Adapters.GarminConnect.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Mtp\FitEdit.Adapters.Mtp.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Sqlite\FitEdit.Adapters.Sqlite.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Strava\FitEdit.Adapters.Strava.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Data\FitEdit.Data.csproj" />
+    <ProjectReference Include="..\FitEdit.Ui.Model\FitEdit.Ui.Model.csproj" />
+  </ItemGroup>
+
+</Project>
