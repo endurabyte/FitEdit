@@ -15,7 +15,7 @@ FitEdit works on Windows, macOS, Linux, Android (Google Play), and iOS*.
 
 # Releases
 
-Releases are hosted on the [FitEdit website](https://www.fitedit.io/releases.html).
+Releases are hosted on the [FitEdit website](https://www.fitedit.io/releases.html) and [Google Play](https://play.google.com/store/apps/details?id=com.endurabyte.fitedit).
 
 [![Windows](https://github.com/endurabyte/FitEdit/actions/workflows/windows.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/windows.yml)
 [![macOS](https://github.com/endurabyte/FitEdit/actions/workflows/macos.yml/badge.svg)](https://github.com/endurabyte/FitEdit/actions/workflows/macos.yml)
