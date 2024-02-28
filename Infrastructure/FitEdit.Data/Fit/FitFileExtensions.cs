@@ -696,6 +696,12 @@ public static class FitFileExtensions
     dest.Events.Add(new MesgEventArgs(mesg));
   }
 
+  public static void Remove(this FitFile f, Mesg mesg)
+  {
+    f.MessagesByDefinition[mesg.Num].Remove(mesg);
+    f.Events.RemoveAll(ea => ea is MesgEventArgs mea && mea.mesg == mesg);
+  }
+
   /// <summary>
   /// Remove all messages and message definitions for the given message type.
   /// </summary>

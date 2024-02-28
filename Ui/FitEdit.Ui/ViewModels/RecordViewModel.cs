@@ -48,6 +48,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// </summary>
   public ObservableCollection<DataGridWrapper> ShownData { get; set; } = new();
 
+  private FitFile? fitFile_;
+
   /// <summary>
   /// Name of the currently selected tab
   /// </summary>
@@ -74,6 +76,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   [Reactive] public bool HideUnnamedMessages { get; set; } = true;
   [Reactive] public bool PrettifyFields { get; set; } = true;
   [Reactive] public bool ShowHexData { get; set; } = false;
+  [Reactive] public bool HaveUnsavedChanges{ get; set; } = false;
 
   [Reactive] public string HexData { get; set; } = "(No Data)";
   [Reactive] public long HexDataSelectionStart { get; set; }
@@ -141,6 +144,14 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
     this.ObservableForProperty(x => x.TabIndex).Subscribe(_ => HandleTabIndexChanged());
     this.ObservableForProperty(x => x.ShowHexData).Subscribe(_ => InitHexData());
+  }
+
+  public async Task SaveChanges()
+  {
+    if (fitFile_ is null) { return; }
+    fitFile_.ForwardfillEvents();
+    await fileService_.CreateAsync(fitFile_);
+    HaveUnsavedChanges = false;
   }
 
   private void ScrollToSelection()
@@ -247,7 +258,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void SelectHexData(long start, long end)
   {
     HexDataSelectionStart = start;
-    HexDataSelectionEnd = end;
+    HexDataSelectionEnd = Math.Max(0, end);
   }
 
   private void InitHexData()
@@ -308,6 +319,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   protected async Task Show(FitFile? ff)
   {
+    fitFile_ = ff;
+
     // Remeber which groups were expanded
     var expandedGroups = AllData_
       .Where(g => g.IsExpanded)
@@ -594,9 +607,67 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       IsNamed = defMessage.IsNamed,
       IsVisible = defMessage.IsNamed || !HideUnnamedMessages,
     };
+
     group.Headers.AddRange(columns);
 
+    AddContextMenus(defMesg.Name, dg);
+
     return group;
+  }
+
+  private void AddContextMenus(string mesgName, DataGrid dg)
+  {
+    if (mesgName == "Lap")
+    {
+      var menu = new ContextMenu();
+      var menuItem = new MenuItem
+      {
+        Header = "Merge",
+        Command = ReactiveCommand.Create(() => MergeSelectedLaps(dg)),
+      };
+
+      ToolTip.SetTip(menuItem, "Merge the selected laps.\nLaps in between the first and last will be merged even if not selected");
+      menu.Items.Add(menuItem);
+      dg.ContextMenu = menu;
+    }
+  }
+
+  private void MergeSelectedLaps(DataGrid dg)
+  {
+    if (dg.ItemsSource is not List<MessageWrapper> list)
+    {
+      return;
+    }
+
+    var allLaps = dg.ItemsSource.Cast<MessageWrapper>().ToList();
+    var selectedLaps = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+
+    MessageWrapper? merged = new MessageWrapperMerger().Merge(allLaps, selectedLaps);
+
+    if (merged == null) { return; }
+
+    int index = allLaps.IndexOf(selectedLaps.First());
+
+    if (index < 0) { return; }
+
+    foreach (var lap in selectedLaps)
+    {
+      // Remove from table
+      list.Remove(lap);
+
+      // Remove from backing data store (FitFile)
+      // Do not modify FitFile.Laps. They are generated from MessagesByDefinition on BackfillEvents
+      fitFile_?.Remove(lap.Mesg);
+    }
+
+    // Add to table
+    list.Insert(index, merged);
+
+    // Add to backing data store (FitFile)
+    fitFile_?.Add(merged.Mesg);
+
+    dg.SelectedItem = merged;
+    HaveUnsavedChanges = true;
   }
 
   private void HandleCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)

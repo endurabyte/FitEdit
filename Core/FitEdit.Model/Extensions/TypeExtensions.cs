@@ -125,4 +125,21 @@ public static class TypeExtensions
 
     return dict;
   }
+
+  public static TTo? Cast<TFrom, TTo>(this TFrom value)
+  {
+    if (value == null) { return default; }
+
+    Type tto = typeof(TTo);
+
+    Type? toNullableType = Nullable.GetUnderlyingType(tto);
+    bool toNullable = toNullableType != null;
+
+    if (toNullable)
+    {
+      tto = toNullableType!;
+    }
+
+    return (TTo?)Convert.ChangeType(value, tto);
+  }
 }
