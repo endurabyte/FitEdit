@@ -9,11 +9,11 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <VersionPrefix>4.2.4</VersionPrefix>
-    <BuildIncrement>29</BuildIncrement>
+    <VersionPrefix>4.2.5</VersionPrefix>
+    <BuildIncrement>30</BuildIncrement>
     <VersionSuffix></VersionSuffix>
     <Product>FitEdit</Product>
-    <Copyright>EnduraByte LLC 2023</Copyright>
+    <Copyright>EnduraByte LLC 2024</Copyright>
   </PropertyGroup>
 
   <PropertyGroup>

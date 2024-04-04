@@ -56,9 +56,9 @@ namespace FitEdit.Data.Fit
       return lapStartTime <= recordStartTime && recordStartTime <= lapEndTime;
     });
 
-    public static System.DateTime Start(this IDurationOfTime mesg) => mesg.GetStartTime().GetDateTime();
-    public static System.DateTime End(this IDurationOfTime hts) => hts.GetTimestamp().GetDateTime();
-    public static System.DateTime InstantOfTime(this IInstantOfTime hts) => hts.GetTimestamp().GetDateTime();
+    public static System.DateTime Start(this IDurationOfTime mesg) => mesg.GetStartTime()?.GetDateTime() ?? System.DateTime.MinValue;
+    public static System.DateTime End(this IDurationOfTime hts) => hts.GetTimestamp()?.GetDateTime() ?? System.DateTime.MinValue;
+    public static System.DateTime InstantOfTime(this IInstantOfTime hts) => hts.GetTimestamp()?.GetDateTime() ?? System.DateTime.MinValue;
 
     public static Comparison<IInstantOfTime> Sort => (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
   }
