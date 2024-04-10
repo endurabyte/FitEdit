@@ -22,14 +22,14 @@ namespace FitEdit.Data.IntegrationTests
       new Writer().Write(fitFile, dest);
       var fitFile2 = await new Reader().ReadAsync(dest);
 
-      Assert.AreEqual(fitFile.MessageDefinitions.Count, fitFile2.MessageDefinitions.Count);
+      Assert.That(fitFile.MessageDefinitions.Count, Is.EqualTo(fitFile2.MessageDefinitions.Count));
 
       for (int i = 0; i < fitFile.MessageDefinitions.Count; i++)
       {
         AssertAreEqual(fitFile.MessageDefinitions[i], fitFile2.MessageDefinitions[i]);
       }
 
-      Assert.AreEqual(fitFile.Messages.Count, fitFile2.Messages.Count);
+      Assert.That(fitFile.Messages.Count, Is.EqualTo(fitFile2.Messages.Count));
 
       for (int i = 0; i < fitFile.Messages.Count; i++)
       {
@@ -47,7 +47,7 @@ namespace FitEdit.Data.IntegrationTests
       var fitFile = await new Reader().ReadAsync(source_);
       new Writer().Write(fitFile, dest);
 
-      FileAssert.AreEqual(source_, dest);
+      Assert.That(source_, Is.EqualTo(dest));
     }
 
     // This test doesn't pass due to minor differences e.g. protocol version
@@ -67,26 +67,26 @@ namespace FitEdit.Data.IntegrationTests
       System.IO.File.WriteAllText("output.json", json);
       System.IO.File.WriteAllText("output2.json", json2);
 
-      Assert.AreEqual(json, json2);
+      Assert.That(json, Is.EqualTo(json2));
     }
 
     private void AssertAreEqual(MesgDefinition a, MesgDefinition b)
     {
-      Assert.AreEqual(a.GlobalMesgNum, b.GlobalMesgNum);
-      Assert.AreEqual(a.LocalMesgNum, b.LocalMesgNum);
-      Assert.AreEqual(a.NumDevFields, b.NumDevFields);
-      Assert.AreEqual(a.NumFields, b.NumFields);
-      Assert.AreEqual(a.IsBigEndian, b.IsBigEndian);
+      Assert.That(a.GlobalMesgNum, Is.EqualTo(b.GlobalMesgNum));
+      Assert.That(a.LocalMesgNum, Is.EqualTo(b.LocalMesgNum));
+      Assert.That(a.NumDevFields, Is.EqualTo(b.NumDevFields));
+      Assert.That(a.NumFields, Is.EqualTo(b.NumFields));
+      Assert.That(a.IsBigEndian, Is.EqualTo(b.IsBigEndian));
     }
 
     private void AssertAreEqual(Mesg a, Mesg b)
     {
-      Assert.AreEqual(a.Name, b.Name);
-      Assert.AreEqual(a.Num, b.Num);
-      Assert.AreEqual(a.LocalNum, b.LocalNum);
+      Assert.That(a.Name, Is.EqualTo(b.Name));
+      Assert.That(a.Num, Is.EqualTo(b.Num));
+      Assert.That(a.LocalNum, Is.EqualTo(b.LocalNum));
       List<Field> fields = a.Fields.Values.ToList();
 
-      Assert.AreEqual(fields.Count, fields.Count);
+      Assert.That(fields.Count, Is.EqualTo(fields.Count));
 
       for (int i = 0; i < fields.Count; i++)
       {
@@ -96,15 +96,15 @@ namespace FitEdit.Data.IntegrationTests
 
     private void AssertAreEqual(Field a, Field b)
     {
-      Assert.AreEqual(a.Name, b.Name);
-      Assert.AreEqual(a.Num, b.Num);
-      Assert.AreEqual(a.Type, b.Type);
-      Assert.AreEqual(a.Scale, b.Scale);
-      Assert.AreEqual(a.Offset, b.Offset);
-      Assert.AreEqual(a.Units, b.Units);
-      Assert.AreEqual(a.IsAccumulated, b.IsAccumulated);
-      Assert.AreEqual(a.ProfileType, b.ProfileType);
-      Assert.AreEqual(a.IsExpandedField, b.IsExpandedField);
+      Assert.That(a.Name, Is.EqualTo(b.Name));
+      Assert.That(a.Num, Is.EqualTo(b.Num));
+      Assert.That(a.Type, Is.EqualTo(b.Type));
+      Assert.That(a.Scale, Is.EqualTo(b.Scale));
+      Assert.That(a.Offset, Is.EqualTo(b.Offset));
+      Assert.That(a.Units, Is.EqualTo(b.Units));
+      Assert.That(a.IsAccumulated, Is.EqualTo(b.IsAccumulated));
+      Assert.That(a.ProfileType, Is.EqualTo(b.ProfileType));
+      Assert.That(a.IsExpandedField, Is.EqualTo(b.IsExpandedField));
     }
   }
 }
