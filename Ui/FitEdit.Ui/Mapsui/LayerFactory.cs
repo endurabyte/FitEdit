@@ -1,7 +1,7 @@
 ﻿using BruTile;
 using BruTile.Predefined;
 using BruTile.Web;
-using FitEdit.Ui.Views;
+using FitEdit.Ui.Extensions;
 using Mapsui.Layers;
 using Mapsui.Nts;
 using Mapsui.Providers;
@@ -82,7 +82,7 @@ public class LayerFactory
     }
   };
 
-  public static ILayer CreatPointFeatures(Coordinate[] coords, string name, Avalonia.Media.Color color, Avalonia.Media.Color selectedColor, double scale) => new Layer
+  public static ILayer CreatePointFeatures(Coordinate[] coords, string name, Avalonia.Media.Color color, Avalonia.Media.Color selectedColor, double scale) => new Layer
   {
     DataSource = new MemoryProvider(coords.Select(c => new PointFeature(c.MapMPoint()))),
     Name = name,

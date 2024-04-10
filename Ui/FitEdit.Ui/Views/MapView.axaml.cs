@@ -1,23 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using FitEdit.Ui.Extensions;
 using FitEdit.Ui.ViewModels;
 using Mapsui;
 using Mapsui.Extensions;
 using Mapsui.Layers;
 using Mapsui.Providers;
-using NetTopologySuite.Geometries;
 
 namespace FitEdit.Ui.Views;
-
-public static class PointExtensions 
-{
-  public static MPoint MapMPoint(this Avalonia.Point p) => new(p.X, p.Y);
-  public static Avalonia.Point MapAvaloniaPoint(this MPoint mp) => new(mp.X, mp.Y);
-  public static Point MapNtsPoint(this Avalonia.Point p) => new(p.X, p.Y);
-  public static Point MapNtsPoint(this Coordinate c) => new(c.X, c.Y);
-  public static MPoint MapMPoint(this Coordinate c) => new(c.X, c.Y);
-  public static Coordinate MapCoordinate(this Avalonia.Point p) => new(p.X, p.Y);
-}
 
 public partial class MapView : UserControl
 {

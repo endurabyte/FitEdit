@@ -20,7 +20,9 @@
   <Grid>
     <maps:MapControl x:Name="MapControl" />
     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-      <CheckBox Content="Edit" IsChecked="{Binding Editing}" VerticalAlignment="Bottom"/>
+      <Button Content="Edit" ToolTip.Tip="Edit lat/lon coordinates" Command="{Binding HandleEditClicked}" IsEnabled="{Binding HasCoordinates}" IsVisible="{Binding !Editing}" VerticalAlignment="Bottom"/>
+      <Button Content="Save" ToolTip.Tip="Save changed lat/lon coordinates" Command="{Binding HandleSaveClicked}" IsVisible="{Binding Editing}" VerticalAlignment="Bottom"/>
+      <Button Content="Cancel" ToolTip.Tip="Cancel lat/lon changes" Command="{Binding HandleCancelClicked}" IsVisible="{Binding Editing}" Foreground="{StaticResource FitLicoriceBlack}" Background="{StaticResource FitRedCrayon}" VerticalAlignment="Bottom"/>
     </StackPanel>
   </Grid>
 </UserControl>
