@@ -62,7 +62,8 @@ echo "Storing notary profile..."
 iex -Command "xcrun notarytool store-credentials $notaryProfile --apple-id $env:FITEDIT_APPLE_DEVELOPER_ID --password $env:FITEDIT_APPLE_APP_SPECIFIC_PASSWORD --team-id $env:FITEDIT_APPLE_TEAM_ID --keychain ~/Library/Keychains/$tmpKeychainName-db"
 
 echo "Installing Clowd.Squirrel..."
-dotnet tool install -g csq --prerelease
+# Versions after 2.9.42 create a .zip instead of .pkg+.nupkg
+dotnet tool install -g csq --version 2.9.42
 
 # Build for Intel
 
