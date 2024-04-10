@@ -13,7 +13,7 @@ public class SpeedTests
     var speed = new Speed(milesPerHour, Unit.MilesPerHour);
     var converted = speed.Convert(Unit.MetersPerSecond);
 
-    Assert.AreEqual(Unit.MetersPerSecond, converted.Unit);
-    Assert.AreEqual(expectedMetersPerSecond, converted.Value, 1e-6);
+    Assert.That(Unit.MetersPerSecond, Is.EqualTo(converted.Unit));
+    Assert.That(expectedMetersPerSecond, Is.EqualTo(converted.Value).Within(1e-6));
   }
 }

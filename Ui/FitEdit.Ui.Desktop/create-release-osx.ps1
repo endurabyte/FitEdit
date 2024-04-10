@@ -3,7 +3,7 @@ param (
   [string]$sync = $false
 )
 
-$framework = "net7.0"
+$framework = "net8.0"
 $configuration = "Release"
 $authors = "EnduraByte LLC"
 $packId = "FitEdit"

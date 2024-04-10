@@ -4,7 +4,7 @@ param (
 )
 
 $projectFile = "FitEdit.Ui.Desktop.csproj"
-$targetFramework = "net7.0"
+$targetFramework = "net8.0"
 $runtimeIdentifier = "linux-x64"
 $configuration = "Release"
 $buildDir = "./bin/$configuration/$targetFramework/$runtimeIdentifier/" 

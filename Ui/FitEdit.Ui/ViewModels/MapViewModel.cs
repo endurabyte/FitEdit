@@ -6,6 +6,8 @@ using FitEdit.Model.Data;
 using FitEdit.Model;
 using FitEdit.Data;
 using FitEdit.Ui.Extensions;
+using Mapsui.Providers;
+
 
 #if USE_MAPSUI
 using Mapsui;
@@ -129,32 +131,76 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     this.ObservableForProperty(x => x.Map).Subscribe(e => HandleMapControlChanged());
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => HandleSelectedIndexChanged(prop.Value));
     this.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => ShowSelection());
-    this.ObservableForProperty(x => x.Editing).Subscribe(e => HandleEditingChanged());
   }
 
-  private void HandleEditingChanged()
+  public void HandleEditClicked() => StartEditing();
+  public void HandleCancelClicked() => EndEditing();
+
+  public void HandleSaveClicked()
   {
-    traces_.Remove(editTraceId_);
-    layers_.Remove(EditLayerIndex_);
-    HandleLayersChanged();
+    bool gotLayer = traces_.TryGetValue(editTraceId_, out ILayer? traceLayer);
+    EndEditing();
 
-    if (!Editing)
-    {
-      return;
-    }
-    
-    UiFile? sf = fileService_.MainFile;
-    if (sf == null) { return; }
-    if (sf.Activity == null) { return; }
-    if (sf.FitFile == null) { return; }
+    if (!gotLayer) { return; }
 
-    ILayer? layer = Add(sf.FitFile, "GPS Editor", EditLayerIndex_, FitColor.LimeCrayon, editable: true);
+    UiFile? uif = fileService_.MainFile;
+    if (uif?.FitFile == null) { return; }
+
+    SaveEditsToFit(traceLayer, uif.FitFile);
+
+    // Reload changes
+    fileService_.MainFile = null;
+    fileService_.MainFile = uif;
+
+    uif.IsLoaded = false;
+    uif.IsLoaded = true;
+  }
+
+  private void StartEditing()
+  {
+    Editing = true;
+
+    UiFile? uif = fileService_.MainFile;
+    if (uif?.FitFile == null) { return; }
+
+    ILayer? layer = Add(uif.FitFile, "GPS Editor", EditLayerIndex_, FitColor.LimeCrayon, editable: true);
 
     if (layer == null) { return; }
     traces_[editTraceId_] = layer;
     layers_[EditLayerIndex_] = layer;
 
     HandleLayersChanged();
+  }
+
+  private void EndEditing()
+  {
+    Editing = false;
+    traces_.Remove(editTraceId_);
+    layers_.Remove(EditLayerIndex_);
+    HandleLayersChanged();
+  }
+
+  /// <summary>
+  /// Commit changed GPS coordinates to current FIT file
+  /// </summary>
+  private static void SaveEditsToFit(ILayer? traceLayer, FitFile fit)
+  {
+    if (traceLayer is not Layer layer) { return; }
+    if (layer.DataSource is not MemoryProvider mp) { return; }
+
+    Coordinate[] coords = mp.Features
+      .Cast<PointFeature>()
+      .Select(f => f.Point.MapCoordinate())
+      .ToArray();
+
+    if (coords.Length != fit.Records.Count) { return; }
+
+    foreach (var pair in fit.Records.Select((record, i) => new { record, i }))
+    {
+      pair.record.WithCoordinate(coords[pair.i]);
+    }
+
+    fit.BackfillEvents();
   }
 
   private void HandleMainFileChanged(IObservedChange<IFileService, UiFile?> property)
@@ -165,7 +211,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     selectedIndexSub_ = property.Value.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => SelectedIndex = prop.Value);
     selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
 
-    Editing = false;
+    EndEditing();
   }
 
   private void HandleMapControlChanged()
@@ -366,7 +412,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (coords.Length < 2) { return null; }
     if (Map?.Map == null) { return null; }
 
-    var trace = LayerFactory.CreatPointFeatures(coords, name, color, selectedColor, 0.5);
+    var trace = LayerFactory.CreatePointFeatures(coords, name, color, selectedColor, 0.5);
 
     return trace;
   }

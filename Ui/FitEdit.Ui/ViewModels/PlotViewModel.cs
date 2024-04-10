@@ -43,13 +43,12 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   private readonly Dictionary<UiFile, List<PlotElement>> plots_ = new();
 
   private LineSeries? HrSeries_ => Plot?.Series[0] as LineSeries;
-  private TrackerHitResult? lastTracker_;
   private double zoomScale_ = 50;
 
   [Reactive] public int SliderValue { get; set; }
   [Reactive] public int SliderMax { get; set; }
 
-  [Reactive] public ScreenPoint? TrackerPosition { get; set; }
+  [Reactive] public TrackerHitResult? Tracker { get; set; }
   [Reactive] public PlotModel? Plot { get; set; }
   [Reactive] public PlotController PlotController { get; set; } = new();
 
@@ -252,7 +251,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
     SliderValue = index;
 
     if (Plot?.PlotView is null) { return; }
-    if (lastTracker_ != null && lastTracker_.Index == index) { return; }
 
     LineSeries? series = HrSeries_;
     if (series == null) { return; }
@@ -260,8 +258,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     DataPoint selection = series.Points[index];
     ScreenPoint position = series.Transform(selection);
-
-    TrackerPosition = position;
 
     var hit = new TrackerHitResult
     {
@@ -277,9 +273,6 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
   private void HandleTrackerChanged(object? sender, TrackerEventArgs e)
   {
     if (e.HitResult == null) { return; }
-
-    lastTracker_ = e.HitResult;
-    TrackerPosition = e.HitResult.Position;
     SelectedIndex = (int)e.HitResult.Index;
   }
 

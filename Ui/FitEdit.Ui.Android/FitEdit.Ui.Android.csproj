@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0-android</TargetFramework>
+    <TargetFramework>net8.0-android</TargetFramework>
     <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
     <Nullable>enable</Nullable>
     <ApplicationId>com.endurabyte.fitedit</ApplicationId>
@@ -33,8 +33,8 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <!--For WebAuthenticator, part of Avalonia.Essentials-->
-    <PackageReference Include="Xamarin.AndroidX.Browser" Version="1.5.0.2" />
-    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1" />
+    <PackageReference Include="Xamarin.AndroidX.Browser" Version="1.8.0" />
+    <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.6" />
     <PackageReference Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="Avalonia.Essentials" Version="1.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />

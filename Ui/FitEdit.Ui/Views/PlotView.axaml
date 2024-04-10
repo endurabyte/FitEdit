@@ -22,7 +22,7 @@
     <oxy:PlotView Grid.Row="0" x:Name="OxyPlotView" Model="{Binding Plot}" Controller="{Binding PlotController}" >
       <oxy:PlotView.DefaultTrackerTemplate>
         <ControlTemplate>
-          <oxy:TrackerControl Position="{Binding TrackerPosition, Mode=TwoWay}" Background="Transparent" BorderBrush="Gray">
+          <oxy:TrackerControl Position="{Binding Position}" DataContext="{Binding Tracker}" Background="Transparent" BorderBrush="Gray">
             <oxy:TrackerControl.Content>
               <TextBlock Text="{Binding}" Margin="7" Foreground="White" />
             </oxy:TrackerControl.Content>

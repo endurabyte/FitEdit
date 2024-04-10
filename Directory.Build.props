@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Configurations>Debug;Release</Configurations>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -17,9 +17,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AvaloniaVersion>11.0.4</AvaloniaVersion>
-    <AvaloniaSvgVersion>11.0.0.2</AvaloniaSvgVersion>
+    <AvaloniaVersion>11.0.10</AvaloniaVersion>
+    <AvaloniaSvgVersion>11.0.0.18</AvaloniaSvgVersion>
     <OxyPlotVersion>2.1.2-av11.0.0</OxyPlotVersion>
-    <MapsuiVersion>4.0.0-173-g0ea83d675</MapsuiVersion>
+    <MapsuiVersion>4.1.5</MapsuiVersion>
   </PropertyGroup>
 </Project>

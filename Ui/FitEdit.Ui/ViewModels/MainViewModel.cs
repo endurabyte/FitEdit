@@ -106,7 +106,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   {
     var assembly = Assembly.GetAssembly(typeof(App));
     var attr = assembly?.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
-    Version = attr?.InformationalVersion ?? "Unknown Version";
+    Version = attr?.InformationalVersion.Split("+")[0] ?? "Unknown Version";
     AppTitle = AppTitle_;
   }
 }
