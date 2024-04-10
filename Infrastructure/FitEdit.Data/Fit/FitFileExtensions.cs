@@ -380,7 +380,7 @@ public static class FitFileExtensions
 
     List<RecordMesg> records = source
       .Get<RecordMesg>()
-      .Where(r => r.GetEnhancedSpeed() < 1000) // filter out speed spikes
+      .Where(r => r.GetEnhancedSpeed() == null || r.GetEnhancedSpeed() < 1000) // filter out speed spikes
       .ToList()
       .Sorted(MessageExtensions.Sort);
 
