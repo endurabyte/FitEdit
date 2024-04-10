@@ -15,12 +15,12 @@ public static class TaskExtensions
   public static T Await<T>(this Task<T> t) => t.GetAwaiter().GetResult();
 
   /// <summary>
-  /// Shorthand for AnyContext()
+  /// Shorthand for ConfigureAwait(false)
   /// </summary>
   public static Task AnyContext(this Task t) => t.WithContext(AsyncContext.Any);
 
   /// <summary>
-  /// Shorthand for AnyContext()
+  /// Shorthand for ConfigureAwait(false)
   /// </summary>
   public static Task<T> AnyContext<T>(this Task<T> t) => t.WithContext(AsyncContext.Any);
 
