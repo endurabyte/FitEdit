@@ -147,11 +147,13 @@ namespace Dynastream.Fit
 
         case Fit.String:
           // Each string may be of differing length
+          int len = 0; // use int since byte can overflow
           // The fit binary must also include a null terminator
           foreach (byte[] element in values)
           {
-            size += (byte)(element.Length);
+            len += element.Length;
           }
+          size = len > 255 ? (byte)255 : (byte)len;
           break;
 
         default:
