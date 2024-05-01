@@ -395,7 +395,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     if (uif == null) { return; }
     uif.Progress = 0;
     uif.IsLoaded = false;
-    FileService.MainFile = FileService.Files.FirstOrDefault(f => f.IsLoaded);
+    FileService.MainFile = null;
   }
 
   private async Task LoadFile(UiFile? uif)
