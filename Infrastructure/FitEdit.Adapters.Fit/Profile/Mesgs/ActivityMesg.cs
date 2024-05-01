@@ -24,7 +24,7 @@ namespace Dynastream.Fit
     /// <summary>
     /// Implements the Activity profile message.
     /// </summary>
-    public class ActivityMesg : Mesg
+    public class ActivityMesg : Mesg, IInstantOfTime
     {
         #region Fields
         #endregion
