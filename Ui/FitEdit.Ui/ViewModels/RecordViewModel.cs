@@ -15,6 +15,7 @@ using DynamicData.Binding;
 using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System.Collections.Concurrent;
 
 namespace FitEdit.Ui.ViewModels;
 
@@ -86,7 +87,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private readonly IWindowAdapter window_;
   private IDisposable? selectedIndexSub_;
   private IDisposable? selectedCountSub_;
-  private readonly HashSet<IDisposable> messageSubs_ = new();
+  private readonly ConcurrentDictionary<IDisposable, IDisposable> messageSubs_ = new();
   private DataGridWrapper? records_;
   private MessageWrapper? selectedMessage_;
   private readonly MesgFieldValueConverter converter_;
@@ -275,7 +276,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     selectedCountSub_?.Dispose();
     foreach (var sub in messageSubs_)
     {
-      sub.Dispose();
+      sub.Value.Dispose();
     }
     messageSubs_.Clear();
 
@@ -479,7 +480,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
         IDisposable sub = wrapper
           .WhenPropertyChanged(x => x.Mesg, notifyOnInitialValue: false)
           .Subscribe(_ => HandleMessagePropertyChanged(wrapper));
-        messageSubs_.Add(sub);
+        messageSubs_[sub] = sub;
       }
     });
 
