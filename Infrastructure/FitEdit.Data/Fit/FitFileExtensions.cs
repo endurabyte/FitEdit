@@ -38,8 +38,8 @@ public static class FitFileExtensions
   /// <summary>
   /// Return the timestamp from the first FileID message. Return default if there is no such message.
   /// </summary>
-  public static System.DateTime GetStartTime(this FitFile f) => f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) is FileIdMesg mesg 
-    ? mesg.GetTimeCreated().GetDateTime() 
+  public static System.DateTime GetStartTime(this FitFile f) => f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) is FileIdMesg mesg
+    ? mesg.GetTimeCreated().GetDateTime()
     : default;
 
   public static List<T> Get<T>(this FitFile f) where T : Mesg => f.Messages
@@ -67,7 +67,7 @@ public static class FitFileExtensions
   /// </summary>
   public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, Dynastream.Fit.DateTime after = default, Dynastream.Fit.DateTime before = default)
     where T : IInstantOfTime => ts.Where(t => t.GetTimestamp().CompareTo(after) >= 0 && t.GetTimestamp().CompareTo(before) < 0).Cast<T>();
-  
+
   /// <summary>
   /// Compute Session, Records, and Laps from Events
   /// </summary>
@@ -300,6 +300,50 @@ public static class FitFileExtensions
 
 #nullable enable
 
+  public static FitFile? Merge(List<FitFile> files)
+  {
+    if (files.Count < 2) { return null; }
+
+    List<FitFile> sorted = files
+      .OrderBy(f => f.GetStartTime())
+      .ToList();
+
+    var merged = new FitFile();
+
+    // Strategy: Concatenate all messages and remove the duplicates.
+    // e.g. there must only be one ActivityMesg, so keep only the first.
+    foreach (var file in sorted)
+    {
+      merged.Append(file);
+    }
+
+    var activityMesg = merged.FindFirst<ActivityMesg>();
+    System.DateTime firstActivityTime = activityMesg?.GetTimestamp().GetDateTime() ?? default;
+
+    merged.RemoveNonfirst(typeof(FileIdMesg));
+    merged.RemoveNonfirst(typeof(FileCreatorMesg));
+    merged.RemoveNonfirst(typeof(DeviceSettingsMesg));
+    merged.RemoveNonfirst(typeof(UserProfileMesg));
+    merged.RemoveNonfirst(typeof(ActivityMesg));
+    merged.RemoveAll(typeof(DeviceInfoMesg), after: firstActivityTime);
+
+    return merged;
+  }
+
+  private static List<T> FindAll<T>(this FitFile f) where T : Mesg => f.FindAll(typeof(T)).Cast<T>().ToList(); 
+
+  private static List<Mesg> FindAll(this FitFile f, Type t) => f.Events.OfType<MesgEventArgs>()
+      .Where(mea => mea.mesg.GetType() == t)
+      .Select(mea => mea.mesg)
+      .ToList();
+
+  private static T? FindFirst<T>(this FitFile f) where T : Mesg => f.FindFirst(typeof(T)) as T;
+
+  private static Mesg? FindFirst(this FitFile f, Type t) => f.Events.OfType<MesgEventArgs>()
+      .Where(mea => mea.mesg.GetType() == t)
+      .Select(mea => mea.mesg)
+      .FirstOrDefault();
+
   /// <summary>
   /// Build a new FIT file from the given file by removing unnecessary messages.
   ///
@@ -313,25 +357,25 @@ public static class FitFileExtensions
     if (source == null) { return null; }
     var dest = new FitFile();
 
-    var typeFilter = new HashSet<Type> 
-    { 
-      typeof(FileIdMesg), 
-      typeof(FileCreatorMesg), 
-      typeof(EventMesg), 
-      typeof(DeviceInfoMesg), 
-      typeof(DeviceSettingsMesg), 
-      typeof(UserProfileMesg), 
-      typeof(SportMesg), 
-      typeof(SessionMesg), 
-      typeof(RecordMesg), 
-      typeof(LapMesg), 
-      typeof(ActivityMesg), 
+    var typeFilter = new HashSet<Type>
+    {
+      typeof(FileIdMesg),
+      typeof(FileCreatorMesg),
+      typeof(EventMesg),
+      typeof(DeviceInfoMesg),
+      typeof(DeviceSettingsMesg),
+      typeof(UserProfileMesg),
+      typeof(SportMesg),
+      typeof(SessionMesg),
+      typeof(RecordMesg),
+      typeof(LapMesg),
+      typeof(ActivityMesg),
     };
     var mesgNumFilter = new HashSet<ushort>(typeFilter.Select(type => MessageFactory.MesgNums[type]));
 
     var filteredEvents = source.Events.Where(e =>
     {
-      if (e is MesgEventArgs mea && typeFilter.Contains(mea.mesg.GetType())) 
+      if (e is MesgEventArgs mea && typeFilter.Contains(mea.mesg.GetType()))
       {
         if (!dest.MessagesByDefinition.ContainsKey(mea.mesg.Num))
         {
@@ -341,13 +385,13 @@ public static class FitFileExtensions
         {
           dest.MessagesByDefinition[mea.mesg.Num].Add(mea.mesg);
         }
-        return true; 
+        return true;
       }
 
-      if (e is MesgDefinitionEventArgs mdea && mesgNumFilter.Contains(mdea.mesgDef.GlobalMesgNum)) 
+      if (e is MesgDefinitionEventArgs mdea && mesgNumFilter.Contains(mdea.mesgDef.GlobalMesgNum))
       {
         dest.MessageDefinitions[mdea.mesgDef.GlobalMesgNum] = mdea.mesgDef;
-        return true; 
+        return true;
       }
 
       return false;
@@ -451,15 +495,15 @@ public static class FitFileExtensions
     if (deviceInfo != null) { mesgs.AddRange(deviceInfo); }
     if (deviceSettings != null) { mesgs.Add(deviceSettings); }
     if (userProfile != null) { mesgs.Add(userProfile); }
-    if (sport != null) 
-    { 
+    if (sport != null)
+    {
       session.SetSport(sport.GetSport());
       session.SetSubSport(sport.GetSubSport());
 
       lap.SetSport(sport.GetSport());
       lap.SetSubSport(sport.GetSubSport());
 
-      mesgs.Add(sport); 
+      mesgs.Add(sport);
     }
 
     mesgs.Add(session);
@@ -634,7 +678,7 @@ public static class FitFileExtensions
       SportMesg sportMesg = sports[i];
       Sport? sport = sportMesg.GetSport();
       SubSport? subSport = sportMesg.GetSubSport();
-      
+
       // Sport already has a session
       if (existing is not null && existing.GetSport() == sport) { continue; }
 
@@ -696,6 +740,9 @@ public static class FitFileExtensions
     dest.Events.Add(new MesgEventArgs(mesg));
   }
 
+  /// <summary>
+  /// Remove the given message.
+  /// </summary>
   public static void Remove(this FitFile f, Mesg mesg)
   {
     f.MessagesByDefinition[mesg.Num].Remove(mesg);
@@ -705,7 +752,71 @@ public static class FitFileExtensions
   /// <summary>
   /// Remove all messages and message definitions for the given message type.
   /// </summary>
-  public static void RemoveAll<T>(this FitFile fit) where T : Mesg => fit.Events.RemoveAll(e => 
-     e is MesgEventArgs mea && mea.mesg.Num == MessageFactory.MesgNums[typeof(T)]
-  || e is MesgDefinitionEventArgs mdea && mdea.mesgDef.GlobalMesgNum == MessageFactory.MesgNums[typeof(T)]);
+  public static void RemoveAll<T>(this FitFile fit) where T : Mesg
+  {
+    var matches = fit.FindAll<T>();
+    foreach (var match in matches)
+    {
+      fit.Remove(match);
+    }
+  }
+
+  /// <summary>
+  /// Remove all messages and message definitions for the given message type.
+  /// </summary>
+  public static void RemoveAll(this FitFile fit, Type t)
+  {
+    var matches = fit.FindAll(t);
+    foreach (var match in matches)
+    {
+      fit.Remove(match);
+    }
+  }
+
+  /// <summary>
+  /// Remove all messages for the given message type except the first instance.
+  /// </summary>
+  public static void RemoveNonfirst(this FitFile fit, Type t)
+  {
+    var match = fit.FindFirst(t);
+    if (match is null) { return; }
+
+    fit.RemoveOthers(match);
+  }
+
+  /// <summary>
+  /// Remove all messages for the given message type except the given instance.
+  /// </summary>
+  public static void RemoveOthers(this FitFile fit, Mesg mesg) => 
+    fit.Events.RemoveAll(e => e.HasMessageOfType(mesg.GetType()) && e is MesgEventArgs mea && !ReferenceEquals(mea.mesg, mesg));
+
+  /// <summary>
+  /// Remove all messages and message definitions for the given message type that occur between the given DateTimes.
+  /// </summary>
+  public static void RemoveAll(this FitFile fit, Type t, System.DateTime after = default, System.DateTime before = default) => 
+    fit.Events.RemoveAll(e => HasMessageOfType(e, t) && e is MesgEventArgs mea && mea.mesg.IsBetween(after, before));
+
+  /// <summary>
+  /// Return true if the given event contains a message of the given type, e.g. <see cref="ActivityMesg"/>.
+  /// </summary>
+  private static bool HasMessageOfType(this EventArgs e, Type t) => 
+       e is MesgEventArgs mea            && mea.mesg.Num               == MessageFactory.MesgNums[t]
+    || e is MesgDefinitionEventArgs mdea && mdea.mesgDef.GlobalMesgNum == MessageFactory.MesgNums[t];
+
+  /// <summary>
+  /// Return true if the given message occurs between the given DateTimes.
+  /// If either DateTime is not specified, it is not considered.
+  /// </summary>
+  private static bool IsBetween(this Mesg mesg, System.DateTime after = default, System.DateTime before = default) => mesg switch
+  {
+    _ when mesg is IDurationOfTime dur
+      && (after == default || dur.GetStartTime().GetDateTime() > after)
+      && (before == default || dur.GetTimestamp().GetDateTime() <= before) => true,
+
+    _ when mesg is IInstantOfTime inst
+      && (after == default || inst.GetTimestamp().GetDateTime() > after)
+      && (before == default || inst.GetTimestamp().GetDateTime() <= before) => true,
+
+    _ => false,
+  };
 }

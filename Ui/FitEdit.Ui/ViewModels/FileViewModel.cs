@@ -567,37 +567,42 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public void HandleMergeClicked() => _ = Task.Run(Merge);
+  public void HandleMergeClicked() => Merge();
 
-  private async Task Merge()
+  private void Merge()
   { 
-    List<UiFile> files = FileService.Files.Where(f => f.IsLoaded).ToList();
+    List<UiFile> files = FileService.Files
+      .Where(f => f.IsLoaded)
+      .ToList();
+
     if (files.Count < 2) { return; }
     if (files.Any(f => f.FitFile == null)) { return; }
 
-    var merged = new FitFile();
+    files.ForEach(UnloadFile);
 
-    foreach (var file in files)
+    var fitFiles = files
+      .Where(f => f.FitFile is not null)
+      .Select(f => f.FitFile!)
+      .ToList();
+
+    _ = Task.Run(async () =>
     {
-      merged.Append(file.FitFile);
-    }
+      var merged = FitFileExtensions.Merge(fitFiles);
 
-    var activity = new LocalActivity
-    {
-      Id = $"{Guid.NewGuid()}",
-      Name = $"Merged {string.Join("-", files.Select(f => f.Activity?.Name).Where(s => !string.IsNullOrEmpty(s)))}"
-    };
+      var activity = new LocalActivity
+      {
+        Id = $"{Guid.NewGuid()}",
+        Name = $"Merged {fitFiles.Count} files on {files.First().Activity?.StartTime.ToShortDateString() ?? "Unknown date"}"
+      };
 
-    var fileRef = new FileReference(activity.Name, merged.GetBytes());
-    activity.File = fileRef;
+      var fileRef = new FileReference(activity.Name, merged.GetBytes());
+      activity.File = fileRef;
 
-    UiFile? sf = await Persist(fileRef);
+      UiFile? uif = await Persist(fileRef);
+      if (uif == null) { return; }
 
-    if (sf == null) { return; }
-    
-    sf.FitFile = merged;
-    sf.IsLoaded = true;
-    sf.Progress = 100;
+      await LoadFile(uif);
+    });
   }
 
   public void HandleRepairSubtractivelyClicked(UiFile uif)
