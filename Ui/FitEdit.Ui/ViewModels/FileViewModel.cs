@@ -357,7 +357,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await Dispatcher.UIThread.InvokeAsync(() =>
     {
       FileService.Add(sf);
-      FileService.MainFile = sf;
     });
 
     await supa_.UpdateAsync(act);
@@ -487,6 +486,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       // Do on the main thread because there are subscribers which update the UI
       await Dispatcher.UIThread.InvokeAsync(() =>
       {
+        FileService.MainFile = null;
         FileService.MainFile = uif;
       });
 
