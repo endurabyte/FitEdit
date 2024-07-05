@@ -4,6 +4,7 @@ using FitEdit.Model.Extensions;
 using FitEdit.Model.Workouts;
 using Dynastream.Fit;
 using Units;
+using System.Runtime.CompilerServices;
 
 namespace FitEdit.Data.Fit;
 
@@ -483,9 +484,10 @@ public static class FitFileExtensions
     stopEvent.SetEvent(Event.Timer);
     stopEvent.SetEventType(EventType.StopDisableAll);
 
-    SessionMesg session = ReconstructSession(records);
-    LapMesg lap = ReconstructLap(records);
-    ActivityMesg activity = ReconstructActivity(records);
+    List<RecordMesg> records2 = EnsureCumulativeDistance(records);
+    SessionMesg session = ReconstructSession(records2);
+    LapMesg lap = ReconstructLap(records2);
+    ActivityMesg activity = ReconstructActivity(records2);
 
     List<Mesg> mesgs = new();
 
@@ -507,7 +509,7 @@ public static class FitFileExtensions
     }
 
     mesgs.Add(session);
-    mesgs.AddRange(records);
+    mesgs.AddRange(records2);
     mesgs.Add(stopEvent);
     mesgs.Add(lap);
     mesgs.Add(activity);
@@ -523,6 +525,85 @@ public static class FitFileExtensions
     dest.ForwardfillEvents();
 
     return dest;
+  }
+
+  /// <summary>
+  /// The distance of each record be cumulative.
+  /// If it is not, assume the discontinuity is due to a sketchy FIT file merge
+  /// and repair it by making the distance cumulative.
+  /// Return a new list of records; do not modify the given list.
+  /// 
+  /// <para/>
+  /// Algorithm:
+  /// Assume the given records are sorted by timestamp.
+  /// Iterate over all records from earliest to latest. 
+  /// If a record's distance is less than the previous record's distance, 
+  /// add the previous record's distance to the current record's distance.
+  /// 
+  /// <para/>
+  /// Example: A good file.
+  /// 
+  /// <code>
+  /// Record | Distance
+  ///   1        10m
+  ///   2        20m
+  ///   3        30m
+  ///   4        40m
+  ///       ...
+  ///   100      100m
+  /// </code>
+  /// 
+  /// <para/>
+  /// Example: A problematic file.
+  /// 
+  /// <code>
+  /// Record | Distance
+  ///   1        10m
+  ///   2        20m
+  ///   3         0m   // Distance should be 20m (== 20m + 0m).
+  ///                  // Somebody probably tried to merge two FIT files.
+  ///   4        10m   // Should be 30m ( == 20m + 10m)
+  ///       ...
+  ///   100      100m
+  /// </code>
+  /// 
+  /// </summary>
+  private static List<RecordMesg> EnsureCumulativeDistance(List<RecordMesg> source)
+  {
+    var dest = source.Select(r => new RecordMesg(r)).ToList();
+
+    double cumulative = 0;
+
+    foreach (int i in Enumerable.Range(0, dest.Count))
+    {
+      double distance = dest[i].GetDistance() ?? 0;
+
+      if (distance < cumulative)
+      {
+        // Add cumulative distance to all subsequent records
+        dest[i..].AddDistance(cumulative);
+      }
+      else
+      {
+        cumulative = distance;
+      }
+    }
+
+    return dest;
+  } 
+
+  private static void AddDistance(this IEnumerable<RecordMesg> records, double distance)
+  {
+    foreach (RecordMesg record in records)
+    {
+      record.AddDistance(distance);
+    }
+  }
+
+  private static void AddDistance(this RecordMesg record, double distance)
+  {
+    double? current = record.GetDistance();
+    record.SetDistance((float)((current ?? 0) + distance));
   }
 
   /// <summary>
