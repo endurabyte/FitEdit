@@ -528,7 +528,7 @@ public static class FitFileExtensions
   }
 
   /// <summary>
-  /// The distance of each record be cumulative.
+  /// The distance of each record should be cumulative.
   /// If it is not, assume the discontinuity is due to a sketchy FIT file merge
   /// and repair it by making the distance cumulative.
   /// Return a new list of records; do not modify the given list.
