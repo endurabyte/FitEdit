@@ -622,11 +622,18 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   public async Task<bool> DeleteAsync(LocalActivity? act)
   {
     if (act is null) { return false; }
-    
-    await client_.Postgrest.Table<Model.Activity>()
-      .Filter("Id", Postgrest.Constants.Operator.Equals, act.Id)
-      .Delete()
-      .AnyContext();
+
+    try
+    {
+      await client_.Postgrest.Table<Model.Activity>()
+        .Filter("Id", Postgrest.Constants.Operator.Equals, act.Id)
+        .Delete()
+        .AnyContext();
+    }
+    catch (HttpRequestException)
+    {
+      tasks_.NotifyUser("Error", "Could reach the server to delete the file.");
+    }
 
     if (Authorization?.Sub is null) { return false; }
 
