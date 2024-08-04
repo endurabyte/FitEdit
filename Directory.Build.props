@@ -9,7 +9,7 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <VersionPrefix>4.4.0</VersionPrefix>
+    <VersionPrefix>4.5.0</VersionPrefix>
     <BuildIncrement>33</BuildIncrement>
     <VersionSuffix></VersionSuffix>
     <Product>FitEdit</Product>

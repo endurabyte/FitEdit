@@ -631,6 +631,24 @@ public static class FitFileExtensions
     var session = dest.Get<SessionMesg>().FirstOrDefault();
     var activity = source.Get<ActivityMesg>().FirstOrDefault();
 
+    if (!records.Any())
+    {
+      var events = source.Get<EventMesg>();
+      var start = events.First().GetTimestamp();
+      var end = events.Last().GetTimestamp();
+
+      records.Add(GetFakeRecord(when: start));
+      records.Add(GetFakeRecord(when: end));
+      lap = GetFakeLap(source);
+      session = GetFakeSession(source);
+      activity = GetFakeActivity(source);
+
+      records.ForEach(dest.Add);
+      dest.Add(lap);
+      dest.Add(session);
+      dest.Add(activity);
+    }
+
     if (lap is null)
     {
       lap = ReconstructLap(records);
@@ -712,6 +730,65 @@ public static class FitFileExtensions
     session.SetTotalDistance(totalDistance);
     session.SetTrigger(SessionTrigger.ActivityEnd);
     return session;
+  }
+
+  private static RecordMesg GetFakeRecord(Dynastream.Fit.DateTime when)
+  {
+    var rec = new RecordMesg();
+    rec.SetTimestamp(when);
+    rec.SetPositionLat(0);
+    rec.SetPositionLong(0);
+    rec.SetDistance(0);
+    rec.SetSpeed(0);
+    rec.SetHeartRate(0);
+    rec.SetCadence(0);
+    return rec;
+  }
+
+  private static LapMesg GetFakeLap(FitFile source)
+  {
+    var events = source.Get<EventMesg>();
+    var start = events.First().GetTimestamp();
+    var end = events.Last().GetTimestamp();
+
+    var session = new LapMesg();
+    session.SetStartTime(start);
+    session.SetTimestamp(end);
+    session.SetEvent(Event.Lap);
+    session.SetEventType(EventType.Stop);
+    session.SetLapTrigger(LapTrigger.SessionEnd);
+    return session;
+  }
+
+  private static SessionMesg GetFakeSession(FitFile source)
+  {
+    var events = source.Get<EventMesg>();
+    var start = events.First().GetTimestamp();
+    var end = events.Last().GetTimestamp();
+
+    var session = new SessionMesg();
+    session.SetStartTime(start);
+    session.SetTimestamp(end);
+    session.SetEvent(Event.Lap);
+    session.SetEventType(EventType.Stop);
+    session.SetTrigger(SessionTrigger.ActivityEnd);
+    return session;
+  }
+
+  private static ActivityMesg GetFakeActivity(FitFile source)
+  {
+    var events = source.Get<EventMesg>();
+    var start = events.First().GetTimestamp();
+    var end = events.Last().GetTimestamp();
+
+    var activity = new ActivityMesg();
+    activity.SetTimestamp(start);
+    activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
+    activity.SetNumSessions(1);
+    activity.SetType(Activity.Manual);
+    activity.SetEvent(Event.Activity);
+    activity.SetEventType(EventType.Stop);
+    return activity;
   }
 
   /// <summary>
