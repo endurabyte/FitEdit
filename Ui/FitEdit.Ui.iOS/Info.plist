@@ -7,7 +7,7 @@
     <key>CFBundleIdentifier</key>
     <string>com.endurabyte.fitedit</string>
     <key>CFBundleShortVersionString</key>
-    <string>4.5.0</string>
+    <string>4.6.0</string>
     <key>LSRequiresIPhoneOS</key>
     <true />
     <key>MinimumOSVersion</key>
@@ -57,6 +57,6 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>33</string>
+    <string>34</string>
   </dict>
 </plist>

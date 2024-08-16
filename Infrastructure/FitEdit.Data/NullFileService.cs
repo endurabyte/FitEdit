@@ -70,7 +70,7 @@ public class NullFileService : IFileService
     return file;
   }
 
-  public Task CreateAsync(FitFile fit) => Task.CompletedTask;
+  public Task CreateAsync(FitFile fit, string? suffix) => Task.CompletedTask;
   public Task<bool> CreateAsync(LocalActivity? act, CancellationToken ct = default) => Task.FromResult(true);
   public Task<bool> DeleteAsync(LocalActivity? act) => Task.FromResult(true);
   public Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => Task.FromResult(new List<string>());

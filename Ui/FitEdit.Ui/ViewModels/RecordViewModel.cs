@@ -671,6 +671,18 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     HaveUnsavedChanges = true;
   }
 
+  public async Task SplitActivity()
+  {
+    if (fitFile_ is null) { return; }
+    if (SelectedIndex == 0 || SelectedIndex == SelectionCount - 1) { return; }
+  
+    System.DateTime at = fitFile_.Records[SelectedIndex].InstantOfTime();
+    (FitFile first, FitFile second) = fitFile_.SplitAt(at);
+   
+    await fileService_.CreateAsync(first, "(Split 1)");
+    await fileService_.CreateAsync(second, "(Split 2)");
+  }
+
   private void HandleCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
   {
     var dg = sender as DataGrid;

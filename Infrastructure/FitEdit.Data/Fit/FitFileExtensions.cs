@@ -4,7 +4,7 @@ using FitEdit.Model.Extensions;
 using FitEdit.Model.Workouts;
 using Dynastream.Fit;
 using Units;
-using System.Runtime.CompilerServices;
+using DateTime = System.DateTime;
 
 namespace FitEdit.Data.Fit;
 
@@ -39,7 +39,7 @@ public static class FitFileExtensions
   /// <summary>
   /// Return the timestamp from the first FileID message. Return default if there is no such message.
   /// </summary>
-  public static System.DateTime GetStartTime(this FitFile f) => f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) is FileIdMesg mesg
+  public static DateTime GetStartTime(this FitFile f) => f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) is FileIdMesg mesg
     ? mesg.GetTimeCreated().GetDateTime()
     : default;
 
@@ -52,22 +52,22 @@ public static class FitFileExtensions
   /// Return only the <see cref="T"/>s which occur between the given times.
   /// Used for e.g. Laps, Sessions, and other messages hich span a duration of time and don't only occupy an instant in time.
   /// </summary>
-  public static IEnumerable<T> DurationBetween<T>(this IEnumerable<T> ts, System.DateTime after = default, System.DateTime before = default)
+  public static IEnumerable<T> DurationBetween<T>(this IEnumerable<T> ts, DateTime after = default, DateTime before = default)
     where T : IDurationOfTime => ts.Where(t => t.Start() > after && t.End() < before);
 
   /// <summary>
   /// Return only the <see cref="T"/>s which occur in the given <see cref="System.DateTime"/> range.
   /// Used for e.g. Records and other messages which don't span a duration of time and instead only occupy an instant in time.
   /// </summary>
-  public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, System.DateTime after = default, System.DateTime before = default)
-    where T : IInstantOfTime => ts.Where(t => t.InstantOfTime() > after && t.InstantOfTime() < before).Cast<T>();
+  public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, DateTime after = default, DateTime before = default)
+    where T : IInstantOfTime => ts.Where(t => t.InstantOfTime() > after && t.InstantOfTime() < before);
 
   /// <summary>
   /// Return only the <see cref="T"/>s which occur in the given <see cref="Dynastream.Fit.DateTime"/> range.
   /// Used for e.g. Records and other messages which don't span a duration of time and instead only occupy an instant in time.
   /// </summary>
   public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, Dynastream.Fit.DateTime after = default, Dynastream.Fit.DateTime before = default)
-    where T : IInstantOfTime => ts.Where(t => t.GetTimestamp().CompareTo(after) >= 0 && t.GetTimestamp().CompareTo(before) < 0).Cast<T>();
+    where T : IInstantOfTime => ts.Where(t => t.GetTimestamp().CompareTo(after) >= 0 && t.GetTimestamp().CompareTo(before) < 0);
 
   /// <summary>
   /// Compute Session, Records, and Laps from Events
@@ -258,7 +258,7 @@ public static class FitFileExtensions
       .Select(_ => new Distance { Unit = Unit.Meter })
       .ToList();
 
-    System.DateTime lastTimestamp = records.First().InstantOfTime();
+    DateTime lastTimestamp = records.First().InstantOfTime();
 
     int recordIndex = 0;
     foreach (RecordMesg record in records)
@@ -277,7 +277,7 @@ public static class FitFileExtensions
         ? value.Convert(Unit.MetersPerSecond).Value
         : record.GetEnhancedSpeed() ?? 0;
 
-      System.DateTime timestamp = record.InstantOfTime();
+      DateTime timestamp = record.InstantOfTime();
       double elapsedSeconds = (timestamp - lastTimestamp).TotalSeconds;
       lastTimestamp = timestamp;
 
@@ -319,7 +319,7 @@ public static class FitFileExtensions
     }
 
     var activityMesg = merged.FindFirst<ActivityMesg>();
-    System.DateTime firstActivityTime = activityMesg?.GetTimestamp().GetDateTime() ?? default;
+    DateTime firstActivityTime = activityMesg?.GetTimestamp().GetDateTime() ?? default;
 
     merged.RemoveNonfirst(typeof(FileIdMesg));
     merged.RemoveNonfirst(typeof(FileCreatorMesg));
@@ -329,6 +329,37 @@ public static class FitFileExtensions
     merged.RemoveAll(typeof(DeviceInfoMesg), after: firstActivityTime);
 
     return merged;
+  }
+
+  public static (FitFile first, FitFile second) SplitAt(this FitFile source, DateTime at)
+  {
+    DateTime start = source.GetStartTime();
+    DateTime end = source.Records.Last().InstantOfTime();
+
+    return (
+      source.ExtractRecords(start, at)!,
+      source.ExtractRecords(at, end)!
+    );
+  }
+  
+  public static List<FitFile> SplitByLap(this FitFile? source)
+  {
+    var laps = source.Get<LapMesg>();
+
+    return laps
+      .Select(lap => source.ExtractRecords(lap.Start(), lap.End())!)
+      .ToList();
+  }
+
+  private static FitFile? ExtractRecords(this FitFile? source, DateTime start, DateTime end)
+  {
+    List<RecordMesg> records = source
+      .Get<RecordMesg>()
+      .InstantBetween(start, end)
+      .ToList()
+      .Sorted(MessageExtensions.Sort);
+
+    return RepairAdditively(source, records);
   }
 
   private static List<T> FindAll<T>(this FitFile f) where T : Mesg => f.FindAll(typeof(T)).Cast<T>().ToList(); 
@@ -430,33 +461,6 @@ public static class FitFileExtensions
       .Sorted(MessageExtensions.Sort);
 
     return RepairAdditively(source, records);
-  }
-
-  public static List<FitFile> SplitByLap(this FitFile? source)
-  {
-    var fits = new List<FitFile>();
-    var laps = source.Get<LapMesg>();
-
-    foreach (var lap in laps)
-    {
-      System.DateTime start = lap.Start();
-      System.DateTime end = lap.End();
-
-      List<RecordMesg> records = source
-        .Get<RecordMesg>()
-        .InstantBetween(start, end)
-        .ToList()
-        .Sorted(MessageExtensions.Sort);
-
-      FitFile? fit = RepairAdditively(source, records);
-
-      if (fit != null)
-      {
-        fits.Add(fit);
-      }
-    }
-
-    return fits;
   }
 
   private static FitFile? RepairAdditively(this FitFile? source, List<RecordMesg> records)
@@ -951,7 +955,7 @@ public static class FitFileExtensions
   /// <summary>
   /// Remove all messages and message definitions for the given message type that occur between the given DateTimes.
   /// </summary>
-  public static void RemoveAll(this FitFile fit, Type t, System.DateTime after = default, System.DateTime before = default) => 
+  public static void RemoveAll(this FitFile fit, Type t, DateTime after = default, DateTime before = default) => 
     fit.Events.RemoveAll(e => HasMessageOfType(e, t) && e is MesgEventArgs mea && mea.mesg.IsBetween(after, before));
 
   /// <summary>
@@ -965,7 +969,7 @@ public static class FitFileExtensions
   /// Return true if the given message occurs between the given DateTimes.
   /// If either DateTime is not specified, it is not considered.
   /// </summary>
-  private static bool IsBetween(this Mesg mesg, System.DateTime after = default, System.DateTime before = default) => mesg switch
+  private static bool IsBetween(this Mesg mesg, DateTime after = default, DateTime before = default) => mesg switch
   {
     _ when mesg is IDurationOfTime dur
       && (after == default || dur.GetStartTime().GetDateTime() > after)

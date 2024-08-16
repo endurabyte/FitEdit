@@ -45,7 +45,7 @@ public class FileService : ReactiveObject, IFileService
 
   private void InitFilesList() => _ = Task.Run(LoadMore);
   
-  public async Task CreateAsync(FitFile fit)
+  public async Task CreateAsync(FitFile fit, string? suffix = "(Edited)")
   { 
     UiFile? originalFile = MainFile;
 
@@ -56,7 +56,7 @@ public class FileService : ReactiveObject, IFileService
     };
 
     newFile.Activity.Id = $"{Guid.NewGuid()}";
-    newFile.Activity.Name = originalFile?.Activity?.Name + " (Edited)";
+    newFile.Activity.Name = $"{originalFile?.Activity?.Name} {suffix}";
     newFile.Activity.FileType = "fit";
     newFile.Activity.StartTime = fit.GetStartTime();
     newFile.Activity.File = new FileReference(newFile.Activity.Name, fit.GetBytes());
@@ -65,11 +65,11 @@ public class FileService : ReactiveObject, IFileService
     bool ok = await CreateAsync(newFile.Activity);
 
     // Make the new file the active one
-    await Dispatcher.UIThread.InvokeAsync(() =>
-    {
-      if (MainFile != null) { MainFile.IsLoaded = false; }
-      MainFile = newFile;
-    });
+    // await Dispatcher.UIThread.InvokeAsync(() =>
+    // {
+    //   if (MainFile != null) { MainFile.IsLoaded = false; }
+    //   MainFile = newFile;
+    // });
   }
 
   public async Task<bool> CreateAsync(LocalActivity? act, CancellationToken ct = default)

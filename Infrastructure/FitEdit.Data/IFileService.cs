@@ -14,7 +14,7 @@ public interface IFileService
   /// <summary>
   /// Create a new file and file list entry for the given FIT file
   /// </summary>
-  Task CreateAsync(FitFile fit);
+  Task CreateAsync(FitFile fit, string? suffix = "");
   Task<bool> CreateAsync(LocalActivity? act, CancellationToken ct = default);
   Task<LocalActivity?> ReadAsync(string id, CancellationToken ct = default);
   Task<bool> UpdateAsync(LocalActivity? act, CancellationToken ct = default);
