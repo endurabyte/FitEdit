@@ -18,51 +18,59 @@
   
   <Grid RowDefinitions="Auto, *, 5" ColumnDefinitions="3*, Auto">
 
-    <Expander Grid.Row="0" Grid.Column="0" Header="Filters">
-      <WrapPanel Orientation="Horizontal">
-        <CheckBox Content="Hide unused columns" IsChecked="{Binding HideUnusedFields}" Margin="0,0,20,0">
-          <ToolTip.Tip>
-            <TextBlock TextWrapping="Wrap">
-              Hide columns that have no data. For example, lat/lon for treadmill runs.
-            </TextBlock>
-          </ToolTip.Tip>
-        </CheckBox>
+    <StackPanel Orientation="Horizontal">
+      <Expander Grid.Row="0" Grid.Column="0" Header="Filters">
+        <WrapPanel Orientation="Horizontal">
+          <CheckBox Content="Hide unused columns" IsChecked="{Binding HideUnusedFields}" Margin="0,0,20,0">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Hide columns that have no data. For example, lat/lon for treadmill runs.
+              </TextBlock>
+            </ToolTip.Tip>
+          </CheckBox>
 
-        <CheckBox Content="Hide unnamed columns" IsChecked="{Binding HideUnnamedFields}" Margin="0,0,20,0">
-          <ToolTip.Tip>
-            <TextBlock TextWrapping="Wrap">
-              Hide columns named like "Field #"
-            </TextBlock>
-          </ToolTip.Tip>
-        </CheckBox>
-        <CheckBox Content="Hide unnamed tabs" IsChecked="{Binding HideUnnamedMessages}" Margin="0,0,20,0">
-          <ToolTip.Tip>
-            <TextBlock TextWrapping="Wrap">
-              Hide tabs like "Message #"
-            </TextBlock>
-          </ToolTip.Tip>
-        </CheckBox>
-        <CheckBox Content="Pretty data" IsChecked="{Binding PrettifyFields}" Margin="0,0,20,0">
-          <ToolTip.Tip>
-            <TextBlock TextWrapping="Wrap">
-              Convert raw data to a more cosmetic format. Examples: <LineBreak/>
-              - Convert numbers like ActivityType "1" to "Running" <LineBreak/>
-              - Convert timestamps like 945518320 to "12/17/2019 11:58:40". The format depends on your region.<LineBreak/>
-              - Convert lat/lon like 427200580 to 35.80753896385431
-            </TextBlock>
-          </ToolTip.Tip>
-        </CheckBox>
-        <CheckBox Content="Hex view" IsChecked="{Binding ShowHexData}" Margin="0,0,20,0">
-          <ToolTip.Tip>
-            <TextBlock TextWrapping="Wrap">
-              Show hex data for the selected row <LineBreak/>
-              See https://developer.garmin.com/fit/protocol/ for the FIT protocol specification
-            </TextBlock>
-          </ToolTip.Tip>
-        </CheckBox>
-      </WrapPanel>
-    </Expander>
+          <CheckBox Content="Hide unnamed columns" IsChecked="{Binding HideUnnamedFields}" Margin="0,0,20,0">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Hide columns named like "Field #"
+              </TextBlock>
+            </ToolTip.Tip>
+          </CheckBox>
+          <CheckBox Content="Hide unnamed tabs" IsChecked="{Binding HideUnnamedMessages}" Margin="0,0,20,0">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Hide tabs like "Message #"
+              </TextBlock>
+            </ToolTip.Tip>
+          </CheckBox>
+          <CheckBox Content="Pretty data" IsChecked="{Binding PrettifyFields}" Margin="0,0,20,0">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Convert raw data to a more cosmetic format. Examples: <LineBreak />
+                - Convert numbers like ActivityType "1" to "Running" <LineBreak />
+                - Convert timestamps like 945518320 to "12/17/2019 11:58:40". The format depends on your region.
+                <LineBreak />
+                - Convert lat/lon like 427200580 to 35.80753896385431
+              </TextBlock>
+            </ToolTip.Tip>
+          </CheckBox>
+          <CheckBox Content="Hex view" IsChecked="{Binding ShowHexData}" Margin="0,0,20,0">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Show hex data for the selected row <LineBreak />
+                See https://developer.garmin.com/fit/protocol/ for the FIT protocol specification
+              </TextBlock>
+            </ToolTip.Tip>
+          </CheckBox>
+        </WrapPanel>
+      </Expander>
 
+      <Button Margin="0"
+        Command="{Binding SplitActivity}"
+        IsVisible="{Binding SelectedIndex > 0}"
+        Content="Split"/>
+    </StackPanel>
+    
     <TabControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding ShownData}" SelectedIndex="{Binding TabIndex}">
       <TabControl.ItemTemplate>
         <DataTemplate>
