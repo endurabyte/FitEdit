@@ -5,14 +5,12 @@ using FitEdit.Data.Fit;
 
 namespace FitEdit.Ui.Converters;
 
-public class MesgFieldValueConverter : IValueConverter
+/// <summary>
+/// Given a <see cref="MessageWrapper"/> and a field name, get or set the value of the field.
+/// </summary>
+public class MessageWrapperFieldNameValueConverter(bool prettify) : IValueConverter
 {
-  public bool Prettify { get; set; }
-
-  public MesgFieldValueConverter(bool prettify)
-  {
-    Prettify = prettify;
-  }
+  public bool Prettify { get; set; } = prettify;
 
   public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value switch
   {
@@ -24,7 +22,7 @@ public class MesgFieldValueConverter : IValueConverter
   {
     if (value is not MessageWrapper mesg || parameter is not (string s, object o)) { return BindingOperations.DoNothing; }
 
-    mesg.SetValue(s, o, Prettify);
+    mesg.SetFieldValue(s, o, Prettify);
     return mesg;
   }
 }

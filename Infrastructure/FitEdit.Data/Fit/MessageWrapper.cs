@@ -30,7 +30,7 @@ public partial class MessageWrapper : HasProperties
     fit_ = assembly;
   }
 
-  public void SetValue(string name, object? value, bool pretty)
+  public void SetFieldValue(string name, object? value, bool pretty)
   {
     try
     {
@@ -316,6 +316,27 @@ public partial class MessageWrapper : HasProperties
       }
     }
 
+    if (Mesg.Name == nameof(MesgNum.Session))
+    {
+      if (name == nameof(SessionMesg.FieldDefNum.StartTime))
+      {
+        if (TryMapDateTimeToTimestamp(value as string, out uint timestamp))
+        {
+          result = timestamp;
+          return true;
+        }
+      }
+    }
+
+    if (name == "StartTime")
+    {
+      if (TryMapDateTimeToTimestamp(value as string, out uint timestamp))
+      {
+        result = timestamp;
+        return true;
+      }
+    }
+
     if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLat)) 
      || name.Contains(nameof(RecordMesg.FieldDefNum.PositionLong)))
     {
@@ -370,6 +391,19 @@ public partial class MessageWrapper : HasProperties
       {
         return Mesg.TimestampToDateTime((uint)value).GetDateTime();
       }
+    }
+
+    if (Mesg.Name == nameof(MesgNum.Session))
+    {
+      if (name == nameof(SessionMesg.FieldDefNum.StartTime))
+      {
+        return Mesg.TimestampToDateTime((uint)value).GetDateTime();
+      }
+    }
+
+    if (name == "StartTime")
+    {
+      return Mesg.TimestampToDateTime((uint)value).GetDateTime();
     }
 
     if (TryConvertBytesToString(name, out string? s))
