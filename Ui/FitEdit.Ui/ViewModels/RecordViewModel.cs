@@ -73,6 +73,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   [Reactive] public int SelectedIndex { get; set; }
 
   [Reactive] public int SelectionCount { get; set; }
+  public bool HasSelection => SelectionCount > 0;
+
   [Reactive] public bool HideUnusedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedMessages { get; set; } = true;
@@ -300,6 +302,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void HandleSelectionCountChanged(int count)
   {
     SelectionCount = count;
+    this.RaisePropertyChanged(nameof(HasSelection));
 
     if (records_?.DataGrid == null) { return; }
     var dg = records_.DataGrid;

@@ -11,6 +11,7 @@ public class UiFile : ReactiveObject
   [Reactive] public FitFile? FitFile { get; set; }
   [Reactive] public LocalActivity? Activity { get; set; }
   [Reactive] public bool IsLoaded { get; set; }
+  public bool IsLoading => Progress > 0;
   [Reactive] public double Progress { get; set; }
 
   /// <summary>
@@ -18,5 +19,11 @@ public class UiFile : ReactiveObject
   /// </summary>
   [Reactive] public int SelectedIndex { get; set; }
   [Reactive] public int SelectionCount { get; set; }
+
+  public UiFile()
+  {
+    this.ObservableForProperty(x => x.Progress)
+      .Subscribe(_ => this.RaisePropertyChanged(nameof(IsLoading)));
+  }
 }
 
