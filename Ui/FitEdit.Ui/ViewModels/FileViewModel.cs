@@ -33,6 +33,7 @@ public interface IFileViewModel
   bool IsDragActive { set; }
 
   void HandleFileDropped(IStorageFile? file);
+  void LoadOrUnload(UiFile uif);
 }
 
 public class DesignFileViewModel : FileViewModel

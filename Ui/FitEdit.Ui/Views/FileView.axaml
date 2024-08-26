@@ -250,7 +250,7 @@
       
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <Border Background="{StaticResource FitLeadBlack2}" CornerRadius="20" Padding="10" Margin="0">
+          <Border Background="{StaticResource FitLeadBlack2}" CornerRadius="20" Padding="10" Margin="0" DoubleTapped="HandleFileDoubleTapped">
 
             <Grid RowDefinitions="*, *, *, *, Auto" ColumnDefinitions="Auto, *, Auto">
 
