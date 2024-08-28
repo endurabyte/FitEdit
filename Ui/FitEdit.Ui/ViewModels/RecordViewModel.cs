@@ -1,22 +1,20 @@
-﻿using System.Collections.ObjectModel;
-using System.Globalization;
+﻿using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Text;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
+using DynamicData.Binding;
+using Dynastream.Fit;
 using FitEdit.Data;
 using FitEdit.Data.Fit;
 using FitEdit.Model.Extensions;
 using FitEdit.Ui.Converters;
 using FitEdit.Ui.Model;
-using DynamicData.Binding;
-using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System.Collections.Concurrent;
-using Avalonia;
 
 namespace FitEdit.Ui.ViewModels;
 
@@ -71,9 +69,9 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// The index of the currently shown GPS coordinate shown in the chart, map, and records tab.
   /// </summary>
   [Reactive] public int SelectedIndex { get; set; }
+  public bool HasNonfirstSelection => SelectedIndex > 0;
 
   [Reactive] public int SelectionCount { get; set; }
-  public bool HasSelection => SelectionCount > 0;
 
   [Reactive] public bool HideUnusedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedFields { get; set; } = true;
@@ -112,6 +110,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     {
       if (fileService_.MainFile == null) { return; }
       fileService_.MainFile.SelectedIndex = property.Value;
+
+      this.RaisePropertyChanged(nameof(HasNonfirstSelection));
     });
 
     this.ObservableForProperty(x => x.HideUnusedFields).Subscribe(_ => UpdateColumnVisibility());
@@ -302,7 +302,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private void HandleSelectionCountChanged(int count)
   {
     SelectionCount = count;
-    this.RaisePropertyChanged(nameof(HasSelection));
 
     if (records_?.DataGrid == null) { return; }
     var dg = records_.DataGrid;
@@ -406,7 +405,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var namedValues = new HashSet<object?>();
 
     // Add defined values.
-    var definedValues = MessageWrapper.GetNamedValues(messageName, field);
+    var definedValues = MesgExtensions.GetNamedValues(messageName, field);
 
     // Don't add actual values if there are no defined values.
     if (definedValues == null) { return null; }
@@ -414,7 +413,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     namedValues.AddRange(definedValues);
 
     // Add actual values
-    var actualValues = wrappers.Select(wrapper => wrapper.GetValue(fieldName, PrettifyFields)).ToList();
+    var actualValues = wrappers.Select(wrapper => wrapper.Mesg.GetFieldValue(fieldName, PrettifyFields)).ToList();
       
     namedValues.AddRange(actualValues);
 
@@ -472,7 +471,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
 
     var defMessage = new MessageWrapper(defMesg);
-    var wrappers = mesgs.Select(mesg => new MessageWrapper(mesg)).ToList();
+    var wrappers = new ObservableCollection<MessageWrapper>(mesgs.Select(mesg => new MessageWrapper(mesg)));
+    foreach (var wrapper in wrappers)
+    {
+      wrapper.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(wrapper));
+    }
+    wrappers.CollectionChanged += (sender, e) => HaveUnsavedChanges = true;
 
     await Task.Run(() =>
     {
@@ -553,7 +557,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
           CellTemplate = new FuncDataTemplate(model => true, (model, scope) =>
           {
             if (model is not MessageWrapper wrapper) { return null; }
-            var converter = new SharedMessageWrapperFieldNameValueConverter(wrapper, prettify: PrettifyFields);
+            var converter = new MessageWrapperFieldValueConverter(wrapper, prettify: PrettifyFields);
 
             var cb = new ComboBox
             {
@@ -561,7 +565,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
               HorizontalAlignment = HorizontalAlignment.Stretch,
               HorizontalContentAlignment = HorizontalAlignment.Stretch,
               ItemsSource = column.NamedValues
-                .Select(_ => $"{_}") // Convert to string since the converted value is a string
+                .Select(o => $"{o}") // Convert to string since the converted value is a string
                 .OrderBy(s => s),
 
               [!ComboBox.SelectedValueProperty] = new Binding
@@ -569,9 +573,19 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
                 Path = nameof(MessageWrapper.Mesg),
                 Converter = converter,
                 ConverterParameter = column.Name,
-                Mode = BindingMode.TwoWay,
-                Source = wrapper,
+                Mode = BindingMode.OneWay,
               }
+            };
+
+            cb.SelectionChanged += (sender, e) =>
+            {
+              // This handler is called when drawing the ComboBox and when the user or code changes the value
+              // We only care about the latter case.
+              // We can discern if this is the case by checking if there are any Removed items.
+              if (e.RemovedItems.Count == 0 ) { return; }
+
+              wrapper.SetFieldValue(column?.Name ?? "", cb.SelectedValue, PrettifyFields);
+              HaveUnsavedChanges = true;
             };
 
             return cb;
@@ -580,30 +594,19 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       }
       else
       {
-        column.Column = new DataGridTemplateColumn
+        var converter = new MesgFieldValueConverter(prettify: PrettifyFields);
+        column.Column = new DataGridTextColumn
         {
           Header = column.Name,
           IsReadOnly = false,
           IsVisible = GetIsVisible(column),
-
-          CellTemplate = new FuncDataTemplate(model => true, (model, scope) =>
+          Binding = new Binding
           {
-            if (model is not MessageWrapper wrapper) { return null; }
-            var converter = new SharedMessageWrapperFieldNameValueConverter(wrapper, prettify: PrettifyFields);
-
-            return new TextBlock
-            {
-              [!TextBox.TextProperty] = new Binding
-              {
-                Path = nameof(MessageWrapper.Mesg),
-                Converter = converter,
-                ConverterParameter = column.Name,
-                Mode = BindingMode.TwoWay,
-                Source = wrapper,
-              },
-              Margin = new Thickness(10, 0, 10, 0),
-            };
-          }),
+            Path = nameof(MessageWrapper.Mesg),
+            Converter = converter,
+            ConverterParameter = column.Name,
+            Mode = BindingMode.OneWay,
+          },
         };
       }
     }
@@ -648,10 +651,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void MergeSelectedLaps(DataGrid dg)
   {
-    if (dg.ItemsSource is not List<MessageWrapper> list)
-    {
-      return;
-    }
+    if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
 
     var allLaps = dg.ItemsSource.Cast<MessageWrapper>().ToList();
     var selectedLaps = dg.SelectedItems.Cast<MessageWrapper>().ToList();
@@ -681,7 +681,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     fitFile_?.Add(merged.Mesg);
 
     dg.SelectedItem = merged;
-    HaveUnsavedChanges = true;
   }
 
   public async Task SplitActivity()
@@ -698,25 +697,23 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void HandleCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
   {
-    var dg = sender as DataGrid;
-
     var column = e.Column as DataGridTextColumn;
     var row = e.Row;
 
-    var binding = column?.Binding as Binding;
-    var converter = binding?.Converter as MessageWrapperFieldNameValueConverter;
+    var fieldName = column?.Header as string;
+    if (fieldName == null) { return; }
 
-    var header = column?.Header as string;
     var message = row.DataContext as MessageWrapper;
+    if (message == null) { return; }
 
     var editingElement = e.EditingElement as TextBox;
-    var newContent = editingElement?.Text;
+    var newValue = editingElement?.Text;
 
-    if (message == null) { return; }
-    if (header == null) { return; }
-    if (converter == null) { return; }
+    bool changed = newValue != message.GetFieldValue(fieldName, PrettifyFields)?.ToString();
+    if (!changed) { return; }
 
-    converter.ConvertBack(message, typeof(MessageWrapper), (header, newContent), CultureInfo.CurrentCulture);
+    message.SetFieldValue(fieldName, newValue, PrettifyFields);
+    HaveUnsavedChanges = true;
   }
 
   private void HandleCellPointerPressed(object? sender, DataGridCellPointerPressedEventArgs e)
@@ -727,40 +724,42 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     string? fieldName = e.Column.Header.ToString();
     if (fieldName == null) { return; }
 
-    var messages = dg.SelectedItems.Cast<MessageWrapper>().ToList();
-
     // Add to the context menu a textbox and button to set all selected cells to the same value
-    var menu = new ContextMenu();
+    var menu = dg.ContextMenu;
+    if (menu is null) { return; }
 
-    var tb = new TextBox
-    {
-      Name = fieldName,
-      HorizontalAlignment = HorizontalAlignment.Stretch,
-      HorizontalContentAlignment = HorizontalAlignment.Stretch,
-    };
+    // Find the previously created context menu items
+    var tb = menu.Items.OfType<TextBox>().FirstOrDefault();
+    var menuItem = menu.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "SetAll" );
 
-    var menuItem = new MenuItem
+    if (tb is null)
     {
-      Header = $"Set {messages.Count} items",
-      Command = ReactiveCommand.Create(() =>
+      tb = new TextBox
       {
-        SetFieldValues(messages, fieldName, tb.Text);
-      }),
-    };
+        Name = fieldName,
+        HorizontalAlignment = HorizontalAlignment.Stretch,
+        HorizontalContentAlignment = HorizontalAlignment.Stretch,
+      };
 
-    ToolTip.SetTip(menuItem, "Set all selected cells to the same value");
-    menu.Items.Add(tb);
-    menu.Items.Add(menuItem);
-    dg.ContextMenu = menu;
+      menu.Items.Add(tb);
+    }
+
+    if (menuItem is null)
+    {
+      menuItem = new MenuItem() { Name = "SetAll" };
+      ToolTip.SetTip(menuItem, "Set all selected cells to the same value");
+      menu.Items.Add(menuItem);
+    }
+
+    var messages = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+    menuItem.Command = ReactiveCommand.Create(() => SetFieldValues(messages, fieldName, tb.Text));
+    menuItem.Header = $"Set {messages.Count} items";
   }
 
   private void SetFieldValues(List<MessageWrapper> messages, string fieldName, object? newValue)
   {
-    var converter = new MessageWrapperFieldNameValueConverter(prettify: PrettifyFields);
-
     foreach (var message in messages)
     {
-      converter.ConvertBack(message, typeof(MessageWrapper), (fieldName, newValue), CultureInfo.CurrentCulture);
       message.SetFieldValue(fieldName, newValue, PrettifyFields);
     }
   }
