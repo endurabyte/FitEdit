@@ -634,9 +634,17 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void AddContextMenus(string mesgName, DataGrid dg)
   {
+    var menu = new ContextMenu();
+
+    var duplicate = new MenuItem
+    {
+      Header = "Duplicate",
+      Command = ReactiveCommand.Create(() => DuplicateRows(dg)),
+    };
+    menu.Items.Add(duplicate);
+
     if (mesgName == "Lap")
     {
-      var menu = new ContextMenu();
       var menuItem = new MenuItem
       {
         Header = "Merge",
@@ -645,8 +653,28 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
       ToolTip.SetTip(menuItem, "Merge the selected laps.\nLaps in between the first and last will be merged even if not selected");
       menu.Items.Add(menuItem);
-      dg.ContextMenu = menu;
     }
+
+    dg.ContextMenu = menu;
+  }
+
+  private void DuplicateRows(DataGrid dg)
+  {
+    if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
+
+    var selection = dg.SelectedItem as MessageWrapper;
+    if (selection is null) { return; }
+
+    var index = list.IndexOf(selection);
+    if (index < 0) { return; }
+
+    var dupe = new MessageWrapper(new Mesg(selection.Mesg));
+    dupe.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(dupe));
+
+    list.Insert(index, dupe);
+    fitFile_?.Add(dupe.Mesg);
+
+    dg.SelectedItem = dupe;
   }
 
   private void MergeSelectedLaps(DataGrid dg)
