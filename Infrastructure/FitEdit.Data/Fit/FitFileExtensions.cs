@@ -53,14 +53,14 @@ public static class FitFileExtensions
   /// Used for e.g. Laps, Sessions, and other messages hich span a duration of time and don't only occupy an instant in time.
   /// </summary>
   public static IEnumerable<T> DurationBetween<T>(this IEnumerable<T> ts, DateTime after = default, DateTime before = default)
-    where T : IDurationOfTime => ts.Where(t => t.Start() > after && t.End() < before);
+    where T : IDurationOfTime => ts.Where(t => t.Start() >= after && t.End() < before);
 
   /// <summary>
   /// Return only the <see cref="T"/>s which occur in the given <see cref="System.DateTime"/> range.
   /// Used for e.g. Records and other messages which don't span a duration of time and instead only occupy an instant in time.
   /// </summary>
   public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, DateTime after = default, DateTime before = default)
-    where T : IInstantOfTime => ts.Where(t => t.InstantOfTime() > after && t.InstantOfTime() < before);
+    where T : IInstantOfTime => ts.Where(t => t.InstantOfTime() >= after && t.InstantOfTime() < before);
 
   /// <summary>
   /// Return only the <see cref="T"/>s which occur in the given <see cref="Dynastream.Fit.DateTime"/> range.

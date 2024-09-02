@@ -69,7 +69,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// The index of the currently shown GPS coordinate shown in the chart, map, and records tab.
   /// </summary>
   [Reactive] public int SelectedIndex { get; set; }
-  public bool HasNonfirstSelection => SelectedIndex > 0;
+  public bool CanSplit => TabName_.Contains("Record") && SelectedIndex > 0 && SelectedIndex < SelectionCount - 1;
 
   [Reactive] public int SelectionCount { get; set; }
 
@@ -111,7 +111,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       if (fileService_.MainFile == null) { return; }
       fileService_.MainFile.SelectedIndex = property.Value;
 
-      this.RaisePropertyChanged(nameof(HasNonfirstSelection));
+      this.RaisePropertyChanged(nameof(CanSplit));
     });
 
     this.ObservableForProperty(x => x.HideUnusedFields).Subscribe(_ => UpdateColumnVisibility());
@@ -176,6 +176,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
 
     SelectHexData(wrapper);
+
+    this.RaisePropertyChanged(nameof(CanSplit));
   }
 
   /// <summary>
@@ -540,6 +542,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       }));
     });
 
+
     var dg = new DataGrid
     {
       ItemsSource = wrappers,
@@ -752,7 +755,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   public async Task SplitActivity()
   {
     if (fitFile_ is null) { return; }
-    if (SelectedIndex == 0 || SelectedIndex == SelectionCount - 1) { return; }
+    if (!CanSplit) { return; }
   
     System.DateTime at = fitFile_.Records[SelectedIndex].InstantOfTime();
     (FitFile first, FitFile second) = fitFile_.SplitAt(at);
