@@ -662,6 +662,18 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       menu.Items.Add(menuItem);
     }
 
+    var setAllTextBox = new TextBox
+    {
+      Name = "SetAll",
+      HorizontalAlignment = HorizontalAlignment.Stretch,
+      HorizontalContentAlignment = HorizontalAlignment.Stretch,
+    };
+    menu.Items.Add(setAllTextBox);
+
+    var setAllButton = new MenuItem() { Name = "SetAll" };
+    ToolTip.SetTip(setAllButton, "Set all selected cells to the same value");
+    menu.Items.Add(setAllButton);
+
     dg.ContextMenu = menu;
   }
 
@@ -702,17 +714,17 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
 
     var allLaps = dg.ItemsSource.Cast<MessageWrapper>().ToList();
-    var selectedLaps = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+    var selection = dg.SelectedItems.Cast<MessageWrapper>().ToList();
 
-    MessageWrapper? merged = new MessageWrapperMerger().Merge(allLaps, selectedLaps);
+    MessageWrapper? merged = new MessageWrapperMerger().Merge(allLaps, selection);
 
     if (merged == null) { return; }
 
-    int index = allLaps.IndexOf(selectedLaps.First());
+    int index = allLaps.IndexOf(selection.First());
 
     if (index < 0) { return; }
 
-    foreach (var lap in selectedLaps)
+    foreach (var lap in selection)
     {
       // Remove from table
       list.Remove(lap);
@@ -766,6 +778,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void HandleCellPointerPressed(object? sender, DataGridCellPointerPressedEventArgs e)
   {
+    if (e.Column is null) { return; }
+
     var dg = sender as DataGrid;
     if (dg is null) { return; }
 
@@ -777,31 +791,15 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (menu is null) { return; }
 
     // Find the previously created context menu items
-    var tb = menu.Items.OfType<TextBox>().FirstOrDefault();
-    var menuItem = menu.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "SetAll" );
+    var setAllTextBox = menu.Items.OfType<TextBox>().FirstOrDefault(x => x.Name == "SetAll");
+    var setAllButton = menu.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "SetAll" );
 
-    if (tb is null)
-    {
-      tb = new TextBox
-      {
-        Name = fieldName,
-        HorizontalAlignment = HorizontalAlignment.Stretch,
-        HorizontalContentAlignment = HorizontalAlignment.Stretch,
-      };
-
-      menu.Items.Add(tb);
-    }
-
-    if (menuItem is null)
-    {
-      menuItem = new MenuItem() { Name = "SetAll" };
-      ToolTip.SetTip(menuItem, "Set all selected cells to the same value");
-      menu.Items.Add(menuItem);
-    }
+    if (setAllTextBox is null) { return; }
+    if (setAllButton is null) { return; }
 
     var messages = dg.SelectedItems.Cast<MessageWrapper>().ToList();
-    menuItem.Command = ReactiveCommand.Create(() => SetFieldValues(messages, fieldName, tb.Text));
-    menuItem.Header = $"Set {messages.Count} items";
+    setAllButton.Command = ReactiveCommand.Create(() => SetFieldValues(messages, fieldName, setAllTextBox.Text));
+    setAllButton.Header = $"Set {messages.Count} items";
   }
 
   private void SetFieldValues(List<MessageWrapper> messages, string fieldName, object? newValue)
