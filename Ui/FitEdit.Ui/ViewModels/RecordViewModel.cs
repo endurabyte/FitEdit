@@ -149,7 +149,13 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   public async Task SaveChanges()
   {
     if (fitFile_ is null) { return; }
+
     fitFile_.ForwardfillEvents();
+    fitFile_.Sessions.Sorted(MessageExtensions.SortByStartTime);
+    fitFile_.Laps.Sorted(MessageExtensions.SortByStartTime);
+    fitFile_.Records.Sorted(MessageExtensions.SortByTimestamp);
+    fitFile_.BackfillEvents();
+    
     await fileService_.CreateAsync(fitFile_);
     HaveUnsavedChanges = false;
   }

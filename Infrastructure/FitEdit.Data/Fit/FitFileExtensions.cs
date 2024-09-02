@@ -357,7 +357,7 @@ public static class FitFileExtensions
       .Get<RecordMesg>()
       .InstantBetween(start, end)
       .ToList()
-      .Sorted(MessageExtensions.Sort);
+      .Sorted(MessageExtensions.SortByTimestamp);
 
     return RepairAdditively(source, records);
   }
@@ -458,7 +458,7 @@ public static class FitFileExtensions
       .Get<RecordMesg>()
       .Where(r => r.GetEnhancedSpeed() == null || r.GetEnhancedSpeed() < 1000) // filter out speed spikes
       .ToList()
-      .Sorted(MessageExtensions.Sort);
+      .Sorted(MessageExtensions.SortByTimestamp);
 
     return RepairAdditively(source, records);
   }
@@ -628,7 +628,7 @@ public static class FitFileExtensions
       .Get<RecordMesg>()
       .Where(r => r.GetEnhancedSpeed() < spike)
       .ToList()
-      .Sorted(MessageExtensions.Sort);
+      .Sorted(MessageExtensions.SortByTimestamp);
 
     var sport = source.Get<SportMesg>().FirstOrDefault();
     var lap = source.Get<LapMesg>().FirstOrDefault();
