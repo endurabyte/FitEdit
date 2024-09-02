@@ -544,9 +544,7 @@ namespace Dynastream.Fit
       {
         if (Fields[i].Num == field.Num)
         {
-          Fields[i] = field;
-          FieldsByNum[field.Num] = field;
-          FieldsByName[field.Name] = field;
+          Add(field, i);
           return;
         }
       }
