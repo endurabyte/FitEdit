@@ -643,6 +643,13 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     };
     menu.Items.Add(duplicate);
 
+    var delete = new MenuItem
+    {
+      Header = "Delete",
+      Command = ReactiveCommand.Create(() => DeleteRows(dg)),
+    };
+    menu.Items.Add(delete);
+
     if (mesgName == "Lap")
     {
       var menuItem = new MenuItem
@@ -656,6 +663,19 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
 
     dg.ContextMenu = menu;
+  }
+
+  private void DeleteRows(DataGrid dg)
+  {
+    if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
+    var selection = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+
+    foreach (var item in selection)
+    {
+      list.Remove(item);
+      fitFile_?.Remove(item.Mesg);
+    }
+    HaveUnsavedChanges = true;
   }
 
   private void DuplicateRows(DataGrid dg)
