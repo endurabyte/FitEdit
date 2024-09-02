@@ -668,7 +668,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var index = list.IndexOf(selection);
     if (index < 0) { return; }
 
-    var dupe = new MessageWrapper(new Mesg(selection.Mesg));
+    var dupe = new MessageWrapper(MessageFactory.Create(selection.Mesg));
     dupe.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(dupe));
 
     list.Insert(index, dupe);
