@@ -445,7 +445,7 @@ namespace Dynastream.Fit
                       Fit.BaseType[baseType].invalidValue));
             }
 
-            field.SetValue(temp.ToArray());
+            field.SetValue(field.GetNumValues(), temp.ToArray());
           }
           catch (Exception)
           {
