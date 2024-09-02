@@ -831,6 +831,9 @@ public static class FitFileExtensions
       return;
     }
 
+    var activity = source.Get<ActivityMesg>().First();
+    activity.SetNumSessions((ushort)sports.Count);
+
     var laps = source.Get<LapMesg>();
     laps.Sort((l1, l2) => l1.Start().CompareTo(l2.Start()));
 
