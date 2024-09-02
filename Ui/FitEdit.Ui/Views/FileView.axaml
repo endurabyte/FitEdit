@@ -250,7 +250,7 @@
       
       <ListBox.ItemTemplate>
         <DataTemplate>
-          <Border Background="{StaticResource FitLeadBlack2}" CornerRadius="20" Padding="10" Margin="0">
+          <Border Background="{StaticResource FitLeadBlack2}" CornerRadius="20" Padding="10" Margin="0" DoubleTapped="HandleFileDoubleTapped">
 
             <Grid RowDefinitions="*, *, *, *, Auto" ColumnDefinitions="Auto, *, Auto">
 
@@ -288,7 +288,7 @@
               </WrapPanel>
               <controls:PieProgressIndicator Grid.Row="0" Grid.Column="2"
                                              VerticalAlignment="Top"
-                                             IsVisible="{Binding Progress > 0}"
+                                             IsVisible="{Binding IsLoading}"
                                              Maximum="100" Value="{Binding Progress}" Height="15"/>
 
             </Grid>

@@ -55,7 +55,7 @@
     <TextBlock DockPanel.Dock="Top" Text="{Binding Message}" IsVisible="{Binding !ImportComplete}" FontStyle="Italic" HorizontalAlignment="Center"/>
     <WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Orientation="Horizontal">
     <Button Width="150" 
-            IsEnabled="{Binding SelectedActivities.Count > 0}"
+            IsEnabled="{Binding HasSelection}"
             IsVisible="{Binding !ImportComplete}"
             Content="Import Selected" 
             Command="{Binding ImportFiles}" 

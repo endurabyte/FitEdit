@@ -60,6 +60,7 @@ namespace FitEdit.Data.Fit
     public static System.DateTime End(this IDurationOfTime hts) => hts.GetTimestamp()?.GetDateTime() ?? System.DateTime.MinValue;
     public static System.DateTime InstantOfTime(this IInstantOfTime hts) => hts.GetTimestamp()?.GetDateTime() ?? System.DateTime.MinValue;
 
-    public static Comparison<IInstantOfTime> Sort => (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
+    public static Comparison<IInstantOfTime> SortByTimestamp => (a, b) => a.GetTimestamp().CompareTo(b.GetTimestamp());
+    public static Comparison<IDurationOfTime> SortByStartTime => (a, b) => a.GetStartTime().CompareTo(b.GetStartTime());
   }
 }

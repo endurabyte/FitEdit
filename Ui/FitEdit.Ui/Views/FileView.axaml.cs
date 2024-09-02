@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using FitEdit.Data;
 using FitEdit.Model;
 using FitEdit.Ui.ViewModels;
 
@@ -53,5 +55,14 @@ public partial class FileView : UserControl
         vm.HandleFileDropped(file);
       }
     }
+  }
+
+  private void HandleFileDoubleTapped(object? sender, TappedEventArgs e)
+  {
+    if (sender is not StyledElement elem) { return; }
+    if (elem.DataContext is not UiFile uif) { return; }
+    if (DataContext is not IFileViewModel vm) { return; }
+
+    vm.LoadOrUnload(uif);
   }
 }

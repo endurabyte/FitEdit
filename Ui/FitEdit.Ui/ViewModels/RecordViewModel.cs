@@ -1,21 +1,20 @@
-﻿using System.Collections.ObjectModel;
-using System.Globalization;
+﻿using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Text;
 using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
+using DynamicData.Binding;
+using Dynastream.Fit;
 using FitEdit.Data;
 using FitEdit.Data.Fit;
 using FitEdit.Model.Extensions;
 using FitEdit.Ui.Converters;
 using FitEdit.Ui.Model;
-using DynamicData.Binding;
-using Dynastream.Fit;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
-using System.Collections.Concurrent;
 
 namespace FitEdit.Ui.ViewModels;
 
@@ -71,7 +70,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// </summary>
   [Reactive] public int SelectedIndex { get; set; }
 
+  public bool CanSplit => TabName_.Contains("Record") 
+    && SelectedIndex > 0 
+    && SelectedIndex < fitFile_?.Records.Count - 1;
+
   [Reactive] public int SelectionCount { get; set; }
+
   [Reactive] public bool HideUnusedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedMessages { get; set; } = true;
@@ -90,7 +94,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   private readonly ConcurrentDictionary<IDisposable, IDisposable> messageSubs_ = new();
   private DataGridWrapper? records_;
   private MessageWrapper? selectedMessage_;
-  private readonly MesgFieldValueConverter converter_;
 
   public RecordViewModel(
     IFileService fileService,
@@ -104,14 +107,14 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     // Scroll it back into view.
     window_.Resized.Subscribe(_ => ScrollToSelection());
 
-    converter_ = new MesgFieldValueConverter(prettify: PrettifyFields);
-
     fileService.ObservableForProperty(x => x.MainFile).Subscribe(property => HandleMainFileChanged(fileService.MainFile));
 
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(property =>
     {
       if (fileService_.MainFile == null) { return; }
       fileService_.MainFile.SelectedIndex = property.Value;
+
+      this.RaisePropertyChanged(nameof(CanSplit));
     });
 
     this.ObservableForProperty(x => x.HideUnusedFields).Subscribe(_ => UpdateColumnVisibility());
@@ -137,7 +140,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     {
       PreserveCurrentTab(async () =>
       {
-        converter_.Prettify = PrettifyFields;
         if (fileService_.MainFile?.FitFile == null) { return; }
         await Show(fileService_.MainFile.FitFile);
       });
@@ -150,7 +152,13 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   public async Task SaveChanges()
   {
     if (fitFile_ is null) { return; }
+
     fitFile_.ForwardfillEvents();
+    fitFile_.Sessions.Sorted(MessageExtensions.SortByStartTime);
+    fitFile_.Laps.Sorted(MessageExtensions.SortByStartTime);
+    fitFile_.Records.Sorted(MessageExtensions.SortByTimestamp);
+    fitFile_.BackfillEvents();
+    
     await fileService_.CreateAsync(fitFile_);
     HaveUnsavedChanges = false;
   }
@@ -166,10 +174,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void HandleTabIndexChanged()
   {
+    this.RaisePropertyChanged(nameof(CanSplit));
+
     if (!TabIndexIsValid_) { return; }
     DataGridWrapper data = ShownData[TabIndex];
-    if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
 
+    if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
     SelectHexData(wrapper);
   }
 
@@ -346,6 +356,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
         group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
         if (group.DataGrid != null)
         {
+          group.DataGrid.CellPointerPressed += (sender, e) => HandleCellPointerPressed(group.DataGrid, e);
           group.DataGrid.CellEditEnding += HandleCellEditEnding;
           group.DataGrid.SelectionChanged += HandleDataGridSelectionChanged;
           group.DataGrid.CurrentCellChanged += HandleCurrentCellChanged;
@@ -405,7 +416,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     var namedValues = new HashSet<object?>();
 
     // Add defined values.
-    var definedValues = MessageWrapper.GetNamedValues(messageName, field);
+    var definedValues = MesgExtensions.GetNamedValues(messageName, field);
 
     // Don't add actual values if there are no defined values.
     if (definedValues == null) { return null; }
@@ -413,7 +424,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     namedValues.AddRange(definedValues);
 
     // Add actual values
-    var actualValues = wrappers.Select(wrapper => wrapper.GetValue(fieldName, PrettifyFields)).ToList();
+    var actualValues = wrappers.Select(wrapper => wrapper.Mesg.GetFieldValue(fieldName, PrettifyFields)).ToList();
       
     namedValues.AddRange(actualValues);
 
@@ -471,7 +482,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
 
     var defMessage = new MessageWrapper(defMesg);
-    var wrappers = mesgs.Select(mesg => new MessageWrapper(mesg)).ToList();
+    var wrappers = new ObservableCollection<MessageWrapper>(mesgs.Select(mesg => new MessageWrapper(mesg)));
+    foreach (var wrapper in wrappers)
+    {
+      wrapper.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(wrapper));
+    }
+    wrappers.CollectionChanged += (sender, e) => HaveUnsavedChanges = true;
 
     await Task.Run(() =>
     {
@@ -529,6 +545,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       }));
     });
 
+
     var dg = new DataGrid
     {
       ItemsSource = wrappers,
@@ -539,8 +556,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     };
 
     // Create columns
-    var converter = new MesgFieldValueConverter(prettify: PrettifyFields);
-
     foreach (var column in columns)
     {
       // Use a ComboBox if it makes sense
@@ -549,12 +564,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
         column.Column = new DataGridTemplateColumn
         {
           Header = column.Name,
+          IsVisible = GetIsVisible(column),
 
           CellTemplate = new FuncDataTemplate(model => true, (model, scope) =>
           {
             if (model is not MessageWrapper wrapper) { return null; }
-
-            object? initialValue = converter.Convert(model, typeof(string), column.Name, CultureInfo.CurrentCulture);
+            var converter = new MessageWrapperFieldValueConverter(wrapper, prettify: PrettifyFields);
 
             var cb = new ComboBox
             {
@@ -562,16 +577,27 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
               HorizontalAlignment = HorizontalAlignment.Stretch,
               HorizontalContentAlignment = HorizontalAlignment.Stretch,
               ItemsSource = column.NamedValues
-                .Select(_ => $"{_}") // Convert to string since the converted value is a string
+                .Select(o => $"{o}") // Convert to string since the converted value is a string
                 .OrderBy(s => s),
-              SelectedValue = initialValue,
+
+              [!ComboBox.SelectedValueProperty] = new Binding
+              {
+                Path = nameof(MessageWrapper.Mesg),
+                Converter = converter,
+                ConverterParameter = column.Name,
+                Mode = BindingMode.OneWay,
+              }
             };
 
             cb.SelectionChanged += (sender, e) =>
             {
-              if (cb.SelectedValue == null) { return; }
-              var newValue = cb.SelectedValue.ToString();
-              converter.ConvertBack(wrapper, typeof(string), (column.Name, newValue), CultureInfo.CurrentCulture);
+              // This handler is called when drawing the ComboBox and when the user or code changes the value
+              // We only care about the latter case.
+              // We can discern if this is the case by checking if there are any Removed items.
+              if (e.RemovedItems.Count == 0 ) { return; }
+
+              wrapper.SetFieldValue(column?.Name ?? "", cb.SelectedValue, PrettifyFields);
+              HaveUnsavedChanges = true;
             };
 
             return cb;
@@ -580,17 +606,19 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       }
       else
       {
+        var converter = new MesgFieldValueConverter(prettify: PrettifyFields);
         column.Column = new DataGridTextColumn
         {
           Header = column.Name,
-          Binding = new Binding
-          {
-            Converter = converter,
-            ConverterParameter = column.Name,
-            Mode = BindingMode.TwoWay,
-          },
           IsReadOnly = false,
           IsVisible = GetIsVisible(column),
+          Binding = new Binding
+          {
+            Path = nameof(MessageWrapper.Mesg),
+            Converter = converter,
+            ConverterParameter = column.Name,
+            Mode = BindingMode.OneWay,
+          },
         };
       }
     }
@@ -618,9 +646,24 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void AddContextMenus(string mesgName, DataGrid dg)
   {
+    var menu = new ContextMenu();
+
+    var duplicate = new MenuItem
+    {
+      Header = "Duplicate",
+      Command = ReactiveCommand.Create(() => DuplicateRows(dg)),
+    };
+    menu.Items.Add(duplicate);
+
+    var delete = new MenuItem
+    {
+      Header = "Delete",
+      Command = ReactiveCommand.Create(() => DeleteRows(dg)),
+    };
+    menu.Items.Add(delete);
+
     if (mesgName == "Lap")
     {
-      var menu = new ContextMenu();
       var menuItem = new MenuItem
       {
         Header = "Merge",
@@ -629,29 +672,71 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
       ToolTip.SetTip(menuItem, "Merge the selected laps.\nLaps in between the first and last will be merged even if not selected");
       menu.Items.Add(menuItem);
-      dg.ContextMenu = menu;
     }
+
+    var setAllTextBox = new TextBox
+    {
+      Name = "SetAll",
+      HorizontalAlignment = HorizontalAlignment.Stretch,
+      HorizontalContentAlignment = HorizontalAlignment.Stretch,
+    };
+    menu.Items.Add(setAllTextBox);
+
+    var setAllButton = new MenuItem() { Name = "SetAll" };
+    ToolTip.SetTip(setAllButton, "Set all selected cells to the same value");
+    menu.Items.Add(setAllButton);
+
+    dg.ContextMenu = menu;
+  }
+
+  private void DeleteRows(DataGrid dg)
+  {
+    if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
+    var selection = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+
+    foreach (var item in selection)
+    {
+      list.Remove(item);
+      fitFile_?.Remove(item.Mesg);
+    }
+    HaveUnsavedChanges = true;
+  }
+
+  private void DuplicateRows(DataGrid dg)
+  {
+    if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
+
+    var selection = dg.SelectedItem as MessageWrapper;
+    if (selection is null) { return; }
+
+    var index = list.IndexOf(selection);
+    if (index < 0) { return; }
+
+    var dupe = new MessageWrapper(MessageFactory.Create(selection.Mesg));
+    dupe.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(dupe));
+
+    list.Insert(index, dupe);
+    fitFile_?.Add(dupe.Mesg);
+
+    dg.SelectedItem = dupe;
   }
 
   private void MergeSelectedLaps(DataGrid dg)
   {
-    if (dg.ItemsSource is not List<MessageWrapper> list)
-    {
-      return;
-    }
+    if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
 
     var allLaps = dg.ItemsSource.Cast<MessageWrapper>().ToList();
-    var selectedLaps = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+    var selection = dg.SelectedItems.Cast<MessageWrapper>().ToList();
 
-    MessageWrapper? merged = new MessageWrapperMerger().Merge(allLaps, selectedLaps);
+    MessageWrapper? merged = new MessageWrapperMerger().Merge(allLaps, selection);
 
     if (merged == null) { return; }
 
-    int index = allLaps.IndexOf(selectedLaps.First());
+    int index = allLaps.IndexOf(selection.First());
 
     if (index < 0) { return; }
 
-    foreach (var lap in selectedLaps)
+    foreach (var lap in selection)
     {
       // Remove from table
       list.Remove(lap);
@@ -668,13 +753,12 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     fitFile_?.Add(merged.Mesg);
 
     dg.SelectedItem = merged;
-    HaveUnsavedChanges = true;
   }
 
   public async Task SplitActivity()
   {
     if (fitFile_ is null) { return; }
-    if (SelectedIndex == 0 || SelectedIndex == SelectionCount - 1) { return; }
+    if (!CanSplit) { return; }
   
     System.DateTime at = fitFile_.Records[SelectedIndex].InstantOfTime();
     (FitFile first, FitFile second) = fitFile_.SplitAt(at);
@@ -685,24 +769,57 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void HandleCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
   {
-    var dg = sender as DataGrid;
-
     var column = e.Column as DataGridTextColumn;
     var row = e.Row;
 
-    var binding = column?.Binding as Binding;
-    var converter = binding?.Converter as MesgFieldValueConverter;
+    var fieldName = column?.Header as string;
+    if (fieldName == null) { return; }
 
-    var header = column?.Header as string;
     var message = row.DataContext as MessageWrapper;
+    if (message == null) { return; }
 
     var editingElement = e.EditingElement as TextBox;
-    var newContent = editingElement?.Text;
+    var newValue = editingElement?.Text;
 
-    if (message == null) { return; }
-    if (header == null) { return; }
-    if (converter == null) { return; }
+    bool changed = newValue != message.GetFieldValue(fieldName, PrettifyFields)?.ToString();
+    if (!changed) { return; }
 
-    converter.ConvertBack(message, typeof(MessageWrapper), (header, newContent), CultureInfo.CurrentCulture);
+    message.SetFieldValue(fieldName, newValue, PrettifyFields);
+    HaveUnsavedChanges = true;
   }
+
+  private void HandleCellPointerPressed(object? sender, DataGridCellPointerPressedEventArgs e)
+  {
+    if (e.Column is null) { return; }
+
+    var dg = sender as DataGrid;
+    if (dg is null) { return; }
+
+    string? fieldName = e.Column.Header.ToString();
+    if (fieldName == null) { return; }
+
+    // Add to the context menu a textbox and button to set all selected cells to the same value
+    var menu = dg.ContextMenu;
+    if (menu is null) { return; }
+
+    // Find the previously created context menu items
+    var setAllTextBox = menu.Items.OfType<TextBox>().FirstOrDefault(x => x.Name == "SetAll");
+    var setAllButton = menu.Items.OfType<MenuItem>().FirstOrDefault(x => x.Name == "SetAll" );
+
+    if (setAllTextBox is null) { return; }
+    if (setAllButton is null) { return; }
+
+    var messages = dg.SelectedItems.Cast<MessageWrapper>().ToList();
+    setAllButton.Command = ReactiveCommand.Create(() => SetFieldValues(messages, fieldName, setAllTextBox.Text));
+    setAllButton.Header = $"Set {messages.Count} items";
+  }
+
+  private void SetFieldValues(List<MessageWrapper> messages, string fieldName, object? newValue)
+  {
+    foreach (var message in messages)
+    {
+      message.SetFieldValue(fieldName, newValue, PrettifyFields);
+    }
+  }
+
 }

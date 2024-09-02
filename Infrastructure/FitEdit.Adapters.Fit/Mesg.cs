@@ -380,15 +380,15 @@ namespace Dynastream.Fit
         Field field = GetField(fieldDef.Num);
         if (null == field)
         {
-          field = Profile.GetField(this.Num, fieldDef.Num);
-          if (null != field)
-          {
-            Add(field);
-          }
-          else
-          {
+          //field = Profile.GetField(this.Num, fieldDef.Num);
+          //if (null != field)
+          //{
+          //  Add(field);
+          //}
+          //else
+          //{
             field = new Field(fieldDef.Num, fieldDef.Type);
-          }
+          //}
         }
 
         WriteField(field, fieldDef.Size, bw);
@@ -445,7 +445,7 @@ namespace Dynastream.Fit
                       Fit.BaseType[baseType].invalidValue));
             }
 
-            field.SetValue(temp.ToArray());
+            field.SetValue(field.GetNumValues(), temp.ToArray());
           }
           catch (Exception)
           {
@@ -544,9 +544,7 @@ namespace Dynastream.Fit
       {
         if (Fields[i].Num == field.Num)
         {
-          Fields[i] = field;
-          FieldsByNum[field.Num] = field;
-          FieldsByName[field.Name] = field;
+          Add(field, i);
           return;
         }
       }

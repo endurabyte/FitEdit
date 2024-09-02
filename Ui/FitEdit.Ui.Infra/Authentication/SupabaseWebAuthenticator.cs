@@ -163,10 +163,15 @@ public partial class SupabaseWebAuthenticator : ReactiveObject, IWebAuthenticato
 
   public async Task<bool> LogoutAsync(CancellationToken ct = default)
   {
-    await supa_.LogoutAsync();
-    IsAuthenticated = false;
-
-    await Task.CompletedTask;
-    return true;
+    try
+    {
+      bool ok = await supa_.LogoutAsync();
+      IsAuthenticated = false;
+      return ok;
+    }
+    catch (GotrueException)
+    {
+      return false;
+    }
   }
 }

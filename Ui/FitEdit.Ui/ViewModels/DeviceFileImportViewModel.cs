@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using FitEdit.Model;
 using FitEdit.Model.Services;
 using FitEdit.Model.Storage;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace FitEdit.Ui.ViewModels;
@@ -57,6 +58,7 @@ public class DeviceFileImportViewModel : ViewModelBase
 
   [Reactive] public ObservableCollection<LocalActivity> Activities { get; set; } = new();
   [Reactive] public ObservableCollection<LocalActivity> SelectedActivities { get; set; } = new();
+  public bool HasSelection => SelectedActivities.Count > 0;
   [Reactive] public string Message { get; set; } = string.Empty;
   [Reactive] public bool ImportComplete { get; set; }
 
@@ -66,6 +68,8 @@ public class DeviceFileImportViewModel : ViewModelBase
     events_ = events;
     dev_ = dev;
     ut_ = ut;
+
+    SelectedActivities.CollectionChanged += (s, e) => this.RaisePropertyChanged(nameof(HasSelection));
   }
 
   public void HandleActivityFound(LocalActivity activity)
