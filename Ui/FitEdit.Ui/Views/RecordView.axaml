@@ -67,7 +67,7 @@
 
       <Button Margin="0"
         Command="{Binding SplitActivity}"
-        IsVisible="{Binding CanSplit}"
+        IsEnabled="{Binding CanSplit}"
         Content="Split Here">
         
         <ToolTip.Tip>

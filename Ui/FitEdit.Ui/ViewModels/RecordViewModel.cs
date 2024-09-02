@@ -69,7 +69,10 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// The index of the currently shown GPS coordinate shown in the chart, map, and records tab.
   /// </summary>
   [Reactive] public int SelectedIndex { get; set; }
-  public bool CanSplit => TabName_.Contains("Record") && SelectedIndex > 0 && SelectedIndex < SelectionCount - 1;
+
+  public bool CanSplit => TabName_.Contains("Record") 
+    && SelectedIndex > 0 
+    && SelectedIndex < fitFile_?.Records.Count - 1;
 
   [Reactive] public int SelectionCount { get; set; }
 
@@ -171,13 +174,13 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
 
   private void HandleTabIndexChanged()
   {
+    this.RaisePropertyChanged(nameof(CanSplit));
+
     if (!TabIndexIsValid_) { return; }
     DataGridWrapper data = ShownData[TabIndex];
+
     if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
-
     SelectHexData(wrapper);
-
-    this.RaisePropertyChanged(nameof(CanSplit));
   }
 
   /// <summary>
