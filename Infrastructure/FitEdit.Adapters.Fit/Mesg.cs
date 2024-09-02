@@ -380,15 +380,15 @@ namespace Dynastream.Fit
         Field field = GetField(fieldDef.Num);
         if (null == field)
         {
-          field = Profile.GetField(this.Num, fieldDef.Num);
-          if (null != field)
-          {
-            Add(field);
-          }
-          else
-          {
+          //field = Profile.GetField(this.Num, fieldDef.Num);
+          //if (null != field)
+          //{
+          //  Add(field);
+          //}
+          //else
+          //{
             field = new Field(fieldDef.Num, fieldDef.Type);
-          }
+          //}
         }
 
         WriteField(field, fieldDef.Size, bw);
