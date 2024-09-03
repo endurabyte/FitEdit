@@ -10,11 +10,12 @@
     <local:ViewLocator/>
   </Application.DataTemplates>
 
+  <Application.Styles>
+    <StyleInclude Source="./Styles.axaml"/>
+  </Application.Styles>
+  
   <Application.Resources>
     <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <StyleInclude Source="./Styles.axaml"/>
-      </ResourceDictionary.MergedDictionaries>
       <FontFamily x:Key="FiraCode">avares://FitEdit.Ui/Assets/Fonts/FiraCode-Regular.ttf#</FontFamily>
     </ResourceDictionary>
   </Application.Resources>

@@ -17,9 +17,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AvaloniaVersion>11.0.10</AvaloniaVersion>
-    <AvaloniaSvgVersion>11.0.0.18</AvaloniaSvgVersion>
+    <AvaloniaVersion>11.1.3</AvaloniaVersion>
+    <AvaloniaSvgVersion>11.1.0.1</AvaloniaSvgVersion>
     <OxyPlotVersion>2.1.2-av11.0.0</OxyPlotVersion>
-    <MapsuiVersion>4.1.5</MapsuiVersion>
+    <MapsuiVersion>4.1.7</MapsuiVersion>
   </PropertyGroup>
 </Project>
