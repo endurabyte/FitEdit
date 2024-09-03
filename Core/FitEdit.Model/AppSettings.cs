@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using ReactiveUI;
+﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
 namespace FitEdit.Model;

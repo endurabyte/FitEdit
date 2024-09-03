@@ -106,7 +106,7 @@ public class DeviceFileImportViewModel : ViewModelBase
   public void ImportFiles()
   {
     ut_.Status = "Importing...";
-    ut_.NextAction();
+    ut_.NextAction?.Invoke();
     ImportComplete = true;
   }
 

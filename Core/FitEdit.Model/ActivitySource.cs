@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace FitEdit.Model;
+﻿namespace FitEdit.Model;
 
 public enum ActivitySource
 {

@@ -1,5 +1,4 @@
 ﻿namespace FitEdit.Model;
-#nullable enable
 
 public class Authorization
 {

@@ -23,7 +23,7 @@ public class TimeZoneUnit
   /// The unit key.
   /// </value>
   [JsonPropertyName("unitKey")]
-  public string UnitKey { get; set; }
+  public string? UnitKey { get; set; }
 
   /// <summary>
   /// Gets or sets the factor.
@@ -41,5 +41,5 @@ public class TimeZoneUnit
   /// The time zone.
   /// </value>
   [JsonPropertyName("timeZone")]
-  public string TimeZone { get; set; }
+  public string? TimeZone { get; set; }
 }

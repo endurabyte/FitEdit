@@ -41,7 +41,9 @@ public static class FileServiceExtensions
   /// Also return activities which exist but do not have a FIT file.
   /// The returned LocalActivity on the tuple will be non-null if the activity already exists in the DB, else it will be null.
   /// </summary>
-  public static async Task<List<(T, LocalActivity?)>> FilterExistingAsync<T>(this IFileService fileService, UserTask task, List<(T t, string sourceId, string name, DateTime startTime)> ts)
+  public static async Task<List<(T, LocalActivity?)>> FilterExistingAsync<T>(this IFileService fileService, 
+    UserTask task, 
+    List<(T t, string sourceId, string name, DateTime startTime)> ts)
   {
     var allExisting = new ConcurrentDictionary<string, LocalActivity>();
 
@@ -51,7 +53,7 @@ public static class FileServiceExtensions
     await Parallel.ForEachAsync(ts, task.CancellationToken, async (tup, ct) =>
     {
       string sourceId = tup.sourceId;
-      string name = tup.name;
+      string? name = tup.name;
       DateTime startTime = tup.startTime;
 
       if (startTime == default)

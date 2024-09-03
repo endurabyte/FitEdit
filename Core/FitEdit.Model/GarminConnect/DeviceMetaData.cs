@@ -14,7 +14,7 @@ public class DeviceMetaData
   /// The device identifier.
   /// </value>
   [JsonPropertyName("deviceId")]
-  public string DeviceId { get; set; }
+  public string? DeviceId { get; set; }
 
   /// <summary>
   /// Gets or sets the device type pk.

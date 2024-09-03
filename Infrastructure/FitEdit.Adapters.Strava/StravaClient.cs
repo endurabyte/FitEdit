@@ -149,7 +149,11 @@ public partial class StravaClient : ReactiveObject, IStravaClient
       }
 
       StravaTrainingActivitiesResponse? stravaResponse = Json.MapFromJson<StravaTrainingActivitiesResponse>(json);
-      activities.AddRange(stravaResponse?.Models.Select(m => (m.Id, m)));
+      if (stravaResponse is not null)
+      {
+        var toAdd = stravaResponse.Models.Select(m => (m.Id, m));
+        activities.AddRange(toAdd);
+      }
 
       total ??= stravaResponse?.Total ?? -1;
     };

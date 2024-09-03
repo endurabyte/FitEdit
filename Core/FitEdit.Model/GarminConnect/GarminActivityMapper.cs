@@ -17,7 +17,7 @@ public static class GarminActivityMapper
       SourceId = sourceId,
       Name = act.ActivityName,
       Description = act.Description,
-      Type = act.ActivityType.TypeKey?.ToUpper(),
+      Type = act.ActivityType?.TypeKey?.ToUpper(),
       DeviceName = "unknown",
       StartTime = startTime,
       Duration = (long)(act.Duration ?? 0),

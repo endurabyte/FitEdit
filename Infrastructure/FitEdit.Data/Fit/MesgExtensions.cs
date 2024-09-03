@@ -331,7 +331,7 @@ public static partial class MesgExtensions
     if (name.Contains(nameof(RecordMesg.FieldDefNum.PositionLat)) 
      || name.Contains(nameof(RecordMesg.FieldDefNum.PositionLong)))
     {
-      if (GeospatialExtensions.TryGetCoordinate(value as string, out double d))
+      if (value is string s && GeospatialExtensions.TryGetCoordinate(s, out double d))
       {
         result = d.ToSemicircles();
         return true;

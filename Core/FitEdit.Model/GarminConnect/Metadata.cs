@@ -32,7 +32,7 @@ public class Metadata
   /// The agent application installation identifier.
   /// </value>
   [JsonPropertyName("agentApplicationInstallationId")]
-  public object AgentApplicationInstallationId { get; set; }
+  public object? AgentApplicationInstallationId { get; set; }
 
   /// <summary>
   /// Gets or sets the agent string.
@@ -41,7 +41,7 @@ public class Metadata
   /// The agent string.
   /// </value>
   [JsonPropertyName("agentString")]
-  public object AgentString { get; set; }
+  public object? AgentString { get; set; }
 
   /// <summary>
   /// Gets or sets the file format.
@@ -50,7 +50,7 @@ public class Metadata
   /// The file format.
   /// </value>
   [JsonPropertyName("fileFormat")]
-  public FileFormat FileFormat { get; set; }
+  public FileFormat? FileFormat { get; set; }
 
   /// <summary>
   /// Gets or sets the associated course identifier.
@@ -59,7 +59,7 @@ public class Metadata
   /// The associated course identifier.
   /// </value>
   [JsonPropertyName("associatedCourseId")]
-  public object AssociatedCourseId { get; set; }
+  public object? AssociatedCourseId { get; set; }
 
   /// <summary>
   /// Gets or sets the last update date.
@@ -86,7 +86,7 @@ public class Metadata
   /// The video URL.
   /// </value>
   [JsonPropertyName("videoUrl")]
-  public object VideoUrl { get; set; }
+  public object? VideoUrl { get; set; }
 
   /// <summary>
   /// Gets or sets the has polyline.
@@ -131,7 +131,7 @@ public class Metadata
   /// The user information dto.
   /// </value>
   [JsonPropertyName("userInfoDto")]
-  public UserInfo UserInfoDto { get; set; }
+  public UserInfo? UserInfoDto { get; set; }
 
   /// <summary>
   /// Gets or sets the chart availability.
@@ -140,7 +140,7 @@ public class Metadata
   /// The chart availability.
   /// </value>
   [JsonPropertyName("chartAvailability")]
-  public ChartAvailability ChartAvailability { get; set; }
+  public ChartAvailability? ChartAvailability { get; set; }
 
   /// <summary>
   /// Gets or sets the child ids.
@@ -149,7 +149,7 @@ public class Metadata
   /// The child ids.
   /// </value>
   [JsonPropertyName("childIds")]
-  public object[] ChildIds { get; set; }
+  public object[]? ChildIds { get; set; }
 
   /// <summary>
   /// Gets or sets the sensors.
@@ -158,7 +158,7 @@ public class Metadata
   /// The sensors.
   /// </value>
   [JsonPropertyName("sensors")]
-  public Sensor[] Sensors { get; set; }
+  public Sensor[]? Sensors { get; set; }
 
   /// <summary>
   /// Gets or sets the activity images.
@@ -167,7 +167,7 @@ public class Metadata
   /// The activity images.
   /// </value>
   [JsonPropertyName("activityImages")]
-  public ActivityImage[] ActivityImages { get; set; }
+  public ActivityImage[]? ActivityImages { get; set; }
 
   /// <summary>
   /// Gets or sets the manufacturer.
@@ -176,7 +176,7 @@ public class Metadata
   /// The manufacturer.
   /// </value>
   [JsonPropertyName("manufacturer")]
-  public string Manufacturer { get; set; }
+  public string? Manufacturer { get; set; }
 
   /// <summary>
   /// Gets or sets the dive number.
@@ -185,7 +185,7 @@ public class Metadata
   /// The dive number.
   /// </value>
   [JsonPropertyName("diveNumber")]
-  public object DiveNumber { get; set; }
+  public object? DiveNumber { get; set; }
 
   /// <summary>
   /// Gets or sets the lap count.
@@ -203,7 +203,7 @@ public class Metadata
   /// The associated workout identifier.
   /// </value>
   [JsonPropertyName("associatedWorkoutId")]
-  public object AssociatedWorkoutId { get; set; }
+  public object? AssociatedWorkoutId { get; set; }
 
   /// <summary>
   /// Gets or sets the is atp activity.
@@ -212,7 +212,7 @@ public class Metadata
   /// The is atp activity.
   /// </value>
   [JsonPropertyName("isAtpActivity")]
-  public object IsAtpActivity { get; set; }
+  public object? IsAtpActivity { get; set; }
 
   /// <summary>
   /// Gets or sets the device meta data.
@@ -221,7 +221,7 @@ public class Metadata
   /// The device meta data.
   /// </value>
   [JsonPropertyName("deviceMetaDataDTO")]
-  public DeviceMetaData DeviceMetaData { get; set; }
+  public DeviceMetaData? DeviceMetaData { get; set; }
 
   /// <summary>
   /// Gets or sets a value indicating whether this <see cref="Metadata"/> is GCJ02.

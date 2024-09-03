@@ -1,5 +1,4 @@
-﻿#nullable enable
-namespace FitEdit.Model;
+﻿namespace FitEdit.Model;
 
 public static class Cryptography
 {

@@ -14,7 +14,7 @@ public class ActivityImage
   /// The image identifier.
   /// </value>
   [JsonPropertyName("imageId")]
-  public string ImageId { get; set; }
+  public string? ImageId { get; set; }
 
   /// <summary>
   /// Gets or sets the URL.
@@ -23,7 +23,7 @@ public class ActivityImage
   /// The URL.
   /// </value>
   [JsonPropertyName("url")]
-  public Uri Url { get; set; }
+  public Uri? Url { get; set; }
 
   /// <summary>
   /// Gets or sets the small URL.
@@ -32,7 +32,7 @@ public class ActivityImage
   /// The small URL.
   /// </value>
   [JsonPropertyName("smallUrl")]
-  public Uri SmallUrl { get; set; }
+  public Uri? SmallUrl { get; set; }
 
   /// <summary>
   /// Gets or sets the medium URL.
@@ -41,7 +41,7 @@ public class ActivityImage
   /// The medium URL.
   /// </value>
   [JsonPropertyName("mediumUrl")]
-  public Uri MediumUrl { get; set; }
+  public Uri? MediumUrl { get; set; }
 
   /// <summary>
   /// Gets or sets the latitude.
@@ -50,7 +50,7 @@ public class ActivityImage
   /// The latitude.
   /// </value>
   [JsonPropertyName("latitude")]
-  public object Latitude { get; set; }
+  public object? Latitude { get; set; }
 
   /// <summary>
   /// Gets or sets the longitude.
@@ -59,7 +59,7 @@ public class ActivityImage
   /// The longitude.
   /// </value>
   [JsonPropertyName("longitude")]
-  public object Longitude { get; set; }
+  public object? Longitude { get; set; }
 
   /// <summary>
   /// Gets or sets the photo date.

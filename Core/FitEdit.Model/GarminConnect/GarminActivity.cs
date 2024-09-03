@@ -23,7 +23,7 @@ public class GarminActivity
   /// The name of the activity.
   /// </value>
   [JsonPropertyName("activityName")]
-  public string ActivityName { get; set; }
+  public string? ActivityName { get; set; }
 
   /// <summary>
   /// Gets or sets the description.
@@ -32,14 +32,14 @@ public class GarminActivity
   /// The description.
   /// </value>
   [JsonPropertyName("description")]
-  public string Description { get; set; }
+  public string? Description { get; set; }
 
   /// <summary>
   /// Format: yyyy-MM-dd HH:mm:ss
   /// Example: 2023-09-05 23:36:03
   /// </summary>
   [JsonPropertyName("startTimeGMT")]
-  public string StartTime { get; set; }
+  public string? StartTime { get; set; }
 
   [JsonPropertyName("beginTimestamp")]
   public long? BeginTimestamp { get; set; }
@@ -66,7 +66,7 @@ public class GarminActivity
   /// The type of the activity.
   /// </value>
   [JsonPropertyName("activityType")]
-  public ActivityType ActivityType { get; set; }
+  public ActivityType? ActivityType { get; set; }
 
   /// <summary>
   /// Gets or sets the type of the event.
@@ -75,5 +75,5 @@ public class GarminActivity
   /// The type of the event.
   /// </value>
   [JsonPropertyName("eventType")]
-  public ActivityType EventType { get; set; }
+  public ActivityType? EventType { get; set; }
 }
