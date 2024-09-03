@@ -22,7 +22,7 @@
 
   <Styles.Resources>
     <ResourceDictionary>
-      <sys:Int32 x:Key="FitFontSize">14</sys:Int32>
+      <sys:Double x:Key="FitFontSize">14</sys:Double>
       <Color x:Key="FitOceanBlue">#005C8D</Color>
       <Color x:Key="FitSkyBlue">#8CD1F4</Color>
       <Color x:Key="FitLicoriceBlack">#000000</Color>

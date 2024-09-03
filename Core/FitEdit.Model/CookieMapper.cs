@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using FitEdit.Model.Extensions;
+﻿using FitEdit.Model.Extensions;
 
 namespace FitEdit.Model;
 

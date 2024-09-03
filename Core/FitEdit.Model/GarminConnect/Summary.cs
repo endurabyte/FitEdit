@@ -248,7 +248,7 @@ public class Summary
   /// The aerobic training effect message.
   /// </value>
   [JsonPropertyName("aerobicTrainingEffectMessage")]
-  public string AerobicTrainingEffectMessage { get; set; }
+  public string? AerobicTrainingEffectMessage { get; set; }
 
   /// <summary>
   /// Gets or sets the anaerobic training effect message.
@@ -257,7 +257,7 @@ public class Summary
   /// The anaerobic training effect message.
   /// </value>
   [JsonPropertyName("anaerobicTrainingEffectMessage")]
-  public string AnaerobicTrainingEffectMessage { get; set; }
+  public string? AnaerobicTrainingEffectMessage { get; set; }
 
   /// <summary>
   /// Gets or sets the end latitude.

@@ -24,5 +24,6 @@ public class DistanceToStringValueConverter : IValueConverter
     };
   }
 
-  public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => new Distance(value as string);
+  public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => 
+    value is string s ? new Distance(s) : null;
 }

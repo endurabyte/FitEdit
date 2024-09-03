@@ -50,7 +50,7 @@ public class UserInfo
   /// The full name.
   /// </value>
   [JsonPropertyName("fullName")]
-  public string FullName { get; set; }
+  public string? FullName { get; set; }
 
   /// <summary>
   /// Gets or sets the name of the user.
@@ -59,7 +59,7 @@ public class UserInfo
   /// The name of the user.
   /// </value>
   [JsonPropertyName("userName")]
-  public string UserName { get; set; }
+  public string? UserName { get; set; }
 
   /// <summary>
   /// Gets or sets the profile image URL large.
@@ -68,7 +68,7 @@ public class UserInfo
   /// The profile image URL large.
   /// </value>
   [JsonPropertyName("profileImageUrlLarge")]
-  public Uri ProfileImageUrlLarge { get; set; }
+  public Uri? ProfileImageUrlLarge { get; set; }
 
   /// <summary>
   /// Gets or sets the profile image URL medium.
@@ -77,7 +77,7 @@ public class UserInfo
   /// The profile image URL medium.
   /// </value>
   [JsonPropertyName("profileImageUrlMedium")]
-  public Uri ProfileImageUrlMedium { get; set; }
+  public Uri? ProfileImageUrlMedium { get; set; }
 
   /// <summary>
   /// Gets or sets the profile image URL small.
@@ -86,7 +86,7 @@ public class UserInfo
   /// The profile image URL small.
   /// </value>
   [JsonPropertyName("profileImageUrlSmall")]
-  public Uri ProfileImageUrlSmall { get; set; }
+  public Uri? ProfileImageUrlSmall { get; set; }
 
   /// <summary>
   /// Gets or sets the location.
@@ -95,7 +95,7 @@ public class UserInfo
   /// The location.
   /// </value>
   [JsonPropertyName("location")]
-  public object Location { get; set; }
+  public object? Location { get; set; }
 
   /// <summary>
   /// Gets or sets the facebook URL.
@@ -104,7 +104,7 @@ public class UserInfo
   /// The facebook URL.
   /// </value>
   [JsonPropertyName("facebookUrl")]
-  public object FacebookUrl { get; set; }
+  public object? FacebookUrl { get; set; }
 
   /// <summary>
   /// Gets or sets the twitter URL.
@@ -113,7 +113,7 @@ public class UserInfo
   /// The twitter URL.
   /// </value>
   [JsonPropertyName("twitterUrl")]
-  public object TwitterUrl { get; set; }
+  public object? TwitterUrl { get; set; }
 
   /// <summary>
   /// Gets or sets the personal website.
@@ -122,7 +122,7 @@ public class UserInfo
   /// The personal website.
   /// </value>
   [JsonPropertyName("personalWebsite")]
-  public object PersonalWebsite { get; set; }
+  public object? PersonalWebsite { get; set; }
 
   /// <summary>
   /// Gets or sets the motivation.
@@ -140,7 +140,7 @@ public class UserInfo
   /// The bio.
   /// </value>
   [JsonPropertyName("bio")]
-  public object Bio { get; set; }
+  public object? Bio { get; set; }
 
   /// <summary>
   /// Gets or sets the primary activity.
@@ -149,7 +149,7 @@ public class UserInfo
   /// The primary activity.
   /// </value>
   [JsonPropertyName("primaryActivity")]
-  public string PrimaryActivity { get; set; }
+  public string? PrimaryActivity { get; set; }
 
   /// <summary>
   /// Gets or sets the favorite activity types.
@@ -158,7 +158,7 @@ public class UserInfo
   /// The favorite activity types.
   /// </value>
   [JsonPropertyName("favoriteActivityTypes")]
-  public string[] FavoriteActivityTypes { get; set; }
+  public string[]? FavoriteActivityTypes { get; set; }
 
   /// <summary>
   /// Gets or sets the running training speed.
@@ -185,7 +185,7 @@ public class UserInfo
   /// The favorite cycling activity types.
   /// </value>
   [JsonPropertyName("favoriteCyclingActivityTypes")]
-  public string[] FavoriteCyclingActivityTypes { get; set; }
+  public string[]? FavoriteCyclingActivityTypes { get; set; }
 
   /// <summary>
   /// Gets or sets the cycling classification.
@@ -194,7 +194,7 @@ public class UserInfo
   /// The cycling classification.
   /// </value>
   [JsonPropertyName("cyclingClassification")]
-  public string CyclingClassification { get; set; }
+  public string? CyclingClassification { get; set; }
 
   /// <summary>
   /// Gets or sets the cycling maximum average power.
@@ -221,7 +221,7 @@ public class UserInfo
   /// The profile visibility.
   /// </value>
   [JsonPropertyName("profileVisibility")]
-  public string ProfileVisibility { get; set; }
+  public string? ProfileVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets the activity start visibility.
@@ -230,7 +230,7 @@ public class UserInfo
   /// The activity start visibility.
   /// </value>
   [JsonPropertyName("activityStartVisibility")]
-  public string ActivityStartVisibility { get; set; }
+  public string? ActivityStartVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets the activity map visibility.
@@ -239,7 +239,7 @@ public class UserInfo
   /// The activity map visibility.
   /// </value>
   [JsonPropertyName("activityMapVisibility")]
-  public string ActivityMapVisibility { get; set; }
+  public string? ActivityMapVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets the course visibility.
@@ -248,7 +248,7 @@ public class UserInfo
   /// The course visibility.
   /// </value>
   [JsonPropertyName("courseVisibility")]
-  public string CourseVisibility { get; set; }
+  public string? CourseVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets the activity heart rate visibility.
@@ -257,7 +257,7 @@ public class UserInfo
   /// The activity heart rate visibility.
   /// </value>
   [JsonPropertyName("activityHeartRateVisibility")]
-  public string ActivityHeartRateVisibility { get; set; }
+  public string? ActivityHeartRateVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets the activity power visibility.
@@ -266,7 +266,7 @@ public class UserInfo
   /// The activity power visibility.
   /// </value>
   [JsonPropertyName("activityPowerVisibility")]
-  public string ActivityPowerVisibility { get; set; }
+  public string? ActivityPowerVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets the badge visibility.
@@ -275,7 +275,7 @@ public class UserInfo
   /// The badge visibility.
   /// </value>
   [JsonPropertyName("badgeVisibility")]
-  public string BadgeVisibility { get; set; }
+  public string? BadgeVisibility { get; set; }
 
   /// <summary>
   /// Gets or sets a value indicating whether [show age].
@@ -428,7 +428,7 @@ public class UserInfo
   /// The other activity.
   /// </value>
   [JsonPropertyName("otherActivity")]
-  public object OtherActivity { get; set; }
+  public object? OtherActivity { get; set; }
 
   /// <summary>
   /// Gets or sets the other primary activity.
@@ -437,7 +437,7 @@ public class UserInfo
   /// The other primary activity.
   /// </value>
   [JsonPropertyName("otherPrimaryActivity")]
-  public object OtherPrimaryActivity { get; set; }
+  public object? OtherPrimaryActivity { get; set; }
 
   /// <summary>
   /// Gets or sets the other motivation.
@@ -446,7 +446,7 @@ public class UserInfo
   /// The other motivation.
   /// </value>
   [JsonPropertyName("otherMotivation")]
-  public object OtherMotivation { get; set; }
+  public object? OtherMotivation { get; set; }
 
   /// <summary>
   /// Gets or sets the user roles.
@@ -455,7 +455,7 @@ public class UserInfo
   /// The user roles.
   /// </value>
   [JsonPropertyName("userRoles")]
-  public string[] UserRoles { get; set; }
+  public string[]? UserRoles { get; set; }
 
   /// <summary>
   /// Gets or sets a value indicating whether [name approved].
@@ -473,7 +473,7 @@ public class UserInfo
   /// The full name of the user profile.
   /// </value>
   [JsonPropertyName("userProfileFullName")]
-  public string UserProfileFullName { get; set; }
+  public string? UserProfileFullName { get; set; }
 
   /// <summary>
   /// Gets or sets a value indicating whether [make golf scorecards private].

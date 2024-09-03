@@ -1,8 +1,9 @@
 ﻿namespace FitEdit.Adapters.Sqlite;
+#nullable enable
 
 public static class MapTileMapper
 {
-  public static Model.MapTile MapModel(this MapTile mt) => mt == null ? null : new()
+  public static Model.MapTile? MapModel(this MapTile mt) => mt == null ? null : new()
   {
     Id = mt.Id,
     Bytes = mt.Bytes,

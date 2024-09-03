@@ -748,8 +748,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     if (task.IsCanceled) { return; }
 
-    List<(GarminActivity, string, string, DateTime)> byTimestamp = activities
-      .Select(a => (a, $"{a.ActivityId}", a.ActivityName, a.GetStartTime()))
+    List<(GarminActivity, string id, string name, DateTime)> byTimestamp = activities
+      .Select(a => (a, $"{a.ActivityId}", a.ActivityName ?? "", a.GetStartTime()))
       .ToList();
 
     IEnumerable<(GarminActivity, LocalActivity?)> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
@@ -789,7 +789,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
         if (task.IsCanceled) { return; }
 
-        List<(StravaActivity, string, string, DateTime)> byTimestamp = activities
+        List<(StravaActivity, string id, string name, DateTime)> byTimestamp = activities
           .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
           .ToList();
 

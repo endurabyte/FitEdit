@@ -54,7 +54,7 @@ namespace FitEdit.Model.Workouts
     public static bool operator ==(Speed lhs, Speed rhs) => lhs?.Equals(rhs) ?? false;
     public static bool operator !=(Speed lhs, Speed rhs) => !(lhs?.Equals(rhs) ?? false);
 
-    public override bool Equals(object obj) => obj is Speed s && s.Convert(Unit.MetersPerSecond).Value == Convert(Unit.MetersPerSecond).Value;
+    public override bool Equals(object? obj) => obj is Speed s && s.Convert(Unit.MetersPerSecond).Value == Convert(Unit.MetersPerSecond).Value;
 
     public override int GetHashCode() => HashCode.Combine(Value, Unit);
 

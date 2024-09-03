@@ -23,5 +23,5 @@ public class FileFormat
   /// The format key.
   /// </value>
   [JsonPropertyName("formatKey")]
-  public string FormatKey { get; set; }
+  public string? FormatKey { get; set; }
 }

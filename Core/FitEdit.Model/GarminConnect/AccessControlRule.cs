@@ -23,5 +23,5 @@ public class AccessControlRule
   /// The type key.
   /// </value>
   [JsonPropertyName("typeKey")]
-  public string TypeKey { get; set; }
+  public string? TypeKey { get; set; }
 }

@@ -17,9 +17,11 @@ public class SessionPersistence : ReactiveObject, IGotrueSessionPersistence<Sess
     db_ = db;
   }
 
-  public void SaveSession(Session session)
+  public void SaveSession(Session? session)
   {
-    Authorization = session.Map();
+    if (session is null) { return; }
+
+    Authorization = session.Map()!;
     db_.InsertAsync(Authorization).Await();
   }
 

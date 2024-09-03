@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using FitEdit;
+﻿using FitEdit;
 
 namespace FitEdit.Model.Clients;
 

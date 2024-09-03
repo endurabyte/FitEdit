@@ -5,9 +5,9 @@ namespace FitEdit.Model
 {
   public class HasProperties : INotifyPropertyChanged
   {
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public bool Set<T>(ref T current, T newValue, [CallerMemberName] string propertyName = null)
+    public bool Set<T>(ref T current, T newValue, [CallerMemberName] string? propertyName = null)
     {
       if (EqualityComparer<T>.Default.Equals(current, newValue))
       {
@@ -27,7 +27,7 @@ namespace FitEdit.Model
       }
     }
 
-    public void NotifyPropertyChanged([CallerMemberName] string propertyName = default)
+    public void NotifyPropertyChanged([CallerMemberName] string? propertyName = default)
       => NotifyPropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 
     public void NotifyPropertyChanged(object sender, PropertyChangedEventArgs args)
