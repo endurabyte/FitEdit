@@ -1,35 +1,43 @@
 using FitEdit.Data.Fit;
 using Dynastream.Fit;
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace FitEdit.Data.IntegrationTests
 {
   public class Copy
   {
-    private const string source_ = @"..\..\..\..\data\devices\forerunner-945\sports\running\treadmill\2019-12-17\"
-        + @"steep-1mi-easy-2x[2mi 2min rest]\garmin-connect\activity.fit";
+    private const string source_ = @"..\..\..\..\TestData\2019-12-17-treadmill-run.fit";
 
     /// <summary>
     /// Verify round trip integrity, i.e. encode(decode(file)) == file
     /// </summary>
-    [Test]
+    [Fact]
     public async Task Copies()
     {
-      var dest = "output.fit";
+      var bytes = System.IO.File.ReadAllBytes(source_);
 
-      var fitFile = await new Reader().ReadAsync(source_);
-      new Writer().Write(fitFile, dest);
-      var fitFile2 = await new Reader().ReadAsync(dest);
+      var ms1 = new MemoryStream(bytes);
+      var ms2 = new MemoryStream();
 
-      Assert.That(fitFile.MessageDefinitions.Count, Is.EqualTo(fitFile2.MessageDefinitions.Count));
+      var fitFile = await new Reader().ReadAsync(ms1);
+      new Writer().Write(fitFile, ms2);
 
-      for (int i = 0; i < fitFile.MessageDefinitions.Count; i++)
+      ms2.Position = 0;
+      var fitFile2 = await new Reader().ReadAsync(ms2);
+
+      fitFile.MessageDefinitions.Count.Should().Be(fitFile2.MessageDefinitions.Count);
+
+      foreach (var kvp in fitFile.MessageDefinitions)
       {
-        AssertAreEqual(fitFile.MessageDefinitions[i], fitFile2.MessageDefinitions[i]);
+        AssertAreEqual(kvp.Value, fitFile2.MessageDefinitions[kvp.Key]);
       }
 
-      Assert.That(fitFile.Messages.Count, Is.EqualTo(fitFile2.Messages.Count));
+      foreach (var kvp in fitFile2.MessageDefinitions)
+      {
+        AssertAreEqual(kvp.Value, fitFile.MessageDefinitions[kvp.Key]);
+      }
+
+      fitFile.Messages.Count.Should().Be(fitFile2.Messages.Count);
 
       for (int i = 0; i < fitFile.Messages.Count; i++)
       {
@@ -37,22 +45,17 @@ namespace FitEdit.Data.IntegrationTests
       }
     }
 
-    // This test doesn't pass due to minor differences e.g. protocol version
-    [Explicit]
-    [Test]
+    [Fact(Skip = "This test doesn't pass due to minor differences e.g. protocol version")]
     public async Task Copy_FilesBinarySame()
     {
-      var dest = "output.fit";
-
       var fitFile = await new Reader().ReadAsync(source_);
-      new Writer().Write(fitFile, dest);
+      var ms = new MemoryStream();
+      new Writer().Write(fitFile, ms);
 
-      Assert.That(source_, Is.EqualTo(dest));
+      ms.GetBuffer().Should().BeEquivalentTo(fitFile.GetBytes());
     }
 
-    // This test doesn't pass due to minor differences e.g. protocol version
-    [Explicit]
-    [Test]
+    [Fact(Skip = "This test doesn't pass due to minor differences e.g. protocol version")]
     public async Task Copies_JsonEqual()
     {
       var dest = "output.fit";
@@ -67,26 +70,26 @@ namespace FitEdit.Data.IntegrationTests
       System.IO.File.WriteAllText("output.json", json);
       System.IO.File.WriteAllText("output2.json", json2);
 
-      Assert.That(json, Is.EqualTo(json2));
+      json.Should().Be(json2);
     }
 
     private void AssertAreEqual(MesgDefinition a, MesgDefinition b)
     {
-      Assert.That(a.GlobalMesgNum, Is.EqualTo(b.GlobalMesgNum));
-      Assert.That(a.LocalMesgNum, Is.EqualTo(b.LocalMesgNum));
-      Assert.That(a.NumDevFields, Is.EqualTo(b.NumDevFields));
-      Assert.That(a.NumFields, Is.EqualTo(b.NumFields));
-      Assert.That(a.IsBigEndian, Is.EqualTo(b.IsBigEndian));
+      a.GlobalMesgNum.Should().Be(b.GlobalMesgNum);
+      a.LocalMesgNum.Should().Be(b.LocalMesgNum);
+      a.NumDevFields.Should().Be(b.NumDevFields);
+      a.NumFields.Should().Be(b.NumFields);
+      a.IsBigEndian.Should().Be(b.IsBigEndian);
     }
 
     private void AssertAreEqual(Mesg a, Mesg b)
     {
-      Assert.That(a.Name, Is.EqualTo(b.Name));
-      Assert.That(a.Num, Is.EqualTo(b.Num));
-      Assert.That(a.LocalNum, Is.EqualTo(b.LocalNum));
-      List<Field> fields = a.Fields.Values.ToList();
+      a.Name.Should().Be(b.Name);
+      a.Num.Should().Be(b.Num);
+      a.LocalNum.Should().Be(b.LocalNum);
+      a.Fields.Count.Should().Be(b.Fields.Count);
 
-      Assert.That(fields.Count, Is.EqualTo(fields.Count));
+      List<Field> fields = a.Fields.Values.ToList();
 
       for (int i = 0; i < fields.Count; i++)
       {
@@ -96,15 +99,15 @@ namespace FitEdit.Data.IntegrationTests
 
     private void AssertAreEqual(Field a, Field b)
     {
-      Assert.That(a.Name, Is.EqualTo(b.Name));
-      Assert.That(a.Num, Is.EqualTo(b.Num));
-      Assert.That(a.Type, Is.EqualTo(b.Type));
-      Assert.That(a.Scale, Is.EqualTo(b.Scale));
-      Assert.That(a.Offset, Is.EqualTo(b.Offset));
-      Assert.That(a.Units, Is.EqualTo(b.Units));
-      Assert.That(a.IsAccumulated, Is.EqualTo(b.IsAccumulated));
-      Assert.That(a.ProfileType, Is.EqualTo(b.ProfileType));
-      Assert.That(a.IsExpandedField, Is.EqualTo(b.IsExpandedField));
+      a.Name.Should().Be(b.Name);
+      a.Num.Should().Be(b.Num);
+      a.Type.Should().Be(b.Type);
+      a.Scale.Should().Be(b.Scale);
+      a.Offset.Should().Be(b.Offset);
+      a.Units.Should().Be(b.Units);
+      a.IsAccumulated.Should().Be(b.IsAccumulated);
+      a.ProfileType.Should().Be(b.ProfileType);
+      a.IsExpandedField.Should().Be(b.IsExpandedField);
     }
   }
 }

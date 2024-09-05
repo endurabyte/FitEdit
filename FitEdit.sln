@@ -22,6 +22,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FitEdit.Adapters.Fit", "Infrastructure\FitEdit.Adapters.Fit\FitEdit.Adapters.Fit.csproj", "{F59847CE-DEEE-42CD-98CE-8901E8E6E501}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C4B0BF37-8C87-4A7E-9413-A8F417C554D1}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\Directory.Build.props = Tests\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{ACB83B7E-8AB4-425C-A305-ABE92AC9961B}"
 EndProject

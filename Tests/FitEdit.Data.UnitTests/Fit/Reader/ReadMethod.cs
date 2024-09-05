@@ -1,31 +1,28 @@
 using Newtonsoft.Json;
-using NUnit.Framework;
 
 namespace FitEdit.Data.UnitTests.Fit.Reader
 {
-  [TestFixture]
   public class ReadMethod
   {
-    private const string source_ = @"..\..\..\..\data\devices\forerunner-945\sports\running\treadmill\2019-12-17\"
-           + @"steep-1mi-easy-2x[2mi 2min rest]\garmin-connect\activity.fit";
+    private const string source_ = @"..\..\..\..\TestData\2019-12-17-treadmill-run.fit";
 
-    [Test]
-    public void ReadsFile()
+    [Fact]
+    public async Task ReadsFile()
     {
-      var fitFile = new Data.Fit.Reader().ReadAsync(source_);
-      Assert.That(fitFile, Is.Not.Null);
+      var fitFile = await new Data.Fit.Reader().ReadAsync(source_);
+      fitFile.Should().NotBeNull(); 
     }
 
-    [Test]
-    public void DumpsToJson()
+    [Fact]
+    public async Task DumpsToJson()
     {
-      var fitFile = new Data.Fit.Reader().ReadAsync(source_);
+      var fitFile = await new Data.Fit.Reader().ReadAsync(source_);
 
-      Assert.DoesNotThrow(() =>
+      fitFile.Invoking(f =>
       {
-        var json = JsonConvert.SerializeObject(fitFile, Formatting.Indented);
-        Assert.That(json, Is.Not.Empty);
-      });
+        var json = JsonConvert.SerializeObject(f, Formatting.Indented);
+        json.Should().NotBeNullOrEmpty();
+      }).Should().NotThrow();
     }
   }
 }

@@ -5,12 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="nunit" Version="4.1.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\Core\FitEdit.Model\FitEdit.Model.csproj" />
     <ProjectReference Include="..\..\Infrastructure\FitEdit.Data\FitEdit.Data.csproj" />
     <ProjectReference Include="..\FitEdit.UnitTests.Shared\FitEdit.UnitTests.Shared.csproj" />
