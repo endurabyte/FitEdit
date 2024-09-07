@@ -407,19 +407,6 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    if (uif.FitFile != null) 
-    {
-      Log.Info($"File {uif.Activity.Name} is already loaded");
-      uif.Progress = 100;
-      uif.IsLoaded = true;
-
-      await Dispatcher.UIThread.InvokeAsync(() =>
-      {
-        FileService.MainFile = uif;
-      });
-      return;
-    }
-
     LocalActivity? act = await FileService.ReadAsync(uif.Activity.Id);
     FileReference? file = act?.File;
     uif.Activity.File = act?.File;
