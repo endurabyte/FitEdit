@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace FitEdit.Data.IntegrationTests
 {
-  public class Copy
+  public class CopyMethod
   {
     private const string source_ = @"..\..\..\..\TestData\2019-12-17-treadmill-run.fit";
 
@@ -22,6 +22,12 @@ namespace FitEdit.Data.IntegrationTests
       var fitFile = await new Reader().ReadAsync(ms1);
       new Writer().Write(fitFile, ms2);
 
+      var buf1 = ms1.ToArray();
+      var buf2 = ms2.ToArray();
+
+      //buf1.Should().BeEquivalentTo(bytes);
+      //buf2.Should().BeEquivalentTo(bytes);
+      
       ms2.Position = 0;
       var fitFile2 = await new Reader().ReadAsync(ms2);
 

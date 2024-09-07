@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Fit\FitEdit.Adapters.Fit.csproj" />
+    <ProjectReference Include="..\FitEdit.UnitTests.Shared\FitEdit.UnitTests.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

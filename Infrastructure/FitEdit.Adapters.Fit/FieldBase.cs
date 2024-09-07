@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using FitEdit.Adapters.Fit;
+using FitEdit.Adapters.Fit.Extensions;
 
 namespace Dynastream.Fit
 {
@@ -120,47 +121,7 @@ namespace Dynastream.Fit
       return subfield == null ? Units : subfield.Units;
     }
 
-    public byte GetSize()
-    {
-      byte size = 0;
-
-      switch (Type & Fit.BaseTypeNumMask)
-      {
-        case Fit.Enum:
-        case Fit.SInt8:
-        case Fit.UInt8:
-        case Fit.SInt16:
-        case Fit.UInt16:
-        case Fit.SInt32:
-        case Fit.UInt32:
-        case Fit.Float32:
-        case Fit.Float64:
-        case Fit.UInt8z:
-        case Fit.UInt16z:
-        case Fit.UInt32z:
-        case Fit.SInt64:
-        case Fit.UInt64:
-        case Fit.UInt64z:
-        case Fit.Byte:
-          size = (byte)(GetNumValues() * Fit.BaseType[Type & Fit.BaseTypeNumMask].size);
-          break;
-
-        case Fit.String:
-          // Each string may be of differing length
-          int len = 0; // use int since byte can overflow
-          // The fit binary must also include a null terminator
-          foreach (byte[] element in values)
-          {
-            len += element.Length;
-          }
-          size = len > 255 ? (byte)255 : (byte)len;
-          break;
-
-        default:
-          break;
-      }
-      return size;
-    }
+    public byte GetSize() => FitTypes.GetFieldSize(Type, values);
 
     internal bool IsSigned()
     {

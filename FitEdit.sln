@@ -74,6 +74,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FitEdit.Adapters.Strava", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FitEdit.Adapters.Mtp", "Infrastructure\FitEdit.Adapters.Mtp\FitEdit.Adapters.Mtp.csproj", "{B686BA37-6E25-4570-BFA3-5738B5E2E22D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FitEdit.Adapters.Fit.UnitTests", "Tests\FitEdit.Adapters.Fit.UnitTests\FitEdit.Adapters.Fit.UnitTests.csproj", "{AB920058-9D3B-4EA9-B4BE-A395AD609CBD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,6 +171,10 @@ Global
 		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B686BA37-6E25-4570-BFA3-5738B5E2E22D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB920058-9D3B-4EA9-B4BE-A395AD609CBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB920058-9D3B-4EA9-B4BE-A395AD609CBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB920058-9D3B-4EA9-B4BE-A395AD609CBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB920058-9D3B-4EA9-B4BE-A395AD609CBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -196,6 +202,7 @@ Global
 		{4B792AAF-D0C2-4673-90CC-7A91E6EA4BEB} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 		{C2016AC1-02FC-4663-B487-FC9DBE550F30} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 		{B686BA37-6E25-4570-BFA3-5738B5E2E22D} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
+		{AB920058-9D3B-4EA9-B4BE-A395AD609CBD} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}

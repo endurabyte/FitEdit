@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using FitEdit.Adapters.Fit;
 using Dynastream.Utility;
+using FitEdit.Adapters.Fit.Extensions;
 
 namespace Dynastream.Fit
 {
@@ -77,7 +78,7 @@ namespace Dynastream.Fit
       {
         Field field = kvp.Value;
 
-        if (field.GetNumValues() > 0)
+        //if (field.GetNumValues() > 0)
         {
           AddCopy(field);
         }
@@ -166,7 +167,7 @@ namespace Dynastream.Fit
 
         if (read)
         {
-          ReadFieldValue(field, fieldDef.Size, mesgReader);
+          FieldTools.ReadFieldValue(field, fieldDef.Size, mesgReader);
         }
         else
         {
@@ -184,180 +185,8 @@ namespace Dynastream.Fit
           SetDeveloperField(fld);
         }
 
-        ReadFieldValue(fld, fldDef.Size, mesgReader);
+        FieldTools.ReadFieldValue(fld, fldDef.Size, mesgReader);
       }
-    }
-
-    private static void ReadFieldValue(
-        FieldBase field,
-        byte size,
-        EndianBinaryReader mesgReader)
-    {
-      byte baseType = (byte)(field.Type & Fit.BaseTypeNumMask);
-      // strings may be an array and are of variable length
-      if (baseType == Fit.String)
-      {
-        byte[] bytes = mesgReader.ReadBytes(size);
-        List<byte> utf8Bytes = new List<byte>();
-
-        if (!Array.Exists(bytes, x => x != 0))
-        {
-          // Array has no non zero values, don't add any strings
-          return;
-        }
-
-        for (int i = 0; i < size; i++)
-        {
-          byte b = bytes[i];
-          utf8Bytes.Add(b);
-
-          if (b == 0x00)
-          {
-            field.AddValue(utf8Bytes.ToArray());
-            utf8Bytes.Clear();
-          }
-        }
-
-        if (utf8Bytes.Count != 0)
-        {
-          // Add a Null Terminator
-          utf8Bytes.Add(0);
-          field.AddValue(utf8Bytes.ToArray());
-          utf8Bytes.Clear();
-        }
-      }
-      else
-      {
-        int numElements = baseType < 0 || baseType >= Fit.BaseType.Length
-          ? 1
-          : size / Fit.BaseType[baseType].size; 
-        
-        for (int i = 0; i < numElements; i++)
-        {
-          object value;
-          bool invalid = TryReadValue(
-              out value,
-              field.Type,
-              mesgReader,
-              size);
-
-          if (!invalid || numElements > 1)
-          {
-            field.SetRawValue(i, value);
-          }
-        }
-
-        // Save raw bytes
-        if (!FitConfig.CacheSourceData) { return; }
-
-        mesgReader.BaseStream.Position -= Math.Min(mesgReader.BaseStream.Position, size);
-        field.SourceData = mesgReader.ReadBytes(size);
-      }
-    }
-
-    private static bool TryReadValue(
-        out object value,
-        byte type,
-        EndianBinaryReader mesgReader,
-        byte size)
-    {
-      bool invalid = true;
-      byte baseTypeNum = (byte)(type & Fit.BaseTypeNumMask);
-      switch (baseTypeNum)
-      {
-        case Fit.Enum:
-        case Fit.Byte:
-        case Fit.UInt8:
-        case Fit.UInt8z:
-          value = mesgReader.ReadByte();
-          if ((byte)value != (byte)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.SInt8:
-          value = mesgReader.ReadSByte();
-          if ((sbyte)value != (sbyte)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.SInt16:
-          value = mesgReader.ReadInt16();
-          if ((short)value != (short)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.UInt16:
-        case Fit.UInt16z:
-          value = mesgReader.ReadUInt16();
-          if ((ushort)value !=
-              (ushort)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.SInt32:
-          value = mesgReader.ReadInt32();
-          if ((int)value != (int)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.UInt32:
-        case Fit.UInt32z:
-          value = mesgReader.ReadUInt32();
-          if ((uint)value != (uint)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.SInt64:
-          value = mesgReader.ReadInt64();
-          if ((long)value != (long)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.UInt64:
-        case Fit.UInt64z:
-          value = mesgReader.ReadUInt64();
-          if ((ulong)value != (ulong)Fit.BaseType[baseTypeNum].invalidValue)
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.Float32:
-          value = mesgReader.ReadSingle();
-          if (!float.IsNaN((float)value))
-          {
-            invalid = false;
-          }
-          break;
-
-        case Fit.Float64:
-          value = mesgReader.ReadDouble();
-          if (!double.IsNaN((double)value))
-          {
-            invalid = false;
-          }
-          break;
-
-        default:
-          value = mesgReader.ReadBytes(size);
-          break;
-      }
-
-      return invalid;
     }
 
     public void Write(Stream outStream)
@@ -380,18 +209,18 @@ namespace Dynastream.Fit
         Field field = GetField(fieldDef.Num);
         if (null == field)
         {
-          //field = Profile.GetField(this.Num, fieldDef.Num);
-          //if (null != field)
-          //{
-          //  Add(field);
-          //}
-          //else
-          //{
+          field = Profile.GetField(this.Num, fieldDef.Num);
+          if (null != field)
+          {
+            Add(field);
+          }
+          else
+          {
             field = new Field(fieldDef.Num, fieldDef.Type);
-          //}
+          }
         }
 
-        WriteField(field, fieldDef.Size, bw);
+        FieldTools.WriteField(field, fieldDef.Size, bw);
       }
 
       foreach (DeveloperFieldDefinition fieldDef in mesgDef.DeveloperFieldDefinitions)
@@ -404,124 +233,7 @@ namespace Dynastream.Fit
           SetDeveloperField(field);
         }
 
-        WriteField(field, fieldDef.Size, bw);
-      }
-    }
-
-    private static void WriteField(FieldBase field, byte size, BinaryWriter bw)
-    {
-      bool typeKnown = FitTypes.TypeMap.ContainsKey(field.Type);
-      if (!typeKnown)
-      {
-        bw.Write(new byte[size]);
-        return;
-      }
-
-      byte baseType = (byte)(field.Type & Fit.BaseTypeNumMask);
-
-      // The field could be blank, correctly formed or partially filled
-      while (field.GetSize() < size)
-      {
-        if (baseType == Fit.String)
-        {
-          // Figure out how much we have to pad
-          byte padAmount = (byte)(size - field.GetSize());
-          //Has to be a string.
-          try
-          {
-            // Get the Last Value of the field
-            byte[] value = (byte[])field.GetValue(field.GetNumValues() - 1);
-            List<byte> temp = new List<byte>();
-
-            if (value != null)
-            {
-              temp.AddRange(value);
-            }
-
-            for (byte i = 0; i < padAmount; i++)
-            {
-              temp.Add(
-                  Convert.ToByte(
-                      Fit.BaseType[baseType].invalidValue));
-            }
-
-            field.SetValue(field.GetNumValues(), temp.ToArray());
-          }
-          catch (Exception)
-          {
-            throw new FitException(
-                "Exception occurred while resizing field to match definition.");
-          }
-        }
-        else
-        {
-          field.AddValue(Fit.BaseType[baseType].invalidValue);
-        }
-      }
-
-      for (int i = 0; i < field.GetNumValues(); i++)
-      {
-        object value = field.GetRawValue(i);
-        if (value == null)
-        {
-          value = Fit.BaseType[baseType].invalidValue;
-        }
-
-        switch (baseType)
-        {
-          case Fit.Enum:
-          case Fit.Byte:
-          case Fit.UInt8:
-          case Fit.UInt8z:
-            bw.Write((byte)value);
-            break;
-
-          case Fit.SInt8:
-            bw.Write((sbyte)value);
-            break;
-
-          case Fit.SInt16:
-            bw.Write((short)value);
-            break;
-
-          case Fit.UInt16:
-          case Fit.UInt16z:
-            bw.Write((ushort)value);
-            break;
-
-          case Fit.SInt32:
-            bw.Write((int)value);
-            break;
-
-          case Fit.UInt32:
-          case Fit.UInt32z:
-            bw.Write((uint)value);
-            break;
-
-          case Fit.SInt64:
-            bw.Write((long)value);
-            break;
-
-          case Fit.UInt64:
-          case Fit.UInt64z:
-            bw.Write((ulong)value);
-            break;
-
-          case Fit.Float32:
-            bw.Write((float)value);
-            break;
-
-          case Fit.Float64:
-            bw.Write((double)value);
-            break;
-
-          case Fit.String:
-            bw.Write((byte[])value);
-            break;
-
-          default:
-            break;
-        }
+        FieldTools.WriteField(field, fieldDef.Size, bw);
       }
     }
 

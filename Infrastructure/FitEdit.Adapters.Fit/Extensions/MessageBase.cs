@@ -1,7 +1,7 @@
 ﻿using FitEdit.Model;
 using FitEdit.Model.Extensions;
 
-namespace FitEdit.Adapters.Fit;
+namespace FitEdit.Adapters.Fit.Extensions;
 
 public class MessageBase : HasProperties
 {
