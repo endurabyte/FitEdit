@@ -6,6 +6,7 @@ namespace FitEdit.Model;
 public static class Log
 {
   public static ILogger Logger { get; set; } = NullLogger.Instance;
+  //public static ILogger Logger { get; set; } = new DebugLogger();
 
   public static void Error(object o) => Logger.LogError($"{o}");
   public static void Warn(object o) => Logger.LogWarning($"{o}");

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Infrastructure\FitEdit.Adapters.Fit\FitEdit.Adapters.Fit.csproj" />
     <ProjectReference Include="..\..\Infrastructure\FitEdit.Data\FitEdit.Data.csproj" />
+    <ProjectReference Include="..\FitEdit.UnitTests.Shared\FitEdit.UnitTests.Shared.csproj" />
   </ItemGroup>
 
 </Project>

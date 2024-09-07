@@ -19,6 +19,7 @@ using System.Linq;
 using FitEdit.Adapters.Fit;
 using Dynastream.Utility;
 using FitEdit.Adapters.Fit.Extensions;
+using System.Text.Json.Serialization;
 
 namespace Dynastream.Fit
 {
@@ -57,6 +58,7 @@ namespace Dynastream.Fit
     public Dictionary<byte, Field> FieldsByNum { get; } = new();
     public Dictionary<string, Field> FieldsByName { get; } = new();
     public Dictionary<int, Field> Fields { get; } = new(); // aka FieldsByIndex
+    [JsonIgnore]
     public Dictionary<DeveloperDataKey, DeveloperField> DeveloperFields { get; } = new();
     #endregion
 

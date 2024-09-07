@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+using System.Text.Json;
+using FitEdit.Model.Data;
 
 namespace FitEdit.Data.UnitTests.Fit.Reader
 {
@@ -20,7 +21,7 @@ namespace FitEdit.Data.UnitTests.Fit.Reader
 
       fitFile.Invoking(f =>
       {
-        var json = JsonConvert.SerializeObject(f, Formatting.Indented);
+        var json = f.ToPrettyJson();
         json.Should().NotBeNullOrEmpty();
       }).Should().NotThrow();
     }

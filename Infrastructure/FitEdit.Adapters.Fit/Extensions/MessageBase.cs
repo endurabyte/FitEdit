@@ -40,7 +40,7 @@ public class MessageBase : HasProperties
     if (!FitConfig.CacheSourceData) { return; }
 
     var position = source.Position;
-    source.Position = 1; // 0 = local mesg num (from the message header). 1 = first field
+    source.Position = 0;
     SourceData = source?.ReadAllBytes() ?? Array.Empty<byte>();
     SourceLength = SourceData.Length;
     source.Position = position;

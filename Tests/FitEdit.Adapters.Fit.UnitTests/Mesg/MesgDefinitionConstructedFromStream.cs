@@ -3,6 +3,8 @@ using FitEdit.Adapters.Fit.UnitTests.TestData;
 
 namespace FitEdit.Adapters.Fit.UnitTests.Mesg;
 
+using MesgDefinition = Dynastream.Fit.MesgDefinition;
+
 public class MesgDefinitionConstructedFromStream
 {
   [Fact]

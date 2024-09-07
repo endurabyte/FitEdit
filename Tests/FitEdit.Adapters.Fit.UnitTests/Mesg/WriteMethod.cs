@@ -5,6 +5,7 @@ using FitEdit.Data.Fit;
 namespace FitEdit.Adapters.Fit.UnitTests.Mesg;
 
 using Mesg = Dynastream.Fit.Mesg;
+using MesgDefinition = Dynastream.Fit.MesgDefinition;
 
 public class WriteMethod
 {
