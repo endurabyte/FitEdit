@@ -66,8 +66,16 @@ public static class FitFileExtensions
   /// Return only the <see cref="T"/>s which occur in the given <see cref="Dynastream.Fit.DateTime"/> range.
   /// Used for e.g. Records and other messages which don't span a duration of time and instead only occupy an instant in time.
   /// </summary>
-  public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, Dynastream.Fit.DateTime after = default, Dynastream.Fit.DateTime before = default)
-    where T : IInstantOfTime => ts.Where(t => t.GetTimestamp().CompareTo(after) >= 0 && t.GetTimestamp().CompareTo(before) < 0);
+  public static IEnumerable<T> InstantBetween<T>(this IEnumerable<T> ts, 
+    Dynastream.Fit.DateTime after = default, 
+    Dynastream.Fit.DateTime before = default
+  ) where T : IInstantOfTime => ts.Where(t =>
+    {
+      var timestamp = t.GetTimestamp();
+      if (timestamp is null) { return false; }
+
+      return timestamp.CompareTo(after) >= 0 && timestamp.CompareTo(before) < 0;
+    });
 
   /// <summary>
   /// Compute Session, Records, and Laps from Events
