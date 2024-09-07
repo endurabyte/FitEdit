@@ -10,16 +10,14 @@ namespace FitEdit.UnitTests.Shared
     {
         public static string GetGpsWorkout()
         {
-            const string source = @"..\..\..\..\data\devices\forerunner-945\sports\running\"
-                + @"generic\2019-12-18\35min-easy-4x20s-strides\garmin-connect\activity.tcx";
+            const string source = @"..\..\..\..\TestData\2019-12-18-outdoor-run.tcx";
 
             return File.ReadAllText(source);
         }
 
         public static string GetTreadmillWorkout()
         {
-            const string source = @"..\..\..\..\data\devices\forerunner-945\sports\running\"
-                + @"treadmill\2019-12-19\90-minutes-easy\garmin-connect\activity.tcx";
+            const string source = @"..\..\..\..\TestData\2019-12-19-treadmill-run.tcx";
 
             return File.ReadAllText(source);
         }

@@ -19,8 +19,7 @@ namespace FitEdit.Data.Fit
 
     public void Write(FitFile fitFile, Stream dest)
     {
-      var encoder = new Encode(ProtocolVersion.V20);
-      encoder.Open(dest);
+      var encoder = new Encode(dest, ProtocolVersion.V20);
 
       // Preserve the original message order
       foreach (var message in fitFile.Events)

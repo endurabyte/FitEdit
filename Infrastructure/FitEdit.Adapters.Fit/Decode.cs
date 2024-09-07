@@ -13,6 +13,7 @@
 #endregion
 
 using FitEdit.Adapters.Fit;
+using FitEdit.Adapters.Fit.Extensions;
 using FitEdit.Model;
 using FitEdit.Model.Extensions;
 

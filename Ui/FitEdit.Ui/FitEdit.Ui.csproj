@@ -33,11 +33,11 @@
     <PackageReference Include="Avalonia.Svg" Version="$(AvaloniaSvgVersion)" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="HarfBuzzSharp" Version="7.3.0.1" />
+    <PackageReference Include="HarfBuzzSharp" Version="7.3.0.2" />
     <PackageReference Condition="$(UseMapsui)" Include="Mapsui.Avalonia" Version="$(MapsuiVersion)" />
     <PackageReference Include="OxyPlot.Avalonia" Version="$(OxyPlotVersion)" />
     <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
-    <PackageReference Include="SkiaSharp" Version="2.88.7" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
   </ItemGroup>
 
   <ItemGroup>

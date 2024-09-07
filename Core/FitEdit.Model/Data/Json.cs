@@ -19,5 +19,6 @@ public static class Json
     }
   }
 
-  public static string ToJson(this object? obj) => JsonSerializer.Serialize(obj);
+  public static string ToPrettyJson(this object? obj) => obj.ToJson(new JsonSerializerOptions { WriteIndented = true });
+  public static string ToJson(this object? obj, JsonSerializerOptions? options = null) => JsonSerializer.Serialize(obj, options);
 }

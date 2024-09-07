@@ -330,7 +330,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await log_.Log($"Reading FIT file {file.Name}");
 
     var reader = new Reader();
-    if (reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
+    if (reader.TryGetDecoder(ms, out FitFile fit, out var decoder))
     {
       await reader.ReadOneAsync(ms, decoder, 100);
     }
@@ -434,7 +434,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await log_.Log($"Reading FIT file {file.Name}");
 
       var reader = new Reader();
-      if (!reader.TryGetDecoder(file.Name, ms, out FitFile fit, out var decoder))
+      if (!reader.TryGetDecoder(ms, out FitFile fit, out var decoder))
       {
         return;
       }

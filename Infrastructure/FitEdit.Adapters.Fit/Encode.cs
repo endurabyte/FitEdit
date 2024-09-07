@@ -125,7 +125,7 @@ namespace Dynastream.Fit
             }
 
             // Fit file must always contain a defn message before data messages
-            if ((lastMesgDef[mesg.LocalNum] == null) || !lastMesgDef[mesg.LocalNum].Supports(mesg))
+            if (lastMesgDef[mesg.LocalNum] == null)
             {
                 Write(new MesgDefinition(mesg));
             }

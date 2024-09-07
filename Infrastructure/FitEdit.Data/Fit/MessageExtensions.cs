@@ -1,7 +1,7 @@
-﻿using FitEdit.Adapters.Fit;
-using FitEdit.Model.Workouts;
+﻿using FitEdit.Model.Workouts;
 using Dynastream.Fit;
 using Units;
+using FitEdit.Adapters.Fit.Extensions;
 
 namespace FitEdit.Data.Fit
 {

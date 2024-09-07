@@ -19,7 +19,7 @@ using System.Text;
 using System.IO;
 using System.Linq;
 using Dynastream.Utility;
-using FitEdit.Adapters.Fit;
+using FitEdit.Adapters.Fit.Extensions;
 
 namespace Dynastream.Fit
 {

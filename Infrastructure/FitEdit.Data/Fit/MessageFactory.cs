@@ -14,6 +14,9 @@ public class MessageFactory
 
   public static Dictionary<Type, ushort> MesgNums = Types.Reverse();
 
+  public static T Create<T>() where T : Mesg => (T)Create(Profile.GetMesg(MesgNums[typeof(T)]));
+  public static T Create<T>(Stream stream, MesgDefinition def) where T : Mesg => (T)Create(new Mesg(stream, def));
+
   /// <summary>
   /// Convert general Mesg to specific e.g. LapMesg
   /// </summary>

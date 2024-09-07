@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using FitEdit.Adapters.Fit;
 using FitEdit.Model;
 using Dynastream.Fit;
+using FitEdit.Adapters.Fit.Extensions;
 
 namespace FitEdit.Data.Fit
 {
@@ -11,12 +11,12 @@ namespace FitEdit.Data.Fit
     {
       Log.Info($"Opening {source}...");
       using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
-      return await ReadAsync(source, stream);
+      return await ReadAsync(stream);
     }
 
-    public async Task<FitFile> ReadAsync(string source, Stream stream)
+    public async Task<FitFile> ReadAsync(Stream stream)
     {
-      if (!TryGetDecoder(source, stream, out FitFile fitFile, out Decode decoder))
+      if (!TryGetDecoder(stream, out FitFile fitFile, out Decode decoder))
       {
         return new FitFile();
       }
@@ -34,13 +34,13 @@ namespace FitEdit.Data.Fit
           Log.Warn("Attempting to read by skipping the header...");
           if (!await decoder.ReadAsync(stream, DecodeMode.InvalidHeader))
           {
-            Log.Error($"Could not read {source} by skipping the header");
+            Log.Error($"Could not read FIT file by skipping the header");
             return null;
           }
         }
         if (!await decoder.ReadAsync(stream))
         {
-          Log.Error($"Could not read {source}");
+          Log.Error($"Could not read FIT file");
           return null;
         }
 
@@ -78,7 +78,7 @@ namespace FitEdit.Data.Fit
       }
     }
 
-    public bool TryGetDecoder(string source, Stream stream, out FitFile fit, out Decode decoder)
+    public bool TryGetDecoder(Stream stream, out FitFile fit, out Decode decoder)
     {
       decoder = new Decode();
       var tmp = new FitFile();
@@ -149,7 +149,7 @@ namespace FitEdit.Data.Fit
 
       if (!Decode.IsFIT(stream))
       {
-        Log.Error($"Is not a FIT file: {source}");
+        Log.Error($"File is not a FIT file");
         fit = null;
         return false;
       }

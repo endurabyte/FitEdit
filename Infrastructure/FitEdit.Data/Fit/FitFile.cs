@@ -10,7 +10,7 @@ namespace FitEdit.Data.Fit
     public List<EventArgs> Events { get; set; } = new();
 
     /// <summary>
-    /// Key: global mesg_num. Value: MesgDefinintion
+    /// Key: global mesg_num. Value: MesgDefinition
     /// </summary>
     public Dictionary<int, MesgDefinition> MessageDefinitions { get; set; } = new();
 
