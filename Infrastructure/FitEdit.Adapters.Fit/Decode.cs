@@ -270,292 +270,308 @@ namespace Dynastream.Fit
       // Is it a compressed timestamp mesg?
       if (isCompressedHeader)
       {
-        var mesgBuffer = new MemoryStream();
-
-        int timeOffset = nextByte & Fit.CompressedTimeMask;
-        timestamp_ += (uint)((timeOffset - lastTimeOffset_) & Fit.CompressedTimeMask);
-        lastTimeOffset_ = timeOffset;
-        Field timestampField = new Field(Profile.GetMesg(MesgNum.Record).GetField("Timestamp"));
-        timestampField.SetValue(timestamp_);
-
-        byte localMesgNum = (byte)((nextByte & Fit.CompressedLocalMesgNumMask) >> 5);
-        mesgBuffer.WriteByte(localMesgNum);
-        if (localMesgDefs_[localMesgNum] == null)
-        {
-          throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
-        }
-        int fieldsSize = localMesgDefs_[localMesgNum].GetMesgSize() - 1;
-        try
-        {
-          byte[] read = br.ReadBytes(fieldsSize);
-          if (read.Length < fieldsSize)
-          {
-            throw new FitException($"Field size mismatch, expected: {fieldsSize}, received: {read.Length}");
-          }
-          mesgBuffer.Write(read, 0, fieldsSize);
-        }
-        catch (Exception e)
-        {
-          throw new FitException($"Compressed Data Message unexpected end of file. Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
-        }
-
-        var mesg = new Mesg(mesgBuffer, localMesgDefs_[localMesgNum])
-        {
-          SourceIndex = sourceIndex
-        };
-        mesg.InsertField(0, timestampField);
-
-        if (FitConfig.Discard.DataMessages.UnexpectedFileIdMessage 
-          && mesg.Num == MesgNum.FileId && fitStream.Position > 1024)
-        {
-          Log.Warn($"Discarding suspicious FileID compressed header message.");
-          fitStream.Position = FindNextMessageByTimestamp(timestamp_, fitStream);
-          return;
-        }
-
-        RaiseMesgEvent(mesg);
+        ReadCompressedTimestamp(fitStream, br, sourceIndex, nextByte);
         return;
       }
 
       // Is it a mesg def?
       if (isMesgDefinition)
       {
-        var mesgDefBuffer = new MemoryStream();
-        const int bytesPerField = 3;
-
-        // Read record content
-        // Fixed content
-        byte reserved = br.ReadByte();
-        byte architecture = br.ReadByte();
-
-        // Suspicious: architecture is not 0 or 1
-        if (FitConfig.Discard.DefinitionMessages.WithUnknownArchitecture && architecture != 0 && architecture != 1)
-        {
-          throw new FitException("FIT decode error: unsupported architecture " + architecture);
-        }
-
-        byte[] globalMesgNum = br.ReadBytes(2);
-        byte numFields = br.ReadByte();
-
-        // Variable content
-        int numBytes = numFields * bytesPerField;
-        byte[] read = br.ReadBytes(numBytes);
-
-        if (read.Length < numBytes)
-        {
-          throw new FitException($"Message Definition size mismatch, expected: {numBytes}, received: {read.Length}");
-        }
-
-        mesgDefBuffer.WriteByte(nextByte);
-        mesgDefBuffer.WriteByte(reserved);
-        mesgDefBuffer.WriteByte(architecture);
-        mesgDefBuffer.Write(globalMesgNum, 0, 2);
-        mesgDefBuffer.WriteByte(numFields);
-        mesgDefBuffer.Write(read, 0, numBytes);
-
-        if (isDevData)
-        {
-          // Definition Contains Dev Data
-          byte numDevFields = br.ReadByte();
-          mesgDefBuffer.WriteByte(numDevFields);
-
-          numBytes = numDevFields * bytesPerField;
-          read = br.ReadBytes(numBytes);
-          if (read.Length < numBytes)
-          {
-            throw new FitException($"Message Definition size mismatch, expected: {numBytes}, received: {read.Length}");
-          }
-
-          // Read Dev Data
-          mesgDefBuffer.Write(read, 0, numBytes);
-        }
-
-        var def = new MesgDefinition(mesgDefBuffer, lookup_)
-        {
-          SourceIndex = sourceIndex,
-        };
-
-        if (FitConfig.Discard.DefinitionMessages.RedefiningGlobalMesgNum 
-          && localMesgDefs_[def.LocalMesgNum] != null
-          && localMesgDefs_[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
-        {
-          Log.Warn($"Discarding suspicious redefinition of local mesg def with different global mesg num");
-          Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
-          return;
-        }
-
-        if (FitConfig.Discard.DefinitionMessages.ContainingUnknownType 
-          && !def.GetFields().Any(field => FitTypes.TypeMap.ContainsKey(field.Type)))
-        {
-          Log.Warn($"Discarding suspicious definition containing unknown types");
-          Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
-          return;
-        }
-
-        if (FitConfig.Discard.DefinitionMessages.WithBigUnknownMessageNum 
-          && def.GlobalMesgNum > 500)
-        {
-          Log.Warn("Discarding suspicious definition containing big unknown mesg_num");
-          Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
-          return;
-        }
-
-        localMesgDefs_[def.LocalMesgNum] = def;
-        MesgDefinitionEvent?.Invoke(this, new MesgDefinitionEventArgs(def));
+        ReadMesgDefinition(br, sourceIndex, nextByte, isDevData);
         return;
       }
 
       // Is it a data mesg?
       if (isDataMessage)
       {
-        var mesgBuffer = new MemoryStream();
-        byte localMesgNum = (byte)(nextByte & Fit.LocalMesgNumMask);
-
-        mesgBuffer.WriteByte(localMesgNum);
-        if (localMesgDefs_[localMesgNum] == null)
-        {
-          throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
-        }
-
-        MesgDefinition def = localMesgDefs_[localMesgNum];
-        Log.Debug($"  (global, local) message num: ({localMesgNum}, {def.GlobalMesgNum})");
-        int fieldsSize = def.GetMesgSize() - 1;
-
-        if (FitConfig.Discard.DataMessages.OfLargeSize 
-          && fieldsSize > 1024)
-        {
-          Log.Debug($"Discarding suspicious large data message with field size {fieldsSize}");
-          return;
-        }
-
-        try
-        {
-          byte[] read = br.ReadBytes(fieldsSize);
-          if (read.Length < fieldsSize)
-          {
-            throw new FitException("Field size mismatch, expected: " + fieldsSize + "received: " + read.Length);
-          }
-          mesgBuffer.Write(read, 0, fieldsSize);
-        }
-        catch (Exception e)
-        {
-          throw new FitException($"Data Message unexpected end of file.  Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
-        }
-
-        var mesg = new Mesg(mesgBuffer, def)
-        {
-          SourceIndex = sourceIndex,
-        };
-
-        // If the new message contains a timestamp field, record the value to use as
-        // a reference for compressed timestamp headers
-        Field timestampField = mesg.GetField("Timestamp");
-        Field latitudeField = mesg.GetField("PositionLat");
-        Field longitudeField = mesg.GetField("PositionLong");
-
-        bool haveTimestamp = timestampField != null && timestampField.Count > 0;
-        bool haveLatitude = latitudeField != null && latitudeField.Count > 0;
-        bool haveLongitude = longitudeField != null && longitudeField.Count > 0;
-
-        if (FitConfig.Discard.DataMessages.WithLargeLatitudeChange 
-          && haveLatitude)
-        {
-          // Detect big jump in latitude
-          var lat = (int)latitudeField.GetValue();
-          var diff = Math.Abs(lat - lastLatitude_);
-          bool suspicious = lastLatitude_ != 0 && diff > GeospatialExtensions.DegreeToSemicircles;
-
-          if (suspicious)
-          {
-            Log.Warn($"Discarding suspicious message with large latitude change of {diff.ToDegrees()}deg");
-            Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
-            return;
-          }
-
-          lastLatitude_ = lat;
-        }
-
-        if (FitConfig.Discard.DataMessages.WithLargeLongitudeChange 
-          && haveLongitude)
-        {
-          // Detect big jump in longitude
-          var lon = (int)longitudeField.GetValue();
-          var diff = Math.Abs(lon - lastLongitude_);
-          bool suspicious = lastLongitude_ != 0 && diff > GeospatialExtensions.DegreeToSemicircles;
-
-          if (suspicious)
-          {
-            Log.Warn($"Discarding suspicious message with large longitude change of {diff.ToDegrees()}");
-            Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
-            return;
-          }
-
-          lastLongitude_ = lon;
-        }
-
-        if (FitConfig.Discard.DataMessages.WithLargeTimestampChange 
-          && haveTimestamp && haveLongitude && haveLongitude)
-        {
-          var ts = (uint)timestampField.GetValue();
-          var diff = Math.Abs((int)ts - (int)timestamp_);
-          bool timeTraveled = timestamp_ > 0 && diff > TimeSpan.FromDays(1).TotalSeconds;
-
-          if (timeTraveled)
-          {
-            var dt = new RecordMesg(mesg).GetTimestamp().GetDateTime();
-            Log.Warn($"Discarding suspicious message at {dt} with timestamp change of {diff}s");
-            Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
-            return;
-          }
-
-          timestamp_ = ts;
-          lastTimeOffset_ = (int)timestamp_ & Fit.CompressedTimeMask;
-        }
-
-        if (FitConfig.Discard.DataMessages.UnexpectedFileIdMessage
-          && mesg is FileIdMesg && fitStream.Position > 1024)
-        {
-          Log.Warn($"Discarding suspicious FileID message.");
-          fitStream.Position = FindNextMessageByTimestamp(timestamp_, fitStream);
-          return;
-        }
-
-        foreach (var kvp in mesg.Fields)
-        {
-          Field field = kvp.Value;
-
-          if (field.IsAccumulated)
-          {
-            int i;
-            for (i = 0; i < field.GetNumValues(); i++)
-            {
-              long value = Convert.ToInt64(field.GetRawValue(i));
-
-              foreach (var kvp2 in mesg.Fields)
-              {
-                Field fieldIn = kvp2.Value;
-                foreach (var kvp3 in fieldIn.Components)
-                {
-                  FieldComponent fc = kvp3.Value;
-                  if ((fc.fieldNum == field.Num) && (fc.accumulate))
-                  {
-                    value = (long)((((value / field.Scale) - field.Offset) + fc.offset) * fc.scale);
-                  }
-                }
-              }
-              accumulator_.Set(mesg.Num, field.Num, value);
-            }
-          }
-        }
-
-        // Now that the entire message is decoded we can evaluate subfields and expand any components
-        mesg.ExpandComponents(accumulator_);
-
-        RaiseMesgEvent(mesg);
+        ReadDataMesg(fitStream, br, sourceIndex, nextByte);
         return;
       }
 
       throw new FitException("Decode:Read - FIT decode error: Unexpected Record Header Byte 0x" + nextByte.ToString("X") + " at stream position: " + fitStream.Position);
+    }
+
+    private void ReadDataMesg(Stream fitStream, BinaryReader br, long sourceIndex, byte nextByte)
+    {
+      var mesgBuffer = new MemoryStream();
+      byte localMesgNum = (byte)(nextByte & Fit.LocalMesgNumMask);
+
+      mesgBuffer.WriteByte(localMesgNum);
+      if (localMesgDefs_[localMesgNum] == null)
+      {
+        throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
+      }
+
+      MesgDefinition def = localMesgDefs_[localMesgNum];
+      Log.Debug($"  (global, local) message num: ({localMesgNum}, {def.GlobalMesgNum})");
+      int fieldsSize = def.GetMesgSize() - 1;
+
+      if (FitConfig.Discard.DataMessages.OfLargeSize
+        && fieldsSize > 1024)
+      {
+        Log.Debug($"Discarding suspicious large data message with field size {fieldsSize}");
+        return;
+      }
+
+      try
+      {
+        byte[] read = br.ReadBytes(fieldsSize);
+        if (read.Length < fieldsSize)
+        {
+          throw new FitException("Field size mismatch, expected: " + fieldsSize + "received: " + read.Length);
+        }
+        mesgBuffer.Write(read, 0, fieldsSize);
+      }
+      catch (Exception e)
+      {
+        throw new FitException($"Data Message unexpected end of file.  Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
+      }
+
+      var mesg = new Mesg(mesgBuffer, def)
+      {
+        SourceIndex = sourceIndex,
+      };
+
+      // If the new message contains a timestamp field, record the value to use as
+      // a reference for compressed timestamp headers
+      Field timestampField = mesg.GetField("Timestamp");
+      Field latitudeField = mesg.GetField("PositionLat");
+      Field longitudeField = mesg.GetField("PositionLong");
+
+      bool haveTimestamp = timestampField != null && timestampField.Count > 0;
+      bool haveLatitude = latitudeField != null && latitudeField.Count > 0;
+      bool haveLongitude = longitudeField != null && longitudeField.Count > 0;
+
+      if (FitConfig.Discard.DataMessages.WithLargeLatitudeChange
+        && haveLatitude)
+      {
+        // Detect big jump in latitude
+        var lat = (int)latitudeField.GetValue();
+        var diff = Math.Abs(lat - lastLatitude_);
+        bool suspicious = lastLatitude_ != 0 && diff > GeospatialExtensions.DegreeToSemicircles;
+
+        if (suspicious)
+        {
+          Log.Warn($"Discarding suspicious message with large latitude change of {diff.ToDegrees()}deg");
+          Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
+          return;
+        }
+
+        lastLatitude_ = lat;
+      }
+
+      if (FitConfig.Discard.DataMessages.WithLargeLongitudeChange
+        && haveLongitude)
+      {
+        // Detect big jump in longitude
+        var lon = (int)longitudeField.GetValue();
+        var diff = Math.Abs(lon - lastLongitude_);
+        bool suspicious = lastLongitude_ != 0 && diff > GeospatialExtensions.DegreeToSemicircles;
+
+        if (suspicious)
+        {
+          Log.Warn($"Discarding suspicious message with large longitude change of {diff.ToDegrees()}");
+          Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
+          return;
+        }
+
+        lastLongitude_ = lon;
+      }
+
+      if (FitConfig.Discard.DataMessages.WithLargeTimestampChange
+        && haveTimestamp && haveLongitude && haveLongitude)
+      {
+        var ts = (uint)timestampField.GetValue();
+        var diff = Math.Abs((int)ts - (int)timestamp_);
+        bool timeTraveled = timestamp_ > 0 && diff > TimeSpan.FromDays(1).TotalSeconds;
+
+        if (timeTraveled)
+        {
+          var dt = new RecordMesg(mesg).GetTimestamp().GetDateTime();
+          Log.Warn($"Discarding suspicious message at {dt} with timestamp change of {diff}s");
+          Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
+          return;
+        }
+
+        timestamp_ = ts;
+        lastTimeOffset_ = (int)timestamp_ & Fit.CompressedTimeMask;
+      }
+
+      if (FitConfig.Discard.DataMessages.UnexpectedFileIdMessage
+        && mesg is FileIdMesg && fitStream.Position > 1024)
+      {
+        Log.Warn($"Discarding suspicious FileID message.");
+        fitStream.Position = FindNextMessageByTimestamp(timestamp_, fitStream);
+        return;
+      }
+
+      foreach (var kvp in mesg.Fields)
+      {
+        Field field = kvp.Value;
+
+        if (field.IsAccumulated)
+        {
+          int i;
+          for (i = 0; i < field.GetNumValues(); i++)
+          {
+            long value = Convert.ToInt64(field.GetRawValue(i));
+
+            foreach (var kvp2 in mesg.Fields)
+            {
+              Field fieldIn = kvp2.Value;
+              foreach (var kvp3 in fieldIn.Components)
+              {
+                FieldComponent fc = kvp3.Value;
+                if ((fc.fieldNum == field.Num) && (fc.accumulate))
+                {
+                  value = (long)((((value / field.Scale) - field.Offset) + fc.offset) * fc.scale);
+                }
+              }
+            }
+            accumulator_.Set(mesg.Num, field.Num, value);
+          }
+        }
+      }
+
+      // Now that the entire message is decoded we can evaluate subfields and expand any components
+      mesg.ExpandComponents(accumulator_);
+
+      RaiseMesgEvent(mesg);
+      return;
+    }
+
+    private void ReadMesgDefinition(BinaryReader br, long sourceIndex, byte nextByte, bool isDevData)
+    {
+      var mesgDefBuffer = new MemoryStream();
+      const int bytesPerField = 3;
+
+      // Read record content
+      // Fixed content
+      byte reserved = br.ReadByte();
+      byte architecture = br.ReadByte();
+
+      // Suspicious: architecture is not 0 or 1
+      if (FitConfig.Discard.DefinitionMessages.WithUnknownArchitecture && architecture != 0 && architecture != 1)
+      {
+        throw new FitException("FIT decode error: unsupported architecture " + architecture);
+      }
+
+      byte[] globalMesgNum = br.ReadBytes(2);
+      byte numFields = br.ReadByte();
+
+      // Variable content
+      int numBytes = numFields * bytesPerField;
+      byte[] read = br.ReadBytes(numBytes);
+
+      if (read.Length < numBytes)
+      {
+        throw new FitException($"Message Definition size mismatch, expected: {numBytes}, received: {read.Length}");
+      }
+
+      mesgDefBuffer.WriteByte(nextByte);
+      mesgDefBuffer.WriteByte(reserved);
+      mesgDefBuffer.WriteByte(architecture);
+      mesgDefBuffer.Write(globalMesgNum, 0, 2);
+      mesgDefBuffer.WriteByte(numFields);
+      mesgDefBuffer.Write(read, 0, numBytes);
+
+      if (isDevData)
+      {
+        // Definition Contains Dev Data
+        byte numDevFields = br.ReadByte();
+        mesgDefBuffer.WriteByte(numDevFields);
+
+        numBytes = numDevFields * bytesPerField;
+        read = br.ReadBytes(numBytes);
+        if (read.Length < numBytes)
+        {
+          throw new FitException($"Message Definition size mismatch, expected: {numBytes}, received: {read.Length}");
+        }
+
+        // Read Dev Data
+        mesgDefBuffer.Write(read, 0, numBytes);
+      }
+
+      var def = new MesgDefinition(mesgDefBuffer, lookup_)
+      {
+        SourceIndex = sourceIndex,
+      };
+
+      if (FitConfig.Discard.DefinitionMessages.RedefiningGlobalMesgNum
+        && localMesgDefs_[def.LocalMesgNum] != null
+        && localMesgDefs_[def.LocalMesgNum].GlobalMesgNum != def.GlobalMesgNum)
+      {
+        Log.Warn($"Discarding suspicious redefinition of local mesg def with different global mesg num");
+        Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
+        return;
+      }
+
+      if (FitConfig.Discard.DefinitionMessages.ContainingUnknownType
+        && !def.GetFields().Any(field => FitTypes.TypeMap.ContainsKey(field.Type)))
+      {
+        Log.Warn($"Discarding suspicious definition containing unknown types");
+        Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
+        return;
+      }
+
+      if (FitConfig.Discard.DefinitionMessages.WithBigUnknownMessageNum
+        && def.GlobalMesgNum > 500)
+      {
+        Log.Warn("Discarding suspicious definition containing big unknown mesg_num");
+        Log.Debug($"Source data: {string.Join(" ", def.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
+        return;
+      }
+
+      localMesgDefs_[def.LocalMesgNum] = def;
+      MesgDefinitionEvent?.Invoke(this, new MesgDefinitionEventArgs(def));
+    }
+
+    private void ReadCompressedTimestamp(Stream fitStream, BinaryReader br, long sourceIndex, byte nextByte)
+    {
+      var mesgBuffer = new MemoryStream();
+
+      int timeOffset = nextByte & Fit.CompressedTimeMask;
+      timestamp_ += (uint)((timeOffset - lastTimeOffset_) & Fit.CompressedTimeMask);
+      lastTimeOffset_ = timeOffset;
+      Field timestampField = new Field(Profile.GetMesg(MesgNum.Record).GetField("Timestamp"));
+      timestampField.SetValue(timestamp_);
+
+      byte localMesgNum = (byte)((nextByte & Fit.CompressedLocalMesgNumMask) >> 5);
+      mesgBuffer.WriteByte(localMesgNum);
+      if (localMesgDefs_[localMesgNum] == null)
+      {
+        throw new FitException($"FIT decode error: Missing message definition for local message number {localMesgNum} at stream position {fitStream.Position}");
+      }
+      int fieldsSize = localMesgDefs_[localMesgNum].GetMesgSize() - 1;
+      try
+      {
+        byte[] read = br.ReadBytes(fieldsSize);
+        if (read.Length < fieldsSize)
+        {
+          throw new FitException($"Field size mismatch, expected: {fieldsSize}, received: {read.Length}");
+        }
+        mesgBuffer.Write(read, 0, fieldsSize);
+      }
+      catch (Exception e)
+      {
+        throw new FitException($"Compressed Data Message unexpected end of file. Wanted {fieldsSize} bytes at stream position {fitStream.Position}", e);
+      }
+
+      var mesg = new Mesg(mesgBuffer, localMesgDefs_[localMesgNum])
+      {
+        SourceIndex = sourceIndex
+      };
+      mesg.InsertField(0, timestampField);
+
+      if (FitConfig.Discard.DataMessages.UnexpectedFileIdMessage
+        && mesg.Num == MesgNum.FileId && fitStream.Position > 1024)
+      {
+        Log.Warn($"Discarding suspicious FileID compressed header message.");
+        fitStream.Position = FindNextMessageByTimestamp(timestamp_, fitStream);
+        return;
+      }
+
+      RaiseMesgEvent(mesg);
     }
 
     /// <summary>
