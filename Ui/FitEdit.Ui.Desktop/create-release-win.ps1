@@ -9,11 +9,11 @@ $rid = "win-x64"
 $authors = "EnduraByte LLC"
 $packId = "FitEdit"
 $certTmpPath = "cert.tmp.crt"
-$certKey = $env:FITEDIT_WINDOWS_CODE_SIGN_KEY
+$certKey = $env:ENDURABYTE_WINDOWS_CODE_SIGN_KEY
 
 pushd $PSScriptRoot
 
-& ./Decode-FromBase64.ps1 $env:FITEDIT_WINDOWS_CODE_SIGN_CERTIFICATE $certTmpPath
+& ./Decode-FromBase64.ps1 $env:ENDURABYTE_WINDOWS_CODE_SIGN_CERTIFICATE $certTmpPath
 $certTmpPath = "$PSScriptRoot/$certTmpPath"
 echo "Created $certTmpPath..."
 
