@@ -1,4 +1,3 @@
-using System.Text.Json;
 using FitEdit.Data.Fit;
 using FitEdit.Model.Data;
 using FitEdit.UnitTests.Shared;
@@ -9,7 +8,7 @@ using Writer = Fit.Writer;
 
 public class WriteMethod
 {
-  private const string source_ = @"..\..\..\..\TestData\2019-12-17-treadmill-run.fit";
+  private const string source_ = @"..\..\..\..\TestData\15535326668_ACTIVITY.fit";
 
   /// <summary>
   /// Verify round trip integrity, i.e. encode(decode(file)) == file
@@ -22,13 +21,16 @@ public class WriteMethod
     var ms1 = new MemoryStream(bytes);
     var ms2 = new MemoryStream();
 
-    var fitFile = await new Reader().ReadAsync(ms1);
-    new Writer().Write(fitFile, ms2);
+    var fitFiles = await new Reader().ReadAsync(ms1);
+    new Writer().Write(fitFiles, ms2);
 
     ms2.Position = 0;
-    var fitFile2 = await new Reader().ReadAsync(ms2);
+    var fitFiles2 = await new Reader().ReadAsync(ms2);
 
-    FitAssert.AreEqual(fitFile, fitFile2);
+    foreach (int i in Enumerable.Range(0, fitFiles.Count))
+    {
+      FitAssert.AreEqual(fitFiles[i], fitFiles2[i]);
+    }
   }
 
   [Fact]
@@ -45,14 +47,18 @@ public class WriteMethod
     FitAssert.AreEquivalentExceptHeader(ms2, bytes);
   }
 
+  /// <summary>
+  /// Assumes only one FIT file in the stream
+  /// </summary>
+  /// <returns></returns>
   [Fact]
   public async Task PreservesBytesInMemory()
   {
-    var fitFile = await new Reader().ReadAsync(source_);
+    var fitFiles = await new Reader().ReadAsync(source_);
     var ms = new MemoryStream();
-    new Writer().Write(fitFile, ms);
+    new Writer().Write(fitFiles, ms);
 
-    FitAssert.AreEquivalentExceptHeader(ms, fitFile.GetBytes());
+    FitAssert.AreEquivalentExceptHeader(ms, fitFiles.FirstOrDefault().GetBytes());
   }
 
   [Fact]

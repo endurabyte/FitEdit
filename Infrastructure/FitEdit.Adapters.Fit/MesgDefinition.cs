@@ -212,14 +212,19 @@ namespace Dynastream.Fit
       bw.Write(Fit.MesgDefinitionReserved);
       bw.Write(Fit.LittleEndian);
       bw.Write(GlobalMesgNum);
-      bw.Write(NumFields);
+
+      // Garmin considers message definition fields with zero size to be invalid
+      var defsWithData = fieldDefs.Where(def => def.Size > 0).ToList();
+      var devDefsWithData = m_devFieldDefs.Where(def => def.Size > 0).ToList();
+
+      bw.Write((byte)defsWithData.Count);
 
       if (NumFields != fieldDefs.Count)
       {
         throw new FitException("MesgDefinition:Write - Field Count Internal Error");
       }
 
-      foreach (FieldDefinition def in fieldDefs)
+      foreach (FieldDefinition def in defsWithData)
       {
         bw.Write(def.Num);
         bw.Write(def.Size);
@@ -228,10 +233,10 @@ namespace Dynastream.Fit
 
       if (NumDevFields > 0)
       {
-        bw.Write(NumDevFields);
+        bw.Write((byte)devDefsWithData.Count);
       }
 
-      foreach (DeveloperFieldDefinition def in m_devFieldDefs)
+      foreach (DeveloperFieldDefinition def in devDefsWithData)
       {
         bw.Write(def.FieldNum);
         bw.Write(def.Size);
