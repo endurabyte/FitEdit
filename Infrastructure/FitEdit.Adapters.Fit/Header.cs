@@ -113,25 +113,19 @@ namespace Dynastream.Fit
         public void Read(Stream fitStream)
         {
             BinaryReader binReader = new BinaryReader(fitStream);
-            try
+
+            Size = binReader.ReadByte();
+            ProtocolVersion = binReader.ReadByte();
+            ProfileVersion = binReader.ReadUInt16();
+            DataSize = binReader.ReadUInt32();
+            dataType = binReader.ReadChars(4);
+            if (Size == Fit.HeaderWithCRCSize)
             {
-                Size = binReader.ReadByte();
-                ProtocolVersion = binReader.ReadByte();
-                ProfileVersion = binReader.ReadUInt16();
-                DataSize = binReader.ReadUInt32();
-                dataType = binReader.ReadChars(4);
-                if (Size == Fit.HeaderWithCRCSize)
-                {
-                    Crc = binReader.ReadUInt16();
-                }
-                else
-                {
-                    Crc = 0x0000;
-                }
+                Crc = binReader.ReadUInt16();
             }
-            catch (EndOfStreamException e)
+            else
             {
-                throw new FitException("Header:Read() Failed at byte " + fitStream.Position + " - ", e);
+                Crc = 0x0000;
             }
         }
 

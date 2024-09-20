@@ -2,11 +2,58 @@
 using Dynastream.Fit;
 using Units;
 using FitEdit.Adapters.Fit.Extensions;
+using System.Diagnostics;
+using FitEdit.Model;
 
 namespace FitEdit.Data.Fit
 {
   public static class MessageExtensions
   {
+    public static void DebugLog(this DeveloperFieldDescriptionEventArgs s)
+    {
+      if (!Debugger.IsAttached) { return; }
+
+      Log.Debug($"|--- {nameof(DeveloperFieldDescription)}. (ApplicationId, ApplicationVersion, FieldDefinitionNumber) = ({s.Description.ApplicationId}, {s.Description.ApplicationVersion}, {s.Description.FieldDefinitionNumber}");
+      Log.Debug(s.PrintBytes());
+    }
+
+    public static void DebugLog(this MesgEventArgs s)
+    {
+      if (!Debugger.IsAttached) { return; }
+
+      Log.Debug($"|--- {nameof(Mesg)} \'{s.mesg.Name}\'. (Num, LocalNum) = ({s.mesg.Num}, {s.mesg.LocalNum}).");
+      Log.Debug($"  Fields:");
+      Log.Debug($"    FieldNum\t Name\t Data");
+      Log.Debug($"    {string.Join("\n    ", s.mesg.Fields.Values
+                        .Select(field => $"{field.Num}\t " +
+                                         $"\'{field.Name}\'\t " +
+                                         $"{string.Join(" ", field.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}"))}"
+      );
+
+      Log.Debug(s.PrintBytes());
+    }
+
+    public static void DebugLog(this MesgDefinitionEventArgs s)
+    {
+      if (!Debugger.IsAttached) { return; }
+
+      Log.Debug($"|--- {nameof(MesgDefinition)}. (GlobalMesgNum, LocalMesgNum) = ({s.mesgDef.GlobalMesgNum}, {s.mesgDef.LocalMesgNum}).");
+
+      int fieldIndex = 0;
+      Log.Debug($"  Field Definitions");
+      Log.Debug($"    FieldIndex\t Num\t Size\t Type\t TypeName\t FieldName\t (Hex Values)");
+      Log.Debug($"    {string.Join("\n    ", s.mesgDef.GetFields()
+          .Select(fieldDef => $"{fieldIndex++}\t " +
+                              $"{fieldDef.Num}\t " +
+                              $"{fieldDef.Size}\t " +
+                              $"{fieldDef.Type}\t " +
+                              $"{(FitTypes.TypeMap.TryGetValue(fieldDef.Type, out var type) ? type.typeName : "Unknown Type")}\t " +
+                              $"\'{Profile.GetField(s.mesgDef.GlobalMesgNum, fieldDef.Num)?.Name ?? "Unknown Field"}\'\t " +
+                              $"({fieldDef.Num:X2} {fieldDef.Size:X2} {fieldDef.Type:X2})"))}");
+
+      Log.Debug(s.PrintBytes());
+    }
+
     public static string PrintBytes(this EventArgs e) => e switch
     {
       MesgEventArgs me => me.mesg.PrintBytes(),

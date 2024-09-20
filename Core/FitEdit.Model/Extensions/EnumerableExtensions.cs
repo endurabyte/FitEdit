@@ -2,6 +2,8 @@
 
 public static class EnumerableExtensions
 {
+  public static bool IsAnyOf<T>(this T t, params T[] values) => values.Contains(t);
+
   public static Dictionary<TKey, TValue> ToDictionaryAllowDuplicateKeys<TKey, TValue, TEnum>(
     this IEnumerable<TEnum> e, 
     Func<TEnum, TKey> getKey, Func<TEnum, TValue> getValue)

@@ -1,5 +1,6 @@
 ﻿using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using FitEdit.Adapters.Fit.Extensions;
 using FitEdit.Adapters.GarminConnect;
 using FitEdit.Adapters.Strava;
 using FitEdit.Data;
@@ -330,11 +331,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     await log_.Log($"Reading FIT file {file.Name}");
 
     var reader = new Reader();
-    if (reader.TryGetDecoder(ms, out FitFile fit, out var decoder))
+    if (reader.TryGetDecoder(ms, out List<FitFile> fits, out var decoder))
     {
-      await reader.ReadOneAsync(ms, decoder, 100);
+      await Reader.ReadSomeAsync(ms, decoder, 100);
     }
 
+    FitFile? fit = fits.FirstOrDefault();
     return fit?.GetStartTime() ?? default;
   }
 
@@ -434,7 +436,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       await log_.Log($"Reading FIT file {file.Name}");
 
       var reader = new Reader();
-      if (!reader.TryGetDecoder(ms, out FitFile fit, out var decoder))
+      if (!reader.TryGetDecoder(ms, out List<FitFile> fits, out var decoder))
       {
         return;
       }
@@ -448,8 +450,11 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
       try
       {
-        while (await reader.ReadOneAsync(ms, decoder, 100))
+        var lastResult = DecodeResult.Init;
+        while (!lastResult.IsAnyOf(DecodeResult.ErrEndOfStream, DecodeResult.OkEndOfFile))
         {
+          lastResult = await Reader.ReadSomeAsync(ms, decoder, 100);
+
           if (ms.Position - lastPosition < resolution)
           {
             continue;
@@ -467,7 +472,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         // Try to proceed despite the exception
       }
 
-      fit.ForwardfillEvents();
+      foreach (var ff in fits)
+      {
+        ff.ForwardfillEvents();
+      }
+      FitFile? fit = fits.FirstOrDefault();
+
       uif.FitFile = fit;
       uif.IsLoaded = true;
 
