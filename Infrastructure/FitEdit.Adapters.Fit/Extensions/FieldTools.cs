@@ -39,7 +39,7 @@ public static class FieldTools
       if (utf8Bytes.Count != 0)
       {
         // Add a Null Terminator
-        utf8Bytes.Add(0);
+        //utf8Bytes.Add(0);
         field.AddValue(utf8Bytes.ToArray());
         utf8Bytes.Clear();
       }
