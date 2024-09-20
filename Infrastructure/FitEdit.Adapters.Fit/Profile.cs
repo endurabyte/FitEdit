@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Dynastream.Fit
 {
@@ -265,6 +266,12 @@ namespace Dynastream.Fit
             if(null != mesg)
             {
                 return mesg.GetField(fieldNum);
+            }
+
+            if (fieldNum == 253)
+            {
+              // Most 253 messages are timestamps
+              return new Field("Timestamp", 253, 134, 1, 0, "s", false, Type.DateTime);
             }
 
             return new Field("unknown", fieldNum, 0, 1, 0, "", false, Type.Enum);
