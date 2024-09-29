@@ -22,11 +22,6 @@ public interface IRecordViewModel
 {
   int SelectedIndex { get; set; }
   int SelectionCount { get; set; }
-
-  bool ShowHexData { get; set; }
-  long HexDataSelectionStart { get; set; }
-  long HexDataSelectionEnd { get; set; }
-  string HexData { get; }
 }
 
 public class DesignRecordViewModel : RecordViewModel
@@ -80,12 +75,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   [Reactive] public bool HideUnnamedFields { get; set; } = true;
   [Reactive] public bool HideUnnamedMessages { get; set; } = true;
   [Reactive] public bool PrettifyFields { get; set; } = true;
-  [Reactive] public bool ShowHexData { get; set; } = false;
   [Reactive] public bool HaveUnsavedChanges{ get; set; } = false;
-
-  [Reactive] public string HexData { get; set; } = "(No Data)";
-  [Reactive] public long HexDataSelectionStart { get; set; }
-  [Reactive] public long HexDataSelectionEnd { get; set; }
 
   private readonly IFileService fileService_;
   private readonly IWindowAdapter window_;
@@ -146,7 +136,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     });
 
     this.ObservableForProperty(x => x.TabIndex).Subscribe(_ => HandleTabIndexChanged());
-    this.ObservableForProperty(x => x.ShowHexData).Subscribe(_ => InitHexData());
   }
 
   public async Task SaveChanges()
@@ -180,7 +169,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     DataGridWrapper data = ShownData[TabIndex];
 
     if (data?.DataGrid?.SelectedItem is not MessageWrapper wrapper) { return; }
-    SelectHexData(wrapper);
   }
 
   /// <summary>
@@ -247,7 +235,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (sender is not DataGrid dg) { return; }
     if (dg.SelectedItem is not MessageWrapper wrapper) { return; }
 
-    SelectHexData(wrapper);
     dg.ScrollIntoView(dg.SelectedItem, dg.CurrentColumn);
     selectedMessage_ = dg.SelectedItem as MessageWrapper;
 
@@ -255,29 +242,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     {
       SelectedIndex = dg.SelectedIndex;
     }
-  }
-
-  private void SelectHexData(MessageWrapper? wrapper)
-  {
-    if (wrapper is null) { return; }
-    const int width = 3; // 2 hex digits + space;
-    SelectHexData(
-      width * wrapper.Mesg.SourceIndex, 
-      width * (wrapper.Mesg.SourceIndex + wrapper.Mesg.SourceLength) - 1); // -1: omit trailing space
-  }
-
-  private void SelectHexData(long start, long end)
-  {
-    HexDataSelectionStart = start;
-    HexDataSelectionEnd = Math.Max(0, end);
-  }
-
-  private void InitHexData()
-  {
-    if (!ShowHexData) { return; }
-    if (fileService_.MainFile?.Activity?.File == null) { return; }
-    HexData = string.Join(" ", fileService_.MainFile.Activity.File.Bytes.Select(b => $"{b:X2}"));
-    SelectHexData(0, 0);
   }
 
   private void HandleMainFileChanged(UiFile? file)
@@ -290,7 +254,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
     messageSubs_.Clear();
 
-    InitHexData();
     PreserveCurrentTab(async () => await Show(file?.FitFile));
 
     if (file == null) { return; }
@@ -431,74 +394,13 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     return namedValues;
   }
 
-  private void HandleMessagePropertyChanged(MessageWrapper wrapper)
-  {
-    if (!ShowHexData) { return; }
-
-    // Get the new bytes for the message
-    var ms = new MemoryStream();
-    wrapper.Mesg.Write(ms);
-    wrapper.Mesg.CacheData(ms);
-    HexData = UpdateHexData(HexData, wrapper);
-  }
-
-  /// <summary>
-  /// Replace the relevant segment of the given data with new bytes
-  /// </summary>
-  private static string UpdateHexData(string hexData, MessageWrapper wrapper)
-  { 
-    Mesg mesg = wrapper.Mesg;
-    var newBytes = mesg.SourceData;
-
-    const int width = 3; // 2 hex digits + space
-    int start = (int)(mesg.SourceIndex * width);
-    int end = (int)((mesg.SourceIndex + mesg.SourceLength) * width);
-
-    if (start >= hexData.Length || end >= hexData.Length) 
-    { 
-      FitEdit.Model.Log.Error($"Hex data index out of range: {start} {end} {hexData.Length}");
-      return "There was a problem showing the data. Try again or contact support@fitedit.io.";
-    }
-
-    ReadOnlySpan<char> span = hexData.AsSpan();
-    var sb = new StringBuilder(hexData.Length);
-    var mid = string.Join(" ", newBytes.Select(b => $"{b:X2}"));
-    sb.Append(span[..start]);
-    sb.Append(mid);
-    sb.Append(' ');
-    sb.Append(span[end..]);
-    var newHexData = sb.ToString();
-
-    if (hexData.Length != sb.Length)
-    {
-      FitEdit.Model.Log.Warn($"Hex data length changed from {sb.Length} to {hexData.Length}");
-    }
-
-    return newHexData;
-  }
-
   private async Task<DataGridWrapper> CreateGroup(MesgDefinition def, List<Mesg> mesgs)
   {
     Mesg defMesg = Profile.GetMesg(def.GlobalMesgNum);
 
     var defMessage = new MessageWrapper(defMesg);
     var wrappers = new ObservableCollection<MessageWrapper>(mesgs.Select(mesg => new MessageWrapper(mesg)));
-    foreach (var wrapper in wrappers)
-    {
-      wrapper.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(wrapper));
-    }
     wrappers.CollectionChanged += (sender, e) => HaveUnsavedChanges = true;
-
-    await Task.Run(() =>
-    {
-      foreach (var wrapper in wrappers)
-      {
-        IDisposable sub = wrapper
-          .WhenPropertyChanged(x => x.Mesg, notifyOnInitialValue: false)
-          .Subscribe(_ => HandleMessagePropertyChanged(wrapper));
-        messageSubs_[sub] = sub;
-      }
-    });
 
     // Categories of fields:
     // Known/unknown fields:
@@ -713,7 +615,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     if (index < 0) { return; }
 
     var dupe = new MessageWrapper(MessageFactory.Create(selection.Mesg));
-    dupe.ObservableForProperty(x => x.Mesg).Subscribe(_ => HandleMessagePropertyChanged(dupe));
 
     list.Insert(index, dupe);
     fitFile_?.Add(dupe.Mesg);

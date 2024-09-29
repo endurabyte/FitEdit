@@ -16,7 +16,7 @@
     <StyleInclude Source="../Styles.axaml"/> 
   </UserControl.Styles>
   
-  <Grid RowDefinitions="Auto, *, 5" ColumnDefinitions="3*, Auto">
+  <Grid RowDefinitions="Auto, *, 5" ColumnDefinitions="3*">
 
     <StackPanel Orientation="Horizontal">
       <Expander Grid.Row="0" Grid.Column="0" Header="Filters">
@@ -51,14 +51,6 @@
                 - Convert timestamps like 945518320 to "12/17/2019 11:58:40". The format depends on your region.
                 <LineBreak />
                 - Convert lat/lon like 427200580 to 35.80753896385431
-              </TextBlock>
-            </ToolTip.Tip>
-          </CheckBox>
-          <CheckBox Content="Hex view" IsChecked="{Binding ShowHexData}" Margin="0,0,20,0">
-            <ToolTip.Tip>
-              <TextBlock TextWrapping="Wrap">
-                Show hex data for the selected row <LineBreak />
-                See https://developer.garmin.com/fit/protocol/ for the FIT protocol specification
               </TextBlock>
             </ToolTip.Tip>
           </CheckBox>
@@ -100,21 +92,6 @@
         </DataTemplate>
       </TabControl.ContentTemplate>
     </TabControl>
-
-    <Grid Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" RowDefinitions="Auto, *" ColumnDefinitions="5, *" 
-          IsVisible="{Binding ShowHexData}">
-      <Separator Classes="vertical" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"/>
-      <Label Grid.Row="0" Grid.Column="1" Content="Hex View" Margin="0 0 20 0" Foreground="{StaticResource SystemAccentColor}"/>
-      <ScrollViewer Name="HexScrollViewer" Grid.Row="1" Grid.Column="1">
-        <SelectableTextBlock Text="{Binding HexData}"
-                             Width="200"
-                             TextWrapping="Wrap"
-                             FontFamily="{StaticResource FiraCode}"
-                             SelectionStart="{Binding HexDataSelectionStart}"
-                             SelectionEnd="{Binding HexDataSelectionEnd}"/>
-      </ScrollViewer>
-    </Grid>
-
   </Grid>
 
 </UserControl>
