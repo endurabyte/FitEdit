@@ -9,8 +9,8 @@
     <Nullable>disable</Nullable>
     <LangVersion>latest</LangVersion>
 
-    <VersionPrefix>5.1.0</VersionPrefix>
-    <BuildIncrement>40</BuildIncrement>
+    <VersionPrefix>5.2.0</VersionPrefix>
+    <BuildIncrement>41</BuildIncrement>
     <VersionSuffix></VersionSuffix>
     <Product>FitEdit</Product>
     <Copyright>EnduraByte LLC 2024</Copyright>

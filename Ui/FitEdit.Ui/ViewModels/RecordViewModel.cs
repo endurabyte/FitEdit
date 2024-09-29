@@ -123,6 +123,8 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
             ShownData.Add(group);
           }
         }
+        
+        return Task.CompletedTask;
       });
     });
 
@@ -131,7 +133,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       PreserveCurrentTab(async () =>
       {
         if (fileService_.MainFile?.FitFile == null) { return; }
-        await Show(fileService_.MainFile.FitFile);
+        await Show(fileService_.MainFile);
       });
     });
 
@@ -142,13 +144,22 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   {
     if (fitFile_ is null) { return; }
 
+    UiFile? uif = fileService_.MainFile;
+    if (uif == null) { return; }
+      
     fitFile_.ForwardfillEvents();
     fitFile_.Sessions.Sorted(MessageExtensions.SortByStartTime);
     fitFile_.Laps.Sorted(MessageExtensions.SortByStartTime);
     fitFile_.Records.Sorted(MessageExtensions.SortByTimestamp);
     fitFile_.BackfillEvents();
+    uif.Commit(fitFile_);
     
-    await fileService_.CreateAsync(fitFile_);
+    await fileService_.UpdateAsync(uif.Activity);
+
+    // Reload changes
+    fileService_.MainFile = null;
+    fileService_.MainFile = uif;
+      
     HaveUnsavedChanges = false;
   }
 
@@ -174,10 +185,10 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
   /// <summary>
   /// Preserve the current tab selection if possible
   /// </summary>
-  private void PreserveCurrentTab(Action a)
+  private void PreserveCurrentTab(Func<Task> f)
   {
     string? tabName = TabName_;
-    a();
+    f();
     SelectTab(tabName);
   }
 
@@ -254,7 +265,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
     messageSubs_.Clear();
 
-    PreserveCurrentTab(async () => await Show(file?.FitFile));
+    PreserveCurrentTab(async () => await Show(file));
 
     if (file == null) { return; }
     
@@ -291,9 +302,10 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     }
   }
 
-  protected async Task Show(FitFile? ff)
+  protected async Task Show(UiFile? uif)
   {
-    fitFile_ = ff;
+    if (uif is null) { return; }
+    fitFile_ = uif.FitFile;
 
     // Remeber which groups were expanded
     var expandedGroups = AllData_
@@ -311,11 +323,11 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     AllData_.Clear();
     ShownData.Clear();
 
-    if (ff != null)
+    if (fitFile_ != null)
     {
-      foreach (var kvp in ff.MessagesByDefinition)
+      foreach (var kvp in fitFile_.MessagesByDefinition)
       {
-        DataGridWrapper group = await CreateGroup(ff.MessageDefinitions[kvp.Key], kvp.Value);
+        DataGridWrapper group = await CreateGroup(fitFile_.MessageDefinitions[kvp.Key], kvp.Value);
         group.IsExpanded = expandedGroups.ContainsKey(group.Name ?? "");
         if (group.DataGrid != null)
         {

@@ -19,6 +19,5 @@ public partial class RecordView : UserControl
   {
     if (DataContext is not IRecordViewModel vm) { return; }
     vm_ = vm;
-
   }
 }
