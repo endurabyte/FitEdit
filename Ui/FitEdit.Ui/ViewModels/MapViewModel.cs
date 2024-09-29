@@ -149,7 +149,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     try
     {
       UiFile? uif = fileService_.MainFile;
-      if (uif?.FitFile == null) { return; }
+      if (uif == null) { return; }
 
       bool gotLayer = traces_.TryGetValue(editTraceId_, out ILayer? traceLayer);
       if (!gotLayer) { return; }
