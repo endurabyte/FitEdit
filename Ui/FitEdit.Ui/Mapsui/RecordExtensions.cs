@@ -13,7 +13,7 @@ public static class RecordExtensions
       (r.GetPositionLat() ?? 0).ToDegrees().ClampLatitude())
     .ToCoordinate();
 
-  public static Dynastream.Fit.RecordMesg WithCoordinate(this Dynastream.Fit.RecordMesg r, Coordinate c)
+  public static Dynastream.Fit.RecordMesg SetCoordinate(this Dynastream.Fit.RecordMesg r, Coordinate c)
   {
     (double lon, double lat) = SphericalMercator.ToLonLat(c.X, c.Y);
 

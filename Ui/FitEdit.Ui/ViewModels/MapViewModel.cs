@@ -6,6 +6,7 @@ using FitEdit.Model.Data;
 using FitEdit.Model;
 using FitEdit.Data;
 using FitEdit.Ui.Extensions;
+using FitEdit.Ui.Models;
 using Mapsui.Providers;
 
 
@@ -59,7 +60,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 {
   [Reactive] public IMapControl? Map { get; set; }
   [Reactive] public bool HasCoordinates { get; set; }
-  [Reactive] public bool Editing { get; set; }
+  [Reactive] public MapState State { get; set; } = MapState.Viewing;
+  public bool IsViewing => State == MapState.Viewing;
+  public bool IsEditing => State == MapState.Editing;
+  public bool IsSaving => State == MapState.Saving;
   [Reactive] public int SelectedIndex { get; set; }
   [Reactive] public int SelectionCount { get; set; }
 
@@ -131,60 +135,78 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     this.ObservableForProperty(x => x.Map).Subscribe(e => HandleMapControlChanged());
     this.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => HandleSelectedIndexChanged(prop.Value));
     this.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => ShowSelection());
+    
+    this.ObservableForProperty(x => x.State).Subscribe(prop => this.RaisePropertyChanged(nameof(IsViewing)));
+    this.ObservableForProperty(x => x.State).Subscribe(prop => this.RaisePropertyChanged(nameof(IsEditing)));
+    this.ObservableForProperty(x => x.State).Subscribe(prop => this.RaisePropertyChanged(nameof(IsSaving)));
   }
 
   public void HandleEditClicked() => StartEditing();
   public void HandleCancelClicked() => EndEditing();
 
-  public void HandleSaveClicked()
+  public async Task HandleSaveClicked()
   {
-    bool gotLayer = traces_.TryGetValue(editTraceId_, out ILayer? traceLayer);
-    EndEditing();
+    try
+    {
+      UiFile? uif = fileService_.MainFile;
+      if (uif?.FitFile == null) { return; }
 
-    if (!gotLayer) { return; }
+      bool gotLayer = traces_.TryGetValue(editTraceId_, out ILayer? traceLayer);
+      if (!gotLayer) { return; }
 
-    UiFile? uif = fileService_.MainFile;
-    if (uif?.FitFile == null) { return; }
+      await Task.Run(() =>
+      {
+        State = MapState.Saving;
+        CommitEdits(traceLayer, uif);
+      });
+      
+      Remove(uif);
+      Show(uif);
+      
+      await fileService_.UpdateAsync(uif.Activity);
 
-    SaveEditsToFit(traceLayer, uif.FitFile);
-
-    // Reload changes
-    fileService_.MainFile = null;
-    fileService_.MainFile = uif;
-
-    uif.IsLoaded = false;
-    uif.IsLoaded = true;
+      // Reload changes
+      fileService_.MainFile = null;
+      fileService_.MainFile = uif;
+    }
+    finally
+    {
+      EndEditing();
+    }
   }
 
   private void StartEditing()
   {
-    Editing = true;
+    State = MapState.Editing;
 
     UiFile? uif = fileService_.MainFile;
     if (uif?.FitFile == null) { return; }
 
-    ILayer? layer = Add(uif.FitFile, "GPS Editor", EditLayerIndex_, FitColor.LimeCrayon, editable: true);
+    ILayer? layer = AddTrace(uif.FitFile, "GPS Editor", EditLayerIndex_, FitColor.LimeCrayon, editable: true);
 
     if (layer == null) { return; }
     traces_[editTraceId_] = layer;
     layers_[EditLayerIndex_] = layer;
 
-    HandleLayersChanged();
+    Remove(uif); // Calls HandleLayersChanged
   }
 
   private void EndEditing()
   {
-    Editing = false;
     traces_.Remove(editTraceId_);
     layers_.Remove(EditLayerIndex_);
     HandleLayersChanged();
+    
+    State = MapState.Viewing;
   }
 
   /// <summary>
   /// Commit changed GPS coordinates to current FIT file
   /// </summary>
-  private static void SaveEditsToFit(ILayer? traceLayer, FitFile fit)
+  private static void CommitEdits(ILayer? traceLayer, UiFile file)
   {
+    if (file.FitFile is not { } fit) { return; }
+    
     if (traceLayer is not Layer layer) { return; }
     if (layer.DataSource is not MemoryProvider mp) { return; }
 
@@ -197,10 +219,11 @@ public class MapViewModel : ViewModelBase, IMapViewModel
 
     foreach (var pair in fit.Records.Select((record, i) => new { record, i }))
     {
-      pair.record.WithCoordinate(coords[pair.i]);
+      pair.record.SetCoordinate(coords[pair.i]);
     }
 
     fit.BackfillEvents();
+    file.Commit(fit);
   }
 
   private void HandleMainFileChanged(IObservedChange<IFileService, UiFile?> property)
@@ -208,8 +231,10 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     selectedIndexSub_?.Dispose();
     selectedCountSub_?.Dispose();
 
-    selectedIndexSub_ = property.Value.ObservableForProperty(x => x.SelectedIndex).Subscribe(prop => SelectedIndex = prop.Value);
-    selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount).Subscribe(prop => SelectionCount = prop.Value);
+    selectedIndexSub_ = property.Value.ObservableForProperty(x => x.SelectedIndex)
+      .Subscribe(prop => SelectedIndex = prop.Value);
+    selectedCountSub_ = property.Value.ObservableForProperty(x => x.SelectionCount)
+      .Subscribe(prop => SelectionCount = prop.Value);
 
     EndEditing();
   }
@@ -236,6 +261,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     }
 
     UpdateExtent();
+    HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
   // Sort layers, update map
@@ -269,7 +295,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (SelectionCount < 2) { return; } // Need at least 2 points selected to draw a line between them
     if (SelectedIndex + SelectionCount >= file.Records.Count) { return; }
 
-    ILayer? layer = Add(file, "Selection", SelectionLayerIndex_, FitColor.RedCrayon, editable: false, lineWidth: 6, index: SelectedIndex, count: SelectionCount);
+    ILayer? layer = AddTrace(file, "Selection", SelectionLayerIndex_, FitColor.RedCrayon, editable: false, lineWidth: 6, index: SelectedIndex, count: SelectionCount);
 
     if (layer == null) { return; }
     traces_[selectionTraceId_] = layer;
@@ -278,22 +304,22 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     HandleLayersChanged();
   }
 
-  private void HandleFileAdded(UiFile? sf) => Add(sf);
+  private void HandleFileAdded(UiFile? sf) => SubscribeLoads(sf);
 
-  private void Add(UiFile? sf)
+  private void SubscribeLoads(UiFile? sf)
   { 
     if (sf == null) { return; }
-    if (isLoadedSubs_.ContainsKey(sf)) { isLoadedSubs_[sf].Dispose(); }
+    
+    if (isLoadedSubs_.TryGetValue(sf, out var sub)) { sub.Dispose(); }
 
-    isLoadedSubs_[sf] = sf.ObservableForProperty(x => x.IsLoaded).Subscribe(e => HandleFileIsLoadedChanged(e.Sender));
+    isLoadedSubs_[sf] = sf.ObservableForProperty(x => x.IsLoaded)
+      .Subscribe(e => HandleFileIsLoadedChanged(e.Sender));
   }
 
   private void HandleFileIsLoadedChanged(UiFile file)
   {
     if (file.IsLoaded) { TryShow(file); }
     else { Remove(file); }
-
-    HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
   private void TryShow(UiFile uif)
@@ -305,6 +331,8 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     }
 
     Show(uif);
+    UpdateExtent();
+    HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
   }
 
   private void Show(UiFile sf)
@@ -315,7 +343,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     if (sf.FitFile != null)
     {
       int index = traceLayerIndex_ + traces_.Count;
-      ILayer? layer = Add(sf.FitFile, "GPS Trace", index, FitColor.LimeCrayon);
+      ILayer? layer = AddTrace(sf.FitFile, "GPS Trace", index, FitColor.LimeCrayon);
 
       if (layer == null) { return; }
       traceIndices_[sf.Activity.Id] = index;
@@ -328,9 +356,6 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     {
       Remove(sf);
     }
-
-    HasCoordinates = LayerFactory.GetHasCoordinates(traces_.Values);
-    UpdateExtent();
   }
 
   private void HandleFileRemoved(UiFile? sf) => Remove(sf);
@@ -371,7 +396,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     breadcrumbFeature_.Geometry = circle;
   }
 
-  private ILayer? Add
+  private ILayer? AddTrace
   (
     FitFile fit,
     string name,
@@ -406,7 +431,7 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     Map.Map.Layers.Insert(layer, trace);
     return trace;
   }
-
+  
   private ILayer? AddEditTrace(Coordinate[] coords, string name, Avalonia.Media.Color color, Avalonia.Media.Color selectedColor)
   {
     if (coords.Length < 2) { return null; }

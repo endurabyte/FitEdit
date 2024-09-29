@@ -16,6 +16,14 @@ public partial class MapView : UserControl
   private bool IsDragging_ => draggedPoint_ != null;
   private Viewport Viewport_ => MapControl.Map.Navigator.Viewport;
 
+  /// <summary>
+  /// If true, the user must release the mouse button before dragging a GPS trackpoint.
+  /// Else, the user can drag the GPS trackpoint without releasing the mouse button.
+  /// </summary>
+  private readonly bool stickyClicks_ = true;
+  
+  private const string selectedKey_ = "selected";
+    
   public MapView()
   {
     InitializeComponent();
@@ -25,8 +33,12 @@ public partial class MapView : UserControl
 
     // We have two options to handle GPS trackpoint drag
     // 1. Manually handle pointer press/release. On press, find the GPS trackpoint under the pointer.
-    //MapControl.PointerPressed += HandlePointerPressed;
-    //MapControl.PointerReleased += HandlePointerReleased;
+    if (!stickyClicks_)
+    {
+      MapControl.PointerPressed += HandlePointerPressed;
+      MapControl.PointerReleased += HandlePointerReleased;
+      return;
+    }
 
     // 2. Use the MapControl HandleInfo which abstracts away pointer handling.
     // Disadvantage: It requires the ILayer.IsMapInfoLayer = true.
@@ -48,19 +60,41 @@ public partial class MapView : UserControl
 
   private void ToggleSelected(PointFeature? feat)
   {
+    if (feat is null) { return; }
+
+    SetPanLock(feat);
+    SetSelectedFeature(feat);
+    ToggleDrag(feat);
+  }
+  
+  private void SetPanLock(PointFeature? feat)
+  {
+    if (feat is null) { return; }
+    if (stickyClicks_) { return; }
+
+    MapControl.Map.Navigator.PanLock = feat[selectedKey_] is null;
+  }
+  
+  private void SetSelectedFeature(PointFeature? feat)
+  {
     if (feat == null) { return; }
 
-    if (feat["selected"] is null)
-    { 
-      feat["selected"] = "true";
-      draggedPoint_ = feat;
-      MapControl.Map.Navigator.PanLock = true;
-      return;
-    }
+    feat[selectedKey_] = feat[selectedKey_] switch
+    {
+      null => "true",
+      _ => null,
+    };
+  }
+  
+  private void ToggleDrag(PointFeature? feat)
+  {
+    if (feat == null) { return; }
 
-    feat["selected"] = null;
-    draggedPoint_ = null;
-    MapControl.Map.Navigator.PanLock = false;
+    draggedPoint_ = feat[selectedKey_] switch
+    {
+      not null => feat,
+      _ => null,
+    };
   }
 
   private PointFeature? FindFeatureUnderPointer(Avalonia.Point screenPosition)
