@@ -11,9 +11,6 @@ public class NullFileService : IFileService
   public UiFile? MainFile { get; set; }
   public ObservableCollection<UiFile> Files { get; set; } = new();
 
-  public IObservable<LocalActivity> Deleted => deletedSubject_;
-  private readonly ISubject<LocalActivity> deletedSubject_ = new Subject<LocalActivity>();
-
   public NullFileService()
   {
     int i = 0;

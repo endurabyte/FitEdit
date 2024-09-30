@@ -9,7 +9,6 @@ public interface IFileService
 {
   UiFile? MainFile { get; set; }
   ObservableCollection<UiFile> Files { get; set; }
-  IObservable<LocalActivity> Deleted { get; }
 
   /// <summary>
   /// Create a new file and file list entry for the given FIT file

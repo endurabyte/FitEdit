@@ -11,5 +11,27 @@
         Icon="/Assets/logo.ico"
         Title="{Binding AppTitle}">
 
+  <NativeMenu.Menu>
+    <NativeMenu>
+      <NativeMenuItem Header="File">
+        <NativeMenuItem.Menu>
+          <NativeMenu>
+            <NativeMenuItem Header="Import"
+                            Command="{Binding File.HandleImportClicked}" />
+            <NativeMenuItem Header="Export"
+                            Command="{Binding File.HandleExportClicked}"
+                            IsEnabled="{Binding File.SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            CommandParameter="{Binding File.SelectedFile}" />
+            <NativeMenuItem Header="Delete"
+                            Command="{Binding File.HandleDeleteClicked}"
+                            IsEnabled="{Binding File.SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}"
+                            CommandParameter="{Binding File.SelectedFile}" />
+
+          </NativeMenu>
+        </NativeMenuItem.Menu>
+      </NativeMenuItem>
+    </NativeMenu>
+  </NativeMenu.Menu>
+  
   <views:MainView />
 </Window>

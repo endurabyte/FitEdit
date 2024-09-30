@@ -214,7 +214,7 @@ LIMIT 1";
     Log.Info($"{nameof(SqliteAdapter)}.{nameof(GetAllActivitiesAsync)}()");
     List<LocalActivity> activities = await db_?
       .Table<LocalActivity>()
-      .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
+      .Where(act => (after == null || act.StartTime >= after) && (before == null || act.StartTime < before))
       .OrderByDescending(act => act.StartTime)
       .Take(limit)
       .ToListAsync()
@@ -235,7 +235,7 @@ LIMIT 1";
 
   public async Task<List<string>> GetAllActivityIdsAsync(DateTime? after, DateTime? before) => (await db_?
     .Table<LocalActivity>()
-      .Where(act => (after == null || act.StartTime > after) && (before == null || act.StartTime < before))
+      .Where(act => (after == null || act.StartTime >= after) && (before == null || act.StartTime < before))
       .ToListAsync().AnyContext())?
     .Select(act => act.Id).ToList() ?? new List<string>();
 

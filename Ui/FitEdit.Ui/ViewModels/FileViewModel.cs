@@ -33,6 +33,12 @@ public interface IFileViewModel
   double ScrollPercent { get; set; }
   bool IsDragActive { set; }
 
+  public UiFile? SelectedFile { get; set; }
+  
+  Task HandleImportClicked();
+  Task HandleExportClicked(UiFile uif);
+  void HandleDeleteClicked(UiFile uif);
+  
   void HandleFileDropped(IStorageFile? file);
   void LoadOrUnload(UiFile uif);
 }
@@ -164,8 +170,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     NotifyBubble bubble = notifier_.NotifyUser($"Searching '{dev.Name}' for activities...");
     bubble.CanCancel = false;
 
-    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, bubble);
-    Dispatcher.UIThread.Invoke(() => bubble.Content = new Views.DeviceFileImportView() { DataContext = vm });
+    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, ut);
+    Dispatcher.UIThread.Invoke(() => ut.Content = new Views.DeviceFileImportView() { DataContext = vm });
 
     bubble.Header = $"Importing activities from '{dev.Name}'";
 
@@ -498,7 +504,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
-  public async void HandleExportClicked(UiFile uif)
+  public async Task HandleExportClicked(UiFile uif)
   {
     int index = FileService.Files.IndexOf(uif);
     if (index < 0 || FileService.Files.Count == 0)
