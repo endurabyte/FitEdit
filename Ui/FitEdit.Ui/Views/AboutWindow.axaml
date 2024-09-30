@@ -1,0 +1,13 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:FitEdit.Ui.Views"
+        xmlns:vm="using:FitEdit.Ui.ViewModels"
+        Width="400"
+        Height="300"
+        CanResize="False"
+        Title="About FitEdit"
+        x:DataType="vm:MainViewModel"
+        x:Class="FitEdit.Ui.Views.AboutWindow">
+
+  <views:AboutView/>
+</Window>

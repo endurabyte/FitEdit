@@ -1,8 +1,11 @@
-﻿using System.Reactive.Linq;
+﻿using System.Reactive;
+using System.Reactive.Linq;
 using System.Reflection;
+using Avalonia.Controls;
 using FitEdit.Model;
 using FitEdit.Services;
 using FitEdit.Ui.Model;
+using FitEdit.Ui.Views;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -25,6 +28,7 @@ public class DesignMainViewModel : MainViewModel
     new DesignFileViewModel(),
     new DesignLogViewModel(),
     new DesignSettingsViewModel(),
+    new DesignAboutViewModel(),
     new NullFitEditService(),
     new DesignTaskViewModel(),
     isCompact: false
@@ -42,6 +46,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IFileViewModel File { get; }
   public ILogViewModel LogVm { get; }
   public ISettingsViewModel Settings { get; }
+  public IAboutViewModel About { get; }
   public IFitEditService FitEdit { get; set; }
 
   [Reactive] public ViewModelBase TaskViewModel { get; set; }
@@ -65,6 +70,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     IFileViewModel file,
     ILogViewModel logVm,
     ISettingsViewModel settings,
+    IAboutViewModel about,
     IFitEditService fitEdit,
     TaskViewModel taskViewModel,
     bool isCompact
@@ -78,6 +84,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     File = file;
     LogVm = logVm;
     Settings = settings;
+    About = about;
     FitEdit = fitEdit;
     TaskViewModel = taskViewModel;
     IsCompact = isCompact;
@@ -108,5 +115,16 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     var attr = assembly?.GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
     Version = attr?.InformationalVersion.Split("+")[0] ?? "Unknown Version";
     AppTitle = AppTitle_;
+  }
+  
+  public void ShowAbout()
+  {
+    var dialog = new AboutWindow
+    {
+      DataContext = About
+    };
+    if (window_.Main is not Window window) { return; }
+    
+    dialog.ShowDialog(window);
   }
 }

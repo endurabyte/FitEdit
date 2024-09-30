@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace FitEdit.Ui.Views;
 
-public partial class DeviceFileImportView : UserControl
+public partial class AboutView : UserControl
 {
-  public DeviceFileImportView()
+  public AboutView()
   {
     InitializeComponent();
   }

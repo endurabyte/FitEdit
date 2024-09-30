@@ -2,9 +2,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="using:FitEdit.Ui"
              xmlns:oxythemes="clr-namespace:OxyPlot.Avalonia.Themes;assembly=OxyPlot.Avalonia"
+             xmlns:vm="using:FitEdit.Ui.ViewModels"
              x:Class="FitEdit.Ui.App"
+             x:DataType="vm:MainViewModel"
+             Name="FitEdit"
              RequestedThemeVariant="Dark">
   <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+  
+  <NativeMenu.Menu>
+    <NativeMenu>
+      <NativeMenuItem Header="About FitEdit" Command="{CompiledBinding ShowAbout}"/>
+    </NativeMenu>
+  </NativeMenu.Menu>
+  
   <Application.DataTemplates>
     <local:ViewLocator/>
   </Application.DataTemplates>

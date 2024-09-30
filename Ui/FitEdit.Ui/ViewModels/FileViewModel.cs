@@ -165,7 +165,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     ut.CanCancel = false;
 
     var vm = new DeviceFileImportViewModel(mtp_, events_, dev, ut);
-    Dispatcher.UIThread.Invoke(() => ut.Content = new DeviceFileImportView() { DataContext = vm });
+    Dispatcher.UIThread.Invoke(() => ut.Content = new Views.DeviceFileImportView() { DataContext = vm });
 
     ut.Header = $"Importing activities from '{dev.Name}'";
 
