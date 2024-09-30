@@ -170,8 +170,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     NotifyBubble bubble = notifier_.NotifyUser($"Searching '{dev.Name}' for activities...");
     bubble.CanCancel = false;
 
-    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, ut);
-    Dispatcher.UIThread.Invoke(() => ut.Content = new Views.DeviceFileImportView() { DataContext = vm });
+    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, bubble);
+    Dispatcher.UIThread.Invoke(() => bubble.Content = new Views.DeviceFileImportView() { DataContext = vm });
 
     bubble.Header = $"Importing activities from '{dev.Name}'";
 
