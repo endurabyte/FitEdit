@@ -34,7 +34,7 @@ public class DeviceFileImportViewModel : ViewModelBase
   private readonly IMtpAdapter mtp_;
   private readonly IEventService events_;
   private readonly PortableDevice dev_;
-  private readonly NotifyBubble ut_;
+  private readonly NotifyBubble bubble_;
 
   private TimeSpan howFarBack_ = new(7, 0, 0, 0);
   public TimeSpan HowFarBack
@@ -62,12 +62,12 @@ public class DeviceFileImportViewModel : ViewModelBase
   [Reactive] public string Message { get; set; } = string.Empty;
   [Reactive] public bool ImportComplete { get; set; }
 
-  public DeviceFileImportViewModel(IMtpAdapter mtp, IEventService events, PortableDevice dev, NotifyBubble ut)
+  public DeviceFileImportViewModel(IMtpAdapter mtp, IEventService events, PortableDevice dev, NotifyBubble bubble)
   {
     mtp_ = mtp;
     events_ = events;
     dev_ = dev;
-    ut_ = ut;
+    bubble_ = bubble;
 
     SelectedActivities.CollectionChanged += (s, e) => this.RaisePropertyChanged(nameof(HasSelection));
   }
@@ -76,7 +76,7 @@ public class DeviceFileImportViewModel : ViewModelBase
   {
     Activities.Add(activity);
 
-    ut_.Status = Activities.Count switch
+    bubble_.Status = Activities.Count switch
     {
       0 => "No activities found",
       1 => "Found 1 activity",
@@ -105,10 +105,10 @@ public class DeviceFileImportViewModel : ViewModelBase
 
   public void ImportFiles()
   {
-    ut_.Status = "Importing...";
-    ut_.NextAction?.Invoke();
+    bubble_.Status = "Importing...";
+    bubble_.NextAction?.Invoke();
     ImportComplete = true;
   }
 
-  public void Dismiss() => ut_.Dismiss();
+  public void Dismiss() => bubble_.Dismiss();
 }

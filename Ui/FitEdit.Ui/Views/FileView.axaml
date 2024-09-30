@@ -34,7 +34,6 @@
     <Menu HorizontalAlignment="Right" Margin="0 0 0 20">
       <MenuItem Header="⋮" FontSize="24"
                 ToolTip.Tip="Show the menu">
-        <MenuItem Command="{Binding HandleImportClicked}" Header="Import" ToolTip.Tip="Import a file from disk"/>
         <MenuItem Command="{Binding HandleMergeClicked}" Header="Merge">
           <ToolTip.Tip>
             <TextBlock TextWrapping="Wrap">
@@ -68,30 +67,11 @@
                     CommandParameter="{Binding SelectedFile}"
                     ToolTip.Tip="Unload the file"/>
 
-          <MenuItem Header="Import"
+          <MenuItem Header="Add missing file"
               Command="{Binding HandleActivityImportClicked}"
               CommandParameter="{Binding SelectedFile.Activity}"
               IsVisible="{Binding SelectedFile.Activity.File, Converter={x:Static ObjectConverters.IsNull}}"
               ToolTip.Tip="Import a file from disk and associate it with this activity"/>
-
-          <MenuItem Header="Export"
-                  Command="{Binding HandleExportClicked}"
-                  CommandParameter="{Binding SelectedFile}"
-                  ToolTip.Tip="Export to file"/>
-
-          <MenuItem Header="Delete"
-                  Command="{Binding HandleDeleteClicked}"
-                  CommandParameter="{Binding SelectedFile}">
-
-            <ToolTip.Tip>
-              <TextBlock TextWrapping="Wrap">
-                Remove the selected activity. <LineBreak/>
-                Removes the activity from the list, local cache and database, and remote cache and database (if logged in). <LineBreak/>
-                Other logged in devices will remove their local copy.
-                Does not affect the activity stored by external services such as Garmin or Strava.
-              </TextBlock>
-            </ToolTip.Tip>
-          </MenuItem>
 
           <MenuItem Header="-"/>
 
