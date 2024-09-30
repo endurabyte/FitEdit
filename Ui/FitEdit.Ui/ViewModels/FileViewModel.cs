@@ -265,16 +265,23 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       return;
     }
 
-    if (!file.Name.EndsWith(".zip"))
+    try
     {
-      await Persist(file);
-      return;
-    }
+      if (!file.Name.EndsWith(".zip"))
+      {
+        await Persist(file);
+        return;
+      }
 
-    List<FileReference> files = Zip.Unzip(file);
-    foreach (FileReference f in files)
+      List<FileReference> files = Zip.Unzip(file);
+      foreach (FileReference f in files)
+      {
+        await Persist(f);
+      }
+    }
+    finally
     {
-      await Persist(f);
+      notifier_.NotifyUser($"Imported {file.Name}", autoCancel: true);
     }
   }
 
@@ -309,9 +316,8 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
     if (act.File is null) { return; }
 
-    await supa_.UpdateAsync(act); // Sets LocalActivity.BucketUrl
-
-    // TODO Show result
+    await Persist(act);
+    notifier_.NotifyUser($"Imported {act.Name}", autoCancel: true);
   }
 
   private async Task<UiFile?> Persist(FileReference? file)
@@ -368,7 +374,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       FileService.Add(sf);
     });
 
-    await supa_.UpdateAsync(act);
+    await supa_.UpdateAsync(act); // Sets LocalActivity.BucketUrl
 
     return sf;
   }
