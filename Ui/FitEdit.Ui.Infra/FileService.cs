@@ -217,6 +217,12 @@ public class FileService : ReactiveObject, IFileService
       backfill *= 2;
     }
 
+    // If we still didn't get any, try activities with the default Datetime e.g. 0001-01-01T00:00
+    if (more.Count < limit)
+    {
+      more = await GetAllActivitiesAsync(new DateTime(), DateTime.UtcNow, limit);
+    }
+    
     more.Sort((a1, a2) => a2.StartTime.CompareTo(a1.StartTime));
 
     foreach (LocalActivity activity in more)
