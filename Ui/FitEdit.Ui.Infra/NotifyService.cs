@@ -14,7 +14,7 @@ public interface INotifyService
   void Add(NotifyBubble bubble);
   void Remove(NotifyBubble bubble);
 
-  NotifyBubble NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false);
+  NotifyBubble NotifyUser(string header, string? status = null, Action? next = null, bool autoCancel = false);
 }
 
 public class DesignNotifyService : NotifyService
@@ -76,36 +76,36 @@ public class NotifyService : INotifyService
 
   public void Remove(NotifyBubble bubble) => Bubbles.Remove(bubble);
 
-  public NotifyBubble NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false)
+  public NotifyBubble NotifyUser(string header, string? status = null, Action? next = null, bool autoCancel = false)
   {
     Log.Info(header);
 
-    var ut = new NotifyBubble
+    var bubble = new NotifyBubble
     {
       Header = header,
       Status = status,
     };
-    Add(ut);
+    Add(bubble);
 
-    if (autoDismiss)
+    if (autoCancel)
     {
-      ut.Cancel(labelAsCanceled: false);
+      bubble.Cancel();
     }
 
     // If the notification has no action
     if (next != null)
     {
       // Prompt the user to confirm the action
-      ut.IsConfirmed = false;
-      ut.NextAction = () =>
+      bubble.IsConfirmed = false;
+      bubble.NextAction = () =>
       {
         // Dismiss the notification when the action starts
-        ut.Dismiss();
+        bubble.Dismiss();
         next();
       };
     }
 
-    return ut;
+    return bubble;
   }
 }
 

@@ -29,14 +29,9 @@ public class NotifyBubble : ReactiveObject
     });
   }
 
-  public void Cancel(bool labelAsCanceled = true)
+  public void Cancel()
   {
     cts_.Cancel();
-    if (labelAsCanceled)
-    {
-      Header = $"(Canceled) {Header}";
-      Status = $"(Canceled) {Status}";
-    }
     IsCanceled = true;
     IsComplete = true;
   }

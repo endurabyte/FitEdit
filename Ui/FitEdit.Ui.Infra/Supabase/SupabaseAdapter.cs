@@ -115,9 +115,6 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
       InitClient();
     });
 
-    // When files are deleted from the app, also delete their database record and bucket file
-    fileService_.Deleted.Subscribe(async act => await DeleteAsync(act).AnyContext());
-
     _ = Task.Run(SyncForever);
   }
 
@@ -632,7 +629,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
     catch (HttpRequestException)
     {
-      notifier_.NotifyUser("Error", "Could reach the server to delete the file.");
+      notifier_.NotifyUser("Error", "Could not reach the server to delete the file.", autoCancel: true);
     }
 
     if (Authorization?.Sub is null) { return false; }

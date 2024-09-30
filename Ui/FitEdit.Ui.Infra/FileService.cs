@@ -25,9 +25,6 @@ public class FileService : ReactiveObject, IFileService
   [Reactive] public UiFile? MainFile { get; set; }
   [Reactive] public ObservableCollection<UiFile> Files { get; set; } = new();
 
-  public IObservable<LocalActivity> Deleted => deletedSubject_;
-  private readonly ISubject<LocalActivity> deletedSubject_ = new Subject<LocalActivity>();
-
   public string PathFor(LocalActivity act) => Path.Combine(storageRoot_, "Files", $"{act.File!.Id}", act.File.Name);
 
   public FileService(IDatabaseAdapter db, ICryptoService crypto, string storageRoot)
@@ -163,7 +160,6 @@ public class FileService : ReactiveObject, IFileService
     try
     {
       bool ok = await db_.DeleteAsync(act);
-      deletedSubject_?.OnNext(act);
 
       if (act.File == null) { return ok; }
 
