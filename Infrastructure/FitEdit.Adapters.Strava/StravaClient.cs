@@ -108,7 +108,7 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     return Task.FromResult(true);
   }
 
-  public async Task<List<StravaActivity>> ListAllActivitiesAsync(UserTask task, CancellationToken ct = default)
+  public async Task<List<StravaActivity>> ListAllActivitiesAsync(NotifyBubble bubble, CancellationToken ct = default)
   {
     HttpClient client = GetAuthenticatedClient();
 
@@ -143,8 +143,8 @@ public partial class StravaClient : ReactiveObject, IStravaClient
       if (resp.StatusCode == HttpStatusCode.TooManyRequests)
       {
         tooMany = true;
-        task.Cancel(); // Auto-dismiss
-        task.Status = "Strava says we've made too many requests. Try again later.";
+        bubble.Cancel(); // Auto-dismiss
+        bubble.Status = "Strava says we've made too many requests. Try again later.";
         return;
       }
 
@@ -167,7 +167,7 @@ public partial class StravaClient : ReactiveObject, IStravaClient
     {
       if (tooMany) { return; }
       await fetchPageAsync(page, ct);
-      task.Status = $"Got {activities.Count} of {total} Strava activities ({(double)activities.Count/total * 100:#.#}%)";
+      bubble.Status = $"Got {activities.Count} of {total} Strava activities ({(double)activities.Count/total * 100:#.#}%)";
     });
 
     return activities.Values.OrderByDescending(a => a.Id).ToList();

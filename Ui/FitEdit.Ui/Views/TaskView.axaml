@@ -4,11 +4,11 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
              mc:Ignorable="d" d:DesignWidth="400"
-             x:Class="FitEdit.Ui.Views.TaskView"
-             x:DataType="vm:TaskViewModel">
+             x:Class="FitEdit.Ui.Views.NotifyView"
+             x:DataType="vm:NotifyViewModel">
 
   <Design.DataContext>
-    <vm:DesignTaskViewModel />
+    <vm:DesignNotifyViewModel />
   </Design.DataContext>
 
   <UserControl.Styles>
@@ -17,7 +17,7 @@
 
   <ScrollViewer>
 
-    <ItemsControl Background="Transparent" ItemsSource="{Binding TaskService.Tasks}">
+    <ItemsControl Background="Transparent" ItemsSource="{Binding Notifier.Bubbles}">
 
       <ItemsControl.Styles>
         <Style Selector="TextBlock">

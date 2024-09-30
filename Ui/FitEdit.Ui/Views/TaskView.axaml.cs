@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace FitEdit.Ui.Views;
 
-public partial class TaskView : UserControl
+public partial class NotifyView : UserControl
 {
-  public TaskView()
+  public NotifyView()
   {
     InitializeComponent();
   }

@@ -7,28 +7,28 @@ using ReactiveUI.Fody.Helpers;
 
 namespace FitEdit.Ui.Infra;
 
-public interface ITaskService
+public interface INotifyService
 {
-  ObservableCollection<UserTask> Tasks { get; }
+  ObservableCollection<NotifyBubble> Bubbles { get; }
 
-  void Add(UserTask task);
-  void Remove(UserTask task);
+  void Add(NotifyBubble bubble);
+  void Remove(NotifyBubble bubble);
 
-  UserTask NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false);
+  NotifyBubble NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false);
 }
 
-public class DesignTaskService : TaskService
+public class DesignNotifyService : NotifyService
 {
-  public DesignTaskService()
+  public DesignNotifyService()
   {
-    Tasks.Add(new UserTask
+    Bubbles.Add(new NotifyBubble
     {
       Header = "A notification",
       Status = "This notification has a pretty long text section so that we can verify that long messages look OK on all platforms.\nWhat do you think?",
       Progress = 67,
     });
 
-    var ut = new UserTask
+    var ut = new NotifyBubble
     {
       Header = "Another notification",
       Status = "Please click continue",
@@ -53,34 +53,34 @@ public class DesignTaskService : TaskService
       }
     };
 
-    Tasks.Add(ut);
+    Bubbles.Add(ut);
   }
 }
 
-public class TaskService : ITaskService
+public class NotifyService : INotifyService
 {
-  [Reactive] public ObservableCollection<UserTask> Tasks { get; set; } = new();
+  [Reactive] public ObservableCollection<NotifyBubble> Bubbles { get; set; } = new();
   [Reactive] public TimeSpan AutoDismissAfter { get; set; } = TimeSpan.FromSeconds(10);
 
-  public void Add(UserTask task)
+  public void Add(NotifyBubble bubble)
   {
-    Tasks.Add(task);
-    task.ObservableForProperty(x => x.IsCanceled).Subscribe(async _ =>
+    Bubbles.Add(bubble);
+    bubble.ObservableForProperty(x => x.IsCanceled).Subscribe(async _ =>
     {
       await Task.Delay(AutoDismissAfter);
-      Remove(task);
+      Remove(bubble);
     });
 
-    task.ObservableForProperty(x => x.IsDismissed).Subscribe(_ => Remove(task));
+    bubble.ObservableForProperty(x => x.IsDismissed).Subscribe(_ => Remove(bubble));
   }
 
-  public void Remove(UserTask task) => Tasks.Remove(task);
+  public void Remove(NotifyBubble bubble) => Bubbles.Remove(bubble);
 
-  public UserTask NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false)
+  public NotifyBubble NotifyUser(string header, string? status = null, Action? next = null, bool autoDismiss = false)
   {
     Log.Info(header);
 
-    var ut = new UserTask
+    var ut = new NotifyBubble
     {
       Header = header,
       Status = status,

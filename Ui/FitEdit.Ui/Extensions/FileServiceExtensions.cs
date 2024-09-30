@@ -42,7 +42,7 @@ public static class FileServiceExtensions
   /// The returned LocalActivity on the tuple will be non-null if the activity already exists in the DB, else it will be null.
   /// </summary>
   public static async Task<List<(T, LocalActivity?)>> FilterExistingAsync<T>(this IFileService fileService, 
-    UserTask task, 
+    NotifyBubble bubble, 
     List<(T t, string sourceId, string name, DateTime startTime)> ts)
   {
     var allExisting = new ConcurrentDictionary<string, LocalActivity>();
@@ -50,7 +50,7 @@ public static class FileServiceExtensions
     int i = 0;
 
     // Get existing activites from DB
-    await Parallel.ForEachAsync(ts, task.CancellationToken, async (tup, ct) =>
+    await Parallel.ForEachAsync(ts, bubble.CancellationToken, async (tup, ct) =>
     {
       string sourceId = tup.sourceId;
       string? name = tup.name;
@@ -65,7 +65,7 @@ public static class FileServiceExtensions
       LocalActivity? existing = await fileService.GetBySourceIdOrStartTimeAsync(sourceId, startTime);
 
       Interlocked.Increment(ref i);
-      task.Status = $"Scanning local database ({i} of {ts.Count}) ({(double)i/ts.Count*100:#.#}%)";
+      bubble.Status = $"Scanning local database ({i} of {ts.Count}) ({(double)i/ts.Count*100:#.#}%)";
 
       if (existing == null) { return; } // New activity
       allExisting[sourceId] = existing;

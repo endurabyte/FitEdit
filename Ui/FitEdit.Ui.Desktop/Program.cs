@@ -13,7 +13,11 @@ internal class Program
   public static void Main(string[] args)
   {
     App.Root = ConfigurationRoot.Bootstrap(new CompositionRoot());
-    new AutoUpdater().WatchForUpdates();
+    App.DidStart += root =>
+    {
+      var notifier = root.Get<INotifyService>();
+      new AutoUpdater(notifier).WatchForUpdates();
+    };
 
     BuildAvaloniaApp()
       .StartWithClassicDesktopLifetime(args);

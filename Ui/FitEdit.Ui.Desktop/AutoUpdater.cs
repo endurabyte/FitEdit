@@ -1,5 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using FitEdit.Model;
+using FitEdit.Ui.Infra;
 using FitEdit.Ui.ViewModels;
 using NuGet.Versioning;
 using Squirrel;
@@ -8,9 +11,13 @@ using Squirrel.SimpleSplat;
 namespace FitEdit.Ui.Desktop;
 
 public class AutoUpdater
-{ 
-  public AutoUpdater()
+{
+  private readonly INotifyService notifier_;
+
+  public AutoUpdater(INotifyService notifier)
   {
+    notifier_ = notifier;
+    
     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
     {
       Log.Info("Auto update not supported on Linux. Please use your package manager.");
@@ -20,6 +27,8 @@ public class AutoUpdater
     SquirrelAwareApp.HandleEvents(onInitialInstall: HandleAppInstalled);
     SquirrelLocator.CurrentMutable.Register(() => new SquirrelLogger(), typeof(ILogger));
   }
+
+  private void NotifyUser(string message, Action restartApp) => notifier_.NotifyUser(message, "", restartApp);
 
   private static void HandleAppInstalled(SemanticVersion version, IAppTools tools)
   {
@@ -58,7 +67,7 @@ public class AutoUpdater
     }, ct);
   }
 
-  private static async Task CheckForUpdates(CancellationToken ct = default)
+  private async Task CheckForUpdates(CancellationToken ct = default)
   {
     Log.Info($"Checking for updates...");
 
@@ -75,10 +84,11 @@ public class AutoUpdater
         if (entry == null) { return; }
 
         // Notify user of update
-        Titlebar.Instance.Message = $"| Please relaunch to update to version {entry.Version}.";
-
-        // TODO provide e.g. a button to restart
-        //UpdateManager.RestartApp();
+        NotifyUser($"Please relaunch to update to version {entry.Version}.", () =>
+        {
+          Process.Start(Environment.ProcessPath!);
+          Environment.Exit(0);
+        });
       }
     }
     catch (Exception e)

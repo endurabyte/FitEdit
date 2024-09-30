@@ -7,9 +7,10 @@ using FitEdit.Ui.Views;
 
 namespace FitEdit.Ui;
 
-public partial class App : Application
+public class App : Application
 {
   public static ICompositionRoot? Root { get; set; }
+  public static Action<ICompositionRoot>? DidStart { get; set; }
 
   public override void Initialize()
   {
@@ -56,5 +57,7 @@ public partial class App : Application
     }
 
     base.OnFrameworkInitializationCompleted();
+    
+    DidStart?.Invoke(Root);
   }
 }

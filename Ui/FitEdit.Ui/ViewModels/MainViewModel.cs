@@ -30,7 +30,7 @@ public class DesignMainViewModel : MainViewModel
     new DesignSettingsViewModel(),
     new DesignAboutViewModel(),
     new NullFitEditService(),
-    new DesignTaskViewModel(),
+    new DesignNotifyViewModel(),
     isCompact: false
   )
   { 
@@ -49,7 +49,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
   public IAboutViewModel About { get; }
   public IFitEditService FitEdit { get; set; }
 
-  [Reactive] public ViewModelBase TaskViewModel { get; set; }
+  [Reactive] public ViewModelBase NotifyViewModel { get; set; }
 
   private string? AppTitle_ => $"FitEdit | Training Data Editor | Version {Version} {Titlebar.Instance.Message}";
   [Reactive] public string? AppTitle { get; set; }
@@ -72,7 +72,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     ISettingsViewModel settings,
     IAboutViewModel about,
     IFitEditService fitEdit,
-    TaskViewModel taskViewModel,
+    NotifyViewModel notifyViewModel,
     bool isCompact
   )
   {
@@ -86,7 +86,7 @@ public class MainViewModel : ViewModelBase, IMainViewModel
     Settings = settings;
     About = about;
     FitEdit = fitEdit;
-    TaskViewModel = taskViewModel;
+    NotifyViewModel = notifyViewModel;
     IsCompact = isCompact;
 
     GetVersion();

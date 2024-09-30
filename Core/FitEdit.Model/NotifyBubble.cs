@@ -3,7 +3,7 @@ using ReactiveUI.Fody.Helpers;
 
 namespace FitEdit.Model;
 
-public class UserTask : ReactiveObject
+public class NotifyBubble : ReactiveObject
 {
   [Reactive] public required string Header { get; set; }
   [Reactive] public string? Status { get; set; }
@@ -21,7 +21,7 @@ public class UserTask : ReactiveObject
 
   private readonly CancellationTokenSource cts_ = new();
 
-  public UserTask()
+  public NotifyBubble()
   {
     this.ObservableForProperty(x => x.Status).Subscribe(_ =>
     {

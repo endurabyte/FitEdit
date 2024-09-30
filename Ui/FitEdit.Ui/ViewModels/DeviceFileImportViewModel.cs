@@ -15,7 +15,7 @@ public class DesignDeviceFileImportViewModel : DeviceFileImportViewModel
       new FakeMtpAdapter(new EventService()), 
       new EventService(), 
       new PortableDevice("FakeDevice", "0x1234"), 
-      new UserTask { Header = "FakeUserTask" })
+      new NotifyBubble { Header = "FakeBubble" })
   {
     Activities.Add(new LocalActivity
     {
@@ -34,7 +34,7 @@ public class DeviceFileImportViewModel : ViewModelBase
   private readonly IMtpAdapter mtp_;
   private readonly IEventService events_;
   private readonly PortableDevice dev_;
-  private readonly UserTask ut_;
+  private readonly NotifyBubble ut_;
 
   private TimeSpan howFarBack_ = new(7, 0, 0, 0);
   public TimeSpan HowFarBack
@@ -62,7 +62,7 @@ public class DeviceFileImportViewModel : ViewModelBase
   [Reactive] public string Message { get; set; } = string.Empty;
   [Reactive] public bool ImportComplete { get; set; }
 
-  public DeviceFileImportViewModel(IMtpAdapter mtp, IEventService events, PortableDevice dev, UserTask ut)
+  public DeviceFileImportViewModel(IMtpAdapter mtp, IEventService events, PortableDevice dev, NotifyBubble ut)
   {
     mtp_ = mtp;
     events_ = events;

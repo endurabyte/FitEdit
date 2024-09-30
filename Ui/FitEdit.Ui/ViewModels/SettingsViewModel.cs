@@ -21,7 +21,7 @@ public interface ISettingsViewModel
 public class DesignSettingsViewModel : SettingsViewModel
 {
   public DesignSettingsViewModel() : base(
-    new DesignTaskService(),
+    new DesignNotifyService(),
     new NullDatabaseAdapter(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
@@ -89,14 +89,14 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
   public string SignUpUrl => $"https://www.fitedit.io/pricing.html";
 
   private CancellationTokenSource authCancelCts_ = new();
-  private readonly ITaskService tasks_;
+  private readonly INotifyService notifier_;
   private readonly IDatabaseAdapter db_;
   private readonly IEmailValidator emailValidator_;
   private readonly IPhoneValidator phoneValidator_;
   private readonly IBrowser browser_;
 
   public SettingsViewModel(
-    ITaskService tasks,
+    INotifyService notifier,
     IDatabaseAdapter db,
     IFitEditService fitEdit,
     IGarminConnectClient garmin,
@@ -106,7 +106,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     IBrowser browser
   )
   {
-    tasks_ = tasks;
+    notifier_ = notifier;
     db_ = db;
     FitEdit = fitEdit;
     Garmin = garmin;
@@ -121,7 +121,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithGarmin)
       .Subscribe(_ =>
       {
-        tasks_.NotifyUser(FitEdit.IsAuthenticatedWithGarmin
+        notifier_.NotifyUser(FitEdit.IsAuthenticatedWithGarmin
           ? "Successfully connected to Garmin!"
           : "Disconnected from Garmin", autoDismiss: true);
       });
@@ -129,7 +129,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     FitEdit.ObservableForProperty(x => x.IsAuthenticatedWithStrava)
       .Subscribe(_ =>
       {
-        tasks_.NotifyUser(FitEdit.IsAuthenticatedWithStrava
+        notifier_.NotifyUser(FitEdit.IsAuthenticatedWithStrava
           ? "Successfully connected to Strava!"
           : "Disconnected from Strava", autoDismiss: true);
       });
@@ -137,7 +137,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     FitEdit.ObservableForProperty(x => x.IsAuthenticated)
       .Subscribe(_ =>
       {
-        tasks_.NotifyUser(FitEdit.IsAuthenticated
+        notifier_.NotifyUser(FitEdit.IsAuthenticated
           ? "Sign in complete!"
           : "Signed out", autoDismiss: true);
       });
@@ -145,7 +145,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     FitEdit.ObservableForProperty(x => x.GarminCookies)
       .Subscribe(async _ =>
       {
-        tasks_.NotifyUser("Received new Garmin cookies from the FitEdit browser extension.", autoDismiss: true);
+        notifier_.NotifyUser("Received new Garmin cookies from the FitEdit browser extension.", autoDismiss: true);
 
         GarminSsoId = FitEdit.GarminCookies.FirstOrDefault(c => c.Name == "GARMIN-SSO-CUST-GUID")?.Value ?? null;
         GarminSessionId = FitEdit.GarminCookies.FirstOrDefault(c => c.Name == "SESSIONID")?.Value ?? null;
@@ -203,18 +203,18 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     if (emailValidator_.IsValid(username))
     {
-      tasks_.NotifyUser("We sent you an email. " +
+      notifier_.NotifyUser("We sent you an email. " +
         "If you're a new user, it has a link. " +
         "If you're a returning user, it has a code and a link. " +
         "Enter the code or open the link on this device within 5 minutes.", autoDismiss: true);
     } else if (phoneValidator_.IsValid(username))
     {
-      tasks_.NotifyUser("We sent you a text message with a code. " +
+      notifier_.NotifyUser("We sent you a text message with a code. " +
         "\nEnter the code within 5 minutes.", autoDismiss: true);
     }
     else
     {
-      tasks_.NotifyUser("Please enter a valid email address or phone number.", autoDismiss: true);
+      notifier_.NotifyUser("Please enter a valid email address or phone number.", autoDismiss: true);
       return;
     }
 
@@ -231,7 +231,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.LogoutAsync();
-      tasks_.NotifyUser(ok ? "Signed out of FitEdit" : "There was a problem signing out of FitEdit", autoDismiss: true);
+      notifier_.NotifyUser(ok ? "Signed out of FitEdit" : "There was a problem signing out of FitEdit", autoDismiss: true);
     });
   }
 
@@ -241,7 +241,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       await FitEdit.AuthorizeGarminAsync();
-      tasks_.NotifyUser(FitEdit.IsAuthenticatingWithGarmin
+      notifier_.NotifyUser(FitEdit.IsAuthenticatingWithGarmin
         ? "Check your web browser. We've opened the Garmin authorize page" 
         : "There was a problem authorizing with Garmin", autoDismiss: true);
     });
@@ -253,7 +253,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.DeauthorizeGarminAsync();
-      tasks_.NotifyUser(ok ? "Deauthorized Garmin" : "There was a problem deauthorizing Garmin", autoDismiss: true);
+      notifier_.NotifyUser(ok ? "Deauthorized Garmin" : "There was a problem deauthorizing Garmin", autoDismiss: true);
     });
   }
 
@@ -270,7 +270,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
       bool ok = await FitEdit.VerifyOtpAsync(Otp.Trim());
       Otp = "";
-      tasks_.NotifyUser(ok ? "Code is valid" : "There was a problem verifying the code", autoDismiss: true);
+      notifier_.NotifyUser(ok ? "Code is valid" : "There was a problem verifying the code", autoDismiss: true);
     });
   }
 
@@ -279,7 +279,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       await browser_.OpenAsync(PaymentPortalUrl);
-      tasks_.NotifyUser("Check your web browser. We've opened a page to manage your payment.", autoDismiss: true);
+      notifier_.NotifyUser("Check your web browser. We've opened a page to manage your payment.", autoDismiss: true);
     });
   }
 
@@ -288,7 +288,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       await browser_.OpenAsync(SignUpUrl);
-      tasks_.NotifyUser("Check your web browser. We've opened a page to sign up.", autoDismiss: true);
+      notifier_.NotifyUser("Check your web browser. We've opened a page to sign up.", autoDismiss: true);
     });
   }
 
@@ -297,7 +297,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       await FitEdit.AuthorizeStravaAsync();
-      tasks_.NotifyUser(FitEdit.IsAuthenticatingWithStrava
+      notifier_.NotifyUser(FitEdit.IsAuthenticatingWithStrava
         ? "Check your web browser. We've opened the Strava authorize page"
         : "There was a problem authorizing with Strava", autoDismiss: true);
     });
@@ -308,7 +308,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
     _ = Task.Run(async () =>
     {
       bool ok = await FitEdit.DeauthorizeStravaAsync();
-      tasks_.NotifyUser(ok ? "Deauthorized Strava" : "There was a problem deauthorizing Strava", autoDismiss: true);
+      notifier_.NotifyUser(ok ? "Deauthorized Strava" : "There was a problem deauthorizing Strava", autoDismiss: true);
     });
   }
 
@@ -338,7 +338,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     if (!signedIn)
     {
-      tasks_.NotifyUser("There was a problem signing in to Garmin", autoDismiss: true);
+      notifier_.NotifyUser("There was a problem signing in to Garmin", autoDismiss: true);
       return;
     }
 
@@ -369,7 +369,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       settings.GarminCookies = null;
     });
 
-    tasks_.NotifyUser("Signed out of Garmin", autoDismiss: true);
+    notifier_.NotifyUser("Signed out of Garmin", autoDismiss: true);
   }
 
   public async Task HandleTermsClicked() => await browser_.OpenAsync("https://www.fitedit.io/support/user-agent-terms.html");
@@ -396,7 +396,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 
     if (!signedIn)
     {
-      tasks_.NotifyUser("There was a problem signing in to Strava", autoDismiss: true);
+      notifier_.NotifyUser("There was a problem signing in to Strava", autoDismiss: true);
       return;
     }
 
@@ -423,7 +423,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
       settings.StravaCookies = Strava.Cookies;
     });
     
-    tasks_.NotifyUser("Signed out of Strava", autoDismiss: true);
+    notifier_.NotifyUser("Signed out of Strava", autoDismiss: true);
   }
 
   public void HandleSyncNowClicked() => _ = Task.Run(FitEdit.Sync);

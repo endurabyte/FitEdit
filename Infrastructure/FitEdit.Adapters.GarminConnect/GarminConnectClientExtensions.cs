@@ -15,12 +15,12 @@ public static class GarminConnectClientExtensions
   /// <para/>
   /// Does not include the FIT files. That must be downloaded separately.
   /// </summary>
-  public static async Task<List<GarminActivity>> GetAllActivitiesAsync(this IGarminConnectClient garmin, UserTask task)
+  public static async Task<List<GarminActivity>> GetAllActivitiesAsync(this IGarminConnectClient garmin, NotifyBubble bubble)
   {
     // Get total count of activities to download, and get the year of the earliest activity e.g.
     // It will be Jan 1 e.g. 2015-01-01 even though my earliest activity is 2015-03-21.
-    GarminFitnessStats? lifetimeStats = await garmin.GetLifetimeFitnessStats(task.CancellationToken);
-    List<GarminFitnessStats>? annualStats = (await garmin.GetYearyFitnessStats(task.CancellationToken))
+    GarminFitnessStats? lifetimeStats = await garmin.GetLifetimeFitnessStats(bubble.CancellationToken);
+    List<GarminFitnessStats>? annualStats = (await garmin.GetYearyFitnessStats(bubble.CancellationToken))
       ?.OrderByDescending(year => year.CountOfActivities)
       ?.ToList();
 
@@ -33,18 +33,18 @@ public static class GarminConnectClientExtensions
     long total = lifetimeStats?.CountOfActivities ?? -1;
 
     string totalStr = $"{(total < 0 ? "all" : $"{total}")}";
-    task.Status = $"Listing {totalStr} activities on Garmin...";
+    bubble.Status = $"Listing {totalStr} activities on Garmin...";
 
     //IDictionary<long, GarminActivity> all = await garmin.ListSerially(task, earliestYear, total);
-    IDictionary<long, GarminActivity> all = await garmin.ListInParallel(task, earliestYear, total);
+    IDictionary<long, GarminActivity> all = await garmin.ListInParallel(bubble, earliestYear, total);
 
     List<GarminActivity> result = all.Values.OrderByDescending(act => act.GetStartTime()).ToList();
-    task.Status = $"Found {result.Count} Garmin activities going back to {result.LastOrDefault()?.GetStartTime()} ";
+    bubble.Status = $"Found {result.Count} Garmin activities going back to {result.LastOrDefault()?.GetStartTime()} ";
 
     return result;
   }
 
-  private static async Task<IDictionary<long, GarminActivity>> ListInParallel(this IGarminConnectClient garmin, UserTask task, DateTime earliestYear, long total, int chunkSize = 500)
+  private static async Task<IDictionary<long, GarminActivity>> ListInParallel(this IGarminConnectClient garmin, NotifyBubble bubble, DateTime earliestYear, long total, int chunkSize = 500)
   {
     ConcurrentDictionary<long, GarminActivity> all = new();
 
@@ -64,10 +64,10 @@ public static class GarminConnectClientExtensions
 
         if (some.Any())
         {
-          task.Status = GetStatus(total, all);
+          bubble.Status = GetStatus(total, all);
         }
 
-      } while (!task.IsCanceled && some.Any());
+      } while (!bubble.IsCanceled && some.Any());
     });
 
     return all;
@@ -109,7 +109,7 @@ public static class GarminConnectClientExtensions
       .ToList();
   }
 
-  private static async Task<IDictionary<long, GarminActivity>> ListSerially(this IGarminConnectClient garmin, UserTask task, DateTime earliestYear, long total, int chunkSize = 500)
+  private static async Task<IDictionary<long, GarminActivity>> ListSerially(this IGarminConnectClient garmin, NotifyBubble bubble, DateTime earliestYear, long total, int chunkSize = 500)
   { 
     Dictionary<long, GarminActivity> all = new();
 
@@ -118,13 +118,13 @@ public static class GarminConnectClientExtensions
     DateTime before = new(DateTime.Today.Year, 12, 31);
     DateTime after = before.AddYears(-1);
 
-    while (!task.IsCanceled && before > earliestYear)
+    while (!bubble.IsCanceled && before > earliestYear)
     {
       List<GarminActivity> some = await garmin.LoadActivities(chunkSize, chunk * chunkSize, after, before);
       all.AddRange(some.Select(a => (a.ActivityId, a)));
       chunk++;
 
-      task.Status = GetStatus(total, all);
+      bubble.Status = GetStatus(total, all);
 
       if (some.Count < chunkSize)
       {
@@ -147,13 +147,13 @@ public static class GarminConnectClientExtensions
   /// Download the given FIT files in parallel. Rate limit so we don't get blocked.
   /// For each file, call the given function to persist (save) the file.
   /// </summary>
-  public static async Task DownloadInParallelAsync(this IGarminConnectClient garmin, UserTask task, List<(long, LocalActivity)> mapped, Func<LocalActivity, Task> persist)
+  public static async Task DownloadInParallelAsync(this IGarminConnectClient garmin, NotifyBubble bubble, List<(long, LocalActivity)> mapped, Func<LocalActivity, Task> persist)
   {
     var workInterval = TimeSpan.FromSeconds(10);
     var restInterval = TimeSpan.FromSeconds(10);
     var start = DateTime.UtcNow;
 
-    task.Status = $"Downloading {mapped.Count} activities...";
+    bubble.Status = $"Downloading {mapped.Count} activities...";
 
     int i = 0;
     await Parallel.ForEachAsync(mapped, async ((long activityId, LocalActivity la) tup, CancellationToken ct) =>
@@ -166,7 +166,7 @@ public static class GarminConnectClientExtensions
 
       byte[] bytes = await garmin.DownloadActivityFile(tup.activityId, ActivityFileType.Fit);
       Interlocked.Increment(ref i);
-      task.Status = $"{(double)i / mapped.Count * 100:#.#}% ({i} of {mapped.Count}) - Downloaded activity \"{tup.la.Name}\" ({tup.activityId})";
+      bubble.Status = $"{(double)i / mapped.Count * 100:#.#}% ({i} of {mapped.Count}) - Downloaded activity \"{tup.la.Name}\" ({tup.activityId})";
 
       var fr = new FileReference("garmin-export.fit", bytes);
       List<FileReference> files = Zip.Unzip(fr);
