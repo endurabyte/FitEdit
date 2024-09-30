@@ -5,7 +5,7 @@
              xmlns:converters="using:FitEdit.Ui.Converters"
              xmlns:vm="clr-namespace:FitEdit.Ui.ViewModels"
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
-             x:Class="FitEdit.Ui.DeviceFileImportView"
+             x:Class="FitEdit.Ui.Views.DeviceFileImportView"
              x:DataType="vm:DeviceFileImportViewModel">
 
   <Design.DataContext>
