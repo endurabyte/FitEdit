@@ -10,7 +10,7 @@ public interface IMtpAdapter
   void GetFiles(PortableDevice dev, TimeSpan howFarBack = default);
 }
 
-public class FakeMtpAdapter
+public class FakeMtpAdapter : IMtpAdapter
 {
   private readonly IEventService events_;
 

@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using FitEdit.Model;
 using FitEdit.Model.Services;
 using FitEdit.Model.Storage;
+using FitEdit.Services;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -10,12 +11,11 @@ namespace FitEdit.Ui.ViewModels;
 
 public class DesignDeviceFileImportViewModel : DeviceFileImportViewModel
 {
-  public DesignDeviceFileImportViewModel(
-    IMtpAdapter mtp,
-    IEventService events,
-    PortableDevice dev,
-    UserTask ut) 
-    : base (mtp, events, dev, ut)
+  public DesignDeviceFileImportViewModel() : base(
+      new FakeMtpAdapter(new EventService()), 
+      new EventService(), 
+      new PortableDevice("FakeDevice", "0x1234"), 
+      new UserTask { Header = "FakeUserTask" })
   {
     Activities.Add(new LocalActivity
     {
