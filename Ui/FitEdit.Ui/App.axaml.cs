@@ -33,10 +33,12 @@ public partial class App : Application
     Root.RegisterModule(new FitEditModule(ApplicationLifetime, Root.Config));
     Root.RegisterModule(new UiModule(isMobile));
 
-    object? dataContext = Root
+    object dataContext = Root
       .Build()
       .Get<IMainViewModel>();
 
+    DataContext = dataContext;
+    
     if (isDesktop)
     {
       desktop!.MainWindow = new MainWindow
