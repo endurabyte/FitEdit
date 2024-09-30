@@ -28,7 +28,7 @@
 
       <Grid.Effect>
         <MultiBinding Converter="{StaticResource AnyBooleanTrueToBlurEffectConverter}">
-          <Binding Path="TaskViewModel.IsVisible"/>
+          <Binding Path="NotifyViewModel.IsVisible"/>
         </MultiBinding>
       </Grid.Effect>
 
@@ -74,7 +74,7 @@
       </Grid>
     </Grid>
 
-    <ContentControl Content="{Binding TaskViewModel}" IsVisible="{Binding TaskViewModel.IsVisible}"/>
+    <ContentControl Content="{Binding NotifyViewModel}" IsVisible="{Binding NotifyViewModel.IsVisible}"/>
 
   </Grid>
 

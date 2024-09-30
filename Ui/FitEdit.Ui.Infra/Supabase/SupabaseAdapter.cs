@@ -27,7 +27,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
   private readonly IDatabaseAdapter db_;
   private readonly IPhoneValidator phoneValidator_;
   private readonly IEmailValidator emailValidator_;
-  private readonly ITaskService tasks_;
+  private readonly INotifyService notifier_;
 
   [Reactive] public bool IsConnected { get; private set; }
   [Reactive] public bool IsAuthenticated { get; private set; }
@@ -52,7 +52,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     IDatabaseAdapter db,
     IPhoneValidator phoneValidator,
     IEmailValidator emailValidator,
-    ITaskService tasks,
+    INotifyService notifier,
     string url,
     string key)
   {
@@ -61,7 +61,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     db_ = db;
     phoneValidator_ = phoneValidator;
     emailValidator_ = emailValidator;
-    tasks_ = tasks;
+    notifier_ = notifier;
     var persistence = new SessionPersistence(db);
 
     client_ = new global::Supabase.Client(url, key, new SupabaseOptions
@@ -526,11 +526,11 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     int limit = 1000;
 
     var allActivities = new List<Activity>();
-    var task = new UserTask { Header = "Syncing from Server..." };
+    var bubble = new NotifyBubble { Header = "Syncing from Server..." };
 
     if (userRequested)
     {
-      tasks_.Add(task);
+      notifier_.Add(bubble);
     }
 
     while (true)
@@ -544,7 +544,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
         .Get()
         .AnyContext();
       page++;
-      task.Status = $"Querying for activities. Found {allActivities.Count}";
+      bubble.Status = $"Querying for activities. Found {allActivities.Count}";
 
       if (!activities.Models.Any()) { break; }
       allActivities.AddRange(activities.Models);
@@ -556,25 +556,25 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     {
       Dispatcher.UIThread.Invoke(() =>
       {
-        task.Status = $"{(double)i / allActivities.Count * 100:#.#}% ({i} of {allActivities.Count}) Syncing '{activity.Name}'";
+        bubble.Status = $"{(double)i / allActivities.Count * 100:#.#}% ({i} of {allActivities.Count}) Syncing '{activity.Name}'";
       });
 
       Interlocked.Increment(ref i);
       await HandleActivityAddedOrUpdated(activity).AnyContext();
     });
 
-    task.Status = i switch
+    bubble.Status = i switch
     {
       0 => $"Already in sync!",
       1 => $"Synced 1 activity",
       _ => $"Synced {i} activities",
     };
 
-    task.IsComplete = true;
+    bubble.IsComplete = true;
 
     if (i == 0)
     {
-      task.IsCanceled = true; // Notification will auto-dismiss
+      bubble.IsCanceled = true; // Notification will auto-dismiss
     }
   }
 
@@ -632,7 +632,7 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     }
     catch (HttpRequestException)
     {
-      tasks_.NotifyUser("Error", "Could reach the server to delete the file.");
+      notifier_.NotifyUser("Error", "Could reach the server to delete the file.");
     }
 
     if (Authorization?.Sub is null) { return false; }

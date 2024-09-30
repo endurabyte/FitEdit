@@ -43,7 +43,7 @@ public class DesignFileViewModel : FileViewModel
 
   public DesignFileViewModel() : base(
     events_,
-    new DesignTaskService(),
+    new DesignNotifyService(),
     new NullFileService(),
     new NullFitEditService(),
     new NullGarminConnectClient(),
@@ -100,7 +100,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   public IGarminConnectClient Garmin { get; }
   public IStravaClient Strava { get; }
 
-  private readonly ITaskService tasks_;
+  private readonly INotifyService notifier_;
   private readonly IEventService events_;
   private readonly IStorageAdapter storage_;
   private readonly ISupabaseAdapter supa_;
@@ -111,7 +111,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public FileViewModel(
     IEventService events,
-    ITaskService tasks,
+    INotifyService notifier,
     IFileService fileService,
     IFitEditService fitEdit,
     IGarminConnectClient garmin,
@@ -127,7 +127,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     DragViewModel dragViewModel
   )
   {
-    tasks_ = tasks;
+    notifier_ = notifier;
     FileService = fileService;
     FitEdit = fitEdit;
     Garmin = garmin;
@@ -151,7 +151,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       SubscribeChanges(file);
     }
 
-    events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => tasks_.NotifyUser(
+    events_.Subscribe<PortableDevice>(EventKey.MtpDeviceAdded, dev => notifier_.NotifyUser(
         $"Found device {dev.Name} ({dev.Id})", 
         "Search for activities?",
         () => DownloadActivitiesAsync(dev)));
@@ -161,22 +161,22 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private void DownloadActivitiesAsync(PortableDevice dev)
   {
-    UserTask ut = tasks_.NotifyUser($"Searching '{dev.Name}' for activities...");
-    ut.CanCancel = false;
+    NotifyBubble bubble = notifier_.NotifyUser($"Searching '{dev.Name}' for activities...");
+    bubble.CanCancel = false;
 
-    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, ut);
-    Dispatcher.UIThread.Invoke(() => ut.Content = new Views.DeviceFileImportView() { DataContext = vm });
+    var vm = new DeviceFileImportViewModel(mtp_, events_, dev, bubble);
+    Dispatcher.UIThread.Invoke(() => bubble.Content = new Views.DeviceFileImportView() { DataContext = vm });
 
-    ut.Header = $"Importing activities from '{dev.Name}'";
+    bubble.Header = $"Importing activities from '{dev.Name}'";
 
-    ut.NextAction = async () =>
+    bubble.NextAction = async () =>
     {
       foreach (LocalActivity activity in vm.SelectedActivities)
       {
         await Persist(activity);
       }
 
-      ut.Status = vm.SelectedActivities.Count switch
+      bubble.Status = vm.SelectedActivities.Count switch
       {
         1 => $"✓ Imported 1 activity",
         _ => $"✓ Imported {vm.SelectedActivities.Count} activities",
@@ -738,75 +738,75 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   private async Task SyncFromGarminAsync()
   {
-    var task = new UserTask { Header = "Syncing from Garmin..." };
-    tasks_.Add(task);
+    var bubble = new NotifyBubble { Header = "Syncing from Garmin..." };
+    notifier_.Add(bubble);
 
-    List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync(task);
+    List<GarminActivity> activities = await Garmin.GetAllActivitiesAsync(bubble);
 
-    if (task.IsCanceled) { return; }
+    if (bubble.IsCanceled) { return; }
 
     List<(GarminActivity, string id, string name, DateTime)> byTimestamp = activities
       .Select(a => (a, $"{a.ActivityId}", a.ActivityName ?? "", a.GetStartTime()))
       .ToList();
 
-    IEnumerable<(GarminActivity, LocalActivity?)> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
+    IEnumerable<(GarminActivity, LocalActivity?)> filtered = await FileService.FilterExistingAsync(bubble, byTimestamp);
     List<(long, LocalActivity)> mapped = filtered
       .Select(MapLocalActivity)
       .ToList();
 
-    if (task.IsCanceled) { return; }
+    if (bubble.IsCanceled) { return; }
 
-    await Garmin.DownloadInParallelAsync(task, mapped, Persist);
+    await Garmin.DownloadInParallelAsync(bubble, mapped, Persist);
 
-    task.Status = mapped.Count switch
+    bubble.Status = mapped.Count switch
     {
       0 => "No new activities from Garmin",
       1 => $"Downloaded 1 new activity from Garmin",
       _ => $"Downloaded {mapped.Count} new activities from Garmin",
     };
 
-    task.IsComplete = true;
+    bubble.IsComplete = true;
   }
 
   public void HandleSyncFromStravaClicked() => _ = Task.Run(SyncFromStravaAsync);
 
   private void SyncFromStravaAsync()
   {
-    var task = new UserTask { Header = "Syncing from Strava..." };
-    tasks_.Add(task);
-    task.Status = "Continue?";
+    var bubble = new NotifyBubble { Header = "Syncing from Strava..." };
+    notifier_.Add(bubble);
+    bubble.Status = "Continue?";
 
-    task.IsConfirmed = false;
-    task.NextAction = async () =>
+    bubble.IsConfirmed = false;
+    bubble.NextAction = async () =>
     {
       try
       {
-        task.Status = "Getting list of activities from Strava";
-        List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(task, task.CancellationToken);
+        bubble.Status = "Getting list of activities from Strava";
+        List<StravaActivity> activities = await Strava.ListAllActivitiesAsync(bubble, bubble.CancellationToken);
 
-        if (task.IsCanceled) { return; }
+        if (bubble.IsCanceled) { return; }
 
         List<(StravaActivity, string id, string name, DateTime)> byTimestamp = activities
           .Select(a => (a, $"{a.Id}", a.Name ?? "", a.GetStartTime()))
           .ToList();
 
-        IEnumerable<(StravaActivity, LocalActivity?)> filtered = await FileService.FilterExistingAsync(task, byTimestamp);
+        IEnumerable<(StravaActivity, LocalActivity?)> filtered = await FileService.FilterExistingAsync(bubble, byTimestamp);
         List<(long id, LocalActivity activity)> mapped = filtered
           .Select(MapLocalActivity)
           .ToList();
 
-        if (task.IsCanceled) { return; }
+        if (bubble.IsCanceled) { return; }
 
-        await Strava.DownloadInParallelAsync(task, mapped, Persist);
+        await Strava.DownloadInParallelAsync(bubble, mapped, Persist);
 
-        task.Status = mapped.Count switch
+        bubble.Status = mapped.Count switch
         {
           0 => "No new activities from Strava",
           1 => $"Downloaded 1 new activity from Strava",
           _ => $"Downloaded {mapped.Count} new activities from Strava",
         };
 
-        task.IsComplete = true;
+        bubble.IsComplete = true;
       }
       catch (TaskCanceledException)
       {
