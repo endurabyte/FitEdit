@@ -36,7 +36,7 @@
         </Grid.Effect>
 
         <TabControl x:Name="MainTabControl" Grid.Row="0" TabStripPlacement="Top" SelectedIndex="{Binding SelectedTabIndex}">
-          <TabItem Header="File" FontSize="12">
+          <TabItem Header="Activities" FontSize="12">
             <views:FileView DataContext="{Binding File}"/>
           </TabItem>
           <TabItem Header="Laps" FontSize="12">
