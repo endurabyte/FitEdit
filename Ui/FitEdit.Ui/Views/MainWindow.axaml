@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:ui="clr-namespace:FitEdit.Ui"
         xmlns:views="clr-namespace:FitEdit.Ui.Views"
         xmlns:vm="using:FitEdit.Ui.ViewModels"
@@ -13,7 +14,7 @@
 
   <NativeMenu.Menu>
     <NativeMenu>
-      <NativeMenuItem Header="File">
+      <NativeMenuItem Header="_File">
         <NativeMenuItem.Menu>
           <NativeMenu>
             <NativeMenuItem Header="Import"
@@ -29,6 +30,41 @@
 
           </NativeMenu>
         </NativeMenuItem.Menu>
+      </NativeMenuItem>
+      <NativeMenuItem Header="_Edit">
+        <NativeMenu>
+          <NativeMenuItem 
+                    IsVisible="{Binding File.CanLoad}"
+                    Command="{Binding File.LoadOrUnload}"
+                    CommandParameter="{Binding File.SelectedFile}">
+            <NativeMenuItem.Header>
+              <MultiBinding StringFormat="Load {0}">
+                <Binding Path="File.SelectedFile.Activity.Name" />
+              </MultiBinding>
+            </NativeMenuItem.Header>
+          </NativeMenuItem>
+          
+          <NativeMenuItem
+                    IsVisible="{Binding File.CanCancelLoad}"
+                    Command="{Binding File.CancelLoad}">
+            <NativeMenuItem.Header>
+              <MultiBinding StringFormat="Cancel loading {0}">
+                <Binding Path="File.SelectedFile.Activity.Name" />
+              </MultiBinding>
+            </NativeMenuItem.Header>
+          </NativeMenuItem>
+          
+          <NativeMenuItem
+                    IsVisible="{Binding File.CanUnload}"
+                    Command="{Binding File.LoadOrUnload}"
+                    CommandParameter="{Binding File.SelectedFile}">
+            <NativeMenuItem.Header>
+              <MultiBinding StringFormat="Unload {0}">
+                <Binding Path="File.SelectedFile.Activity.Name" />
+              </MultiBinding>
+            </NativeMenuItem.Header>
+          </NativeMenuItem>
+        </NativeMenu>
       </NativeMenuItem>
     </NativeMenu>
   </NativeMenu.Menu>

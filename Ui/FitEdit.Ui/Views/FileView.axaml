@@ -55,18 +55,6 @@
         <MenuItem Header="Selection"
                   IsEnabled="{Binding SelectedFile, Converter={x:Static ObjectConverters.IsNotNull}}">
 
-          <MenuItem Header="_Load"
-                    IsVisible="{Binding !SelectedFile.IsLoaded}"
-                    IsEnabled="{Binding SelectedFile.Activity.File, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    Command="{Binding LoadOrUnload}"
-                    CommandParameter="{Binding SelectedFile}"
-                    ToolTip.Tip="Load the file"/>
-          <MenuItem Header="Unload"
-                    IsVisible="{Binding SelectedFile.IsLoaded}"
-                    Command="{Binding LoadOrUnload}"
-                    CommandParameter="{Binding SelectedFile}"
-                    ToolTip.Tip="Unload the file"/>
-
           <MenuItem Header="Add missing file"
               Command="{Binding HandleActivityImportClicked}"
               CommandParameter="{Binding SelectedFile.Activity}"
