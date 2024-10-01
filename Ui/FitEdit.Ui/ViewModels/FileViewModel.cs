@@ -443,18 +443,18 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public void LoadOrUnload(UiFile uif)
   {
-    if (uif.IsLoading)
-    {
-      CancelLoad();
-      return;
-    }
-    
     if (uif.IsLoaded)
     {
       UnloadFile(uif);
       return;
     }
 
+    if (uif.IsLoading)
+    {
+      CancelLoad();
+      return;
+    }
+    
     _ = Task.Run(async () => await LoadFile(uif, _cancelLoadCts.Token).AnyContext());
   }
 
