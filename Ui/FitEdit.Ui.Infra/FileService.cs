@@ -1,13 +1,10 @@
 ﻿using System.Collections.ObjectModel;
-using System.Reactive.Subjects;
-using Avalonia.Threading;
 using FitEdit.Data;
 using FitEdit.Data.Fit;
 using FitEdit.Model;
 using FitEdit.Model.Data;
 using FitEdit.Model.Extensions;
 using FitEdit.Services;
-using DynamicData;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 

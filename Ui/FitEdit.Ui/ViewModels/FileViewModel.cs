@@ -32,6 +32,10 @@ public interface IFileViewModel
   /// </summary>
   double ScrollPercent { get; set; }
   bool IsDragActive { set; }
+  
+  bool CanLoad { get; }
+  bool CanUnload { get; }
+  bool CanCancelLoad { get; }
 
   public UiFile? SelectedFile { get; set; }
   
@@ -41,6 +45,7 @@ public interface IFileViewModel
   
   void HandleFileDropped(IStorageFile? file);
   void LoadOrUnload(UiFile uif);
+  void CancelLoad();
 }
 
 public class DesignFileViewModel : FileViewModel
@@ -78,6 +83,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   [Reactive] public FileRemoteDeleteViewModel FileRemoteDeleteViewModel { get; set; }
   [Reactive] public ViewModelBase DragViewModel { get; set; }
 
+  [Reactive] public bool CanLoad { get; set; }
+  [Reactive] public bool CanUnload { get; set; }
+  [Reactive] public bool CanCancelLoad { get; set; } 
+  
   /// <summary>
   /// Load more (older) items into the file list if the user scrolls this percentage to the bottom
   /// </summary>
@@ -115,6 +124,10 @@ public class FileViewModel : ViewModelBase, IFileViewModel
   private readonly ILogViewModel log_;
   private readonly IBrowser browser_;
 
+  private IDisposable? isLoadedSub_;
+  private IDisposable? isLoadingSub_;
+  private CancellationTokenSource _cancelLoadCts = new();
+    
   public FileViewModel(
     IEventService events,
     INotifyService notifier,
@@ -162,8 +175,42 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         "Search for activities?",
         () => DownloadActivitiesAsync(dev)));
 
+    SubscribeSelectedFile();
+    
     _ = Task.Run(mtp_.Scan);
   }
+
+  private void SubscribeSelectedFile()
+  {
+    this.ObservableForProperty(x => x.SelectedFile)
+      .Subscribe(x =>
+      {
+        isLoadedSub_?.Dispose();
+        isLoadedSub_ = x.Value.ObservableForProperty(y => y.IsLoaded)
+          .Subscribe(_ =>
+          {
+            SetCanLoad();
+            SetCanUnload();
+            SetCanCancelLoad();
+          });
+        
+        isLoadingSub_?.Dispose();
+        isLoadingSub_ = x.Value.ObservableForProperty(y => y.IsLoading)
+          .Subscribe(_ =>
+          {
+            SetCanLoad();
+            SetCanCancelLoad();
+          });
+        
+        SetCanLoad();
+        SetCanUnload();
+        SetCanCancelLoad();
+      });
+  }
+
+  private void SetCanLoad() => CanLoad = SelectedFile?.Activity?.File is not null && !SelectedFile.IsLoaded && !SelectedFile.IsLoading;
+  private void SetCanUnload() => CanUnload = SelectedFile?.Activity?.File is not null && SelectedFile.IsLoaded;
+  private void SetCanCancelLoad() => CanCancelLoad = SelectedFile?.Activity?.File is not null && !SelectedFile.IsLoaded && SelectedFile.IsLoading;
 
   private void DownloadActivitiesAsync(PortableDevice dev)
   {
@@ -396,13 +443,19 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public void LoadOrUnload(UiFile uif)
   {
-    if (!uif.IsLoaded)
+    if (uif.IsLoading)
     {
-      _ = Task.Run(async () => await LoadFile(uif).AnyContext());
+      CancelLoad();
+      return;
+    }
+    
+    if (uif.IsLoaded)
+    {
+      UnloadFile(uif);
       return;
     }
 
-    UnloadFile(uif);
+    _ = Task.Run(async () => await LoadFile(uif, _cancelLoadCts.Token).AnyContext());
   }
 
   private void UnloadFile(UiFile? uif)
@@ -413,7 +466,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     FileService.MainFile = null;
   }
 
-  private async Task LoadFile(UiFile? uif)
+  private async Task LoadFile(UiFile? uif, CancellationToken ct)
   {
     if (uif == null || uif.Activity == null || uif.Activity.File == null)
     {
@@ -436,7 +489,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       Log.Info($"Got file {file.Name} ({file.Bytes.Length} bytes)");
 
       // Handle FIT files
-      string extension = Path.GetExtension(file.Name);
+      //string extension = Path.GetExtension(file.Name);
 
       //if (extension.ToLower() != ".fit")
       //{
@@ -465,6 +518,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
         var lastResult = DecodeResult.Init;
         while (!lastResult.IsAnyOf(DecodeResult.ErrEndOfStream, DecodeResult.OkEndOfFile))
         {
+          if (ct.IsCancellationRequested)
+          {
+            uif.Progress = 0;
+            return;
+          }
+          
           lastResult = await Reader.ReadSomeAsync(ms, decoder, 100);
 
           if (ms.Position - lastPosition < resolution)
@@ -510,6 +569,12 @@ public class FileViewModel : ViewModelBase, IFileViewModel
     }
   }
 
+  public void CancelLoad()
+  {
+    _cancelLoadCts.Cancel();
+    _cancelLoadCts = new();
+  }
+  
   public async Task HandleExportClicked(UiFile uif)
   {
     int index = FileService.Files.IndexOf(uif);
@@ -611,7 +676,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       UiFile? uif = await Persist(fileRef);
       if (uif == null) { return; }
 
-      await LoadFile(uif);
+      await LoadFile(uif, _cancelLoadCts.Token);
     });
   }
 
