@@ -8,7 +8,7 @@ jobs:
   Build:
     name: Windows Installer
       #runs-on: windows-latest
-    runs-on: fractal
+    runs-on: m2mini-win11
     defaults:
       run:
         # ./ is the repo root
