@@ -1,21 +1,23 @@
 name: Linux
 on: 
-  push:
-    branches: [ main ]
-    paths:
+  workflow_dispatch:
+  pull_request:
+    types: ['opened', 'reopened', 'synchronize', 'ready_for_review']
+    paths: 
       - '**'
+
 jobs:
   Build:
     name: Build for Linux
-      #runs-on: ubuntu-latest
-    runs-on: m2mini-win11
+    runs-on: ubuntu-latest
+    #runs-on: m2mini-win11
     defaults:
       run:
         # ./ is the repo root
         working-directory: ./
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
       - run: pwsh ./make.ps1
