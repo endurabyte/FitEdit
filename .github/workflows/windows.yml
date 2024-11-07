@@ -5,7 +5,7 @@ on:
     types: ['opened', 'reopened', 'synchronize', 'ready_for_review']
     paths: 
       - '**'
-- 
+ 
 jobs:
   Build:
     name: Windows Installer
