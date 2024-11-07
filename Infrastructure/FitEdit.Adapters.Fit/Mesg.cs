@@ -128,6 +128,13 @@ namespace Dynastream.Fit
       {
         bool read = true;
 
+        // Skip duplicate fields 
+        if (FieldsByNum.TryGetValue(fieldDef.Num, out var value) && value.GetNumValues() > 0)
+        {
+          mesgReader.ReadBytes(fieldDef.Size);
+          continue;
+        }
+
         // It's possible the field type found in the field definition may
         // not agree with the type defined in the profile.  The profile
         // type will be preferred for decode.

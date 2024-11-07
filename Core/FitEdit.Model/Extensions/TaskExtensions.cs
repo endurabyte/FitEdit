@@ -19,6 +19,8 @@ public static class TaskExtensions
   /// </summary>
   public static Task AnyContext(this Task t) => t.WithContext(AsyncContext.Any);
 
+  public static Task<T> AsTask<T>(this T t) => Task.FromResult(t);
+
   /// <summary>
   /// Shorthand for ConfigureAwait(false)
   /// </summary>
