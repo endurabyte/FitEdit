@@ -1,9 +1,11 @@
 name: Windows
 on: 
-  push:
-    branches: [ main ]
-    paths:
+  workflow_dispatch:
+  pull_request:
+    types: ['opened', 'reopened', 'synchronize', 'ready_for_review']
+    paths: 
       - '**'
+ 
 jobs:
   Build:
     name: Windows Installer
@@ -14,8 +16,8 @@ jobs:
         # ./ is the repo root
         working-directory: ./
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-dotnet@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
       - run: pwsh ./make.ps1
@@ -23,6 +25,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          FITEDIT_RELEASES_S3_BUCKET: ${{ secrets.FITEDIT_RELEASES_S3_BUCKET }}
+          FITEDIT_STAGE_S3_BUCKET: ${{ secrets.FITEDIT_STAGE_S3_BUCKET }}
           ENDURABYTE_WINDOWS_CODE_SIGN_CERTIFICATE: ${{ secrets.ENDURABYTE_WINDOWS_CODE_SIGN_CERTIFICATE }}
           FITEDIT_PLATFORM: WINDOWS
