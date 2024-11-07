@@ -34,31 +34,26 @@ public class WriteMethod
   }
 
   [Fact]
-  public async Task PreservesBytesOnDisk()
+  public async Task PreservesBytes()
   {
     var bytes = File.ReadAllBytes(source_);
 
     var ms1 = new MemoryStream(bytes);
-    var ms2 = new MemoryStream();
 
-    var fitFile = await new Reader().ReadAsync(ms1);
-    new Writer().Write(fitFile, ms2);
+    var fitFiles = await new Reader().ReadAsync(ms1);
 
-    FitAssert.AreEquivalentExceptHeader(ms2, bytes);
-  }
+    // Assert each FIT file is equal to the original
+    long byteIndex = 0;
+    foreach (int i in Enumerable.Range(0, fitFiles.Count))
+    {
+      var ms2 = new MemoryStream();
+      new Writer().Write(fitFiles[i], ms2);
 
-  /// <summary>
-  /// Assumes only one FIT file in the stream
-  /// </summary>
-  /// <returns></returns>
-  [Fact]
-  public async Task PreservesBytesInMemory()
-  {
-    var fitFiles = await new Reader().ReadAsync(source_);
-    var ms = new MemoryStream();
-    new Writer().Write(fitFiles, ms);
+      byte[] thisFileOnly = bytes.Skip((int)byteIndex).Take((int)ms2.Length).ToArray();
+      FitAssert.AreEquivalentExceptHeader(ms2, thisFileOnly);
 
-    FitAssert.AreEquivalentExceptHeader(ms, fitFiles.FirstOrDefault().GetBytes());
+      byteIndex += ms2.Length;
+    }
   }
 
   [Fact]

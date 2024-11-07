@@ -268,7 +268,7 @@ public static class FieldTools
     {
       object toAdd = type switch
       {
-        Fit.String => FitEdit.Adapters.Fit.Extensions.FieldTools.PadString(expectedSize - actualSize, values),
+        Fit.String => PadString(expectedSize - actualSize, values),
         _ => FitTypes.GetInvalidValue(type),
       };
 

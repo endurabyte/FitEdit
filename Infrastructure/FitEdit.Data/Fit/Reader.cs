@@ -87,11 +87,11 @@ public class Reader
     fits = [];
     var fitsTemp = new List<FitFile>();
     var tmp = new FitFile();
+    fitsTemp.Add(tmp);
 
     decoder.FitFileRead += () =>
     {
       Log.Debug($"Read FIT file with {tmp.Events.Count} messages");
-      fitsTemp.Add(tmp);
       tmp = new FitFile();
     };
 

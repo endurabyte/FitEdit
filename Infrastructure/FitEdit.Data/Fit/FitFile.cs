@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Dynastream.Fit;
 
 namespace FitEdit.Data.Fit
@@ -19,6 +20,7 @@ namespace FitEdit.Data.Fit
     /// </summary>
     public Dictionary<int, List<Mesg>> MessagesByDefinition { get; set; } = new();
 
+    [JsonIgnore]
     public IReadOnlyList<Mesg> Messages => MessagesByDefinition.SelectMany(kvp => kvp.Value).ToList();
 
     /// <summary>
