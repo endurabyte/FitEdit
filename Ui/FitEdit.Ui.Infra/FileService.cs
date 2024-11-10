@@ -191,15 +191,15 @@ public class FileService : ReactiveObject, IFileService
 
   public async Task LoadMore()
   {
-    DateTime oldest = Files
+    var files = Files.ToDictionary(file => file.Activity?.Id ?? "", file => file);
+
+    var dates = Files
+      .Where(f => f?.Activity?.StartTime > new DateTime())
       .Select(f => f?.Activity?.StartTime ?? DateTime.UtcNow)
       .OrderBy(d => d)
-      .FirstOrDefault();
+      .ToList();
 
-    if (oldest == default)
-    {
-      oldest = DateTime.UtcNow;
-    }
+    DateTime oldest = dates.FirstOrDefault();
 
     var backfill = TimeSpan.FromDays(7);
     var backfillLimit = TimeSpan.FromDays(365 * 10); // 10 years
@@ -208,18 +208,20 @@ public class FileService : ReactiveObject, IFileService
     List<LocalActivity> more = new();
 
     // While no results found, keep looking further into the past until we get a result or hit the limit
-    while (more.Count < limit && backfill < backfillLimit)
+    while (more.Count < limit && backfill < backfillLimit && oldest > new DateTime() + backfill)
     {
       more = await GetAllActivitiesAsync(oldest - backfill, oldest, limit);
       backfill *= 2;
     }
 
     // If we still didn't get any, try activities with the default Datetime e.g. 0001-01-01T00:00
-    if (more.Count < limit)
+    if (more.Count == 0)
     {
       more = await GetAllActivitiesAsync(new DateTime(), DateTime.UtcNow, limit);
     }
-    
+  
+    // Only add files we don't already have
+    more = more.Where(more => !files.ContainsKey(more.Id)).ToList();
     more.Sort((a1, a2) => a2.StartTime.CompareTo(a1.StartTime));
 
     foreach (LocalActivity activity in more)

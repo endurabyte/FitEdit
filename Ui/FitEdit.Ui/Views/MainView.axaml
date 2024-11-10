@@ -39,9 +39,11 @@
           <TabItem Header="Activities" FontSize="12">
             <views:FileView DataContext="{Binding File}"/>
           </TabItem>
-          <TabItem Header="Laps" FontSize="12">
+          <!-- TODO show only when it's a treadmill run. 
+               This tab is intended for editing treadmill lap distances. -->
+          <!--<TabItem Header="Laps" FontSize="12">
             <views:LapView DataContext="{Binding Laps}"/>
-          </TabItem>
+          </TabItem>-->
           <TabItem Header="Data" FontSize="12">
             <views:RecordView DataContext="{Binding Records}"/>
           </TabItem>
