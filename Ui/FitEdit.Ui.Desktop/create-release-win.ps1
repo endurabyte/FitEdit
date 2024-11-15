@@ -21,7 +21,7 @@ echo "Publishing..."
 dotnet publish FitEdit.Ui.Desktop.csproj --configuration $configuration --runtime $rid --framework $framework --output "./bin/Release/$framework/publish/$rid/" --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
 echo "Packing..."
-dotnet tool install -g csq --prerelease
+#dotnet tool install -g csq --prerelease
 csq pack --xplat=win --packId "FitEdit" --packAuthors $authors --packVersion $version --packDirectory "./bin/Release/$framework/publish/$rid" --icon "../FitEdit.Ui/Assets/logo.ico" --mainExe "FitEdit.exe" --releaseDir "./releases/$rid" --signParams="/f `"$certTmpPath`" /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com /csp `"SafeNet Smart Card Key Storage Provider`" /k $certKey" --noDelta
 
 Remove-Item -Path $certTmpPath
