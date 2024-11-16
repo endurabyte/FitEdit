@@ -45,7 +45,7 @@ iex -Command "security list-keychains -d user -s $tmpKeychainName ~/Library/Keyc
 echo "Unlocking temporary keychain..."
 iex -Command "security unlock-keychain -p $tmpKeychainPassword $tmpKeychainName"
 echo "Removing relock timeout..."
-iex -Command "security set-keychain-settings $tempKeychainName"
+iex -Command "security set-keychain-settings $tmpKeychainName"
 
 echo "Importing $appCertPath into keychain..."
 iex -Command "security import $appCertPath -k $tmpKeychainName -P $appCertPassword -A -T /usr/bin/codesign -T /usr/bin/productsign"
@@ -98,7 +98,7 @@ $output2 | Write-Output
 
 # Clean up
 echo "Removing temporary keychain..."
-iex -Command "security delete-keychain $tempKeychainName"
+iex -Command "security delete-keychain $tmpKeychainName"
 
 echo "Restoring default keychain..."
 iex -Command "security list-keychains -d user -s login.keychain"
