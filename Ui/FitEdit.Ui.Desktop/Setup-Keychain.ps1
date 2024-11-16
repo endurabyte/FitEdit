@@ -13,8 +13,8 @@ $installCertPath = "installer.p12"
 $appCert_base64 = $env:FITEDIT_MACOS_APP_CERT_P12_1 + $env:FITEDIT_MACOS_APP_CERT_P12_2
 $installCert_base64 = $env:FITEDIT_MACOS_INSTALL_CERT_P12_1 + $env:FITEDIT_MACOS_INSTALL_CERT_P12_2
 
-$appCertPassword = $env:MACOS_APP_CERT_P12_PW
-$installCertPassword = $env:MACOS_INSTALL_CERT_P12_PW
+$appCertPassword = $env:FITEDIT_MACOS_APP_CERT_P12_PW
+$installCertPassword = $env:FITEDIT_MACOS_INSTALL_CERT_P12_PW
 
 echo "Creating $appCertPath..."
 & ./Decode-FromBase64.ps1 $appCert_base64 $appCertPath
