@@ -33,7 +33,7 @@ vpk pack -y `
   --packDir "./bin/$configuration/$framework/publish/$rid/" `
   --icon "../FitEdit.Ui/Assets/logo.ico" `
   --mainExe "FitEdit.exe" `
-  --releaseDir "./Releases/$rid" `
+  --outputDir "./Releases/$rid" `
   --delta None `
   --signParams="/f `"$certTmpPath`" /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com /csp `"$csp`" /k $certKey"
 
