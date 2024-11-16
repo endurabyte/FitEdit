@@ -21,7 +21,7 @@ $tmpKeychainName = "fitedit.keychain"
 
 pushd $PSScriptRoot
 
-# Convert certs from base64 env vars to p12 files and import into kechain
+# Convert certs from base64 env vars to p12 files and import into kechain.
 # The base64 env vars are set in the GitHub actions secrets but they are too long to fit
 # on Windows where the limit is 4096 chars. So we split them into two env vars and concatenate.
 $appCert_base64 = $env:FITEDIT_MACOS_APP_CERT_P12_1 + $env:FITEDIT_MACOS_APP_CERT_P12_2
