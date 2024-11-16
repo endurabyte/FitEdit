@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
 using FitEdit.Ui.Infra;
+using Velopack;
 
 namespace FitEdit.Ui.Desktop;
 
@@ -12,11 +13,14 @@ internal class Program
   [STAThread]
   public static void Main(string[] args)
   {
+    VelopackApp.Build().Run();
+    
     App.Root = ConfigurationRoot.Bootstrap(new CompositionRoot());
     App.DidStart += root =>
     {
       var notifier = root.Get<INotifyService>();
-      new AutoUpdater(notifier).WatchForUpdates();
+      new SquirrelAutoUpdater(notifier).WatchForUpdates();
+      new VelopackAutoUpdater(notifier).WatchForUpdates();
     };
 
     BuildAvaloniaApp()

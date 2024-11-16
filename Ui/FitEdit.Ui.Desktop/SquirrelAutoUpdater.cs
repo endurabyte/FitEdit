@@ -1,20 +1,18 @@
 ﻿using System.Diagnostics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using FitEdit.Model;
 using FitEdit.Ui.Infra;
-using FitEdit.Ui.ViewModels;
 using NuGet.Versioning;
 using Squirrel;
 using Squirrel.SimpleSplat;
 
 namespace FitEdit.Ui.Desktop;
 
-public class AutoUpdater
+public class SquirrelAutoUpdater
 {
   private readonly INotifyService notifier_;
 
-  public AutoUpdater(INotifyService notifier)
+  public SquirrelAutoUpdater(INotifyService notifier)
   {
     notifier_ = notifier;
     
@@ -49,7 +47,7 @@ public class AutoUpdater
       return;
     }
 
-    if (System.Diagnostics.Debugger.IsAttached)
+    if (Debugger.IsAttached)
     {
       Log.Info("Skipping auto update check because debugger is attached.");
       return;
@@ -73,7 +71,7 @@ public class AutoUpdater
 
     try
     {
-      using var mgr = new UpdateManager($"https://fitedit-releases.s3.us-east-1.amazonaws.com/{GetOS()}-{GetArch()}");
+      var mgr = new UpdateManager($"https://fitedit-releases.s3.us-east-1.amazonaws.com/{Env.GetOS()}-{Env.GetArch()}");
       UpdateInfo updateInfo = await mgr.CheckForUpdate();
 
       if (!ct.IsCancellationRequested && updateInfo.ReleasesToApply.Any())
@@ -96,19 +94,4 @@ public class AutoUpdater
       Log.Error($"Problem checking or applying updates: {e}");
     }
   }
-
-  private static string GetOS()
-  {
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) { return "win"; }
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) { return "osx"; }
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) { return "linux"; }
-    return "";
-  }
-
-  private static string GetArch() => RuntimeInformation.ProcessArchitecture switch
-  {
-    Architecture.Arm64 => "arm64",
-    Architecture.X86 => "x86",
-    _ => "x64",
-  };
 }

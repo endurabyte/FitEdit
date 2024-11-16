@@ -118,14 +118,15 @@ public class SupabaseAdapter : ReactiveObject, ISupabaseAdapter
     _ = Task.Run(SyncForever);
   }
 
-  private async Task SyncForever()
+  private Task SyncForever() => SyncForever(default);
+  private async Task SyncForever(CancellationToken ct)
   {
-    while (true)
+    while (!ct.IsCancellationRequested)
     {
-      await Task.Delay(TimeSpan.FromMinutes(5));
+      await Task.Delay(TimeSpan.FromMinutes(5), ct);
       await SyncUserInfo();
-      await Task.Run(SyncRecent);
-    };
+      await Task.Run(SyncRecent, ct);
+    }
   }
 
   private void InitClient()
