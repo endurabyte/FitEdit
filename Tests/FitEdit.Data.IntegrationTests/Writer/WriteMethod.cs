@@ -1,6 +1,12 @@
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+using DynamicData;
 using FitEdit.Data.Fit;
+using FitEdit.Model;
 using FitEdit.Model.Data;
+using FitEdit.Model.Extensions;
 using FitEdit.UnitTests.Shared;
+using Microsoft.Extensions.Logging;
 
 namespace FitEdit.Data.IntegrationTests.Writer;
 
@@ -8,23 +14,26 @@ using Writer = Fit.Writer;
 
 public class WriteMethod
 {
-  private const string source_ = @"../../../../TestData/15535326668_ACTIVITY.fit";
-
   /// <summary>
   /// Verify round trip integrity, i.e. encode(decode(file)) == file
   /// </summary>
-  [Fact]
-  public async Task PreservesFitFile()
+  [Theory]
+  [InlineData("../../../../TestData/2019-12-17-treadmill-run.fit")]
+  [InlineData("../../../../TestData/15535326668_ACTIVITY.fit")]
+  [InlineData("../../../../TestData/2024-09-05-groningen-paddling.fit")]
+  [InlineData("../../../../TestData/2024-11-17-elemnt-roam.fit")]
+  public async Task PreservesFitFile(string source)
   {
-    var bytes = File.ReadAllBytes(source_);
+    var bytes = await File.ReadAllBytesAsync(source);
 
     var ms1 = new MemoryStream(bytes);
     var ms2 = new MemoryStream();
 
     var fitFiles = await new Reader().ReadAsync(ms1);
+    
     new Writer().Write(fitFiles, ms2);
-
     ms2.Position = 0;
+    
     var fitFiles2 = await new Reader().ReadAsync(ms2);
 
     foreach (int i in Enumerable.Range(0, fitFiles.Count))
@@ -33,10 +42,13 @@ public class WriteMethod
     }
   }
 
-  [Fact]
-  public async Task PreservesBytes()
+  [Theory]
+  [InlineData("../../../../TestData/2019-12-17-treadmill-run.fit")]
+  [InlineData("../../../../TestData/15535326668_ACTIVITY.fit")]
+  [InlineData("../../../../TestData/2024-11-17-elemnt-roam.fit")]
+  public async Task PreservesBytes(string source)
   {
-    var bytes = File.ReadAllBytes(source_);
+    var bytes = await File.ReadAllBytesAsync(source);
 
     var ms1 = new MemoryStream(bytes);
 
@@ -56,11 +68,14 @@ public class WriteMethod
     }
   }
 
-  [Fact]
-  public async Task SerializesToEqualJson()
+  [Theory]
+  [InlineData("../../../../TestData/2019-12-17-treadmill-run.fit")]
+  [InlineData("../../../../TestData/15535326668_ACTIVITY.fit")]
+  [InlineData("../../../../TestData/2024-11-17-elemnt-roam.fit")]
+  public async Task SerializesToEqualJson(string source)
   {
     // Arrange
-    var fitFile = await new Reader().ReadAsync(source_);
+    var fitFile = await new Reader().ReadAsync(source);
     MemoryStream ms = new();
     new Writer().Write(fitFile, ms);
     ms.Position = 0;
@@ -68,11 +83,10 @@ public class WriteMethod
     // Act
     var fitFile2 = await new Reader().ReadAsync(ms);
 
-    var json = fitFile.ToPrettyJson();
-    var json2 = fitFile2.ToPrettyJson();
+    var json = fitFile.ToJson().Sha256();
+    var json2 = fitFile2.ToJson().Sha256();
 
     // Assert
     json.Should().Be(json2);
   }
-
 }

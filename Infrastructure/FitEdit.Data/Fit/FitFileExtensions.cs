@@ -192,13 +192,8 @@ public static class FitFileExtensions
   /// <summary>
   /// Pretty-print useful information from a fit file: Session, Laps, and Records
   /// </summary>
-  public static FitFile Print(this FitFile f, Action<string> print, bool showRecords)
+  private static FitFile Print(this FitFile f, Action<string> print, bool showRecords)
   {
-    if (f == null)
-    {
-      return f;
-    }
-
     var sessions = f.Sessions;
     var laps = f.Laps;
     var records = f.Records;
@@ -239,10 +234,18 @@ public static class FitFileExtensions
     return f;
   }
 
+  public static List<string> PrintEvents(this FitFile fitFile) =>
+    fitFile.Events.Select(message => message switch
+    {
+      MesgEventArgs mesgArgs => mesgArgs.MapString(),
+      MesgDefinitionEventArgs mesgDefArgs => mesgDefArgs.MapString(),
+      _ => ""
+    }).ToList();
+
   /// <summary>
   /// Pretty-print everything in the given FIT file.
   /// </summary>
-  public static string PrintAll(this FitFile f) => JsonSerializer.Serialize(f, new JsonSerializerOptions { WriteIndented = true });
+  public static string ToJson(this FitFile f) => JsonSerializer.Serialize(f, new JsonSerializerOptions { WriteIndented = true });
 
   public static string PrintBytes(this FitFile f)
   {

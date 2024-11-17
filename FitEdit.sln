@@ -78,6 +78,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FitEdit.Adapters.Mtp", "Inf
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FitEdit.Adapters.Fit.UnitTests", "Tests\FitEdit.Adapters.Fit.UnitTests\FitEdit.Adapters.Fit.UnitTests.csproj", "{AB920058-9D3B-4EA9-B4BE-A395AD609CBD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestData", "TestData", "{8AE37F7E-4DA9-4C6C-8E8D-BFFDF09F3516}"
+	ProjectSection(SolutionItems) = preProject
+		Tests\TestData\2024-11-17-elemnt-roam.fit = Tests\TestData\2024-11-17-elemnt-roam.fit
+		Tests\TestData\2019-12-19-treadmill-run.tcx = Tests\TestData\2019-12-19-treadmill-run.tcx
+		Tests\TestData\2019-12-18-outdoor-run.tcx = Tests\TestData\2019-12-18-outdoor-run.tcx
+		Tests\TestData\2019-12-17-treadmill-run.fit = Tests\TestData\2019-12-17-treadmill-run.fit
+		Tests\TestData\15535326668_ACTIVITY.fit = Tests\TestData\15535326668_ACTIVITY.fit
+		Tests\TestData\2024-09-05-groningen-paddling.fit = Tests\TestData\2024-09-05-groningen-paddling.fit
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -204,6 +214,7 @@ Global
 		{C2016AC1-02FC-4663-B487-FC9DBE550F30} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 		{B686BA37-6E25-4570-BFA3-5738B5E2E22D} = {A5D838EC-C896-4623-B1D8-E0B6BFF2A25C}
 		{AB920058-9D3B-4EA9-B4BE-A395AD609CBD} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
+		{8AE37F7E-4DA9-4C6C-8E8D-BFFDF09F3516} = {C4B0BF37-8C87-4A7E-9413-A8F417C554D1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D037F1D-2EFD-4281-A46F-3A2C84BDA5F3}
