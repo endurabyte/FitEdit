@@ -19,7 +19,6 @@ internal class Program
     App.DidStart += root =>
     {
       var notifier = root.Get<INotifyService>();
-      new SquirrelAutoUpdater(notifier).WatchForUpdates();
       new VelopackAutoUpdater(notifier).WatchForUpdates();
     };
 

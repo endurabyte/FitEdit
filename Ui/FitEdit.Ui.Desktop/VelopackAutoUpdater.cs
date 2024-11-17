@@ -12,12 +12,6 @@ public class VelopackAutoUpdater(INotifyService notifier)
 
   public void WatchForUpdates(CancellationToken ct = default)
   {
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-    {
-      Log.Info("Auto update not supported on Linux. Please use your package manager.");
-      return;
-    }
-
     if (Debugger.IsAttached)
     {
       Log.Info("Skipping auto update check because debugger is attached.");
@@ -26,8 +20,6 @@ public class VelopackAutoUpdater(INotifyService notifier)
 
     _ = Task.Run(async () =>
     {
-      await Task.Delay(TimeSpan.FromSeconds(30), ct);
-
       while (!ct.IsCancellationRequested)
       {
         await CheckForUpdates(ct);
