@@ -5,7 +5,7 @@ namespace FitEdit.Data.UnitTests.Fit.Reader
 {
   public class ReadMethod
   {
-    private const string source_ = @"..\..\..\..\TestData\2019-12-17-treadmill-run.fit";
+    private const string source_ = @"../../../../TestData/2019-12-17-treadmill-run.fit";
 
     [Fact]
     public async Task ReadsFile()

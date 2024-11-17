@@ -10,14 +10,14 @@ namespace FitEdit.UnitTests.Shared
     {
         public static string GetGpsWorkout()
         {
-            const string source = @"..\..\..\..\TestData\2019-12-18-outdoor-run.tcx";
+            const string source = @"../../../../TestData/2019-12-18-outdoor-run.tcx";
 
             return File.ReadAllText(source);
         }
 
         public static string GetTreadmillWorkout()
         {
-            const string source = @"..\..\..\..\TestData\2019-12-19-treadmill-run.tcx";
+            const string source = @"../../../../TestData/2019-12-19-treadmill-run.tcx";
 
             return File.ReadAllText(source);
         }

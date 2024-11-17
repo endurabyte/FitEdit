@@ -8,7 +8,7 @@ using Writer = Fit.Writer;
 
 public class WriteMethod
 {
-  private const string source_ = @"..\..\..\..\TestData\15535326668_ACTIVITY.fit";
+  private const string source_ = @"../../../../TestData/15535326668_ACTIVITY.fit";
 
   /// <summary>
   /// Verify round trip integrity, i.e. encode(decode(file)) == file
