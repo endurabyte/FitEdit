@@ -58,6 +58,9 @@ foreach ($rid in $rids) {
     $configuration = $using:configuration
     $framework = $using:framework
     $rid = $using:rid
+    $csp = $using:csp
+    $certKey = $using:certKey
+    $certTmpPath = $using:certTmpPath
 
     & {
       vpk pack -y `
