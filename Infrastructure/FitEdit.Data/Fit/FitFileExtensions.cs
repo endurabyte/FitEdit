@@ -37,11 +37,40 @@ public static class FitFileExtensions
   }
 
   /// <summary>
-  /// Return the timestamp from the first FileID message. Return default if there is no such message.
+  /// Return the timestamp that the workout started. Try to get it in the following order:
+  /// - From the first FileID message. 
+  /// - From the first Event message
+  /// - From the first Record message.
+  /// - From the first Lap message.
+  /// - From the first Session message.
+  /// - From the first Activity message.
+  /// Return default if none of the above are found.
   /// </summary>
-  public static DateTime GetStartTime(this FitFile f) => f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) is FileIdMesg mesg
-    ? mesg.GetTimeCreated().GetDateTime()
-    : default;
+  public static DateTime GetStartTime(this FitFile f) =>
+        (f.Messages.FirstOrDefault(mesg => mesg is FileIdMesg) as FileIdMesg)?.GetTimeCreated()?.GetDateTime()
+      ?? (f.Messages.FirstOrDefault(mesg => mesg is EventMesg) as EventMesg)?.Start()
+      ?? f.Records.FirstOrDefault()?.InstantOfTime()
+      ?? f.Laps.FirstOrDefault()?.Start()
+      ?? f.Sessions.FirstOrDefault()?.Start()
+      ?? (f.Messages.FirstOrDefault(mesg => mesg is ActivityMesg) as ActivityMesg)?.InstantOfTime()
+      ?? default;
+
+  /// <summary>
+  /// Return the timestamp that the workout started. Try to get it in the following order:
+  /// - From the last Record message.
+  /// - From the last Event message
+  /// - From the last Lap message.
+  /// - From the last Session message.
+  /// - From the last Activity message.
+  /// Return default if none of the above are found.
+  /// </summary>
+  public static DateTime GetEndTime(this FitFile f) =>
+         f.Records.LastOrDefault()?.InstantOfTime()
+      ?? (f.Messages.LastOrDefault(mesg => mesg is EventMesg) as EventMesg)?.End()
+      ?? f.Laps.LastOrDefault()?.GetLapEndTime()
+      ?? f.Sessions.LastOrDefault()?.End()
+      ?? (f.Messages.LastOrDefault(mesg => mesg is ActivityMesg) as ActivityMesg)?.InstantOfTime()
+      ?? default;
 
   public static List<T> Get<T>(this FitFile f) where T : Mesg => f.Messages
     .Where(message => message.Num == MessageFactory.MesgNums[typeof(T)])
@@ -342,7 +371,7 @@ public static class FitFileExtensions
   public static (FitFile first, FitFile second) SplitAt(this FitFile source, DateTime at)
   {
     DateTime start = source.GetStartTime();
-    DateTime end = source.Records.Last().InstantOfTime();
+    DateTime end = source.GetEndTime();
 
     return (
       source.ExtractRecords(start, at)!,
@@ -473,9 +502,10 @@ public static class FitFileExtensions
 
   private static FitFile? RepairAdditively(this FitFile? source, List<RecordMesg> records)
   {
-    if (!records.Any()) { return null; }
-    var start = records.First().GetTimestamp();
-    var end = records.Last().GetTimestamp();
+    if (source == null) { return null; }
+
+    var start = new Dynastream.Fit.DateTime(source.GetStartTime());
+    var end = new Dynastream.Fit.DateTime(source.GetEndTime());
 
     var fileId = source.Get<FileIdMesg>().FirstOrDefault();
     fileId!.SetTimeCreated(start);
@@ -497,9 +527,9 @@ public static class FitFileExtensions
     stopEvent.SetEventType(EventType.StopDisableAll);
 
     List<RecordMesg> records2 = EnsureCumulativeDistance(records);
-    SessionMesg session = ReconstructSession(records2);
-    LapMesg lap = ReconstructLap(records2);
-    ActivityMesg activity = ReconstructActivity(records2);
+    SessionMesg session = ReconstructSession(source, records2);
+    LapMesg lap = ReconstructLap(source, records2);
+    ActivityMesg activity = ReconstructActivity(source);
 
     List<Mesg> mesgs = new();
 
@@ -639,45 +669,42 @@ public static class FitFileExtensions
       .Sorted(MessageExtensions.SortByTimestamp);
 
     var sport = source.Get<SportMesg>().FirstOrDefault();
-    var lap = source.Get<LapMesg>().FirstOrDefault();
-    var session = dest.Get<SessionMesg>().FirstOrDefault();
+    var firstLap = source.Get<LapMesg>().FirstOrDefault();
+    var lastLap = source.Get<LapMesg>().LastOrDefault();
+    var session = source.Get<SessionMesg>().FirstOrDefault();
     var activity = source.Get<ActivityMesg>().FirstOrDefault();
+
+    // Garmin requires FileId message to have a time created
+    var fileId = source.Get<FileIdMesg>().FirstOrDefault();
+    fileId!.SetTimeCreated(new Dynastream.Fit.DateTime(source.GetStartTime()));
 
     if (!records.Any())
     {
-      var events = source.Get<EventMesg>();
-      var start = events.First().GetTimestamp();
-      var end = events.Last().GetTimestamp();
+      DateTime start = source.GetStartTime();
+      DateTime end = source.GetEndTime();
 
-      records.Add(GetFakeRecord(when: start));
-      records.Add(GetFakeRecord(when: end));
-      lap = GetFakeLap(source);
-      session = GetFakeSession(source);
-      activity = GetFakeActivity(source);
-
+      records.Add(GetFakeRecord(when: new Dynastream.Fit.DateTime(start)));
+      records.Add(GetFakeRecord(when: new Dynastream.Fit.DateTime(end)));
       records.ForEach(dest.Add);
-      dest.Add(lap);
-      dest.Add(session);
-      dest.Add(activity);
     }
 
-    if (lap is null)
+    if (firstLap is null)
     {
-      lap = ReconstructLap(records);
+      firstLap = ReconstructLap(source, records);
 
       if (sport != null)
       {
-        lap.SetSport(sport.GetSport());
-        lap.SetSubSport(sport.GetSubSport());
+        firstLap.SetSport(sport.GetSport());
+        firstLap.SetSubSport(sport.GetSubSport());
       }
 
-      dest.Add(lap);
+      dest.Add(firstLap);
     }
 
     // If there are still no session messages, fallback to creating one from records
     if (session is null)
     {
-      session = ReconstructSession(records);
+      session = ReconstructSession(source, records);
       if (sport != null)
       {
         session.SetSport(sport.GetSport());
@@ -689,7 +716,7 @@ public static class FitFileExtensions
 
     if (activity is null)
     {
-      activity = ReconstructActivity(records);
+      activity = ReconstructActivity(source);
       dest.Add(activity);
     }
 
@@ -697,10 +724,31 @@ public static class FitFileExtensions
     return dest;
   }
 
-  private static LapMesg ReconstructLap(List<RecordMesg> records)
+  private static DateTime? GetLapEndTime(this LapMesg lap)
   {
-    var start = records.First().GetTimestamp();
-    var end = records.Last().GetTimestamp();
+    // The lap Timestamp is often incorrect. Instead, use the start time + duration
+    //return lap.End();
+
+    Dynastream.Fit.DateTime? lapEnd = lap.GetStartTime();
+    float? elapsed = lap.GetTotalElapsedTime();
+
+    if (lap != null && elapsed != null)
+    {
+      lapEnd.Add(new Dynastream.Fit.DateTime((uint)elapsed));
+    }
+
+    return lapEnd?.GetDateTime();
+  } 
+
+  private static LapMesg ReconstructLap(FitFile source, List<RecordMesg> records)
+  {
+    if (!records.Any())
+    {
+      return GetFakeLap(source);
+    }
+
+    var start = new Dynastream.Fit.DateTime(source.GetStartTime());
+    var end = new Dynastream.Fit.DateTime(source.GetEndTime());
 
     float totalDistance = SumDistance(records);
 
@@ -721,10 +769,15 @@ public static class FitFileExtensions
     return lap;
   }
 
-  private static SessionMesg ReconstructSession(List<RecordMesg> records)
+  private static SessionMesg ReconstructSession(FitFile source, List<RecordMesg> records)
   {
-    var start = records.First().GetTimestamp();
-    var end = records.Last().GetTimestamp();
+    if (!records.Any())
+    {
+      return GetFakeSession(source);
+    }
+
+    var start = new Dynastream.Fit.DateTime(source.GetStartTime());
+    var end = new Dynastream.Fit.DateTime(source.GetEndTime());
 
     float totalDistance = SumDistance(records);
 
@@ -759,48 +812,30 @@ public static class FitFileExtensions
 
   private static LapMesg GetFakeLap(FitFile source)
   {
-    var events = source.Get<EventMesg>();
-    var start = events.First().GetTimestamp();
-    var end = events.Last().GetTimestamp();
+    DateTime start = source.GetStartTime();
+    DateTime end = source.GetEndTime();
 
-    var session = new LapMesg();
-    session.SetStartTime(start);
-    session.SetTimestamp(end);
-    session.SetEvent(Event.Lap);
-    session.SetEventType(EventType.Stop);
-    session.SetLapTrigger(LapTrigger.SessionEnd);
-    return session;
+    var lap = new LapMesg();
+    lap.SetStartTime(new Dynastream.Fit.DateTime(start));
+    lap.SetTimestamp(new Dynastream.Fit.DateTime(end));
+    lap.SetEvent(Event.Lap);
+    lap.SetEventType(EventType.Stop);
+    lap.SetLapTrigger(LapTrigger.SessionEnd);
+    return lap;
   }
 
   private static SessionMesg GetFakeSession(FitFile source)
   {
-    var events = source.Get<EventMesg>();
-    var start = events.First().GetTimestamp();
-    var end = events.Last().GetTimestamp();
+    DateTime start = source.GetStartTime();
+    DateTime end = source.GetEndTime();
 
     var session = new SessionMesg();
-    session.SetStartTime(start);
-    session.SetTimestamp(end);
+    session.SetStartTime(new Dynastream.Fit.DateTime(start));
+    session.SetTimestamp(new Dynastream.Fit.DateTime(end));
     session.SetEvent(Event.Lap);
     session.SetEventType(EventType.Stop);
     session.SetTrigger(SessionTrigger.ActivityEnd);
     return session;
-  }
-
-  private static ActivityMesg GetFakeActivity(FitFile source)
-  {
-    var events = source.Get<EventMesg>();
-    var start = events.First().GetTimestamp();
-    var end = events.Last().GetTimestamp();
-
-    var activity = new ActivityMesg();
-    activity.SetTimestamp(start);
-    activity.SetTotalTimerTime(end.GetTimeStamp() - start.GetTimeStamp());
-    activity.SetNumSessions(1);
-    activity.SetType(Activity.Manual);
-    activity.SetEvent(Event.Activity);
-    activity.SetEventType(EventType.Stop);
-    return activity;
   }
 
   /// <summary>
@@ -810,7 +845,9 @@ public static class FitFileExtensions
   {
     double? sum = 0;
 
-    foreach (int i in Enumerable.Range(1, records.Count - 1))
+    var penultimate = Math.Max(0, records.Count - 1);
+
+    foreach (int i in Enumerable.Range(1, penultimate))
     {
       sum += records[i].GetDistance() - (double?)records[i - 1].GetDistance();
     }
@@ -830,15 +867,26 @@ public static class FitFileExtensions
     var sessions = source.Get<SessionMesg>();
     var sports = source.Get<SportMesg>();
 
-    if (sessions.Count >= sports.Count)
+    if (sessions.Count > 0 && sessions.Count == sports.Count)
     {
-      foreach (SessionMesg session in sessions)
-      {
-        dest.Add(session);
-      }
       return;
     }
 
+    // Reconstruct sports from sessions
+    if (sessions.Count > sports.Count)
+    {
+      foreach (SessionMesg session in sessions)
+      {
+        var sport = new SportMesg();
+        sport.SetSport(session.GetSport());
+        sport.SetSubSport(session.GetSubSport());
+        dest.Add(sport);
+      }
+
+      return;
+    }
+
+    // Reconstruct sessions from sports and laps
     var activity = source.Get<ActivityMesg>().First();
     activity.SetNumSessions((ushort)sports.Count);
 
@@ -884,10 +932,10 @@ public static class FitFileExtensions
     }
   }
 
-  private static ActivityMesg ReconstructActivity(List<RecordMesg> records)
+  private static ActivityMesg ReconstructActivity(FitFile source)
   {
-    var start = records.First().GetTimestamp();
-    var end = records.Last().GetTimestamp();
+    var start = new Dynastream.Fit.DateTime(source.GetStartTime());
+    var end = new Dynastream.Fit.DateTime(source.GetEndTime());
     var activity = new ActivityMesg();
 
     activity.SetTimestamp(start);
