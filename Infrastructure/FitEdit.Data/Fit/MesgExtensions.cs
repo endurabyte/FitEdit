@@ -6,6 +6,7 @@ using FitEdit.Model;
 using FitEdit.Model.Extensions;
 using Dynastream.Fit;
 using AssemblyExtensions = FitEdit.Model.Extensions.AssemblyExtensions;
+using DateTime = System.DateTime;
 
 namespace FitEdit.Data.Fit;
 
@@ -22,6 +23,21 @@ public static partial class MesgExtensions
     fit_ = assembly;
   }
 
+  /// <summary>
+  /// Return true if the given message occurs between the given DateTimes.
+  /// If either DateTime is not specified, it is not considered.
+  /// </summary>
+  public static bool IsBetween(this Mesg mesg, DateTime after = default, DateTime before = default) => mesg switch
+  {
+    IDurationOfTime dur when (after == default || dur.GetStartTime().GetDateTime() > after)
+                             && (before == default || dur.GetTimestamp().GetDateTime() <= before) => true,
+
+    IInstantOfTime inst when (after == default || inst.GetTimestamp().GetDateTime() > after)
+                             && (before == default || inst.GetTimestamp().GetDateTime() <= before) => true,
+
+    _ => false,
+  };
+  
   public static void SetFieldValue(this Mesg mesg, string name, object? value, bool pretty)
   {
     try

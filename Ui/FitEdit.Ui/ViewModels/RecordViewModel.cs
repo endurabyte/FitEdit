@@ -10,6 +10,7 @@ using DynamicData.Binding;
 using Dynastream.Fit;
 using FitEdit.Data;
 using FitEdit.Data.Fit;
+using FitEdit.Data.Fit.Edits;
 using FitEdit.Model.Extensions;
 using FitEdit.Ui.Converters;
 using FitEdit.Ui.Model;
@@ -576,6 +577,31 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     };
     menu.Items.Add(delete);
 
+    if (mesgName == "Record")
+    {
+      var menuItem = new MenuItem
+      {
+        Header = "Split Activity Here",
+        Command = ReactiveCommand.Create(SplitActivity),
+      };
+      ToolTip.SetTip(menuItem, 
+          "Split the activity at the selected record."
+        + "\nThe first activity will contain all messages up to and including the selected row."
+        + "\nThe second activity will contain all messages after the selected row.");
+      menu.Items.Add(menuItem);
+    }
+    
+    if (mesgName == "Record")
+    {
+      var menuItem = new MenuItem
+      {
+        Header = "Split Lap Here",
+        Command = ReactiveCommand.Create(SplitLap),
+      };
+      ToolTip.SetTip(menuItem, "Split the lap at the selected record into two laps.");
+      menu.Items.Add(menuItem);
+    }
+    
     if (mesgName == "Lap")
     {
       var menuItem = new MenuItem
@@ -679,6 +705,15 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     await fileService_.CreateAsync(first, "(Split 1)");
     await fileService_.CreateAsync(second, "(Split 2)");
   }
+  
+  public void SplitLap()
+  {
+    if (fitFile_ is null) { return; }
+    IEdit edit = new SplitLapEdit(fitFile_, fitFile_.Records[SelectedIndex]);
+    edit.Apply();
+    
+    HaveUnsavedChanges = true;
+  }
 
   private void HandleCellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
   {
@@ -733,6 +768,6 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     {
       message.SetFieldValue(fieldName, newValue, PrettifyFields);
     }
+    HaveUnsavedChanges = true;
   }
-
 }

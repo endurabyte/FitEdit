@@ -120,7 +120,7 @@ namespace Dynastream.Fit
     public void Read(Stream inStream, MesgDefinition defnMesg)
     {
       inStream.Position = 1;
-      EndianBinaryReader mesgReader = new EndianBinaryReader(inStream, defnMesg.IsBigEndian);
+      BinaryReader mesgReader = new EndianBinaryReader(inStream, defnMesg.IsBigEndian);
 
       LocalNum = defnMesg.LocalMesgNum;
 

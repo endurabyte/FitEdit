@@ -57,18 +57,6 @@
         </WrapPanel>
       </Expander>
 
-      <Button Margin="0"
-        Command="{Binding SplitActivity}"
-        IsEnabled="{Binding CanSplit}"
-        Content="Split Here">
-        
-        <ToolTip.Tip>
-          Split the activity at the selected row. 
-          The first activity contains all messages up to and including the selected row.
-          The second activity contains all messages after the selected row.
-        </ToolTip.Tip>
-      </Button>
-    
       <Button HorizontalAlignment="Right" VerticalAlignment="Bottom"
               Content="Save Changes"
               Command="{Binding SaveChanges}"
