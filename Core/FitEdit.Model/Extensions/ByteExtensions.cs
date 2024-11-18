@@ -1,7 +1,13 @@
-﻿namespace FitEdit.Model.Extensions;
+﻿using System.Security.Cryptography;
+using System.Text;
+
+namespace FitEdit.Model.Extensions;
 
 public static class ByteExtensions
 {
+  public static string Sha256(this object o) => Encoding.UTF8.GetBytes($"{o}").Sha256();
+  public static string Sha256(this byte[] bytes) => BitConverter.ToString(SHA256.HashData(bytes)).Replace("-", string.Empty);
+
   /// <summary>
   /// Return the index of the nth occurrence of the given byte sequence from the given start index in the given byte sequence.
   /// Return -1 if no such occurence exists.

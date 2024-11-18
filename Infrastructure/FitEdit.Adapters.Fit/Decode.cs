@@ -337,7 +337,7 @@ namespace Dynastream.Fit
       if (FitConfig.Discard.DataMessages.OfLargeSize
         && fieldsSize > 1024)
       {
-        Log.Debug($"Discarding suspicious large data message with field size {fieldsSize}");
+        Log.Warn($"Discarding suspicious large data message with field size {fieldsSize}");
         return;
       }
 

@@ -9,8 +9,7 @@ public class Reader
 {
   public async Task<List<FitFile>> ReadAsync(string source)
   {
-    Log.Info($"Opening {source}...");
-    using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
+    await using var stream = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.Read);
     return await ReadAsync(stream);
   }
 
@@ -95,10 +94,8 @@ public class Reader
       tmp = new FitFile();
     };
 
-    int count = 0;
     decoder.MesgEvent += (o, s) =>
     {
-      Log.Debug($"Read record {count++}");
       s.DebugLog();
 
       var mesg = MessageFactory.Create(s.mesg);
@@ -117,7 +114,6 @@ public class Reader
 
     decoder.MesgDefinitionEvent += (o, s) =>
     {
-      Log.Debug($"Read record {count++}");
       s.DebugLog();
 
       tmp.MessageDefinitions[s.mesgDef.GlobalMesgNum] = s.mesgDef;
@@ -126,7 +122,6 @@ public class Reader
 
     decoder.DeveloperFieldDescriptionEvent += (o, s) =>
     {
-      Log.Debug($"Read record {count++}");
       s.DebugLog();
 
       tmp.Events.Add(s);

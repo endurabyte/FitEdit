@@ -203,14 +203,14 @@ namespace Dynastream.Fit
 
     public void Write(Stream fitDest)
     {
-      BinaryWriter bw = new BinaryWriter(fitDest);
+      BinaryWriter bw = new EndianBinaryWriter(fitDest, IsBigEndian);
       byte header = LocalMesgNum;
       header |= Fit.MesgDefinitionMask;
       header |= NumDevFields > 0 ? Fit.DevDataMask : (byte)0x00;
 
       bw.Write(header);
       bw.Write(Fit.MesgDefinitionReserved);
-      bw.Write(Fit.LittleEndian);
+      bw.Write(architecture);
       bw.Write(GlobalMesgNum);
 
       // Garmin considers message definition fields with zero size to be invalid
