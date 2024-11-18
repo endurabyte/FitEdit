@@ -9,7 +9,7 @@ public static class FieldTools
   public static void ReadFieldValue(
       FieldBase field,
       byte size,
-      EndianBinaryReader mesgReader)
+      BinaryReader mesgReader)
   {
     byte baseType = (byte)(field.Type & Fit.BaseTypeNumMask);
     // strings may be an array and are of variable length
@@ -76,7 +76,7 @@ public static class FieldTools
   private static bool TryReadValue(
       out object value,
       byte type,
-      EndianBinaryReader mesgReader,
+      BinaryReader mesgReader,
       byte size)
   {
     bool invalid = true;

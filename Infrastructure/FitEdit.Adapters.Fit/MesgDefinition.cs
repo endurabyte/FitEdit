@@ -90,12 +90,12 @@ namespace Dynastream.Fit
     #endregion
 
     #region Constructors
-    internal MesgDefinition() : base((MesgDefinition)null)
-    {
-      LocalMesgNum = 0;
-      GlobalMesgNum = (ushort)MesgNum.Invalid;
-      architecture = Fit.LittleEndian;
-    }
+    // internal MesgDefinition() : base((MesgDefinition)null)
+    // {
+    //   LocalMesgNum = 0;
+    //   GlobalMesgNum = (ushort)MesgNum.Invalid;
+    //   architecture = Fit.LittleEndian;
+    // }
 
     internal MesgDefinition(
         Stream source,
@@ -137,7 +137,7 @@ namespace Dynastream.Fit
     {
       LocalMesgNum = mesgDef.LocalMesgNum;
       GlobalMesgNum = mesgDef.GlobalMesgNum;
-      architecture = mesgDef.IsBigEndian ? Fit.BigEndian : Fit.LittleEndian;
+      architecture = mesgDef.architecture;
       NumFields = mesgDef.NumFields;
 
       foreach (FieldDefinition fieldDef in mesgDef.fieldDefs)
