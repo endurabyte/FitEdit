@@ -883,6 +883,9 @@ public static class FitFileExtensions
   /// </summary>
   private static void ReconstructSessions(FitFile? source, FitFile dest)
   {
+    if (source is null)
+      return;
+    
     var sessions = source.Get<SessionMesg>();
     var sports = source.Get<SportMesg>();
 
@@ -906,7 +909,9 @@ public static class FitFileExtensions
     }
 
     // Reconstruct sessions from sports and laps
-    var activity = source.Get<ActivityMesg>().First();
+    var activity = source.Get<ActivityMesg>().FirstOrDefault() 
+       ?? ReconstructActivity(source);
+    
     activity.SetNumSessions((ushort)sports.Count);
 
     var laps = source.Get<LapMesg>();
