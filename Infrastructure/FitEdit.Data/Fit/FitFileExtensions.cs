@@ -472,7 +472,7 @@ public static class FitFileExtensions
       }
 
       return false;
-    });
+    }).ToList();
 
     dest.Events.AddRange(filteredEvents);
     dest.ForwardfillEvents();

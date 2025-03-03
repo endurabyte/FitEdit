@@ -283,17 +283,17 @@ namespace Dynastream.Fit
       long sourceIndex = fitStream.Position;
 
       byte nextByte = br.ReadByte();
-      Log.Debug($"Message header: {nextByte:X2}");
+      //Log.Debug($"Message header: {nextByte:X2}");
 
       bool isCompressedHeader = (nextByte & Fit.CompressedHeaderMask) == Fit.CompressedHeaderMask;
       bool isMesgDefinition = (nextByte & Fit.MesgDefinitionMask) == Fit.MesgDefinitionMask;
       bool isDataMessage = (nextByte & Fit.MesgDefinitionMask) == Fit.MesgHeaderMask;
       bool isDevData = (nextByte & Fit.DevDataMask) == Fit.DevDataMask;
 
-      Log.Debug($"  Compressed: {isCompressedHeader}");
-      Log.Debug($"  Definition: {isMesgDefinition}");
-      Log.Debug($"  Data: {isDataMessage}");
-      Log.Debug($"  DevData: {isDevData}");
+      //Log.Debug($"  Compressed: {isCompressedHeader}");
+      //Log.Debug($"  Definition: {isMesgDefinition}");
+      //Log.Debug($"  Data: {isDataMessage}");
+      //Log.Debug($"  DevData: {isDevData}");
 
       // Is it a compressed timestamp mesg?
       if (isCompressedHeader)
@@ -331,7 +331,7 @@ namespace Dynastream.Fit
       }
 
       MesgDefinition def = _localMesgDefs[localMesgNum];
-      Log.Debug($"  (global, local) message num: ({localMesgNum}, {def.GlobalMesgNum})");
+      //Log.Debug($"  (global, local) message num: ({localMesgNum}, {def.GlobalMesgNum})");
       int fieldsSize = def.GetMesgSize() - 1;
 
       if (FitConfig.Discard.DataMessages.OfLargeSize
