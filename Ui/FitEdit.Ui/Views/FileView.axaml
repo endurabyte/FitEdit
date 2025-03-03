@@ -75,6 +75,17 @@
 
           </MenuItem>
 
+          <MenuItem Header ="Remove Gaps"
+                  IsEnabled="{Binding SelectedFile.IsLoaded}"
+                  Command="{Binding HandleRemoveGapsClicked}"
+                  CommandParameter="{Binding SelectedFile}">
+            <ToolTip.Tip>
+              <TextBlock TextWrapping="Wrap">
+                Remove gaps > 60s from the file. This makes it look like e.g. you didn't take a break during your workout. This adjusts the timestamps of all records that follow a gap.
+              </TextBlock>
+            </ToolTip.Tip>
+
+          </MenuItem>
           <MenuItem Header="Repair" IsEnabled="{Binding SelectedFile.IsLoaded}">
             <MenuItem Header="Subtractively"
                   Command="{Binding HandleRepairSubtractivelyClicked}"

@@ -5,6 +5,7 @@ using FitEdit.Adapters.GarminConnect;
 using FitEdit.Adapters.Strava;
 using FitEdit.Data;
 using FitEdit.Data.Fit;
+using FitEdit.Data.Fit.Edits;
 using FitEdit.Model;
 using FitEdit.Model.Extensions;
 using FitEdit.Model.GarminConnect;
@@ -17,6 +18,7 @@ using FitEdit.Ui.Extensions;
 using FitEdit.Ui.Infra;
 using FitEdit.Ui.Model.Supabase;
 using Microsoft.Extensions.Logging.Abstractions;
+using Newtonsoft.Json.Bson;
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
@@ -733,6 +735,20 @@ public class FileViewModel : ViewModelBase, IFileViewModel
       $"Repaired {file.Activity?.Name}",
       fit.GetBytes()
     ));
+  }
+
+  public void HandleRemoveGapsClicked(UiFile file)
+  {
+    FitFile? fit = new RemoveGapsEdit().Apply(file.FitFile);
+
+    Task.Run(async () =>
+    {
+      await Persist(new FileReference
+      (
+        $"(No Gaps) {file.Activity?.Name}",
+        fit.GetBytes()
+      ));
+    });
   }
 
   public async Task HandleOpenGarminUploadPageClicked() => await browser_.OpenAsync("https://connect.garmin.com/modern/import-data");
