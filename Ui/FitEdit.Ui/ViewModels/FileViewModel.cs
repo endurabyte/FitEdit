@@ -739,7 +739,7 @@ public class FileViewModel : ViewModelBase, IFileViewModel
 
   public void HandleRemoveGapsClicked(UiFile file)
   {
-    FitFile? fit = new RemoveGapsEdit().Apply(file.FitFile);
+    FitFile? fit = new RemoveGapsEdit(file.FitFile).Apply();
 
     Task.Run(async () =>
     {

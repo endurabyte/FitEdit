@@ -1,17 +1,12 @@
 ﻿namespace FitEdit.Data.Fit.Edits;
 
-public interface IEdit
+public class RemoveGapsEdit(FitFile fit) : IEdit
 {
-  FitFile Apply(FitFile file);
-}
-
-public class RemoveGapsEdit : IEdit
-{
-  public FitFile Apply(FitFile file)
+  public FitFile Apply()
   {
     var minGap = TimeSpan.FromSeconds(60);
 
-    var copy = new FitFile(file);
+    var copy = new FitFile(fit);
     var records = copy.Records;
 
     // Algorithm:
