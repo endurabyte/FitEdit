@@ -90,7 +90,7 @@ public class Reader
 
     decoder.FitFileRead += () =>
     {
-      Log.Debug($"Read FIT file with {tmp.Events.Count} messages");
+      //Log.Debug($"Read FIT file with {tmp.Events.Count} messages");
       tmp = new FitFile();
     };
 

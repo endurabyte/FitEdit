@@ -62,7 +62,7 @@
               Command="{Binding SaveChanges}"
               IsVisible="{Binding HaveUnsavedChanges}">
         <ToolTip.Tip>
-          Creates a new activity with all of the changes applied.
+          Write all changes to the current FIT file.
         </ToolTip.Tip>
       </Button>
 
