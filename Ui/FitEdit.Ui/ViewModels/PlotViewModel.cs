@@ -178,7 +178,7 @@ public class PlotViewModel : ViewModelBase, IPlotViewModel
 
     foreach (var record in fit.Records)
     {
-      var speed = (double?)record.GetEnhancedSpeed() ?? 0;
+      var speed = (double?)(record.GetSpeed() ?? record.GetEnhancedSpeed()) ?? 0;
       var hr = (double?)record.GetHeartRate() ?? 0;
       var cadence = (double?)record.GetCadence() ?? 0;
       var time = record.InstantOfTime();
