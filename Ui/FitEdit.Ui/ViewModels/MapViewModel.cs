@@ -408,17 +408,37 @@ public class MapViewModel : ViewModelBase, IMapViewModel
     int count = -1
   )
   {
-    var range = Enumerable.Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count);
+    var range = Enumerable
+      .Range(index < 0 ? 0 : index, count < 0 ? fit.Records.Count : count)
+      .ToList();
 
     Coordinate[] coords = range
       .Select(i => fit.Records[i])
       .Select(r => r.MapCoordinate())
-      .Where(c => c.X != 0 && c.Y != 0)
       .ToArray();
 
+    // Prevent zero lat lon
+    foreach (int i in range.Skip(1))
+    {
+      PreventZeroLatLon(coords, i);
+    }
+    
     return editable 
       ? AddEditTrace(coords, name, color, FitColor.RedCrayon) 
       : AddTrace(coords, name, layer, color, lineWidth);
+  }
+
+  private static void PreventZeroLatLon(Coordinate[] coords, int i)
+  {
+    Coordinate coord = coords[i];
+    Coordinate prev = coords[i - 1];
+
+    const double tol = 1e-6;
+    if (Math.Abs(coord.X) < tol && Math.Abs(coord.Y) < tol)
+    {
+      coord.X = prev.X;
+      coord.Y = prev.Y;
+    }
   }
 
   private ILayer? AddTrace(Coordinate[] coords, string name, int layer, Avalonia.Media.Color color, int lineWidth)
