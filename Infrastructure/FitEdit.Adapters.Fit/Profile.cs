@@ -226,6 +226,7 @@ namespace Dynastream.Fit
             MaxMetHeartRateSource,
             HrvStatus,
             NoFlyTimeMode,
+            PrimaryBenefit,
             
             NumTypes
         }
@@ -1958,6 +1959,8 @@ namespace Dynastream.Fit
             newMesg.SetField(new Field("AvgGrit", 186, 136, 1, 0, "kGrit", false, Type.Float32));
             fieldIndex++;
             newMesg.SetField(new Field("AvgFlow", 187, 136, 1, 0, "Flow", false, Type.Float32));
+            fieldIndex++;
+            newMesg.SetField(new Field("PrimaryBenefit", 188, 0, 1, 0, "", false, Type.PrimaryBenefit));
             fieldIndex++;
             newMesg.SetField(new Field("AvgSpo2", 194, 2, 1, 0, "percent", false, Type.Uint8));
             fieldIndex++;

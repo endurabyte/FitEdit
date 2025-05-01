@@ -4473,6 +4473,9 @@ namespace Dynastream.Fit
             SetFieldValue(210, 0, maxCoreTemperature_, Fit.SubfieldIndexMainField);
         }
         
+        public PrimaryBenefit? GetBenefit() => GetFieldValue(188, 0, Fit.SubfieldIndexMainField) as PrimaryBenefit?;
+        public void SetBenefit(PrimaryBenefit? benefit) => SetFieldValue(188, 0, benefit, Fit.SubfieldIndexMainField);
+
         #endregion // Methods
     } // Class
 } // namespace
