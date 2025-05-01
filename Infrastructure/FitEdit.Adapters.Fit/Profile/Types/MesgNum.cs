@@ -67,6 +67,7 @@ namespace Dynastream.Fit
         public const ushort WeatherAlert = 129;
         public const ushort CadenceZone = 131;
         public const ushort Hr = 132;
+        public const ushort ActivityMetrics = 140;   // undocumented
         public const ushort SegmentLap = 142;
         public const ushort MemoGlob = 145;
         public const ushort SegmentId = 148;

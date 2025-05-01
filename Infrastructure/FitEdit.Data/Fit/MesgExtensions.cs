@@ -443,6 +443,6 @@ public static partial class MesgExtensions
     return match.Success && byte.TryParse(match.Value, out id);
   }
 
-  [GeneratedRegex("\\d+$")]
+  [GeneratedRegex("\\d+ $")]
   private static partial Regex fieldRegex();
 }

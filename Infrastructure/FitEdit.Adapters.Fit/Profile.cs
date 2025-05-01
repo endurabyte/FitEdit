@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Text;
 using System.IO;
 using System.Runtime.CompilerServices;
+using FitEdit.Adapters.Fit.Factories;
 
 namespace Dynastream.Fit
 {
@@ -226,7 +227,7 @@ namespace Dynastream.Fit
             MaxMetHeartRateSource,
             HrvStatus,
             NoFlyTimeMode,
-            PrimaryBenefit,
+            PrimaryBenefit, // undocumented
             
             NumTypes
         }
@@ -645,6 +646,10 @@ namespace Dynastream.Fit
                 case MesgNum.Hr:
                     newMesg = CreateHrMesg();
                     break;
+                
+                case MesgNum.ActivityMetrics:
+                    newMesg = ActivityMetricsMesgFactory.Create();
+                  break;
                 
                 case MesgNum.StressLevel:
                     newMesg = CreateStressLevelMesg();
