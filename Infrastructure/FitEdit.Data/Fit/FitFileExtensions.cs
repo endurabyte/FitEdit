@@ -642,7 +642,7 @@ public static class FitFileExtensions
     return dest;
   } 
 
-  private static void AddDistance(this IEnumerable<RecordMesg> records, double distance)
+  public static void AddDistance(this IEnumerable<RecordMesg> records, double distance)
   {
     foreach (RecordMesg record in records)
     {

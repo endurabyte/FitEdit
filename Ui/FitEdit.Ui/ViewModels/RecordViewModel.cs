@@ -575,7 +575,15 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
       Header = "Delete",
       Command = ReactiveCommand.Create(() => DeleteRows(dg)),
     };
+    ToolTip.SetTip(delete, "Remove the given record. Do not motify subsequent records.");
     menu.Items.Add(delete);
+    var deleteAndRecalculate = new MenuItem
+    {
+      Header = "Delete and subtract distance",
+      Command = ReactiveCommand.Create(() => DeleteRows(dg, subtractDistance: true)),
+    };
+    ToolTip.SetTip(delete, @"Remove the given record and subtract its distance from subsequent records.");
+    menu.Items.Add(deleteAndRecalculate);
 
     if (mesgName == "Record")
     {
@@ -629,7 +637,7 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     dg.ContextMenu = menu;
   }
 
-  private void DeleteRows(DataGrid dg)
+  private void DeleteRows(DataGrid dg, bool subtractDistance = false)
   {
     if (dg.ItemsSource is not ObservableCollection<MessageWrapper> list) { return; }
     var selection = dg.SelectedItems.Cast<MessageWrapper>().ToList();
@@ -638,8 +646,59 @@ public class RecordViewModel : ViewModelBase, IRecordViewModel
     {
       list.Remove(item);
       fitFile_?.Remove(item.Mesg);
+    
+      if (subtractDistance)
+      {
+        SubtractDistance(item);
+        // Since we removed a record message and are doing arithmetic with record indices,
+        // we need to update the records list
+        fitFile_.ForwardfillEvents();
+      }
+    }
+    
+    if (subtractDistance)
+    {
+      // Cause the data grid to show the new distances by calling NotifyPropertyChanged
+      foreach (var enumerable in dg.ItemsSource)
+      {
+        if (enumerable is not MessageWrapper wrapper)
+          continue;
+          
+        wrapper.NotifyPropertyChanged(nameof(MessageWrapper.Mesg));
+      }
     }
     HaveUnsavedChanges = true;
+  }
+
+  /// <summary>
+  /// Subtract the distance of the given record (relative to is predecessor) from all subsequent records.
+  /// </summary>
+  private void SubtractDistance(MessageWrapper item)
+  {
+    if (fitFile_ is null)
+      return;
+      
+    if (item.Mesg is not RecordMesg record)
+      return;
+     
+    int index = fitFile_.Records.IndexOf(record);
+    // Index of the record after the deleted record
+    int nextIndex = index + 1;
+    
+    if (index < 0)
+      return;
+    
+    // All records after the deleted record
+    List<RecordMesg> subsequentRecords = Enumerable
+      .Range(nextIndex, fitFile_.Records.Count - nextIndex)
+      .Select(i => fitFile_.Records[i])
+      .ToList();
+
+    RecordMesg prevRecord = fitFile_.Records[Math.Max(0, index - 1)];
+    double? prevDist = prevRecord.GetDistance();
+    double? dist = record.GetDistance();
+    double? diff = dist - prevDist;
+    subsequentRecords.AddDistance(-1 * diff ?? 0);
   }
 
   private void DuplicateRows(DataGrid dg)
