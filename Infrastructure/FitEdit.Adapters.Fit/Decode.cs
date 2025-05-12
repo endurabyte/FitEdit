@@ -415,7 +415,7 @@ namespace Dynastream.Fit
 
         if (timeTraveled)
         {
-          var dt = new RecordMesg(mesg).GetTimestamp().GetDateTime();
+          var dt = new RecordMesg(mesg).GetTimestamp()?.GetDateTime();
           Log.Warn($"Discarding suspicious message at {dt} with timestamp change of {diff}s");
           Log.Debug($"Source data: {string.Join(" ", mesg.SourceData?.Select(b => $"{b:X2}") ?? new List<string>())}");
           return;

@@ -22,7 +22,7 @@
         public static bool OfLargeSize { get; set; } = false;
         public static bool WithLargeLatitudeChange { get; set; } = true;
         public static bool WithLargeLongitudeChange { get; set; } = true;
-        public static bool WithLargeTimestampChange { get; set; } = true;
+        public static bool WithLargeTimestampChange { get; set; } = false;
 
         /// <summary>
         /// Ignore any FileId message other than the first or any FileId message that is not at the beginning of the file.

@@ -358,15 +358,13 @@ public static class FitFileExtensions
       merged.Append(file);
     }
 
-    var activityMesg = merged.FindFirst<ActivityMesg>();
-    DateTime firstActivityTime = activityMesg?.GetTimestamp().GetDateTime() ?? default;
-
+    merged.BackfillEvents();
+    
     merged.RemoveNonfirst(typeof(FileIdMesg));
     merged.RemoveNonfirst(typeof(FileCreatorMesg));
     merged.RemoveNonfirst(typeof(DeviceSettingsMesg));
     merged.RemoveNonfirst(typeof(UserProfileMesg));
     merged.RemoveNonfirst(typeof(ActivityMesg));
-    merged.RemoveAll(typeof(DeviceInfoMesg), after: firstActivityTime);
 
     return merged;
   }
