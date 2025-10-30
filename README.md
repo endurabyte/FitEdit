@@ -69,37 +69,9 @@ FitEdit repairs corrupt or unuploadable files.
 - Scan and recover lost records
 - View raw byte data with built-in hex viewer
 
-# Paid Features
-
-## Synchronize
-
-Syncs between your devices and with third-party fitness platforms.* **
-
-- Sync activities between devices
-- Import activities from other platforms
-- Export activities to other platforms
-- Sync activity name and description with other platforms
-  
-\* Currently supporting Garmin and Strava. 
-
-\** Third-party features may break at any time as these platforms may change without notice. The most stable features use official platform APIs, while addtitional features use internal APIs.
-
-## Official Integrations
-
-Garmin and Strava each offer an official developer API. FitEdit is a member of both, and our backend is integrated with each.
-
- - [Garmin](https://developer.garmin.com/)
- - [Strava](https://developers.strava.com/)
-
-You must authorize (give FitEdit permission) to access your data with these platforms. [Learn more](https://www.fitedit.io/support/integration-signin-terms.html)
-
-After you've authorized FitEdit with Garmin, Garmin sends FitEdit server-to-server notifications when you upload activities and when you edit activities on Garmin Connect. Then, our servers push the notification to your running FitEdit app. You'll find that after your workout has uploaded to Garmin Connect, it shows in FitEdit shortly thereafter, and when you update an activity title or description on Garmin Connect, the change shows up in FitEdit a few seconds later. If the app isn't running, it will get all changes the next time it starts. 
-
-After you've authorized FitEdit with Strava, it provides the same features described above for Garmin Connect.
-
 ## Unofficial Integrations
 
-Unfortunately, the official Garmin API does not allow download of all activities in bulk* or to upload activities. For these features, you'll be interested in the unofficial integration.
+The official Garmin API does not allow download of all activities in bulk* or to upload activities. For these features, you'll be interested in the unofficial integration.
 
 In the app, you can sign in to Garmin by pasting a couple [cookies](https://www.fitedit.io/support/garmin-signin.html). The [browser extension](https://github.com/endurabyte/FitEdit.Browser) makes this very easy. Signing in like this provides these benefits:
 
@@ -109,7 +81,7 @@ In the app, you can sign in to Garmin by pasting a couple [cookies](https://www.
 
 \* Garmin does allow backfilling of up to 5 years of activities. We do not (yet) support this feature, but you can backfill all activities without restriction using the unofficial integration.
 
-Unfortunately, Strava does not expose activity downloads through their official API, downloading of past data, or to download in bulk**. For these features, you'll be interested in the unofficial integration.
+Strava does not expose activity downloads through their official API, downloading of past data, or to download in bulk**. For these features, you'll be interested in the unofficial integration.
 
 You can sign into Strava with your username and password. Signing in like this provides these benefits:
 
@@ -117,3 +89,4 @@ You can sign into Strava with your username and password. Signing in like this p
 - Delete Strava activities from the app
 
 \** Strava may temporarily block you for making too many requests. We'll notify you about this in the app. You can try again later.
+
